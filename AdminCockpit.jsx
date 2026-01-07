@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import SystemHealthPanel from '../components/SystemHealthPanel';
+import SystemHealthPanel from './SystemHealthPanel';
 import api from './api'
 
 const AdminCockpit = () => {
