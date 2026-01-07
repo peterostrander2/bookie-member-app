@@ -1,171 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import api from './api'
-// Confidence Meter Component
-const ConfidenceMeter = ({ confidence, size = 70 }) => {
-  const radius = (size - 8) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const progress = (confidence / 100) * circumference;
-  const offset = circumference - progress;
-  
-  const getColor = (conf) => {
-    if (conf >= 80) return '#00FF88';
-    if (conf >= 70) return '#00D4FF';
-    return '#FFD700';
-  };
-  
-  const color = getColor(confidence);
-  
-  return (
-    <div style={{ position: 'relative', width: size, height: size }}>
-      <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-        <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke="#ffffff10" strokeWidth="6" />
-        <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke={color} strokeWidth="6"
-          strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round"
-          style={{ filter: `drop-shadow(0 0 8px ${color})`, transition: 'stroke-dashoffset 0.5s ease' }} />
-      </svg>
-      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
-        <div style={{ fontSize: '10px', color: '#6b7280' }}>#{confidence >= 80 ? '1' : confidence >= 70 ? '2' : '3'}</div>
-        <div style={{ fontSize: '16px', fontWeight: 'bold', color }}>{confidence}%</div>
-      </div>
-    </div>
-  );
-};
+import api from './api';
 
-// Smash Spot Card Component
-const SmashSpotCard = ({ pick, rank }) => {
-  const [expanded, setExpanded] = useState(false);
-  
-  const getGlow = (conf) => {
-    if (conf >= 80) return '0 0 20px #00FF8840';
-    if (conf >= 70) return '0 0 20px #00D4FF40';
-    return '0 0 20px #FFD70040';
-  };
-  
-  const getBorderColor = (conf) => {
-    if (conf >= 80) return '#00FF88';
-    if (conf >= 70) return '#00D4FF';
-    return '#FFD700';
-  };
-  
-  return (
-    <div 
-      onClick={() => setExpanded(!expanded)}
-      style={{
-        backgroundColor: '#1a1a2e',
-        borderRadius: '12px',
-        padding: '20px',
-        cursor: 'pointer',
-        boxShadow: getGlow(pick.confidence),
-        borderLeft: `4px solid ${getBorderColor(pick.confidence)}`,
-        transition: 'transform 0.2s',
-      }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
-        <div>
-          <div style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>{pick.player}</div>
-          <div style={{ color: '#00D4FF', fontSize: '14px' }}>{pick.team}</div>
-          <div style={{ color: '#6b7280', fontSize: '13px' }}>vs {pick.opponent}</div>
-        </div>
-        <ConfidenceMeter confidence={pick.confidence} />
-      </div>
-      
-      <div style={{
-        backgroundColor: pick.recommendation?.includes('OVER') ? '#00FF8820' : '#FF444420',
-        borderRadius: '8px',
-        padding: '12px 15px',
-        marginBottom: '15px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '15px'
-      }}>
-        <span style={{
-          backgroundColor: pick.recommendation?.includes('OVER') ? '#00FF88' : '#FF4444',
-          color: '#000',
-          padding: '4px 10px',
-          borderRadius: '4px',
-          fontSize: '12px',
-          fontWeight: 'bold'
-        }}>
-          {pick.recommendation?.includes('OVER') ? 'OVER' : 'UNDER'}
-        </span>
-        <span style={{ color: '#fff', fontSize: '24px', fontWeight: 'bold' }}>{pick.line}</span>
-        <span style={{ color: '#9ca3af', fontSize: '14px', textTransform: 'uppercase' }}>{pick.stat}</span>
-      </div>
-      
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
-        <div>
-          <div style={{ color: '#6b7280', fontSize: '11px' }}>PROJECTION</div>
-          <div style={{ color: '#fff', fontSize: '20px', fontWeight: 'bold' }}>{pick.projection}</div>
-        </div>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ color: '#6b7280', fontSize: '18px' }}>→</div>
-        </div>
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ color: '#6b7280', fontSize: '11px' }}>EDGE</div>
-          <div style={{ color: '#00FF88', fontSize: '20px', fontWeight: 'bold' }}>
-            {pick.edge > 0 ? '+' : ''}{pick.edge} ({pick.edge_pct > 0 ? '+' : ''}{pick.edge_pct}%)
-          </div>
-        </div>
-      </div>
-      
-      {pick.badges && pick.badges.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '15px' }}>
-          {pick.badges.map((badge, i) => (
-            <span key={i} style={{
-              backgroundColor: badge.type === 'injury_boost' ? '#FF444420' : badge.type === 'weak_defense' ? '#FFD70020' : '#00D4FF20',
-              color: badge.type === 'injury_boost' ? '#FF4444' : badge.type === 'weak_defense' ? '#FFD700' : '#00D4FF',
-              padding: '4px 10px',
-              borderRadius: '12px',
-              fontSize: '12px',
-              border: `1px solid ${badge.type === 'injury_boost' ? '#FF444440' : badge.type === 'weak_defense' ? '#FFD70040' : '#00D4FF40'}`
-            }}>
-              {badge.label}
-            </span>
-          ))}
-        </div>
-      )}
-      
-      <div style={{
-        backgroundColor: '#12121f',
-        borderRadius: '8px',
-        padding: '12px',
-        marginBottom: '10px'
-      }}>
-        <div style={{ color: '#6b7280', fontSize: '11px', marginBottom: '8px' }}>VALUE BREAKDOWN</div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', color: '#9ca3af', fontSize: '14px' }}>
-          <span>{pick.base_avg || pick.season_avg}</span>
-          <span style={{ color: '#00FF88' }}>+{(pick.projection - (pick.base_avg || pick.season_avg || pick.projection - pick.edge)).toFixed(1)}</span>
-          <span>=</span>
-          <span style={{ color: '#00D4FF', fontWeight: 'bold' }}>{pick.projection}</span>
-        </div>
-      </div>
-      
-      <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '12px' }}>
-        {expanded ? '▲ Collapse' : '▼ See breakdown'}
-      </div>
-      
-      {expanded && pick.adjustments && (
-        <div style={{ marginTop: '15px', paddingTop: '15px', borderTop: '1px solid #333' }}>
-          {pick.adjustments.map((adj, i) => (
-            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', color: '#9ca3af', fontSize: '13px' }}>
-              <span>{adj.icon} {adj.label}</span>
-              <span style={{ color: adj.value >= 0 ? '#00FF88' : '#FF4444' }}>
-                {adj.value >= 0 ? '+' : ''}{adj.value}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
-// Main SmashSpots Page
 const SmashSpots = () => {
   const [sport, setSport] = useState('NBA');
   const [picks, setPicks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   const sports = ['NBA', 'NFL', 'MLB', 'NHL', 'NCAAB'];
 
@@ -175,44 +14,128 @@ const SmashSpots = () => {
 
   const fetchPicks = async () => {
     setLoading(true);
-    setError(null);
     try {
       const data = await api.getSmashSpots(sport);
-      if (data.picks || data.smash_spots) {
-        setPicks(data.picks || data.smash_spots || []);
-      } else if (Array.isArray(data)) {
-        setPicks(data);
+      
+      if (data.slate && data.slate.length > 0) {
+        // Convert game data to picks
+        const gamePicks = data.slate.map(game => {
+          // Analyze spread value
+          const spreadEdge = analyzeSpread(game);
+          // Analyze total value
+          const totalEdge = analyzeTotal(game);
+          
+          return {
+            ...game,
+            spreadEdge,
+            totalEdge,
+            bestPick: spreadEdge.confidence > totalEdge.confidence ? 'spread' : 'total'
+          };
+        }).filter(g => g.spreadEdge.confidence >= 60 || g.totalEdge.confidence >= 60)
+          .sort((a, b) => Math.max(b.spreadEdge.confidence, b.totalEdge.confidence) - 
+                         Math.max(a.spreadEdge.confidence, a.totalEdge.confidence));
+        
+        setPicks(gamePicks);
       } else {
-        setPicks(MOCK_PICKS);
+        setPicks([]);
       }
     } catch (err) {
       console.error('Error fetching picks:', err);
-      setPicks(MOCK_PICKS);
+      setPicks([]);
     }
     setLoading(false);
+  };
+
+  const analyzeSpread = (game) => {
+    const spread = Math.abs(game.spread);
+    const odds = game.spread_odds;
+    let confidence = 50;
+    let recommendation = game.spread > 0 ? game.home_team : game.away_team;
+    let side = game.spread > 0 ? 'HOME' : 'AWAY';
+    
+    // Key numbers analysis
+    if ([3, 7, 10].includes(spread)) confidence += 10;
+    if (spread >= 10) confidence += 5; // Big favorites often cover
+    if (odds > -105) confidence += 8; // Plus odds or low juice
+    if (spread <= 3) confidence += 5; // Close games have value
+    
+    // Random variance for demo (replace with real model)
+    confidence += Math.floor(Math.random() * 15);
+    confidence = Math.min(95, Math.max(55, confidence));
+    
+    return { confidence, recommendation, side, spread: game.spread, odds };
+  };
+
+  const analyzeTotal = (game) => {
+    const total = game.total;
+    const overOdds = game.over_odds;
+    const underOdds = game.under_odds;
+    let confidence = 50;
+    let recommendation = 'OVER';
+    
+    // Analyze juice
+    if (overOdds > underOdds) {
+      recommendation = 'OVER';
+      confidence += 5;
+    } else {
+      recommendation = 'UNDER';
+      confidence += 5;
+    }
+    
+    // Key totals
+    if (total > 230) confidence += 5;
+    if (total < 215) confidence += 5;
+    
+    // Random variance for demo
+    confidence += Math.floor(Math.random() * 15);
+    confidence = Math.min(92, Math.max(55, confidence));
+    
+    return { confidence, recommendation, total, overOdds, underOdds };
+  };
+
+  const getConfidenceColor = (conf) => {
+    if (conf >= 80) return '#00FF88';
+    if (conf >= 70) return '#00D4FF';
+    return '#FFD700';
+  };
+
+  const formatTime = (dateStr) => {
+    const date = new Date(dateStr);
+    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   };
 
   return (
     <div style={{ padding: '20px', backgroundColor: '#0a0a0f', minHeight: '100vh' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', flexWrap: 'wrap', gap: '15px' }}>
           <div>
-            <h1 style={{ color: '#fff', fontSize: '28px', margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ fontSize: '32px' }}>🔥</span> Today's Smash Spots
+            <h1 style={{ color: '#fff', fontSize: '28px', margin: '0 0 5px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              🔥 Today's Smash Spots
             </h1>
+            <p style={{ color: '#6b7280', margin: 0, fontSize: '14px' }}>
+              {picks.length} high-confidence plays found
+            </p>
           </div>
-          
-          <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-            <div style={{ display: 'flex', gap: '20px', fontSize: '13px' }}>
-              <span style={{ color: '#00FF88' }}>● 80%+ SMASH</span>
-              <span style={{ color: '#00D4FF' }}>● 70%+ STRONG</span>
-              <span style={{ color: '#FFD700' }}>● &lt;70% LEAN</span>
-            </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px' }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#00FF88' }}></span>
+              <span style={{ color: '#9ca3af' }}>80%+ SMASH</span>
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px' }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#00D4FF' }}></span>
+              <span style={{ color: '#9ca3af' }}>70%+ STRONG</span>
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px' }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#FFD700' }}></span>
+              <span style={{ color: '#9ca3af' }}>&lt;70% LEAN</span>
+            </span>
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '25px' }}>
+        {/* Sport Tabs */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '25px', flexWrap: 'wrap' }}>
           {sports.map(s => (
             <button
               key={s}
@@ -221,7 +144,7 @@ const SmashSpots = () => {
                 padding: '10px 20px',
                 backgroundColor: sport === s ? '#00D4FF' : '#1a1a2e',
                 color: sport === s ? '#000' : '#9ca3af',
-                border: 'none',
+                border: sport === s ? 'none' : '1px solid #333',
                 borderRadius: '8px',
                 cursor: 'pointer',
                 fontWeight: sport === s ? 'bold' : 'normal',
@@ -233,95 +156,132 @@ const SmashSpots = () => {
           ))}
         </div>
 
+        {/* Picks Grid */}
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '60px', color: '#9ca3af' }}>
-            Loading picks...
-          </div>
-        ) : error ? (
-          <div style={{ textAlign: 'center', padding: '60px', color: '#FF4444' }}>
-            {error}
-          </div>
+          <div style={{ textAlign: 'center', padding: '60px', color: '#9ca3af' }}>Loading picks...</div>
         ) : picks.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '60px', color: '#9ca3af' }}>
-            No picks available for {sport} right now. Check back closer to game time.
+          <div style={{ textAlign: 'center', padding: '60px', color: '#9ca3af', backgroundColor: '#1a1a2e', borderRadius: '12px' }}>
+            <div style={{ fontSize: '48px', marginBottom: '15px' }}>🔍</div>
+            <h3 style={{ color: '#fff', marginBottom: '10px' }}>No High-Confidence Picks</h3>
+            <p>Check back closer to game time for today's {sport} picks.</p>
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '20px' }}>
-            {picks.map((pick, i) => (
-              <SmashSpotCard key={i} pick={pick} rank={i + 1} />
-            ))}
+            {picks.map((game, idx) => {
+              const mainPick = game.bestPick === 'spread' ? game.spreadEdge : game.totalEdge;
+              const confidence = mainPick.confidence;
+              const color = getConfidenceColor(confidence);
+              
+              return (
+                <div key={idx} style={{
+                  backgroundColor: '#1a1a2e',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  borderLeft: `4px solid ${color}`
+                }}>
+                  {/* Header */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
+                    <div>
+                      <div style={{ color: '#fff', fontSize: '16px', fontWeight: 'bold' }}>{game.away_team}</div>
+                      <div style={{ color: '#9ca3af', fontSize: '14px' }}>@ {game.home_team}</div>
+                      <div style={{ color: '#6b7280', fontSize: '12px', marginTop: '5px' }}>{formatTime(game.commence_time)}</div>
+                    </div>
+                    {/* Confidence Ring */}
+                    <div style={{ position: 'relative', width: '60px', height: '60px' }}>
+                      <svg width="60" height="60" style={{ transform: 'rotate(-90deg)' }}>
+                        <circle cx="30" cy="30" r="25" fill="none" stroke="#333" strokeWidth="5" />
+                        <circle 
+                          cx="30" cy="30" r="25" fill="none" 
+                          stroke={color} strokeWidth="5"
+                          strokeDasharray={`${confidence * 1.57} 157`}
+                        />
+                      </svg>
+                      <div style={{
+                        position: 'absolute', top: '50%', left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        color: color, fontWeight: 'bold', fontSize: '14px'
+                      }}>
+                        {confidence}%
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Spread Pick */}
+                  <div style={{
+                    backgroundColor: '#12121f',
+                    borderRadius: '8px',
+                    padding: '12px',
+                    marginBottom: '10px'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <span style={{ color: '#6b7280', fontSize: '12px' }}>SPREAD</span>
+                        <div style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>
+                          {game.spread > 0 ? '+' : ''}{game.spread}
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <span style={{
+                          backgroundColor: game.spreadEdge.confidence >= 70 ? '#00FF8830' : '#FFD70030',
+                          color: game.spreadEdge.confidence >= 70 ? '#00FF88' : '#FFD700',
+                          padding: '4px 10px',
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                          fontWeight: 'bold'
+                        }}>
+                          {game.spreadEdge.side}
+                        </span>
+                        <div style={{ color: '#9ca3af', fontSize: '12px', marginTop: '4px' }}>
+                          {game.spreadEdge.confidence}% conf
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Total Pick */}
+                  <div style={{
+                    backgroundColor: '#12121f',
+                    borderRadius: '8px',
+                    padding: '12px'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <span style={{ color: '#6b7280', fontSize: '12px' }}>TOTAL</span>
+                        <div style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>
+                          {game.total}
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <span style={{
+                          backgroundColor: game.totalEdge.recommendation === 'OVER' ? '#00FF8830' : '#FF444430',
+                          color: game.totalEdge.recommendation === 'OVER' ? '#00FF88' : '#FF4444',
+                          padding: '4px 10px',
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                          fontWeight: 'bold'
+                        }}>
+                          {game.totalEdge.recommendation}
+                        </span>
+                        <div style={{ color: '#9ca3af', fontSize: '12px', marginTop: '4px' }}>
+                          {game.totalEdge.confidence}% conf
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Odds Row */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', fontSize: '12px', color: '#6b7280' }}>
+                    <span>ML: {game.home_ml > 0 ? '+' : ''}{game.home_ml} / {game.away_ml > 0 ? '+' : ''}{game.away_ml}</span>
+                    <span>via {game.sportsbook}</span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
     </div>
   );
 };
-
-// Mock picks for when API is unavailable
-const MOCK_PICKS = [
-  {
-    player: 'Jerami Grant',
-    team: 'Portland Trail Blazers',
-    opponent: 'Utah Jazz',
-    stat: 'points',
-    line: 21.5,
-    projection: 25.0,
-    edge: 3.5,
-    edge_pct: 16.3,
-    confidence: 85,
-    recommendation: 'STRONG OVER',
-    base_avg: 21.9,
-    badges: [
-      { type: 'weak_defense', label: '#25 vs Wings' },
-      { type: 'injury_boost', label: '32 pts vacuum' }
-    ],
-    adjustments: [
-      { icon: '🎯', label: 'Matchup', value: 1.2 },
-      { icon: '🚀', label: 'Vacuum', value: 1.9 }
-    ]
-  },
-  {
-    player: 'Collin Sexton',
-    team: 'Utah Jazz',
-    opponent: 'Portland Trail Blazers',
-    stat: 'points',
-    line: 17.5,
-    projection: 20.1,
-    edge: 2.6,
-    edge_pct: 14.9,
-    confidence: 85,
-    recommendation: 'STRONG OVER',
-    base_avg: 17.9,
-    badges: [
-      { type: 'weak_defense', label: '#26 vs Guards' },
-      { type: 'pace', label: 'Pace +2' }
-    ],
-    adjustments: [
-      { icon: '🎯', label: 'Matchup', value: 1.4 },
-      { icon: '⚡', label: 'Pace', value: 0.8 }
-    ]
-  },
-  {
-    player: 'Devin Booker',
-    team: 'Phoenix Suns',
-    opponent: 'Houston Rockets',
-    stat: 'points',
-    line: 27.5,
-    projection: 25.5,
-    edge: -2,
-    edge_pct: -7.3,
-    confidence: 75,
-    recommendation: 'LEAN UNDER',
-    base_avg: 27.1,
-    badges: [
-      { type: 'elite_defense', label: '#8 vs Guards' },
-      { type: 'blowout', label: '+8.5 dog' }
-    ],
-    adjustments: [
-      { icon: '🛡️', label: 'Defense', value: -0.8 },
-      { icon: '⚠️', label: 'Blowout Risk', value: -0.8 }
-    ]
-  }
-];
 
 export default SmashSpots;
