@@ -235,3 +235,20 @@ const SmashSpots = () => {
                       </div>
                     </div>
                   </div>
+{/* All Books */}
+                  {game.all_books && (
+                    <div style={{ marginTop: '10px', fontSize: '10px', color: '#4b5563' }}>
+                      Compared: {game.all_books.slice(0, 8).join(', ')}{game.all_books.length > 8 ? ` +${game.all_books.length - 8} more` : ''}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default SmashSpots;
