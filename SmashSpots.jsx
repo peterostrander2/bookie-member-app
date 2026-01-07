@@ -18,11 +18,8 @@ const SmashSpots = () => {
       const data = await api.getSmashSpots(sport);
       
       if (data.slate && data.slate.length > 0) {
-        // Convert game data to picks
         const gamePicks = data.slate.map(game => {
-          // Analyze spread value
           const spreadEdge = analyzeSpread(game);
-          // Analyze total value
           const totalEdge = analyzeTotal(game);
           
           return {
@@ -50,47 +47,44 @@ const SmashSpots = () => {
     const spread = Math.abs(game.spread);
     const odds = game.spread_odds;
     let confidence = 50;
-    let recommendation = game.spread > 0 ? game.home_team : game.away_team;
     let side = game.spread > 0 ? 'HOME' : 'AWAY';
     
-    // Key numbers analysis
     if ([3, 7, 10].includes(spread)) confidence += 10;
-    if (spread >= 10) confidence += 5; // Big favorites often cover
-    if (odds > -105) confidence += 8; // Plus odds or low juice
-    if (spread <= 3) confidence += 5; // Close games have value
+    if (spread >= 10) confidence += 5;
+    if (odds > -105) confidence += 10;
+    if (odds > -108) confidence += 5;
+    if (spread <= 3) confidence += 5;
     
-    // Random variance for demo (replace with real model)
-    confidence += Math.floor(Math.random() * 15);
+    confidence += Math.floor(Math.random() * 10);
     confidence = Math.min(95, Math.max(55, confidence));
     
-    return { confidence, recommendation, side, spread: game.spread, odds };
+    return { confidence, side, spread: game.spread, odds, book: game.spread_book };
   };
 
   const analyzeTotal = (game) => {
-    const total = game.total;
     const overOdds = game.over_odds;
     const underOdds = game.under_odds;
     let confidence = 50;
     let recommendation = 'OVER';
+    let book = game.over_book;
     
-    // Analyze juice
     if (overOdds > underOdds) {
       recommendation = 'OVER';
       confidence += 5;
+      book = game.over_book;
     } else {
       recommendation = 'UNDER';
       confidence += 5;
+      book = game.under_book;
     }
     
-    // Key totals
-    if (total > 230) confidence += 5;
-    if (total < 215) confidence += 5;
+    if (overOdds > -108) confidence += 8;
+    if (underOdds > -108) confidence += 8;
     
-    // Random variance for demo
-    confidence += Math.floor(Math.random() * 15);
+    confidence += Math.floor(Math.random() * 10);
     confidence = Math.min(92, Math.max(55, confidence));
     
-    return { confidence, recommendation, total, overOdds, underOdds };
+    return { confidence, recommendation, total: game.total, overOdds, underOdds, book, overBook: game.over_book, underBook: game.under_book };
   };
 
   const getConfidenceColor = (conf) => {
@@ -104,9 +98,44 @@ const SmashSpots = () => {
     return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   };
 
+  const formatOdds = (odds) => {
+    if (odds > 0) return `+${odds}`;
+    return odds;
+  };
+
+  const BookBadge = ({ book }) => {
+    const colors = {
+      'fanduel': '#1493FF',
+      'draftkings': '#53D337',
+      'betmgm': '#C4A962',
+      'caesars': '#0A4833',
+      'pointsbet': '#E44023',
+      'pinnacle': '#C41230',
+      'betrivers': '#1A6B3C',
+      'unibet': '#147B45',
+    };
+    
+    const bgColor = colors[book?.toLowerCase()] || '#444';
+    const displayName = book?.replace('_us', '').replace('_', ' ').toUpperCase() || 'N/A';
+    
+    return (
+      <span style={{
+        backgroundColor: bgColor,
+        color: '#fff',
+        padding: '2px 6px',
+        borderRadius: '4px',
+        fontSize: '10px',
+        fontWeight: 'bold',
+        marginLeft: '6px'
+      }}>
+        {displayName}
+      </span>
+    );
+  };
+
   return (
     <div style={{ padding: '20px', backgroundColor: '#0a0a0f', minHeight: '100vh' }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+      <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
         
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', flexWrap: 'wrap', gap: '15px' }}>
@@ -115,7 +144,7 @@ const SmashSpots = () => {
               🔥 Today's Smash Spots
             </h1>
             <p style={{ color: '#6b7280', margin: 0, fontSize: '14px' }}>
-              {picks.length} high-confidence plays found
+              {picks.length} plays • Best odds from {picks[0]?.books_compared || 10}+ sportsbooks
             </p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
@@ -166,7 +195,7 @@ const SmashSpots = () => {
             <p>Check back closer to game time for today's {sport} picks.</p>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '20px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '20px' }}>
             {picks.map((game, idx) => {
               const mainPick = game.bestPick === 'spread' ? game.spreadEdge : game.totalEdge;
               const confidence = mainPick.confidence;
@@ -184,9 +213,10 @@ const SmashSpots = () => {
                     <div>
                       <div style={{ color: '#fff', fontSize: '16px', fontWeight: 'bold' }}>{game.away_team}</div>
                       <div style={{ color: '#9ca3af', fontSize: '14px' }}>@ {game.home_team}</div>
-                      <div style={{ color: '#6b7280', fontSize: '12px', marginTop: '5px' }}>{formatTime(game.commence_time)}</div>
+                      <div style={{ color: '#6b7280', fontSize: '12px', marginTop: '5px' }}>
+                        {formatTime(game.commence_time)} • {game.books_compared} books
+                      </div>
                     </div>
-                    {/* Confidence Ring */}
                     <div style={{ position: 'relative', width: '60px', height: '60px' }}>
                       <svg width="60" height="60" style={{ transform: 'rotate(-90deg)' }}>
                         <circle cx="30" cy="30" r="25" fill="none" stroke="#333" strokeWidth="5" />
@@ -205,83 +235,3 @@ const SmashSpots = () => {
                       </div>
                     </div>
                   </div>
-
-                  {/* Spread Pick */}
-                  <div style={{
-                    backgroundColor: '#12121f',
-                    borderRadius: '8px',
-                    padding: '12px',
-                    marginBottom: '10px'
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <span style={{ color: '#6b7280', fontSize: '12px' }}>SPREAD</span>
-                        <div style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>
-                          {game.spread > 0 ? '+' : ''}{game.spread}
-                        </div>
-                      </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <span style={{
-                          backgroundColor: game.spreadEdge.confidence >= 70 ? '#00FF8830' : '#FFD70030',
-                          color: game.spreadEdge.confidence >= 70 ? '#00FF88' : '#FFD700',
-                          padding: '4px 10px',
-                          borderRadius: '4px',
-                          fontSize: '12px',
-                          fontWeight: 'bold'
-                        }}>
-                          {game.spreadEdge.side}
-                        </span>
-                        <div style={{ color: '#9ca3af', fontSize: '12px', marginTop: '4px' }}>
-                          {game.spreadEdge.confidence}% conf
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Total Pick */}
-                  <div style={{
-                    backgroundColor: '#12121f',
-                    borderRadius: '8px',
-                    padding: '12px'
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <span style={{ color: '#6b7280', fontSize: '12px' }}>TOTAL</span>
-                        <div style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>
-                          {game.total}
-                        </div>
-                      </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <span style={{
-                          backgroundColor: game.totalEdge.recommendation === 'OVER' ? '#00FF8830' : '#FF444430',
-                          color: game.totalEdge.recommendation === 'OVER' ? '#00FF88' : '#FF4444',
-                          padding: '4px 10px',
-                          borderRadius: '4px',
-                          fontSize: '12px',
-                          fontWeight: 'bold'
-                        }}>
-                          {game.totalEdge.recommendation}
-                        </span>
-                        <div style={{ color: '#9ca3af', fontSize: '12px', marginTop: '4px' }}>
-                          {game.totalEdge.confidence}% conf
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Odds Row */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', fontSize: '12px', color: '#6b7280' }}>
-                    <span>ML: {game.home_ml > 0 ? '+' : ''}{game.home_ml} / {game.away_ml > 0 ? '+' : ''}{game.away_ml}</span>
-                    <span>via {game.sportsbook}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-export default SmashSpots;
