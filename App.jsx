@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
-import Dashboard from './pages/Dashboard';
-import SmashSpots from './pages/SmashSpots';
-import Splits from './pages/Splits';
-import Esoteric from './pages/Esoteric';
-import Signals from './pages/Signals';
-import Grading from './pages/Grading';
-import AdminCockpit from './pages/AdminCockpit';
-import Profile from './pages/Profile';
-import ComplianceFooter from './components/ComplianceFooter';
-import api from './services/api';
+import Dashboard from './Dashboard';
+import SmashSpots from './SmashSpots';
+import Splits from './Splits';
+import Esoteric from './Esoteric';
+import Signals from './Signals';
+import Grading from './Grading';
+import AdminCockpit from './AdminCockpit';
+import Profile from './Profile';
+import ComplianceFooter from './ComplianceFooter';
+import api from './api';
 
 const Navbar = () => {
   const location = useLocation();
@@ -76,7 +76,7 @@ const Navbar = () => {
               }}
             >
               <span>{link.icon}</span>
-              <span style={{ display: window.innerWidth < 768 ? 'none' : 'inline' }}>{link.label}</span>
+              <span>{link.label}</span>
             </Link>
           ))}
         </div>
@@ -85,19 +85,19 @@ const Navbar = () => {
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
-          backgroundColor: health?.status === 'healthy' ? '#00FF8815' : '#FF444415',
+          backgroundColor: health?.status === 'healthy' || health?.status === 'online' ? '#00FF8815' : '#FF444415',
           padding: '6px 12px',
           borderRadius: '20px',
           fontSize: '12px',
-          color: health?.status === 'healthy' ? '#00FF88' : '#FF4444'
+          color: health?.status === 'healthy' || health?.status === 'online' ? '#00FF88' : '#FF4444'
         }}>
           <span style={{
             width: '6px',
             height: '6px',
             borderRadius: '50%',
-            backgroundColor: health?.status === 'healthy' ? '#00FF88' : '#FF4444'
+            backgroundColor: health?.status === 'healthy' || health?.status === 'online' ? '#00FF88' : '#FF4444'
           }} />
-          {health?.status === 'healthy' ? 'Online' : 'Offline'}
+          {health?.status === 'healthy' || health?.status === 'online' ? 'Online' : 'Offline'}
         </div>
       </div>
     </nav>
