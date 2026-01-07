@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import api from '../services/api';
+import api from './api'
 
 const SystemHealthPanel = ({ compact = false }) => {
   const [health, setHealth] = useState(null);
