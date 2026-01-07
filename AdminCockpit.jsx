@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import SystemHealthPanel from '../components/SystemHealthPanel';
-import api from '../services/api';
+import api from './api'
 
 const AdminCockpit = () => {
   const [apiLogs, setApiLogs] = useState([]);
