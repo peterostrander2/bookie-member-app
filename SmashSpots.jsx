@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import api from './api';
-
+import api from './api'
 // Confidence Meter Component
 const ConfidenceMeter = ({ confidence, size = 70 }) => {
   const radius = (size - 8) / 2;
