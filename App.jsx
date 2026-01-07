@@ -8,6 +8,9 @@ import Signals from './Signals';
 import Grading from './Grading';
 import AdminCockpit from './AdminCockpit';
 import Profile from './Profile';
+import CLVDashboard from './CLVDashboard';
+import BacktestDashboard from './BacktestDashboard';
+import BankrollManager from './BankrollManager';
 import ComplianceFooter from './ComplianceFooter';
 import api from './api';
 
@@ -23,6 +26,9 @@ const Navbar = () => {
     { path: '/', label: 'Dashboard', icon: '🏠' },
     { path: '/smash-spots', label: 'Smash Spots', icon: '🔥' },
     { path: '/splits', label: 'Splits', icon: '📊' },
+    { path: '/clv', label: 'CLV', icon: '📈' },
+    { path: '/backtest', label: 'Backtest', icon: '🔬' },
+    { path: '/bankroll', label: 'Bankroll', icon: '💰' },
     { path: '/esoteric', label: 'Esoteric', icon: '🔮' },
     { path: '/signals', label: 'Signals', icon: '⚡' },
     { path: '/grading', label: 'Grading', icon: '📝' },
@@ -114,6 +120,9 @@ const App = () => {
             <Route path="/" element={<Dashboard />} />
             <Route path="/smash-spots" element={<SmashSpots />} />
             <Route path="/splits" element={<Splits />} />
+            <Route path="/clv" element={<CLVDashboard />} />
+            <Route path="/backtest" element={<BacktestDashboard />} />
+            <Route path="/bankroll" element={<BankrollManager />} />
             <Route path="/esoteric" element={<Esoteric />} />
             <Route path="/signals" element={<Signals />} />
             <Route path="/grading" element={<Grading />} />
