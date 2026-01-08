@@ -16,8 +16,13 @@ const Signals = () => {
       // Try to get live player props
       const propsData = await api.getLiveProps('NBA').catch(() => ({ props: [] }));
 
+      // Debug: log what backend returns
+      console.log('Props API response:', propsData);
+
       // Get all props with any edge - sort by confidence/edge
       const allProps = propsData.props || propsData || [];
+
+      console.log('All props count:', allProps.length, 'Sample:', allProps[0]);
 
       // Filter for props with positive edge or decent confidence
       const goodProps = allProps.filter(p =>
