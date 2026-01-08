@@ -3,54 +3,106 @@ const BASE_URL = 'https://web-production-7b2a.up.railway.app';
 const api = {
   // Health
   getHealth: async () => {
-    const res = await fetch(`${BASE_URL}/health`);
-    return res.json();
+    try {
+      const res = await fetch(`${BASE_URL}/health`);
+      if (!res.ok) return { status: 'offline' };
+      return res.json();
+    } catch {
+      return { status: 'offline' };
+    }
   },
 
   getModelStatus: async () => {
-    const res = await fetch(`${BASE_URL}/model-status`);
-    return res.json();
+    try {
+      const res = await fetch(`${BASE_URL}/model-status`);
+      if (!res.ok) return null;
+      return res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  // Esoteric - Today's Energy
+  getTodayEnergy: async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/esoteric/today-energy`);
+      if (!res.ok) return null;
+      return res.json();
+    } catch {
+      return null;
+    }
   },
 
   // Live Data
   getSmashSpots: async (sport = 'NBA') => {
     try {
       const res = await fetch(`${BASE_URL}/live/slate/${sport}`);
+      if (!res.ok) return { slate: [] };
       return res.json();
     } catch (err) {
       console.error('API Error:', err);
-      return { picks: [] };
+      return { slate: [] };
     }
   },
 
   getLiveGames: async (sport = 'NBA') => {
-    const res = await fetch(`${BASE_URL}/live/games/${sport}`);
-    return res.json();
+    try {
+      const res = await fetch(`${BASE_URL}/live/games/${sport}`);
+      if (!res.ok) return [];
+      return res.json();
+    } catch {
+      return [];
+    }
   },
 
   getLiveProps: async (sport = 'NBA') => {
-    const res = await fetch(`${BASE_URL}/live/props/${sport}`);
-    return res.json();
+    try {
+      const res = await fetch(`${BASE_URL}/live/props/${sport}`);
+      if (!res.ok) return [];
+      return res.json();
+    } catch {
+      return [];
+    }
   },
 
   getLiveOdds: async (sport = 'NBA') => {
-    const res = await fetch(`${BASE_URL}/live/odds/${sport}`);
-    return res.json();
+    try {
+      const res = await fetch(`${BASE_URL}/live/odds/${sport}`);
+      if (!res.ok) return { games: [] };
+      return res.json();
+    } catch {
+      return { games: [] };
+    }
   },
 
   getSplits: async (sport = 'NBA') => {
-    const res = await fetch(`${BASE_URL}/live/splits/${sport}`);
-    return res.json();
+    try {
+      const res = await fetch(`${BASE_URL}/live/splits/${sport}`);
+      if (!res.ok) return [];
+      return res.json();
+    } catch {
+      return [];
+    }
   },
 
   getSharpMoney: async (sport = 'NBA') => {
-    const res = await fetch(`${BASE_URL}/sharp-money/${sport}`);
-    return res.json();
+    try {
+      const res = await fetch(`${BASE_URL}/sharp-money/${sport}`);
+      if (!res.ok) return { signals: [] };
+      return res.json();
+    } catch {
+      return { signals: [] };
+    }
   },
 
   getInjuries: async (sport = 'NBA') => {
-    const res = await fetch(`${BASE_URL}/live/injuries/${sport}`);
-    return res.json();
+    try {
+      const res = await fetch(`${BASE_URL}/live/injuries/${sport}`);
+      if (!res.ok) return [];
+      return res.json();
+    } catch {
+      return [];
+    }
   },
 
   // Predictions
