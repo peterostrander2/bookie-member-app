@@ -6,6 +6,85 @@ import { explainPick, quickExplain } from './pickExplainer';
 import { analyzeCorrelation, checkPickCorrelation } from './correlationDetector';
 import { ConsensusMeter, ConsensusMiniBadge, ConsensusAlert, calculateConsensus } from './ConsensusMeter';
 
+// Floating Glow Badge for special convergence picks
+const ConvergenceGlowBadge = ({ tier }) => {
+  const isGolden = tier === 'GOLDEN_CONVERGENCE';
+  const isHarmonic = tier === 'HARMONIC_ALIGNMENT' || tier === 'SUPER_SIGNAL';
+
+  if (!isGolden && !isHarmonic) return null;
+
+  const config = isGolden ? {
+    gradient: 'linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF6B00 100%)',
+    glow: '0 0 20px rgba(255, 215, 0, 0.6), 0 0 40px rgba(255, 165, 0, 0.4)',
+    icon: '🏆',
+    label: 'GOLDEN CONVERGENCE',
+    subtext: 'ML + Sharp + Esoteric Aligned'
+  } : {
+    gradient: 'linear-gradient(135deg, #8B5CF6 0%, #00D4FF 50%, #00FF88 100%)',
+    glow: '0 0 20px rgba(139, 92, 246, 0.6), 0 0 40px rgba(0, 212, 255, 0.4)',
+    icon: '✨',
+    label: 'HARMONIC ALIGNMENT',
+    subtext: 'Math + Magic Converge'
+  };
+
+  return (
+    <div style={{
+      position: 'absolute',
+      top: '-12px',
+      left: '50%',
+      transform: 'translateX(-50%)',
+      zIndex: 20,
+      animation: 'pulse 2s infinite'
+    }}>
+      <style>
+        {`
+          @keyframes pulse {
+            0%, 100% { transform: translateX(-50%) scale(1); opacity: 1; }
+            50% { transform: translateX(-50%) scale(1.05); opacity: 0.9; }
+          }
+          @keyframes shimmer {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+          }
+        `}
+      </style>
+      <div style={{
+        background: config.gradient,
+        padding: '3px',
+        borderRadius: '20px',
+        boxShadow: config.glow
+      }}>
+        <div style={{
+          backgroundColor: '#0a0a0f',
+          borderRadius: '18px',
+          padding: '6px 16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}>
+          <span style={{ fontSize: '16px' }}>{config.icon}</span>
+          <div>
+            <div style={{
+              background: config.gradient,
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              fontWeight: 'bold',
+              fontSize: '11px',
+              letterSpacing: '0.5px'
+            }}>
+              {config.label}
+            </div>
+            <div style={{ color: '#6b7280', fontSize: '9px' }}>
+              {config.subtext}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const SmashSpots = () => {
   const [sport, setSport] = useState('NBA');
   const [picks, setPicks] = useState([]);
@@ -342,14 +421,23 @@ const SmashSpots = () => {
               const tierInfo = getTierInfo(mainPick.tier);
               const recDisplay = getRecommendationDisplay(mainPick.recommendation);
 
+              const isSpecialTier = mainPick.tier === 'GOLDEN_CONVERGENCE' || mainPick.tier === 'HARMONIC_ALIGNMENT' || mainPick.tier === 'SUPER_SIGNAL';
+
               return (
                 <div key={idx} style={{
-                  backgroundColor: '#1a1a2e',
+                  backgroundColor: isSpecialTier ? '#0f0f1a' : '#1a1a2e',
                   borderRadius: '12px',
                   padding: '20px',
+                  paddingTop: isSpecialTier ? '30px' : '20px',
                   borderLeft: `4px solid ${color}`,
-                  position: 'relative'
+                  position: 'relative',
+                  overflow: 'visible',
+                  border: isSpecialTier ? `1px solid ${tierInfo.color}30` : 'none',
+                  boxShadow: isSpecialTier ? `0 0 30px ${tierInfo.color}15` : 'none'
                 }}>
+                  {/* Floating Glow Badge for Golden/Harmonic */}
+                  <ConvergenceGlowBadge tier={mainPick.tier} />
+
                   {/* Tier Badge */}
                   <div style={{
                     position: 'absolute',
