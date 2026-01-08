@@ -14,17 +14,20 @@ const Signals = () => {
     setLoading(true);
     try {
       // Try to get live player props
-      const propsData = await api.getLiveProps('NBA').catch(() => []);
+      const propsData = await api.getLiveProps('NBA').catch(() => ({ props: [] }));
 
-      // Filter for high-conviction plays
-      const highConviction = (propsData.props || propsData || []).filter(p =>
-        (p.confidence >= 80) || (p.edge >= 10) || (p.badges && p.badges.some(b =>
-          b.label?.includes('HARMONIC') || b.type?.includes('harmonic')
-        ))
+      // Get all props with any edge - sort by confidence/edge
+      const allProps = propsData.props || propsData || [];
+
+      // Filter for props with positive edge or decent confidence
+      const goodProps = allProps.filter(p =>
+        (p.confidence >= 60) || (p.best_edge > 0) || (p.over_edge > 0) || (p.under_edge > 0)
       );
 
-      // Show real data only - no mock fallback
-      setSignals(highConviction);
+      // Sort by confidence/edge descending, take top 10
+      goodProps.sort((a, b) => (b.confidence || 0) - (a.confidence || 0));
+
+      setSignals(goodProps.slice(0, 12));
     } catch (err) {
       console.error(err);
       setSignals([]);
@@ -133,24 +136,28 @@ const Signals = () => {
                     }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
                         <div>
-                          <div style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>{signal.player}</div>
+                          <div style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>{signal.player_name || signal.player}</div>
                           <div style={{ color: '#8B5CF6', fontSize: '14px' }}>{signal.team}</div>
-                          <div style={{ color: '#6b7280', fontSize: '13px' }}>vs {signal.opponent}</div>
+                          <div style={{ color: '#6b7280', fontSize: '13px' }}>vs {signal.away_team || signal.opponent}</div>
                         </div>
                         <div style={{
-                          background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+                          background: (signal.confidence >= 80)
+                            ? 'linear-gradient(135deg, #FFD700, #FFA500)'
+                            : (signal.confidence >= 70)
+                            ? 'linear-gradient(135deg, #00FF88, #00D4FF)'
+                            : 'linear-gradient(135deg, #8B5CF6, #EC4899)',
                           color: '#000',
                           padding: '6px 12px',
                           borderRadius: '20px',
                           fontSize: '11px',
                           fontWeight: 'bold'
                         }}>
-                          ⭐ GOLDEN
+                          {(signal.confidence >= 80) ? '⭐ GOLDEN' : (signal.confidence >= 70) ? '⚡ STRONG' : '✨ EDGE'}
                         </div>
                       </div>
-                      
+
                       <div style={{
-                        backgroundColor: signal.recommendation?.includes('OVER') ? '#00FF8820' : '#FF444420',
+                        backgroundColor: signal.recommendation === 'OVER' ? '#00FF8820' : '#FF444420',
                         borderRadius: '8px',
                         padding: '12px',
                         marginBottom: '15px',
@@ -159,31 +166,31 @@ const Signals = () => {
                         gap: '12px'
                       }}>
                         <span style={{
-                          backgroundColor: signal.recommendation?.includes('OVER') ? '#00FF88' : '#FF4444',
+                          backgroundColor: signal.recommendation === 'OVER' ? '#00FF88' : '#FF4444',
                           color: '#000',
                           padding: '4px 10px',
                           borderRadius: '4px',
                           fontSize: '12px',
                           fontWeight: 'bold'
                         }}>
-                          {signal.recommendation?.includes('OVER') ? 'OVER' : 'UNDER'}
+                          {signal.recommendation || 'OVER'}
                         </span>
                         <span style={{ color: '#fff', fontSize: '22px', fontWeight: 'bold' }}>{signal.line}</span>
-                        <span style={{ color: '#9ca3af', fontSize: '14px' }}>{signal.stat}</span>
+                        <span style={{ color: '#9ca3af', fontSize: '14px' }}>{signal.stat_type || signal.stat}</span>
                       </div>
 
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
                         <div>
-                          <div style={{ color: '#6b7280' }}>LSTM</div>
-                          <div style={{ color: '#00D4FF', fontWeight: 'bold' }}>{signal.lstm_confidence || 85}%</div>
+                          <div style={{ color: '#6b7280' }}>Confidence</div>
+                          <div style={{ color: '#00D4FF', fontWeight: 'bold' }}>{signal.confidence || 65}%</div>
                         </div>
                         <div>
-                          <div style={{ color: '#6b7280' }}>Esoteric</div>
-                          <div style={{ color: '#8B5CF6', fontWeight: 'bold' }}>{signal.esoteric_score || 4}/5</div>
+                          <div style={{ color: '#6b7280' }}>Best Book</div>
+                          <div style={{ color: '#8B5CF6', fontWeight: 'bold', textTransform: 'capitalize' }}>{signal.over_book || signal.under_book || 'N/A'}</div>
                         </div>
                         <div>
                           <div style={{ color: '#6b7280' }}>Edge</div>
-                          <div style={{ color: '#00FF88', fontWeight: 'bold' }}>+{signal.edge_pct || 12}%</div>
+                          <div style={{ color: '#00FF88', fontWeight: 'bold' }}>+{signal.best_edge || signal.over_edge || 0}%</div>
                         </div>
                       </div>
                     </div>
