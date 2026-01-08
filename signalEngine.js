@@ -14,7 +14,7 @@ import api from './api';
 // These should match /grader/weights from backend
 // ============================================================================
 
-const DEFAULT_WEIGHTS = {
+export const DEFAULT_WEIGHTS = {
   // DATA SIGNALS (Highest Impact)
   sharp_money: 18,      // Professional bettor action - #1 indicator
   line_value: 15,       // Best odds vs market average
