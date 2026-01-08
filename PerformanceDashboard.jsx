@@ -297,7 +297,7 @@ const PerformanceDashboard = () => {
                 Signal Win Rates
               </h3>
 
-              {Object.keys(signalPerf.signals).length === 0 ? (
+              {!signalPerf?.signals || Object.keys(signalPerf.signals).length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
                   No signal data yet. Start tracking picks to see signal performance.
                 </div>

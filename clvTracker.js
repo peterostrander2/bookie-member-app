@@ -398,18 +398,23 @@ export const clearAllData = () => {
 export const getCLVInsights = () => {
   const stats = getStats();
   const picks = getAllPicks();
-  const closedPicks = picks.filter(p => p.clv !== null);
 
+  // Validate stats object
+  if (!stats || typeof stats !== 'object') {
+    return [];
+  }
+
+  const closedPicks = picks.filter(p => p.clv !== null);
   const insights = [];
 
   // Overall CLV health
-  if (stats.avgCLV > 0.5) {
+  if (stats.avgCLV != null && stats.avgCLV > 0.5) {
     insights.push({
       type: 'success',
       title: 'Strong CLV Performance',
       message: `Averaging +${stats.avgCLV.toFixed(2)} points CLV. You're beating the market.`
     });
-  } else if (stats.avgCLV < -0.5) {
+  } else if (stats.avgCLV != null && stats.avgCLV < -0.5) {
     insights.push({
       type: 'warning',
       title: 'Negative CLV Trend',
@@ -418,7 +423,7 @@ export const getCLVInsights = () => {
   }
 
   // Positive CLV rate
-  if (stats.positiveCLVRate >= 55) {
+  if (stats.positiveCLVRate != null && stats.positiveCLVRate >= 55) {
     insights.push({
       type: 'success',
       title: 'Consistent Line Beating',
@@ -427,7 +432,7 @@ export const getCLVInsights = () => {
   }
 
   // Tier performance
-  if (stats.byTier.GOLDEN_CONVERGENCE?.total >= 5) {
+  if (stats.byTier?.GOLDEN_CONVERGENCE?.total >= 5) {
     const tierStats = stats.byTier.GOLDEN_CONVERGENCE;
     if (tierStats.winRate >= 60) {
       insights.push({
@@ -439,23 +444,25 @@ export const getCLVInsights = () => {
   }
 
   // Sport-specific insights
-  Object.entries(stats.bySport).forEach(([sport, sportStats]) => {
-    if (sportStats.total >= 10) {
-      if (sportStats.avgCLV > 1) {
-        insights.push({
-          type: 'success',
-          title: `${sport} Edge Detected`,
-          message: `Strong +${sportStats.avgCLV.toFixed(2)} CLV in ${sport} (${sportStats.total} picks).`
-        });
-      } else if (sportStats.avgCLV < -1) {
-        insights.push({
-          type: 'warning',
-          title: `${sport} Underperformance`,
-          message: `Negative ${sportStats.avgCLV.toFixed(2)} CLV in ${sport}. Consider reducing exposure.`
-        });
+  if (stats.bySport && typeof stats.bySport === 'object') {
+    Object.entries(stats.bySport).forEach(([sport, sportStats]) => {
+      if (sportStats?.total >= 10) {
+        if (sportStats.avgCLV > 1) {
+          insights.push({
+            type: 'success',
+            title: `${sport} Edge Detected`,
+            message: `Strong +${sportStats.avgCLV.toFixed(2)} CLV in ${sport} (${sportStats.total} picks).`
+          });
+        } else if (sportStats.avgCLV < -1) {
+          insights.push({
+            type: 'warning',
+            title: `${sport} Underperformance`,
+            message: `Negative ${sportStats.avgCLV.toFixed(2)} CLV in ${sport}. Consider reducing exposure.`
+          });
+        }
       }
-    }
-  });
+    });
+  }
 
   return insights;
 };

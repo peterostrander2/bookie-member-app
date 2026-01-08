@@ -375,21 +375,21 @@ const DailySummary = () => {
                     {/* Pick info */}
                     <div style={{ flex: 1 }}>
                       <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>
-                        {pick.away_team || pick.game?.away_team} @ {pick.home_team || pick.game?.home_team}
+                        {pick.away_team || pick.game?.away_team || 'Away'} @ {pick.home_team || pick.game?.home_team || 'Home'}
                       </div>
                       <div style={{ color: '#9ca3af', fontSize: '12px' }}>
-                        {pick.side} {pick.bet_type === 'spread' ? pick.line : pick.line} ({pick.odds > 0 ? '+' : ''}{pick.odds})
+                        {pick.side || 'N/A'} {pick.line ?? '--'} ({pick.odds > 0 ? '+' : ''}{pick.odds ?? '--'})
                       </div>
                     </div>
 
                     {/* Confidence */}
                     <div style={{ textAlign: 'center' }}>
                       <div style={{
-                        color: pick.confidence >= 80 ? '#FFD700' : pick.confidence >= 70 ? '#00FF88' : '#00D4FF',
+                        color: (pick.confidence || 0) >= 80 ? '#FFD700' : (pick.confidence || 0) >= 70 ? '#00FF88' : '#00D4FF',
                         fontWeight: 'bold',
                         fontSize: '16px'
                       }}>
-                        {pick.confidence}%
+                        {pick.confidence ?? '--'}%
                       </div>
                       <div style={{ color: '#6b7280', fontSize: '10px' }}>conf</div>
                     </div>

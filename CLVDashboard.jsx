@@ -209,7 +209,7 @@ const CLVDashboard = () => {
                 Performance by Tier
               </h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {Object.entries(stats.byTier).map(([tier, tierStats]) => {
+                {stats?.byTier && Object.entries(stats.byTier).map(([tier, tierStats]) => {
                   const tierInfo = getTierInfo(tier);
                   return (
                     <div key={tier} style={{
@@ -254,7 +254,7 @@ const CLVDashboard = () => {
                 gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
                 gap: '12px'
               }}>
-                {Object.entries(stats.bySport).map(([sport, sportStats]) => (
+                {stats?.bySport && Object.entries(stats.bySport).map(([sport, sportStats]) => (
                   <div key={sport} style={{
                     padding: '15px',
                     backgroundColor: '#0a0a0f',

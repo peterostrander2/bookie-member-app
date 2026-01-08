@@ -170,7 +170,7 @@ export const recordOutcome = (predictionId, outcomeData) => {
  * Update signal performance metrics when a prediction is graded
  */
 const updateSignalPerformance = (prediction) => {
-  if (!prediction.outcome || prediction.outcome.result === 'PUSH') return;
+  if (!prediction || !prediction.outcome || prediction.outcome.result === 'PUSH') return;
 
   const isWin = prediction.outcome.result === 'WIN';
 
@@ -178,30 +178,32 @@ const updateSignalPerformance = (prediction) => {
     const stored = localStorage.getItem(STORAGE_KEYS.SIGNAL_PERFORMANCE);
     const perf = stored ? JSON.parse(stored) : {};
 
-    // Update each signal's performance
-    Object.entries(prediction.signals).forEach(([signalName, signalData]) => {
-      if (!perf[signalName]) {
-        perf[signalName] = {
-          total: 0,
-          wins: 0,
-          byScore: {}  // Track performance by score buckets
-        };
-      }
+    // Update each signal's performance (validate signals object exists)
+    if (prediction.signals && typeof prediction.signals === 'object') {
+      Object.entries(prediction.signals).forEach(([signalName, signalData]) => {
+        if (!perf[signalName]) {
+          perf[signalName] = {
+            total: 0,
+            wins: 0,
+            byScore: {}  // Track performance by score buckets
+          };
+        }
 
-      perf[signalName].total++;
-      if (isWin) perf[signalName].wins++;
+        perf[signalName].total++;
+        if (isWin) perf[signalName].wins++;
 
-      // Track by score bucket (50-60, 60-70, 70-80, 80-90, 90+)
-      const score = signalData.score || 50;
-      const bucket = Math.floor(score / 10) * 10;
-      const bucketKey = `${bucket}-${bucket + 10}`;
+        // Track by score bucket (50-60, 60-70, 70-80, 80-90, 90+)
+        const score = signalData?.score || 50;
+        const bucket = Math.floor(score / 10) * 10;
+        const bucketKey = `${bucket}-${bucket + 10}`;
 
-      if (!perf[signalName].byScore[bucketKey]) {
-        perf[signalName].byScore[bucketKey] = { total: 0, wins: 0 };
-      }
-      perf[signalName].byScore[bucketKey].total++;
-      if (isWin) perf[signalName].byScore[bucketKey].wins++;
-    });
+        if (!perf[signalName].byScore[bucketKey]) {
+          perf[signalName].byScore[bucketKey] = { total: 0, wins: 0 };
+        }
+        perf[signalName].byScore[bucketKey].total++;
+        if (isWin) perf[signalName].byScore[bucketKey].wins++;
+      });
+    }
 
     // Update tier performance
     const tier = prediction.tier;
