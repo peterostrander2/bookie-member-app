@@ -19,20 +19,24 @@ const Signals = () => {
       // Debug: log what backend returns
       console.log('Props API response:', propsData);
 
-      // Get all props with any edge - sort by confidence/edge
+      // Get all props
       const allProps = propsData.props || propsData || [];
 
       console.log('All props count:', allProps.length, 'Sample:', allProps[0]);
 
-      // Filter for props with positive edge or decent confidence
-      const goodProps = allProps.filter(p =>
-        (p.confidence >= 60) || (p.best_edge > 0) || (p.over_edge > 0) || (p.under_edge > 0)
-      );
+      // Filter out mock/placeholder data - require real edge or varied confidence
+      // Mock data typically has confidence exactly 60 and edges at 0
+      const realProps = allProps.filter(p => {
+        const hasRealEdge = (p.best_edge > 0.1) || (p.over_edge > 0.1) || (p.under_edge > 0.1);
+        const hasVariedConfidence = p.confidence && p.confidence !== 60 && p.confidence !== 65;
+        const hasRealOdds = p.over_odds || p.under_odds;
+        return hasRealEdge || hasVariedConfidence || hasRealOdds;
+      });
 
-      // Sort by confidence/edge descending, take top 10
-      goodProps.sort((a, b) => (b.confidence || 0) - (a.confidence || 0));
+      // Sort by confidence/edge descending
+      realProps.sort((a, b) => (b.confidence || 0) - (a.confidence || 0));
 
-      setSignals(goodProps.slice(0, 12));
+      setSignals(realProps.slice(0, 12));
     } catch (err) {
       console.error(err);
       setSignals([]);
@@ -444,31 +448,6 @@ const Signals = () => {
     </div>
   );
 };
-
-const MOCK_GOLDEN_SIGNALS = [
-  {
-    player: 'Jerami Grant',
-    team: 'Portland Trail Blazers',
-    opponent: 'Utah Jazz',
-    stat: 'points',
-    line: 21.5,
-    recommendation: 'STRONG OVER',
-    lstm_confidence: 87,
-    esoteric_score: 4,
-    edge_pct: 16.3
-  },
-  {
-    player: 'Collin Sexton',
-    team: 'Utah Jazz',
-    opponent: 'Portland',
-    stat: 'points',
-    line: 17.5,
-    recommendation: 'STRONG OVER',
-    lstm_confidence: 82,
-    esoteric_score: 4,
-    edge_pct: 14.9
-  }
-];
 
 const DEFAULT_SIGNALS = [
   { id: 1, name: 'Sharp Money', source: 'Splits API', weight: 18, type: 'data' },
