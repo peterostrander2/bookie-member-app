@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import api from './api';
 import { getAllPicks, getStats } from './clvTracker';
 import { analyzeCorrelation } from './correlationDetector';
+import SharpMoneyWidget from './SharpMoneyWidget';
 
 const Dashboard = () => {
   const [health, setHealth] = useState(null);
@@ -11,6 +12,7 @@ const Dashboard = () => {
   const [trackedStats, setTrackedStats] = useState(null);
   const [correlationStatus, setCorrelationStatus] = useState(null);
   const [alerts, setAlerts] = useState([]);
+  const [activeSport, setActiveSport] = useState('NBA');
 
   useEffect(() => {
     fetchData();
@@ -169,6 +171,31 @@ const Dashboard = () => {
             ))}
           </div>
         )}
+
+        {/* Sport Selector + Sharp Money Widget */}
+        <div style={{ marginBottom: '20px' }}>
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+            {['NBA', 'NFL', 'MLB', 'NHL', 'NCAAB'].map(sport => (
+              <button
+                key={sport}
+                onClick={() => setActiveSport(sport)}
+                style={{
+                  padding: '6px 14px',
+                  backgroundColor: activeSport === sport ? '#00D4FF' : '#1a1a2e',
+                  color: activeSport === sport ? '#000' : '#6b7280',
+                  border: activeSport === sport ? 'none' : '1px solid #333',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  fontWeight: activeSport === sport ? 'bold' : 'normal'
+                }}
+              >
+                {sport}
+              </button>
+            ))}
+          </div>
+          <SharpMoneyWidget sport={activeSport} />
+        </div>
 
         {/* Your Stats */}
         {trackedStats && trackedStats.total > 0 && (
