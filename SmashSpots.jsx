@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import api from './api';
 import { calculateConfidence, fetchSignalContext, getTierInfo, getRecommendationDisplay } from './signalEngine';
 import { recordPick, getAllPicks } from './clvTracker';
+import { explainPick, quickExplain } from './pickExplainer';
+import { analyzeCorrelation, checkPickCorrelation } from './correlationDetector';
+import { ConsensusMeter, ConsensusMiniBadge, ConsensusAlert, calculateConsensus } from './ConsensusMeter';
 
 const SmashSpots = () => {
   const [sport, setSport] = useState('NBA');
@@ -9,17 +12,40 @@ const SmashSpots = () => {
   const [loading, setLoading] = useState(true);
   const [signalContext, setSignalContext] = useState(null);
   const [trackedPicks, setTrackedPicks] = useState(new Set());
+  const [expandedExplanations, setExpandedExplanations] = useState(new Set());
+  const [correlationWarning, setCorrelationWarning] = useState(null);
 
   const sports = ['NBA', 'NFL', 'MLB', 'NHL', 'NCAAB'];
 
-  // Load already tracked picks on mount
+  // Load already tracked picks on mount and analyze correlation
   useEffect(() => {
     const existingPicks = getAllPicks();
     const trackedIds = new Set(existingPicks.map(p =>
       `${p.game.home_team}-${p.game.away_team}-${p.side}-${p.bet_type}`
     ));
     setTrackedPicks(trackedIds);
+
+    // Analyze correlation of tracked picks
+    if (existingPicks.length >= 2) {
+      const correlation = analyzeCorrelation(existingPicks);
+      if (correlation.hasCorrelation) {
+        setCorrelationWarning(correlation);
+      }
+    }
   }, []);
+
+  // Toggle explanation visibility
+  const toggleExplanation = (gameIdx) => {
+    setExpandedExplanations(prev => {
+      const next = new Set(prev);
+      if (next.has(gameIdx)) {
+        next.delete(gameIdx);
+      } else {
+        next.add(gameIdx);
+      }
+      return next;
+    });
+  };
 
   const handleTrackPick = (game, betType) => {
     const isSpread = betType === 'spread';
@@ -45,6 +71,13 @@ const SmashSpots = () => {
     // Update tracked set
     const pickId = `${game.home_team}-${game.away_team}-${pickData.side}-${betType}`;
     setTrackedPicks(prev => new Set([...prev, pickId]));
+
+    // Re-analyze correlation with new pick
+    const allPicks = getAllPicks();
+    if (allPicks.length >= 2) {
+      const correlation = analyzeCorrelation(allPicks);
+      setCorrelationWarning(correlation.hasCorrelation ? correlation : null);
+    }
   };
 
   const isPickTracked = (game, betType) => {
@@ -232,6 +265,61 @@ const SmashSpots = () => {
           ))}
         </div>
 
+        {/* Correlation Warning */}
+        {correlationWarning && correlationWarning.hasCorrelation && (
+          <div style={{
+            backgroundColor: correlationWarning.recommendation.color + '15',
+            border: `1px solid ${correlationWarning.recommendation.color}40`,
+            borderRadius: '12px',
+            padding: '15px 20px',
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '15px'
+          }}>
+            <div style={{
+              fontSize: '28px',
+              opacity: 0.9
+            }}>
+              {correlationWarning.recommendation.status === 'danger' ? '🚨' :
+               correlationWarning.recommendation.status === 'warning' ? '⚠️' :
+               correlationWarning.recommendation.status === 'caution' ? '💡' : '✅'}
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{
+                color: correlationWarning.recommendation.color,
+                fontWeight: 'bold',
+                marginBottom: '4px'
+              }}>
+                {correlationWarning.recommendation.message}
+              </div>
+              <div style={{ color: '#9ca3af', fontSize: '13px' }}>
+                {correlationWarning.recommendation.action}
+              </div>
+              {correlationWarning.warnings.slice(0, 2).map((w, i) => (
+                <div key={i} style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px' }}>
+                  • {w.message}
+                </div>
+              ))}
+            </div>
+            <div style={{
+              backgroundColor: '#0a0a0f',
+              padding: '10px 15px',
+              borderRadius: '8px',
+              textAlign: 'center'
+            }}>
+              <div style={{ color: '#6b7280', fontSize: '10px', marginBottom: '2px' }}>DIVERSIFICATION</div>
+              <div style={{
+                color: correlationWarning.recommendation.color,
+                fontSize: '24px',
+                fontWeight: 'bold'
+              }}>
+                {correlationWarning.diversificationScore}%
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Picks Grid */}
         {loading ? (
           <div style={{ textAlign: 'center', padding: '60px', color: '#9ca3af' }}>
@@ -347,10 +435,13 @@ const SmashSpots = () => {
                     </div>
                   </div>
 
-                  {/* Signal Breakdown */}
+                  {/* Signal Breakdown with Consensus */}
                   <div style={{ marginBottom: '12px' }}>
-                    <div style={{ color: '#6b7280', fontSize: '11px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                      Top Signals
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <div style={{ color: '#6b7280', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        Top Signals
+                      </div>
+                      <ConsensusMiniBadge signals={mainAnalysis} />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                       {(mainPick.signals || []).slice(0, 3).map((signal, sIdx) => (
@@ -382,6 +473,104 @@ const SmashSpots = () => {
                       ))}
                     </div>
                   </div>
+
+                  {/* Why This Pick - Expandable */}
+                  <button
+                    onClick={() => toggleExplanation(idx)}
+                    style={{
+                      width: '100%',
+                      padding: '8px',
+                      backgroundColor: expandedExplanations.has(idx) ? '#00D4FF15' : 'transparent',
+                      border: '1px solid #333',
+                      borderRadius: '6px',
+                      color: '#00D4FF',
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      marginBottom: '12px'
+                    }}
+                  >
+                    <span>💡</span>
+                    {expandedExplanations.has(idx) ? 'Hide Explanation' : 'Why This Pick?'}
+                    <span style={{ transform: expandedExplanations.has(idx) ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>▼</span>
+                  </button>
+
+                  {/* Expanded Explanation */}
+                  {expandedExplanations.has(idx) && (() => {
+                    const explanation = explainPick(game, mainAnalysis, sport);
+                    return (
+                      <div style={{
+                        backgroundColor: '#0a0a0f',
+                        borderRadius: '8px',
+                        padding: '15px',
+                        marginBottom: '12px',
+                        border: '1px solid #333'
+                      }}>
+                        {/* Summary */}
+                        <p style={{ color: '#fff', fontSize: '13px', lineHeight: '1.6', margin: '0 0 12px' }}>
+                          {explanation.summary}
+                        </p>
+
+                        {/* Key Factors */}
+                        <div style={{ marginBottom: '12px' }}>
+                          <div style={{ color: '#6b7280', fontSize: '10px', marginBottom: '6px', textTransform: 'uppercase' }}>
+                            Key Factors
+                          </div>
+                          {explanation.bullets.slice(0, 4).map((bullet, bIdx) => (
+                            <div key={bIdx} style={{
+                              display: 'flex',
+                              alignItems: 'flex-start',
+                              gap: '8px',
+                              marginBottom: '6px',
+                              fontSize: '12px'
+                            }}>
+                              <span style={{
+                                color: bullet.level === 'high' ? '#00FF88' : bullet.level === 'medium' ? '#00D4FF' : '#6b7280'
+                              }}>
+                                {bullet.text}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Risk Factors */}
+                        {explanation.risks.length > 0 && (
+                          <div>
+                            <div style={{ color: '#FF8844', fontSize: '10px', marginBottom: '6px', textTransform: 'uppercase' }}>
+                              Risk Factors
+                            </div>
+                            {explanation.risks.map((risk, rIdx) => (
+                              <div key={rIdx} style={{
+                                fontSize: '12px',
+                                color: risk.level === 'high' ? '#FF4444' : risk.level === 'medium' ? '#FF8844' : '#9ca3af',
+                                marginBottom: '4px'
+                              }}>
+                                ⚠️ {risk.text}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Consensus Meter */}
+                        <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #333' }}>
+                          <ConsensusMeter signals={mainAnalysis} showDetails={false} />
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Triple Alignment Alert */}
+                  {calculateConsensus(mainAnalysis).tripleAlignment && (
+                    <div style={{ marginBottom: '12px' }}>
+                      <ConsensusAlert
+                        signals={mainAnalysis}
+                        pickName={`${game.away_team} @ ${game.home_team}`}
+                      />
+                    </div>
+                  )}
 
                   {/* Both Picks Row */}
                   <div style={{

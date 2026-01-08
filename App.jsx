@@ -15,6 +15,8 @@ import SharpAlerts from './SharpAlerts';
 import BestOdds from './BestOdds';
 import InjuryVacuum from './InjuryVacuum';
 import PerformanceDashboard from './PerformanceDashboard';
+import ConsensusMeterPage from './ConsensusMeter';
+import DailySummary from './DailySummary';
 import ComplianceFooter from './ComplianceFooter';
 import api from './api';
 
@@ -130,6 +132,8 @@ const App = () => {
             <Route path="/odds" element={<BestOdds />} />
             <Route path="/injuries" element={<InjuryVacuum />} />
             <Route path="/performance" element={<PerformanceDashboard />} />
+            <Route path="/consensus" element={<ConsensusMeterPage />} />
+            <Route path="/summary" element={<DailySummary />} />
             <Route path="/splits" element={<Splits />} />
             <Route path="/clv" element={<CLVDashboard />} />
             <Route path="/backtest" element={<BacktestDashboard />} />
