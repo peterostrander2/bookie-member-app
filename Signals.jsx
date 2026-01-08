@@ -13,17 +13,21 @@ const Signals = () => {
   const fetchSignals = async () => {
     setLoading(true);
     try {
-      // Try to get live high-conviction plays
-      const data = await api.getSmashSpots('NBA');
-      const highConviction = (data.picks || data.smash_spots || []).filter(p =>
-        (p.confidence >= 80) || (p.badges && p.badges.some(b => 
+      // Try to get live player props
+      const propsData = await api.getLiveProps('NBA').catch(() => []);
+
+      // Filter for high-conviction plays
+      const highConviction = (propsData.props || propsData || []).filter(p =>
+        (p.confidence >= 80) || (p.edge >= 10) || (p.badges && p.badges.some(b =>
           b.label?.includes('HARMONIC') || b.type?.includes('harmonic')
         ))
       );
-      setSignals(highConviction.length > 0 ? highConviction : MOCK_GOLDEN_SIGNALS);
+
+      // Show real data only - no mock fallback
+      setSignals(highConviction);
     } catch (err) {
       console.error(err);
-      setSignals(MOCK_GOLDEN_SIGNALS);
+      setSignals([]);
     }
     setLoading(false);
   };
