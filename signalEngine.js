@@ -408,7 +408,15 @@ export const calculateConfidence = (game, sport, contextData = {}) => {
   }
 
   // Final confidence (no randomness!)
-  const confidence = Math.round(weightedSum / totalWeight);
+  let confidence = Math.round(weightedSum / totalWeight);
+
+  // Boost confidence for games with live odds data
+  // Having real odds from multiple books is valuable signal even without sharp data
+  if (game.spread_odds && game.books_compared > 3) {
+    confidence = Math.min(100, confidence + 8);  // Boost for multi-book comparison
+  } else if (game.spread_odds && game.spread !== undefined) {
+    confidence = Math.min(100, confidence + 5);  // Boost for having real odds
+  }
 
   // Determine tier
   let tier;
@@ -476,13 +484,27 @@ export const fetchSignalContext = async (sport) => {
       api.getGraderWeights().catch(() => null)
     ]);
 
+    // Normalize sharp data - handle different field names
+    let normalizedSharp = sharpData?.signals || sharpData || [];
+    if (Array.isArray(normalizedSharp)) {
+      normalizedSharp = normalizedSharp.map(s => ({
+        ...s,
+        // Normalize field names for signal calculator
+        money_pct: s.money_pct || s.sharp_pct || 50,
+        ticket_pct: s.ticket_pct || s.public_pct || 50,
+        home_team: s.home_team || s.game?.split(' @ ')?.[1] || s.game?.split(' vs ')?.[0] || '',
+        away_team: s.away_team || s.game?.split(' @ ')?.[0] || s.game?.split(' vs ')?.[1] || ''
+      }));
+    }
+
     return {
-      sharpData: sharpData?.signals || sharpData || null,
+      sharpData: normalizedSharp.length > 0 ? normalizedSharp : null,
       splits: splits?.games || splits || null,
       injuries: injuries?.injuries || injuries || null,
       weights: weights?.weights || DEFAULT_WEIGHTS,
-      cosmicData: null, // TODO: Add cosmic endpoint
-      predictions: null  // TODO: Add predictions per game
+      cosmicData: null,
+      predictions: null,
+      hasLiveData: normalizedSharp.length > 0 || (splits?.length > 0) || (injuries?.length > 0)
     };
   } catch (error) {
     console.error('Error fetching signal context:', error);
@@ -492,7 +514,8 @@ export const fetchSignalContext = async (sport) => {
       injuries: null,
       weights: DEFAULT_WEIGHTS,
       cosmicData: null,
-      predictions: null
+      predictions: null,
+      hasLiveData: false
     };
   }
 };
