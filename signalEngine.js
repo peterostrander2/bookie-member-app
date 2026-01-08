@@ -79,7 +79,7 @@ const signalCalculators = {
    * Compares money% vs ticket% to detect professional action
    */
   sharp_money: (game, sharpData) => {
-    if (!sharpData) return { score: 50, contribution: 'No sharp data available' };
+    if (!sharpData || !Array.isArray(sharpData)) return { score: 50, contribution: 'No sharp data available' };
 
     const matchingGame = sharpData.find(s =>
       s.home_team === game.home_team || s.away_team === game.away_team
@@ -159,7 +159,7 @@ const signalCalculators = {
    * INJURY IMPACT - Usage vacuum when stars are out
    */
   injury_impact: (game, injuries) => {
-    if (!injuries || injuries.length === 0) {
+    if (!injuries || !Array.isArray(injuries) || injuries.length === 0) {
       return { score: 50, contribution: 'No injury data' };
     }
 
@@ -221,7 +221,7 @@ const signalCalculators = {
    * PUBLIC FADE - Fade heavy public action
    */
   public_fade: (game, splits) => {
-    if (!splits) return { score: 50, contribution: 'No splits data' };
+    if (!splits || !Array.isArray(splits)) return { score: 50, contribution: 'No splits data' };
 
     const matchingSplit = splits.find(s =>
       s.home_team === game.home_team || s.away_team === game.away_team
