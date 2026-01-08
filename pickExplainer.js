@@ -84,7 +84,9 @@ const generateHeadline = (recommendation, confidence, game) => {
   };
 
   const options = headlines[recommendation] || headlines.LEAN;
-  return options[Math.floor(Math.random() * options.length)];
+  // Use deterministic selection based on confidence (no randomness)
+  const index = confidence % options.length;
+  return options[index];
 };
 
 /**

@@ -42,6 +42,10 @@ export const americanToDecimal = (americanOdds) => {
  * Convert decimal odds to implied probability
  */
 export const decimalToImpliedProbability = (decimalOdds) => {
+  if (!decimalOdds || decimalOdds <= 0) {
+    console.warn('Invalid decimal odds:', decimalOdds);
+    return 0.5; // Safe default
+  }
   return 1 / decimalOdds;
 };
 
@@ -77,8 +81,47 @@ export const breakEvenProbability = (americanOdds) => {
  * @returns {object} Kelly calculation result
  */
 export const calculateKelly = (winProbability, americanOdds, kellyFraction = 0.25) => {
+  // Validate inputs
+  if (!winProbability || winProbability <= 0 || winProbability >= 1) {
+    return {
+      fullKellyPercent: 0,
+      recommendedPercent: 0,
+      edge: 0,
+      edgePercent: 0,
+      hasEdge: false,
+      recommendation: 'INVALID',
+      error: 'Invalid win probability'
+    };
+  }
+
+  if (!americanOdds || americanOdds === 0) {
+    return {
+      fullKellyPercent: 0,
+      recommendedPercent: 0,
+      edge: 0,
+      edgePercent: 0,
+      hasEdge: false,
+      recommendation: 'INVALID',
+      error: 'Invalid odds'
+    };
+  }
+
   const decimalOdds = americanToDecimal(americanOdds);
   const netOdds = decimalOdds - 1; // b in the formula
+
+  // Guard against division by zero (even money = decimal 2.0, net = 1.0, so this is rare)
+  if (netOdds <= 0) {
+    return {
+      fullKellyPercent: 0,
+      recommendedPercent: 0,
+      edge: 0,
+      edgePercent: 0,
+      hasEdge: false,
+      recommendation: 'INVALID',
+      error: 'Invalid net odds'
+    };
+  }
+
   const p = winProbability;
   const q = 1 - p;
 

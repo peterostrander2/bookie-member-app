@@ -357,6 +357,19 @@ const signalCalculators = {
  * @returns {Object} { confidence, tier, signals, recommendation }
  */
 export const calculateConfidence = (game, sport, contextData = {}) => {
+  // Validate game object
+  if (!game || typeof game !== 'object') {
+    console.error('Invalid game object provided to calculateConfidence');
+    return {
+      confidence: 50,
+      tier: 'PARTIAL_ALIGNMENT',
+      recommendation: 'PASS',
+      signals: [],
+      topSignals: [],
+      breakdown: { dataSignals: [], mlSignals: [], esotericSignals: [] }
+    };
+  }
+
   const { sharpData, splits, injuries, predictions, cosmicData } = contextData;
 
   // Get sport-specific weight modifiers
