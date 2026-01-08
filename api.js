@@ -67,7 +67,7 @@ const api = {
 
   getLiveOdds: async (sport = 'NBA') => {
     try {
-      const res = await fetch(`${BASE_URL}/live/odds/${sport}`);
+      const res = await fetch(`${BASE_URL}/live/games/${sport}`);
       if (!res.ok) return { games: [] };
       return res.json();
     } catch {
@@ -87,7 +87,7 @@ const api = {
 
   getSharpMoney: async (sport = 'NBA') => {
     try {
-      const res = await fetch(`${BASE_URL}/sharp-money/${sport}`);
+      const res = await fetch(`${BASE_URL}/live/sharp/${sport}`);
       if (!res.ok) return { signals: [] };
       return res.json();
     } catch {
