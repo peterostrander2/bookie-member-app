@@ -232,11 +232,22 @@ const SmashSpots = () => {
             totalAnalysis,
             bestPick: spreadEdge.confidence > totalEdge.confidence ? 'spread' : 'total'
           };
-        }).filter(g => g.spreadEdge.confidence >= 55 || g.totalEdge.confidence >= 55)
+        });
+
+        // Debug: log all games and their confidence
+        console.log('All games with confidence:', gamePicks.map(g => ({
+          game: `${g.away_team} @ ${g.home_team}`,
+          spreadConf: g.spreadEdge.confidence,
+          totalConf: g.totalEdge.confidence
+        })));
+
+        // Filter and sort - use 50% threshold to show more picks
+        const filteredPicks = gamePicks
+          .filter(g => g.spreadEdge.confidence >= 50 || g.totalEdge.confidence >= 50)
           .sort((a, b) => Math.max(b.spreadEdge.confidence, b.totalEdge.confidence) -
                          Math.max(a.spreadEdge.confidence, a.totalEdge.confidence));
 
-        setPicks(gamePicks);
+        setPicks(filteredPicks);
       } else {
         setPicks([]);
       }

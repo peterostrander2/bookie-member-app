@@ -411,11 +411,17 @@ export const calculateConfidence = (game, sport, contextData = {}) => {
   let confidence = Math.round(weightedSum / totalWeight);
 
   // Boost confidence for games with live odds data
-  // Having real odds from multiple books is valuable signal even without sharp data
-  if (game.spread_odds && game.books_compared > 3) {
-    confidence = Math.min(100, confidence + 8);  // Boost for multi-book comparison
-  } else if (game.spread_odds && game.spread !== undefined) {
-    confidence = Math.min(100, confidence + 5);  // Boost for having real odds
+  // Having real odds from sportsbooks is valuable signal even without sharp data
+  const hasRealOdds = game.spread_odds || game.over_odds || game.moneyline_home;
+  const hasSpread = game.spread !== undefined && game.spread !== null;
+  const booksCount = game.books_compared || game.all_books?.length || 0;
+
+  if (hasRealOdds && booksCount > 3) {
+    confidence = Math.min(100, confidence + 10);  // Strong boost for multi-book comparison
+  } else if (hasRealOdds && hasSpread) {
+    confidence = Math.min(100, confidence + 7);   // Good boost for having real odds + spread
+  } else if (hasRealOdds || hasSpread) {
+    confidence = Math.min(100, confidence + 5);   // Base boost for any real data
   }
 
   // Determine tier

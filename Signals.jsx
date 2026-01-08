@@ -138,7 +138,9 @@ const Signals = () => {
                         <div>
                           <div style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>{signal.player_name || signal.player}</div>
                           <div style={{ color: '#8B5CF6', fontSize: '14px' }}>{signal.team}</div>
-                          <div style={{ color: '#6b7280', fontSize: '13px' }}>vs {signal.away_team || signal.opponent}</div>
+                          <div style={{ color: '#6b7280', fontSize: '13px' }}>
+                            vs {signal.opponent || (signal.team === signal.home_team ? signal.away_team : signal.home_team) || 'TBD'}
+                          </div>
                         </div>
                         <div style={{
                           background: (signal.confidence >= 80)
