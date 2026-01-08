@@ -1,135 +1,249 @@
 import React, { useState, useEffect } from 'react';
-import api from './api'
+import {
+  getDailyEsotericReading,
+  getGematriaAnalysis,
+  calculateEsotericScore,
+  GEMATRIA_CIPHERS,
+  POWER_NUMBERS,
+  getEsotericTierInfo
+} from './signalEngine';
 
 const Esoteric = () => {
-  const [todayEnergy, setTodayEnergy] = useState(null);
+  const [dailyReading, setDailyReading] = useState(null);
   const [awayTeam, setAwayTeam] = useState('');
   const [homeTeam, setHomeTeam] = useState('');
   const [gameDate, setGameDate] = useState(new Date().toISOString().split('T')[0]);
-  const [predictedTotal, setPredictedTotal] = useState('');
+  const [spread, setSpread] = useState('');
+  const [total, setTotal] = useState('');
   const [analysis, setAnalysis] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [loadingEnergy, setLoadingEnergy] = useState(true);
+  const [showCiphers, setShowCiphers] = useState(false);
 
   useEffect(() => {
-    fetchTodayEnergy();
+    // Load daily reading on mount (frontend calculation)
+    const reading = getDailyEsotericReading(new Date());
+    setDailyReading(reading);
   }, []);
 
-  const fetchTodayEnergy = async () => {
-    setLoadingEnergy(true);
-    try {
-      const data = await api.getTodayEnergy();
-      setTodayEnergy(data);
-    } catch (err) {
-      setTodayEnergy(MOCK_ENERGY);
-    }
-    setLoadingEnergy(false);
-  };
-
-  const analyzeMatchup = async () => {
+  const analyzeMatchup = () => {
     if (!awayTeam || !homeTeam) return;
-    
-    setLoading(true);
-    try {
-      const data = await api.analyzeEsoteric({
-        away_team: awayTeam,
-        home_team: homeTeam,
-        game_date: gameDate,
-        predicted_total: predictedTotal ? parseFloat(predictedTotal) : null
-      });
-      setAnalysis(data);
-    } catch (err) {
-      setAnalysis(MOCK_ANALYSIS);
-    }
-    setLoading(false);
+
+    const gameData = {
+      home_team: homeTeam,
+      away_team: awayTeam,
+      spread: spread ? parseFloat(spread) : null,
+      total: total ? parseFloat(total) : null
+    };
+
+    const date = new Date(gameDate);
+    const gematria = getGematriaAnalysis(homeTeam, awayTeam, date);
+    const esoteric = calculateEsotericScore(gameData, date);
+
+    setAnalysis({
+      gematria,
+      esoteric,
+      tierInfo: getEsotericTierInfo(esoteric.esotericTier)
+    });
   };
 
   const getMoonIcon = (phase) => {
-    if (phase?.toLowerCase().includes('full')) return '🌕';
-    if (phase?.toLowerCase().includes('new')) return '🌑';
-    if (phase?.toLowerCase().includes('waxing')) return '🌓';
-    if (phase?.toLowerCase().includes('waning')) return '🌗';
-    return '🌙';
+    const icons = {
+      new: '🌑', waxing_crescent: '🌒', first_quarter: '🌓', waxing_gibbous: '🌔',
+      full: '🌕', waning_gibbous: '🌖', last_quarter: '🌗', waning_crescent: '🌘'
+    };
+    return icons[phase] || '🌙';
   };
 
   return (
     <div style={{ padding: '20px', backgroundColor: '#0a0a0f', minHeight: '100vh' }}>
       <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-        
+
+        {/* HEADER */}
         <div style={{ marginBottom: '30px' }}>
-          <h1 style={{ color: '#FFD700', fontSize: '28px', margin: '0 0 5px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <h1 style={{
+            color: '#FFD700',
+            fontSize: '28px',
+            margin: '0 0 5px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px'
+          }}>
             <span>🔮</span> Esoteric Edge
           </h1>
           <p style={{ color: '#6b7280', margin: 0, fontSize: '14px' }}>
-            Gematria • Numerology • Sacred Geometry • Astrology
+            Gematria • Numerology • Sacred Geometry • Cosmic Alignment
           </p>
         </div>
 
-        {/* Today's Cosmic Energy */}
-        <div style={{
-          background: 'linear-gradient(135deg, #1a1a2e 0%, #2d1f4e 100%)',
-          borderRadius: '16px',
-          padding: '25px',
-          marginBottom: '25px',
-          border: '1px solid #8B5CF640'
-        }}>
-          <h2 style={{ color: '#FFD700', fontSize: '16px', margin: '0 0 20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            ✨ Today's Cosmic Energy
-          </h2>
-          
-          {loadingEnergy ? (
-            <div style={{ color: '#9ca3af', textAlign: 'center', padding: '20px' }}>Loading...</div>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px', marginBottom: '8px' }}>
-                  {getMoonIcon(todayEnergy?.moon_phase)}
+        {/* TODAY'S COSMIC READING */}
+        {dailyReading && (
+          <div style={{
+            background: 'linear-gradient(135deg, #1a1a2e 0%, #2d1f4e 100%)',
+            borderRadius: '16px',
+            padding: '25px',
+            marginBottom: '25px',
+            border: '1px solid #8B5CF640'
+          }}>
+            <h2 style={{ color: '#FFD700', fontSize: '16px', margin: '0 0 20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              ✨ Today's Cosmic Reading
+              <span style={{ color: '#6b7280', fontSize: '12px', fontWeight: 'normal' }}>
+                {dailyReading.date}
+              </span>
+            </h2>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '15px', marginBottom: '20px' }}>
+              {/* Moon Phase */}
+              <div style={{
+                backgroundColor: '#12121f',
+                borderRadius: '12px',
+                padding: '20px',
+                textAlign: 'center'
+              }}>
+                <div style={{ fontSize: '42px', marginBottom: '8px' }}>
+                  {dailyReading.moonEmoji}
                 </div>
-                <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '16px' }}>
-                  {todayEnergy?.moon_phase || 'Full Moon'}
+                <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '14px', marginBottom: '4px' }}>
+                  {dailyReading.moonPhase.replace('_', ' ')}
                 </div>
-                <div style={{ color: '#9ca3af', fontSize: '13px' }}>
-                  {todayEnergy?.moon_meaning || 'Normal Energy'}
-                </div>
-              </div>
-              
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px', color: '#00D4FF', fontWeight: 'bold', marginBottom: '8px' }}>
-                  {todayEnergy?.life_path || 7}
-                </div>
-                <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '16px' }}>
-                  Life Path Number
-                </div>
-                <div style={{ color: '#9ca3af', fontSize: '13px' }}>
-                  {todayEnergy?.life_path_meaning || 'Underdogs, unexpected'}
+                <div style={{ color: '#9ca3af', fontSize: '12px' }}>
+                  Moon Phase
                 </div>
               </div>
-              
-              <div style={{ textAlign: 'center' }}>
+
+              {/* Life Path */}
+              <div style={{
+                backgroundColor: '#12121f',
+                borderRadius: '12px',
+                padding: '20px',
+                textAlign: 'center'
+              }}>
                 <div style={{
-                  backgroundColor: '#D4A574',
-                  color: '#000',
-                  padding: '12px 20px',
-                  borderRadius: '8px',
+                  fontSize: '42px',
                   fontWeight: 'bold',
-                  fontSize: '18px',
-                  display: 'inline-block',
+                  color: [8, 11, 22, 33].includes(dailyReading.lifePath) ? '#FFD700' : '#00D4FF',
                   marginBottom: '8px'
                 }}>
-                  {todayEnergy?.zodiac || 'Capricorn'}
+                  {dailyReading.lifePath}
                 </div>
-                <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '16px' }}>
-                  Earth Sign
+                <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '14px', marginBottom: '4px' }}>
+                  Life Path
                 </div>
-                <div style={{ color: '#9ca3af', fontSize: '13px' }}>
-                  {todayEnergy?.zodiac_meaning || 'Lean UNDERS'}
+                <div style={{ color: '#9ca3af', fontSize: '12px' }}>
+                  {[8, 11, 22, 33].includes(dailyReading.lifePath) ? 'Master Number!' : 'Numerology'}
+                </div>
+              </div>
+
+              {/* Planetary Ruler */}
+              <div style={{
+                backgroundColor: '#12121f',
+                borderRadius: '12px',
+                padding: '20px',
+                textAlign: 'center'
+              }}>
+                <div style={{ fontSize: '42px', marginBottom: '8px' }}>
+                  {dailyReading.planetaryRuler === 'Sun' ? '☀️' :
+                   dailyReading.planetaryRuler === 'Moon' ? '🌙' :
+                   dailyReading.planetaryRuler === 'Mars' ? '♂️' :
+                   dailyReading.planetaryRuler === 'Mercury' ? '☿️' :
+                   dailyReading.planetaryRuler === 'Jupiter' ? '♃' :
+                   dailyReading.planetaryRuler === 'Venus' ? '♀️' : '♄'}
+                </div>
+                <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '14px', marginBottom: '4px' }}>
+                  {dailyReading.planetaryRuler}
+                </div>
+                <div style={{ color: '#9ca3af', fontSize: '12px' }}>
+                  {dailyReading.dayOfWeek}
+                </div>
+              </div>
+
+              {/* Tesla Number */}
+              <div style={{
+                backgroundColor: dailyReading.teslaAlignment === 'STRONG' ? '#8B5CF620' : '#12121f',
+                borderRadius: '12px',
+                padding: '20px',
+                textAlign: 'center',
+                border: dailyReading.teslaAlignment === 'STRONG' ? '1px solid #8B5CF6' : 'none'
+              }}>
+                <div style={{
+                  fontSize: '42px',
+                  fontWeight: 'bold',
+                  color: dailyReading.teslaAlignment === 'STRONG' ? '#8B5CF6' : '#fff',
+                  marginBottom: '8px'
+                }}>
+                  {dailyReading.teslaNumber}
+                </div>
+                <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '14px', marginBottom: '4px' }}>
+                  Tesla 3-6-9
+                </div>
+                <div style={{ color: dailyReading.teslaAlignment === 'STRONG' ? '#8B5CF6' : '#9ca3af', fontSize: '12px' }}>
+                  {dailyReading.teslaAlignment === 'STRONG' ? '⚡ Active!' : 'Moderate'}
                 </div>
               </div>
             </div>
-          )}
-        </div>
 
-        {/* Analyze Matchup Form */}
+            {/* Daily Insights */}
+            <div style={{
+              backgroundColor: '#12121f',
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '15px'
+            }}>
+              <h4 style={{ color: '#00D4FF', fontSize: '14px', margin: '0 0 12px' }}>📊 Today's Insights</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {dailyReading.insights.map((insight, i) => (
+                  <div key={i} style={{ color: '#d1d5db', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ color: '#8B5CF6' }}>•</span> {insight}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Natural Bias & Recommendation */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+              <div style={{
+                backgroundColor: '#00D4FF15',
+                borderRadius: '10px',
+                padding: '15px',
+                border: '1px solid #00D4FF30'
+              }}>
+                <div style={{ color: '#00D4FF', fontSize: '12px', marginBottom: '4px' }}>Natural Bias Today</div>
+                <div style={{ color: '#fff', fontSize: '16px', fontWeight: 'bold', textTransform: 'capitalize' }}>
+                  {dailyReading.naturalBias}
+                </div>
+              </div>
+              <div style={{
+                backgroundColor: '#FFD70015',
+                borderRadius: '10px',
+                padding: '15px',
+                border: '1px solid #FFD70030'
+              }}>
+                <div style={{ color: '#FFD700', fontSize: '12px', marginBottom: '4px' }}>Recommendation</div>
+                <div style={{ color: '#fff', fontSize: '14px' }}>
+                  {dailyReading.recommendation}
+                </div>
+              </div>
+            </div>
+
+            {/* Lucky Numbers */}
+            <div style={{ marginTop: '15px', textAlign: 'center' }}>
+              <span style={{ color: '#6b7280', fontSize: '12px' }}>Lucky Numbers: </span>
+              {dailyReading.luckyNumbers.map((num, i) => (
+                <span key={i} style={{
+                  backgroundColor: '#8B5CF620',
+                  color: '#8B5CF6',
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  marginLeft: '8px'
+                }}>
+                  {num}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ANALYZE MATCHUP FORM */}
         <div style={{
           backgroundColor: '#1a1a2e',
           borderRadius: '16px',
@@ -138,17 +252,17 @@ const Esoteric = () => {
           border: '1px solid #333'
         }}>
           <h2 style={{ color: '#00D4FF', fontSize: '16px', margin: '0 0 20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            ⚔️ Analyze Matchup
+            ⚔️ Analyze Matchup Gematria
           </h2>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '15px', marginBottom: '20px' }}>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '15px', marginBottom: '20px' }}>
             <div>
               <label style={{ color: '#9ca3af', fontSize: '12px', display: 'block', marginBottom: '6px' }}>Away Team</label>
               <input
                 type="text"
                 value={awayTeam}
                 onChange={(e) => setAwayTeam(e.target.value)}
-                placeholder="e.g., Baltimore Ravens"
+                placeholder="e.g., Lakers"
                 style={{
                   width: '100%',
                   padding: '12px',
@@ -161,14 +275,14 @@ const Esoteric = () => {
                 }}
               />
             </div>
-            
+
             <div>
               <label style={{ color: '#9ca3af', fontSize: '12px', display: 'block', marginBottom: '6px' }}>Home Team</label>
               <input
                 type="text"
                 value={homeTeam}
                 onChange={(e) => setHomeTeam(e.target.value)}
-                placeholder="e.g., Pittsburgh Steelers"
+                placeholder="e.g., Celtics"
                 style={{
                   width: '100%',
                   padding: '12px',
@@ -181,7 +295,7 @@ const Esoteric = () => {
                 }}
               />
             </div>
-            
+
             <div>
               <label style={{ color: '#9ca3af', fontSize: '12px', display: 'block', marginBottom: '6px' }}>Game Date</label>
               <input
@@ -200,14 +314,34 @@ const Esoteric = () => {
                 }}
               />
             </div>
-            
+
             <div>
-              <label style={{ color: '#9ca3af', fontSize: '12px', display: 'block', marginBottom: '6px' }}>Predicted Total (optional)</label>
+              <label style={{ color: '#9ca3af', fontSize: '12px', display: 'block', marginBottom: '6px' }}>Spread (opt)</label>
               <input
                 type="number"
-                value={predictedTotal}
-                onChange={(e) => setPredictedTotal(e.target.value)}
-                placeholder="e.g., 44.5"
+                value={spread}
+                onChange={(e) => setSpread(e.target.value)}
+                placeholder="-3.5"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  backgroundColor: '#12121f',
+                  border: '1px solid #333',
+                  borderRadius: '8px',
+                  color: '#fff',
+                  fontSize: '14px',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{ color: '#9ca3af', fontSize: '12px', display: 'block', marginBottom: '6px' }}>Total (opt)</label>
+              <input
+                type="number"
+                value={total}
+                onChange={(e) => setTotal(e.target.value)}
+                placeholder="224.5"
                 style={{
                   width: '100%',
                   padding: '12px',
@@ -221,17 +355,17 @@ const Esoteric = () => {
               />
             </div>
           </div>
-          
+
           <button
             onClick={analyzeMatchup}
-            disabled={loading || !awayTeam || !homeTeam}
+            disabled={!awayTeam || !homeTeam}
             style={{
               padding: '14px 28px',
-              backgroundColor: loading ? '#333' : '#00D4FF',
-              color: loading ? '#666' : '#000',
+              backgroundColor: (!awayTeam || !homeTeam) ? '#333' : '#8B5CF6',
+              color: (!awayTeam || !homeTeam) ? '#666' : '#fff',
               border: 'none',
               borderRadius: '8px',
-              cursor: loading ? 'not-allowed' : 'pointer',
+              cursor: (!awayTeam || !homeTeam) ? 'not-allowed' : 'pointer',
               fontWeight: 'bold',
               fontSize: '14px',
               display: 'flex',
@@ -239,182 +373,315 @@ const Esoteric = () => {
               gap: '8px'
             }}
           >
-            🔮 {loading ? 'Analyzing...' : 'Analyze Esoteric Edge'}
+            🔮 Calculate Esoteric Edge
           </button>
         </div>
 
-        {/* Analysis Results */}
+        {/* ANALYSIS RESULTS */}
         {analysis && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            
-            {/* Gematria */}
+
+            {/* Esoteric Score Summary */}
+            <div style={{
+              background: `linear-gradient(135deg, ${analysis.tierInfo.color}20 0%, #1a1a2e 100%)`,
+              borderRadius: '16px',
+              padding: '25px',
+              border: `1px solid ${analysis.tierInfo.color}40`,
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: '64px', marginBottom: '10px' }}>
+                {analysis.esoteric.esotericEmoji}
+              </div>
+              <div style={{
+                fontSize: '48px',
+                fontWeight: 'bold',
+                color: analysis.tierInfo.color,
+                marginBottom: '5px'
+              }}>
+                {analysis.esoteric.esotericScore}%
+              </div>
+              <div style={{
+                color: analysis.tierInfo.color,
+                fontSize: '18px',
+                fontWeight: 'bold',
+                marginBottom: '10px'
+              }}>
+                {analysis.tierInfo.label}
+              </div>
+              <div style={{ color: '#9ca3af', fontSize: '14px' }}>
+                {analysis.tierInfo.description}
+              </div>
+
+              {analysis.gematria.favored && (
+                <div style={{
+                  marginTop: '20px',
+                  backgroundColor: '#00FF8820',
+                  padding: '12px 20px',
+                  borderRadius: '10px',
+                  display: 'inline-block'
+                }}>
+                  <span style={{ color: '#00FF88', fontWeight: 'bold' }}>
+                    Stars Favor: {analysis.gematria.favored === 'home' ? homeTeam : awayTeam}
+                  </span>
+                  <div style={{ color: '#9ca3af', fontSize: '12px', marginTop: '4px' }}>
+                    {analysis.gematria.favorReason}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Gematria Breakdown */}
             <div style={{
               backgroundColor: '#1a1a2e',
               borderRadius: '16px',
               padding: '25px',
               border: '1px solid #333'
             }}>
-              <h3 style={{ color: '#00D4FF', fontSize: '18px', margin: '0 0 20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                🔢 Gematria Analysis
-              </h3>
-              
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h3 style={{ color: '#00D4FF', fontSize: '18px', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  🔢 Gematria Analysis
+                </h3>
+                <button
+                  onClick={() => setShowCiphers(!showCiphers)}
+                  style={{
+                    backgroundColor: '#12121f',
+                    border: '1px solid #333',
+                    color: '#9ca3af',
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '12px'
+                  }}
+                >
+                  {showCiphers ? 'Hide All Ciphers' : 'Show All Ciphers'}
+                </button>
+              </div>
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px', marginBottom: '20px' }}>
+                {/* Away Team */}
                 <div>
                   <div style={{ color: '#FF6B6B', fontSize: '14px', marginBottom: '10px', fontWeight: 'bold' }}>
-                    {analysis.gematria?.away_team || awayTeam.toLowerCase()}
+                    {awayTeam} (Away)
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: showCiphers ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)', gap: '10px' }}>
                     <div style={{ backgroundColor: '#12121f', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
-                      <div style={{ color: '#fff', fontSize: '24px', fontWeight: 'bold' }}>{analysis.gematria?.away_simple || 79}</div>
-                      <div style={{ color: '#6b7280', fontSize: '11px' }}>Simple</div>
+                      <div style={{ color: '#fff', fontSize: '24px', fontWeight: 'bold' }}>{analysis.gematria.awayValues.ordinal}</div>
+                      <div style={{ color: '#6b7280', fontSize: '11px' }}>Ordinal</div>
                     </div>
                     <div style={{ backgroundColor: '#12121f', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
-                      <div style={{ color: '#fff', fontSize: '24px', fontWeight: 'bold' }}>{analysis.gematria?.away_pythagorean || 7}</div>
-                      <div style={{ color: '#6b7280', fontSize: '11px' }}>Pythagorean</div>
+                      <div style={{ color: '#fff', fontSize: '24px', fontWeight: 'bold' }}>{analysis.gematria.awayValues.reduction}</div>
+                      <div style={{ color: '#6b7280', fontSize: '11px' }}>Reduction</div>
                     </div>
-                    <div style={{ backgroundColor: '#12121f', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
-                      <div style={{ color: '#fff', fontSize: '24px', fontWeight: 'bold' }}>{analysis.gematria?.away_reduced || 7}</div>
-                      <div style={{ color: '#6b7280', fontSize: '11px' }}>Reduced</div>
-                    </div>
+                    {showCiphers && (
+                      <>
+                        <div style={{ backgroundColor: '#12121f', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
+                          <div style={{ color: '#fff', fontSize: '24px', fontWeight: 'bold' }}>{analysis.gematria.awayValues.reverseOrdinal}</div>
+                          <div style={{ color: '#6b7280', fontSize: '11px' }}>Reverse</div>
+                        </div>
+                        <div style={{ backgroundColor: '#12121f', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
+                          <div style={{ color: '#fff', fontSize: '24px', fontWeight: 'bold' }}>{analysis.gematria.awayValues.jewish}</div>
+                          <div style={{ color: '#6b7280', fontSize: '11px' }}>Jewish</div>
+                        </div>
+                        <div style={{ backgroundColor: '#12121f', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
+                          <div style={{ color: '#fff', fontSize: '24px', fontWeight: 'bold' }}>{analysis.gematria.awayValues.sumerian}</div>
+                          <div style={{ color: '#6b7280', fontSize: '11px' }}>Sumerian</div>
+                        </div>
+                        <div style={{ backgroundColor: '#12121f', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
+                          <div style={{ color: '#fff', fontSize: '24px', fontWeight: 'bold' }}>{analysis.gematria.awayValues.reverseReduction}</div>
+                          <div style={{ color: '#6b7280', fontSize: '11px' }}>Rev. Red.</div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
-                
+
+                {/* Home Team */}
                 <div>
                   <div style={{ color: '#4ECDC4', fontSize: '14px', marginBottom: '10px', fontWeight: 'bold' }}>
-                    {analysis.gematria?.home_team || homeTeam.toLowerCase()}
+                    {homeTeam} (Home)
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: showCiphers ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)', gap: '10px' }}>
                     <div style={{ backgroundColor: '#12121f', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
-                      <div style={{ color: '#fff', fontSize: '24px', fontWeight: 'bold' }}>{analysis.gematria?.home_simple || 103}</div>
-                      <div style={{ color: '#6b7280', fontSize: '11px' }}>Simple</div>
+                      <div style={{ color: '#fff', fontSize: '24px', fontWeight: 'bold' }}>{analysis.gematria.homeValues.ordinal}</div>
+                      <div style={{ color: '#6b7280', fontSize: '11px' }}>Ordinal</div>
                     </div>
                     <div style={{ backgroundColor: '#12121f', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
-                      <div style={{ color: '#fff', fontSize: '24px', fontWeight: 'bold' }}>{analysis.gematria?.home_pythagorean || 4}</div>
-                      <div style={{ color: '#6b7280', fontSize: '11px' }}>Pythagorean</div>
+                      <div style={{ color: '#fff', fontSize: '24px', fontWeight: 'bold' }}>{analysis.gematria.homeValues.reduction}</div>
+                      <div style={{ color: '#6b7280', fontSize: '11px' }}>Reduction</div>
                     </div>
-                    <div style={{ backgroundColor: '#12121f', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
-                      <div style={{ color: '#fff', fontSize: '24px', fontWeight: 'bold' }}>{analysis.gematria?.home_reduced || 4}</div>
-                      <div style={{ color: '#6b7280', fontSize: '11px' }}>Reduced</div>
-                    </div>
+                    {showCiphers && (
+                      <>
+                        <div style={{ backgroundColor: '#12121f', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
+                          <div style={{ color: '#fff', fontSize: '24px', fontWeight: 'bold' }}>{analysis.gematria.homeValues.reverseOrdinal}</div>
+                          <div style={{ color: '#6b7280', fontSize: '11px' }}>Reverse</div>
+                        </div>
+                        <div style={{ backgroundColor: '#12121f', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
+                          <div style={{ color: '#fff', fontSize: '24px', fontWeight: 'bold' }}>{analysis.gematria.homeValues.jewish}</div>
+                          <div style={{ color: '#6b7280', fontSize: '11px' }}>Jewish</div>
+                        </div>
+                        <div style={{ backgroundColor: '#12121f', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
+                          <div style={{ color: '#fff', fontSize: '24px', fontWeight: 'bold' }}>{analysis.gematria.homeValues.sumerian}</div>
+                          <div style={{ color: '#6b7280', fontSize: '11px' }}>Sumerian</div>
+                        </div>
+                        <div style={{ backgroundColor: '#12121f', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
+                          <div style={{ color: '#fff', fontSize: '24px', fontWeight: 'bold' }}>{analysis.gematria.homeValues.reverseReduction}</div>
+                          <div style={{ color: '#6b7280', fontSize: '11px' }}>Rev. Red.</div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
-              
+
+              {/* Alignments Found */}
+              {analysis.gematria.alignments.length > 0 && (
+                <div style={{ marginTop: '20px' }}>
+                  <h4 style={{ color: '#FFD700', fontSize: '14px', margin: '0 0 12px' }}>⚡ Alignments Found</h4>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                    {analysis.gematria.alignments.slice(0, 6).map((alignment, i) => (
+                      <div key={i} style={{
+                        backgroundColor: alignment.type === 'TESLA_ALIGNMENT' ? '#8B5CF620' :
+                                        alignment.type === 'MASTER_NUMBER' ? '#FFD70020' :
+                                        alignment.type === 'FIBONACCI' ? '#00FF8820' : '#00D4FF20',
+                        border: `1px solid ${
+                          alignment.type === 'TESLA_ALIGNMENT' ? '#8B5CF6' :
+                          alignment.type === 'MASTER_NUMBER' ? '#FFD700' :
+                          alignment.type === 'FIBONACCI' ? '#00FF88' : '#00D4FF'
+                        }40`,
+                        padding: '10px 15px',
+                        borderRadius: '8px',
+                        fontSize: '13px'
+                      }}>
+                        <div style={{ color: '#fff', fontWeight: 'bold', marginBottom: '2px' }}>
+                          {alignment.type.replace('_', ' ')}
+                        </div>
+                        <div style={{ color: '#9ca3af', fontSize: '12px' }}>
+                          {alignment.message}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Component Scores */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '15px' }}>
+              {/* Gematria */}
               <div style={{
-                backgroundColor: '#00D4FF20',
-                borderRadius: '8px',
-                padding: '12px 20px',
+                backgroundColor: '#1a1a2e',
+                borderRadius: '12px',
+                padding: '20px',
+                border: '1px solid #333',
                 textAlign: 'center'
               }}>
-                <span style={{ color: '#9ca3af' }}>Gematria Difference: </span>
-                <span style={{ color: '#00D4FF', fontWeight: 'bold' }}>
-                  {analysis.gematria?.difference > 0 ? '+' : ''}{analysis.gematria?.difference || '+24'}
-                </span>
-                <span style={{ color: '#9ca3af' }}> (favors {analysis.gematria?.favors || 'Home'})</span>
+                <div style={{ fontSize: '32px', marginBottom: '8px' }}>🔢</div>
+                <div style={{ color: '#00D4FF', fontSize: '24px', fontWeight: 'bold' }}>
+                  {analysis.esoteric.components.gematria.score}
+                </div>
+                <div style={{ color: '#6b7280', fontSize: '12px' }}>Gematria</div>
+                <div style={{ color: '#9ca3af', fontSize: '10px', marginTop: '4px' }}>
+                  Weight: {analysis.esoteric.components.gematria.weight}%
+                </div>
+              </div>
+
+              {/* Moon */}
+              <div style={{
+                backgroundColor: '#1a1a2e',
+                borderRadius: '12px',
+                padding: '20px',
+                border: '1px solid #333',
+                textAlign: 'center'
+              }}>
+                <div style={{ fontSize: '32px', marginBottom: '8px' }}>
+                  {getMoonIcon(analysis.esoteric.components.moon.phase)}
+                </div>
+                <div style={{ color: '#FFD700', fontSize: '24px', fontWeight: 'bold' }}>
+                  {analysis.esoteric.components.moon.score}
+                </div>
+                <div style={{ color: '#6b7280', fontSize: '12px' }}>Moon</div>
+                <div style={{ color: '#9ca3af', fontSize: '10px', marginTop: '4px' }}>
+                  {analysis.esoteric.components.moon.phase.replace('_', ' ')}
+                </div>
+              </div>
+
+              {/* Numerology */}
+              <div style={{
+                backgroundColor: '#1a1a2e',
+                borderRadius: '12px',
+                padding: '20px',
+                border: '1px solid #333',
+                textAlign: 'center'
+              }}>
+                <div style={{ fontSize: '32px', marginBottom: '8px' }}>🔮</div>
+                <div style={{ color: '#8B5CF6', fontSize: '24px', fontWeight: 'bold' }}>
+                  {analysis.esoteric.components.numerology.score}
+                </div>
+                <div style={{ color: '#6b7280', fontSize: '12px' }}>Numerology</div>
+                <div style={{ color: '#9ca3af', fontSize: '10px', marginTop: '4px' }}>
+                  Life Path {analysis.esoteric.components.numerology.lifePath}
+                </div>
+              </div>
+
+              {/* Geometry */}
+              <div style={{
+                backgroundColor: '#1a1a2e',
+                borderRadius: '12px',
+                padding: '20px',
+                border: '1px solid #333',
+                textAlign: 'center'
+              }}>
+                <div style={{ fontSize: '32px', marginBottom: '8px' }}>📐</div>
+                <div style={{ color: '#EC4899', fontSize: '24px', fontWeight: 'bold' }}>
+                  {analysis.esoteric.components.geometry.score}
+                </div>
+                <div style={{ color: '#6b7280', fontSize: '12px' }}>Geometry</div>
+                <div style={{ color: '#9ca3af', fontSize: '10px', marginTop: '4px' }}>
+                  Line: {analysis.esoteric.components.geometry.line || 'N/A'}
+                </div>
+              </div>
+
+              {/* Zodiac */}
+              <div style={{
+                backgroundColor: '#1a1a2e',
+                borderRadius: '12px',
+                padding: '20px',
+                border: '1px solid #333',
+                textAlign: 'center'
+              }}>
+                <div style={{ fontSize: '32px', marginBottom: '8px' }}>♈</div>
+                <div style={{ color: '#F59E0B', fontSize: '24px', fontWeight: 'bold' }}>
+                  {analysis.esoteric.components.zodiac.score}
+                </div>
+                <div style={{ color: '#6b7280', fontSize: '12px' }}>Zodiac</div>
+                <div style={{ color: '#9ca3af', fontSize: '10px', marginTop: '4px' }}>
+                  {analysis.esoteric.components.zodiac.ruler}
+                </div>
               </div>
             </div>
 
-            {/* Moon Phase & Numerology */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            {/* Top Insights */}
+            {analysis.esoteric.topInsights.length > 0 && (
               <div style={{
                 backgroundColor: '#1a1a2e',
-                borderRadius: '16px',
-                padding: '25px',
+                borderRadius: '12px',
+                padding: '20px',
                 border: '1px solid #333'
               }}>
-                <h3 style={{ color: '#FFD700', fontSize: '18px', margin: '0 0 15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  🌙 Moon Phase
-                </h3>
-                <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#fff', marginBottom: '5px' }}>
-                  {analysis.moon?.phase || 'Full Moon'}
-                </div>
-                <div style={{ color: '#9ca3af', fontSize: '14px' }}>
-                  Position: {analysis.moon?.position || '57.1%'}
-                </div>
-              </div>
-              
-              <div style={{
-                backgroundColor: '#1a1a2e',
-                borderRadius: '16px',
-                padding: '25px',
-                border: '1px solid #333'
-              }}>
-                <h3 style={{ color: '#8B5CF6', fontSize: '18px', margin: '0 0 15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  🔢 Numerology
-                </h3>
-                <div style={{ fontSize: '48px', fontWeight: 'bold', color: '#8B5CF6', marginBottom: '5px' }}>
-                  {analysis.numerology?.life_path || 7}
-                </div>
-                <div style={{ color: '#fff', fontWeight: 'bold', marginBottom: '5px' }}>
-                  {analysis.numerology?.meaning || 'Spirituality'}
-                </div>
-                <div style={{ color: '#9ca3af', fontSize: '14px', marginBottom: '10px' }}>
-                  {analysis.numerology?.implication || 'Underdogs, unexpected'}
-                </div>
-                {analysis.numerology?.upset_energy && (
-                  <div style={{
-                    backgroundColor: '#8B5CF620',
-                    color: '#8B5CF6',
-                    padding: '8px 12px',
-                    borderRadius: '6px',
-                    fontSize: '13px',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px'
-                  }}>
-                    🔄 Upset Energy Present
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Sacred Geometry */}
-            <div style={{
-              backgroundColor: '#1a1a2e',
-              borderRadius: '16px',
-              padding: '25px',
-              border: '1px solid #333'
-            }}>
-              <h3 style={{ color: '#8B5CF6', fontSize: '18px', margin: '0 0 20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                📐 Sacred Geometry (Tesla 3-6-9)
-              </h3>
-              
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px' }}>
-                <div style={{ backgroundColor: '#12121f', padding: '20px', borderRadius: '12px', textAlign: 'center' }}>
-                  <div style={{ color: '#fff', fontSize: '32px', fontWeight: 'bold', marginBottom: '5px' }}>
-                    {analysis.sacred_geometry?.predicted_total || 45}
-                  </div>
-                  <div style={{ color: '#6b7280', fontSize: '12px' }}>Predicted Total</div>
-                </div>
-                
-                <div style={{
-                  backgroundColor: analysis.sacred_geometry?.is_tesla_369 ? '#8B5CF630' : '#12121f',
-                  padding: '20px',
-                  borderRadius: '12px',
-                  textAlign: 'center',
-                  border: analysis.sacred_geometry?.is_tesla_369 ? '1px solid #8B5CF6' : 'none'
-                }}>
-                  <div style={{ color: analysis.sacred_geometry?.is_tesla_369 ? '#8B5CF6' : '#fff', fontSize: '32px', fontWeight: 'bold', marginBottom: '5px' }}>
-                    {analysis.sacred_geometry?.digital_root || 9}
-                  </div>
-                  <div style={{ color: '#6b7280', fontSize: '12px' }}>Digital Root</div>
-                  {analysis.sacred_geometry?.is_tesla_369 && (
-                    <div style={{ color: '#8B5CF6', fontSize: '11px', marginTop: '5px' }}>Tesla 3-6-9! ⚡</div>
-                  )}
-                </div>
-                
-                <div style={{ backgroundColor: '#12121f', padding: '20px', borderRadius: '12px', textAlign: 'center' }}>
-                  <div style={{ color: '#fff', fontSize: '32px', fontWeight: 'bold', marginBottom: '5px' }}>
-                    {analysis.sacred_geometry?.nearest_fibonacci || 55}
-                  </div>
-                  <div style={{ color: '#6b7280', fontSize: '12px' }}>Nearest Fibonacci</div>
+                <h4 style={{ color: '#FFD700', fontSize: '14px', margin: '0 0 12px' }}>💡 Key Insights</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {analysis.esoteric.topInsights.map((insight, i) => (
+                    <div key={i} style={{ color: '#d1d5db', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ color: '#8B5CF6' }}>✦</span> {insight}
+                    </div>
+                  ))}
                 </div>
               </div>
-            </div>
+            )}
           </div>
         )}
 
-        {/* About Section */}
+        {/* ABOUT SECTION */}
         <div style={{
           backgroundColor: '#1a1a2e',
           borderRadius: '16px',
@@ -425,58 +692,31 @@ const Esoteric = () => {
           <h3 style={{ color: '#FFD700', fontSize: '16px', margin: '0 0 15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             📚 About Esoteric Edge
           </h3>
-          
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', color: '#9ca3af', fontSize: '14px' }}>
-            <div><span style={{ color: '#00D4FF', fontWeight: 'bold' }}>Gematria</span> - Assigns numerical values to team names. Higher values = more energy.</div>
-            <div><span style={{ color: '#8B5CF6', fontWeight: 'bold' }}>Numerology</span> - Life path numbers reveal the energy of game dates. Power days (8, 11, 22) favor favorites.</div>
-            <div><span style={{ color: '#FFD700', fontWeight: 'bold' }}>Moon Phases</span> - Full moons bring chaos and upsets. New moons favor underdogs.</div>
-            <div><span style={{ color: '#FF6B6B', fontWeight: 'bold' }}>Sacred Geometry</span> - Tesla's 3-6-9 pattern and Fibonacci alignment reveal hidden patterns.</div>
-            <div><span style={{ color: '#4ECDC4', fontWeight: 'bold' }}>Zodiac Elements</span> - Fire = high scoring, Earth = defense, Air = upsets, Water = home teams.</div>
+            <div><span style={{ color: '#00D4FF', fontWeight: 'bold' }}>Gematria (35%)</span> - 6 cipher methods: Ordinal, Reverse, Reduction, Jewish, Sumerian. Finds Tesla 3-6-9, Master Numbers, Fibonacci alignments.</div>
+            <div><span style={{ color: '#FFD700', fontWeight: 'bold' }}>Moon Phase (20%)</span> - Full moons bring chaos. New moons favor underdogs. Waxing = momentum.</div>
+            <div><span style={{ color: '#8B5CF6', fontWeight: 'bold' }}>Numerology (20%)</span> - Daily life path number. Master numbers (11, 22, 33) = powerful days.</div>
+            <div><span style={{ color: '#EC4899', fontWeight: 'bold' }}>Sacred Geometry (15%)</span> - Fibonacci lines, Tesla divisible spreads/totals.</div>
+            <div><span style={{ color: '#F59E0B', fontWeight: 'bold' }}>Zodiac (10%)</span> - Planetary rulers influence daily energy. Mars = aggression, Saturn = discipline.</div>
+          </div>
+
+          <div style={{
+            marginTop: '20px',
+            padding: '15px',
+            backgroundColor: '#8B5CF620',
+            borderRadius: '10px',
+            border: '1px solid #8B5CF640'
+          }}>
+            <div style={{ color: '#D8B4FE', fontSize: '13px' }}>
+              <strong>🌟 Cosmic Confluence:</strong> When Esoteric Edge aligns with our research-backed signals (sharp money, RLM, pace),
+              you get maximum conviction. Use esoteric as <em>additional confluence</em>, not the sole factor.
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
-};
-
-const MOCK_ENERGY = {
-  moon_phase: 'Full Moon',
-  moon_meaning: 'Normal Energy',
-  life_path: 7,
-  life_path_meaning: 'Underdogs, unexpected',
-  zodiac: 'Capricorn',
-  zodiac_meaning: 'Lean UNDERS'
-};
-
-const MOCK_ANALYSIS = {
-  gematria: {
-    away_team: 'ravens',
-    home_team: 'steelers',
-    away_simple: 79,
-    away_pythagorean: 7,
-    away_reduced: 7,
-    home_simple: 103,
-    home_pythagorean: 4,
-    home_reduced: 4,
-    difference: 24,
-    favors: 'Home'
-  },
-  moon: {
-    phase: 'Full Moon',
-    position: '57.1%'
-  },
-  numerology: {
-    life_path: 7,
-    meaning: 'Spirituality',
-    implication: 'Underdogs, unexpected',
-    upset_energy: true
-  },
-  sacred_geometry: {
-    predicted_total: 45,
-    digital_root: 9,
-    is_tesla_369: true,
-    nearest_fibonacci: 55
-  }
 };
 
 export default Esoteric;
