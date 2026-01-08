@@ -1,11 +1,12 @@
 /**
- * SIGNAL ENGINE v9.0 - RESEARCH-OPTIMIZED
+ * SIGNAL ENGINE v10.0 - RESEARCH-OPTIMIZED + ESOTERIC EDGE
  *
  * The brain of Bookie-o-em. Now powered by:
  * - Academic research (arXiv, PubMed, PMC)
  * - Professional bettor strategies (VSiN, Action Network methodology)
  * - ML model insights (XGBoost feature importance)
  * - 20+ years of betting market data
+ * - ESOTERIC EDGE: Gematria, numerology, cosmic alignment (showcased separately)
  *
  * KEY RESEARCH FINDINGS IMPLEMENTED:
  * - Sharp money RLM: 56% win rate (OddsShopper)
@@ -13,7 +14,12 @@
  * - Home B2B + 65% public: 58% fade rate (Sports Insights)
  * - East Coast traveling West underdogs: 55.9% ATS (Sports Insights)
  * - Wind >10mph NFL: 54.3% unders (Covers)
- * - Moon phase: NO significant effect (PubMed - multiple studies)
+ *
+ * DUAL-SCORE SYSTEM:
+ * - Main Confidence: Research-backed signals (sharp money, pace, B2B, etc.)
+ * - Esoteric Edge: Gematria, moon phase, numerology (showcased for confluence)
+ *
+ * When both systems align = COSMIC CONFLUENCE 🌟
  *
  * NO RANDOMNESS. Every score is deterministic and traceable.
  */
@@ -127,13 +133,553 @@ const getLifePath = () => {
 };
 
 /**
- * Calculate gematria value of a name
+ * Calculate gematria value of a name (English Ordinal - simple A=1)
  */
 const calcGematria = (name) => {
   return (name || '').toUpperCase().split('').reduce((sum, char) => {
     const code = char.charCodeAt(0);
     return sum + (code >= 65 && code <= 90 ? code - 64 : 0);
   }, 0);
+};
+
+// ============================================================================
+// ESOTERIC EDGE MODULE - Separate showcase system
+// For engagement & confluence with main model
+// ============================================================================
+
+/**
+ * GEMATRIA CIPHERS - Multiple calculation methods
+ * These are real ciphers used in gematria communities
+ */
+export const GEMATRIA_CIPHERS = {
+  // English Ordinal: A=1, B=2, ... Z=26
+  ordinal: (text) => {
+    return (text || '').toUpperCase().split('').reduce((sum, char) => {
+      const code = char.charCodeAt(0);
+      return sum + (code >= 65 && code <= 90 ? code - 64 : 0);
+    }, 0);
+  },
+
+  // Reverse Ordinal: A=26, B=25, ... Z=1
+  reverseOrdinal: (text) => {
+    return (text || '').toUpperCase().split('').reduce((sum, char) => {
+      const code = char.charCodeAt(0);
+      return sum + (code >= 65 && code <= 90 ? 27 - (code - 64) : 0);
+    }, 0);
+  },
+
+  // Reduction (Pythagorean): reduce to single digits (A=1, J=1, S=1, etc.)
+  reduction: (text) => {
+    return (text || '').toUpperCase().split('').reduce((sum, char) => {
+      const code = char.charCodeAt(0);
+      if (code >= 65 && code <= 90) {
+        let val = code - 64;
+        while (val > 9) val = String(val).split('').reduce((s, d) => s + parseInt(d), 0);
+        return sum + val;
+      }
+      return sum;
+    }, 0);
+  },
+
+  // Reverse Reduction
+  reverseReduction: (text) => {
+    return (text || '').toUpperCase().split('').reduce((sum, char) => {
+      const code = char.charCodeAt(0);
+      if (code >= 65 && code <= 90) {
+        let val = 27 - (code - 64);
+        while (val > 9) val = String(val).split('').reduce((s, d) => s + parseInt(d), 0);
+        return sum + val;
+      }
+      return sum;
+    }, 0);
+  },
+
+  // Jewish/Hebrew (simplified): special values for certain letters
+  jewish: (text) => {
+    const values = {
+      A: 1, B: 2, C: 3, D: 4, E: 5, F: 6, G: 7, H: 8, I: 9,
+      K: 10, L: 20, M: 30, N: 40, O: 50, P: 60, Q: 70, R: 80,
+      S: 90, T: 100, U: 200, V: 300, W: 400, X: 500, Y: 600, Z: 700, J: 600
+    };
+    return (text || '').toUpperCase().split('').reduce((sum, char) => sum + (values[char] || 0), 0);
+  },
+
+  // Sumerian: A=6, B=12, ... (multiples of 6)
+  sumerian: (text) => {
+    return (text || '').toUpperCase().split('').reduce((sum, char) => {
+      const code = char.charCodeAt(0);
+      return sum + (code >= 65 && code <= 90 ? (code - 64) * 6 : 0);
+    }, 0);
+  }
+};
+
+/**
+ * POWER NUMBERS - Numbers with special significance
+ */
+export const POWER_NUMBERS = {
+  // Master numbers (numerology)
+  master: [11, 22, 33, 44, 55, 66, 77, 88, 99],
+
+  // Tesla's 3-6-9 (divine numbers)
+  tesla: [3, 6, 9, 27, 36, 63, 72, 81, 108, 144, 216, 369],
+
+  // Fibonacci sequence
+  fibonacci: [1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377],
+
+  // Sacred/religious numbers
+  sacred: [7, 12, 40, 72, 153, 666, 777, 888],
+
+  // Sports-relevant numbers (jersey legends, championships)
+  sports: [23, 24, 8, 12, 3, 33, 34, 32, 21, 45, 99, 81]
+};
+
+/**
+ * Get comprehensive gematria analysis for a matchup
+ */
+export const getGematriaAnalysis = (homeTeam, awayTeam, date = new Date()) => {
+  const homeValues = {};
+  const awayValues = {};
+  const matchups = [];
+
+  // Calculate all cipher values
+  Object.entries(GEMATRIA_CIPHERS).forEach(([cipher, fn]) => {
+    homeValues[cipher] = fn(homeTeam);
+    awayValues[cipher] = fn(awayTeam);
+  });
+
+  // Date numerology
+  const dateString = `${date.getMonth() + 1}${date.getDate()}${date.getFullYear()}`;
+  const dateValue = GEMATRIA_CIPHERS.reduction(dateString.split('').map(d => String.fromCharCode(64 + parseInt(d) || 65)).join(''));
+  const dayOfYear = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+
+  // Find alignments
+  const alignments = [];
+  let esotericScore = 50;
+
+  // Check for matching values across ciphers
+  Object.entries(homeValues).forEach(([cipher, homeVal]) => {
+    const awayVal = awayValues[cipher];
+
+    // Teams match in a cipher = significant
+    if (homeVal === awayVal) {
+      alignments.push({
+        type: 'CIPHER_MATCH',
+        cipher,
+        value: homeVal,
+        message: `${cipher}: Both teams = ${homeVal}`,
+        boost: 8
+      });
+      esotericScore += 8;
+    }
+
+    // Difference is a power number
+    const diff = Math.abs(homeVal - awayVal);
+    if (POWER_NUMBERS.tesla.includes(diff)) {
+      alignments.push({
+        type: 'TESLA_ALIGNMENT',
+        cipher,
+        value: diff,
+        message: `${cipher}: Tesla number ${diff} (${homeVal} vs ${awayVal})`,
+        boost: 10
+      });
+      esotericScore += 10;
+    }
+
+    if (POWER_NUMBERS.master.includes(homeVal) || POWER_NUMBERS.master.includes(awayVal)) {
+      const masterTeam = POWER_NUMBERS.master.includes(homeVal) ? homeTeam : awayTeam;
+      const masterVal = POWER_NUMBERS.master.includes(homeVal) ? homeVal : awayVal;
+      alignments.push({
+        type: 'MASTER_NUMBER',
+        cipher,
+        value: masterVal,
+        team: masterTeam,
+        message: `${cipher}: ${masterTeam} = Master ${masterVal}`,
+        boost: 6
+      });
+      esotericScore += 6;
+    }
+
+    if (POWER_NUMBERS.fibonacci.includes(homeVal) || POWER_NUMBERS.fibonacci.includes(awayVal)) {
+      const fibTeam = POWER_NUMBERS.fibonacci.includes(homeVal) ? homeTeam : awayTeam;
+      const fibVal = POWER_NUMBERS.fibonacci.includes(homeVal) ? homeVal : awayVal;
+      alignments.push({
+        type: 'FIBONACCI',
+        cipher,
+        value: fibVal,
+        team: fibTeam,
+        message: `${cipher}: ${fibTeam} = Fibonacci ${fibVal}`,
+        boost: 5
+      });
+      esotericScore += 5;
+    }
+  });
+
+  // Date alignment check
+  const dateSum = dateValue % 9 || 9;
+  Object.entries(homeValues).forEach(([cipher, homeVal]) => {
+    if (homeVal % 9 === dateSum || awayValues[cipher] % 9 === dateSum) {
+      const alignedTeam = homeVal % 9 === dateSum ? homeTeam : awayTeam;
+      alignments.push({
+        type: 'DATE_ALIGNMENT',
+        cipher,
+        dateValue: dateSum,
+        team: alignedTeam,
+        message: `${cipher}: ${alignedTeam} aligns with today's energy (${dateSum})`,
+        boost: 7
+      });
+      esotericScore += 7;
+    }
+  });
+
+  // Day of year alignment
+  if (dayOfYear === homeValues.ordinal % 365 || dayOfYear === awayValues.ordinal % 365) {
+    alignments.push({
+      type: 'DAY_OF_YEAR',
+      value: dayOfYear,
+      message: `Day ${dayOfYear} matches team gematria - rare alignment!`,
+      boost: 12
+    });
+    esotericScore += 12;
+  }
+
+  // Cap score at 95
+  esotericScore = Math.min(95, esotericScore);
+
+  // Determine esoteric pick
+  let favored = null;
+  let favorReason = '';
+
+  if (alignments.length > 0) {
+    // Count alignments per team
+    const homeAlignments = alignments.filter(a => a.team === homeTeam || !a.team).length;
+    const awayAlignments = alignments.filter(a => a.team === awayTeam || !a.team).length;
+
+    if (homeAlignments > awayAlignments) {
+      favored = 'home';
+      favorReason = `${homeTeam} has ${homeAlignments} cosmic alignments`;
+    } else if (awayAlignments > homeAlignments) {
+      favored = 'away';
+      favorReason = `${awayTeam} has ${awayAlignments} cosmic alignments`;
+    }
+  }
+
+  return {
+    homeTeam,
+    awayTeam,
+    homeValues,
+    awayValues,
+    alignments,
+    esotericScore,
+    favored,
+    favorReason,
+    dateEnergy: dateSum,
+    dayOfYear,
+    topAlignment: alignments[0] || null
+  };
+};
+
+/**
+ * Get daily esoteric reading
+ */
+export const getDailyEsotericReading = (date = new Date()) => {
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const year = date.getFullYear();
+
+  // Life path for the day
+  let lifePath = String(month + day + year).split('').reduce((s, d) => s + parseInt(d), 0);
+  while (lifePath > 9 && ![11, 22, 33].includes(lifePath)) {
+    lifePath = String(lifePath).split('').reduce((s, d) => s + parseInt(d), 0);
+  }
+
+  // Moon phase
+  const moonPhase = getMoonPhase();
+  const moonEmoji = {
+    new: '🌑', waxing_crescent: '🌒', first_quarter: '🌓', waxing_gibbous: '🌔',
+    full: '🌕', waning_gibbous: '🌖', last_quarter: '🌗', waning_crescent: '🌘'
+  }[moonPhase] || '🌙';
+
+  // Day of week energy
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const dayEnergies = {
+    0: { planet: 'Sun', energy: 'victory', color: 'Gold', bias: 'favorites' },
+    1: { planet: 'Moon', energy: 'intuition', color: 'Silver', bias: 'home teams' },
+    2: { planet: 'Mars', energy: 'aggression', color: 'Red', bias: 'overs' },
+    3: { planet: 'Mercury', energy: 'speed', color: 'Yellow', bias: 'high-pace teams' },
+    4: { planet: 'Jupiter', energy: 'expansion', color: 'Blue', bias: 'underdogs' },
+    5: { planet: 'Venus', energy: 'harmony', color: 'Green', bias: 'close games' },
+    6: { planet: 'Saturn', energy: 'discipline', color: 'Black', bias: 'unders' }
+  };
+
+  const dayOfWeek = date.getDay();
+  const todayEnergy = dayEnergies[dayOfWeek];
+
+  // Tesla daily number (3-6-9)
+  const teslaNumber = (day * month) % 9 || 9;
+  const teslaAlignment = [3, 6, 9].includes(teslaNumber) ? 'STRONG' : 'moderate';
+
+  // Power numbers active today
+  const activePowerNumbers = [];
+  if (POWER_NUMBERS.master.includes(day)) activePowerNumbers.push({ type: 'Master', value: day });
+  if (POWER_NUMBERS.fibonacci.includes(day)) activePowerNumbers.push({ type: 'Fibonacci', value: day });
+  if (POWER_NUMBERS.tesla.includes(month + day)) activePowerNumbers.push({ type: 'Tesla', value: month + day });
+
+  // Generate daily insight
+  const insights = [
+    `Life Path ${lifePath} day - ${lifePath === 8 ? 'abundance & success energy' : lifePath === 11 ? 'master intuition day' : lifePath === 22 ? 'master builder energy' : 'balanced energy'}`,
+    `${moonEmoji} ${moonPhase.replace('_', ' ')} moon - ${['full', 'new'].includes(moonPhase) ? 'heightened energy' : 'steady flow'}`,
+    `${dayNames[dayOfWeek]} ruled by ${todayEnergy.planet} - ${todayEnergy.energy} energy favors ${todayEnergy.bias}`,
+    `Tesla resonance: ${teslaNumber} (${teslaAlignment} alignment with 3-6-9)`
+  ];
+
+  // Recommended approach for today
+  let recommendation = '';
+  if (moonPhase === 'full') {
+    recommendation = 'Full moon = heightened emotions. Trust bold plays.';
+  } else if (moonPhase === 'new') {
+    recommendation = 'New moon = fresh starts. Good for underdog plays.';
+  } else if (teslaAlignment === 'STRONG') {
+    recommendation = 'Tesla alignment active. Trust the mathematics.';
+  } else if (lifePath === 8) {
+    recommendation = 'Abundance day. High-value plays favored.';
+  } else {
+    recommendation = 'Steady energy. Stick to high-confluence plays.';
+  }
+
+  return {
+    date: date.toDateString(),
+    lifePath,
+    moonPhase,
+    moonEmoji,
+    dayOfWeek: dayNames[dayOfWeek],
+    planetaryRuler: todayEnergy.planet,
+    dayEnergy: todayEnergy.energy,
+    colorOfDay: todayEnergy.color,
+    naturalBias: todayEnergy.bias,
+    teslaNumber,
+    teslaAlignment,
+    activePowerNumbers,
+    insights,
+    recommendation,
+    luckyNumbers: [lifePath, teslaNumber, day % 10 || 10, (month + day) % 22 || 22]
+  };
+};
+
+/**
+ * Calculate full esoteric score for a game
+ */
+export const calculateEsotericScore = (game, date = new Date()) => {
+  const homeTeam = game.home_team || '';
+  const awayTeam = game.away_team || '';
+
+  // Get gematria analysis
+  const gematria = getGematriaAnalysis(homeTeam, awayTeam, date);
+
+  // Get daily reading
+  const daily = getDailyEsotericReading(date);
+
+  // Moon phase score
+  const moonPhase = getMoonPhase();
+  let moonScore = 50;
+  let moonInsight = '';
+
+  if (moonPhase === 'full') {
+    moonScore = 70;
+    moonInsight = 'Full moon: Peak energy, trust your instincts';
+  } else if (moonPhase === 'new') {
+    moonScore = 65;
+    moonInsight = 'New moon: Fresh cycle, underdogs shine';
+  } else if (['waxing_gibbous', 'waxing_crescent'].includes(moonPhase)) {
+    moonScore = 58;
+    moonInsight = 'Waxing moon: Building energy, momentum plays';
+  } else {
+    moonScore = 52;
+    moonInsight = 'Waning moon: Releasing energy, fade hype';
+  }
+
+  // Numerology score (life path alignment)
+  const lifePath = daily.lifePath;
+  let numerologyScore = 50;
+  let numerologyInsight = '';
+
+  if ([8, 11, 22, 33].includes(lifePath)) {
+    numerologyScore = 72;
+    numerologyInsight = `Master number ${lifePath} day - powerful alignments`;
+  } else if ([1, 5, 9].includes(lifePath)) {
+    numerologyScore = 62;
+    numerologyInsight = `Life path ${lifePath} - action & change energy`;
+  } else {
+    numerologyScore = 55;
+    numerologyInsight = `Life path ${lifePath} - balanced day`;
+  }
+
+  // Sacred geometry (check spread/total for Fibonacci)
+  const line = game.spread || game.total || 0;
+  const rounded = Math.round(Math.abs(line));
+  let geometryScore = 50;
+  let geometryInsight = '';
+
+  if (POWER_NUMBERS.fibonacci.includes(rounded)) {
+    geometryScore = 68;
+    geometryInsight = `Line ${rounded} = Fibonacci number (natural harmony)`;
+  } else if (rounded % 3 === 0) {
+    geometryScore = 62;
+    geometryInsight = `Line ${rounded} = Tesla divisible (3-6-9 energy)`;
+  } else if (POWER_NUMBERS.sacred.includes(rounded)) {
+    geometryScore = 65;
+    geometryInsight = `Line ${rounded} = Sacred number`;
+  } else {
+    geometryScore = 52;
+    geometryInsight = `Line ${rounded} - neutral geometry`;
+  }
+
+  // Zodiac/planetary day alignment
+  const planetaryBias = daily.naturalBias;
+  let zodiacScore = 50;
+  let zodiacInsight = `${daily.dayOfWeek} (${daily.planetaryRuler}) favors ${planetaryBias}`;
+
+  // Check if game aligns with planetary bias
+  if (planetaryBias === 'overs' && (game.total && game.total > 220)) {
+    zodiacScore = 65;
+  } else if (planetaryBias === 'unders' && (game.total && game.total < 215)) {
+    zodiacScore = 65;
+  } else if (planetaryBias === 'underdogs' && (game.spread && game.spread > 5)) {
+    zodiacScore = 62;
+  } else if (planetaryBias === 'favorites' && (game.spread && game.spread < -5)) {
+    zodiacScore = 62;
+  } else if (planetaryBias === 'home teams') {
+    zodiacScore = 58;
+  }
+
+  // Aggregate esoteric score
+  const esotericWeights = {
+    gematria: 35,
+    moon: 20,
+    numerology: 20,
+    geometry: 15,
+    zodiac: 10
+  };
+
+  const totalWeight = Object.values(esotericWeights).reduce((s, w) => s + w, 0);
+  const weightedSum =
+    gematria.esotericScore * esotericWeights.gematria +
+    moonScore * esotericWeights.moon +
+    numerologyScore * esotericWeights.numerology +
+    geometryScore * esotericWeights.geometry +
+    zodiacScore * esotericWeights.zodiac;
+
+  const finalEsotericScore = Math.round(weightedSum / totalWeight);
+
+  // Determine esoteric tier
+  let esotericTier = 'NEUTRAL';
+  let esotericEmoji = '🔮';
+
+  if (finalEsotericScore >= 75) {
+    esotericTier = 'COSMIC_ALIGNMENT';
+    esotericEmoji = '🌟';
+  } else if (finalEsotericScore >= 65) {
+    esotericTier = 'STARS_FAVOR';
+    esotericEmoji = '⭐';
+  } else if (finalEsotericScore >= 55) {
+    esotericTier = 'MILD_ALIGNMENT';
+    esotericEmoji = '✨';
+  }
+
+  return {
+    esotericScore: finalEsotericScore,
+    esotericTier,
+    esotericEmoji,
+    components: {
+      gematria: {
+        score: gematria.esotericScore,
+        weight: esotericWeights.gematria,
+        alignments: gematria.alignments,
+        favored: gematria.favored,
+        favorReason: gematria.favorReason,
+        homeValues: gematria.homeValues,
+        awayValues: gematria.awayValues
+      },
+      moon: {
+        score: moonScore,
+        weight: esotericWeights.moon,
+        phase: moonPhase,
+        insight: moonInsight
+      },
+      numerology: {
+        score: numerologyScore,
+        weight: esotericWeights.numerology,
+        lifePath,
+        insight: numerologyInsight
+      },
+      geometry: {
+        score: geometryScore,
+        weight: esotericWeights.geometry,
+        line: rounded,
+        insight: geometryInsight
+      },
+      zodiac: {
+        score: zodiacScore,
+        weight: esotericWeights.zodiac,
+        day: daily.dayOfWeek,
+        ruler: daily.planetaryRuler,
+        insight: zodiacInsight
+      }
+    },
+    dailyReading: daily,
+    topInsights: [
+      gematria.topAlignment?.message,
+      moonInsight,
+      numerologyInsight
+    ].filter(Boolean)
+  };
+};
+
+/**
+ * Check for COSMIC CONFLUENCE - when main model and esoteric align
+ */
+export const checkCosmicConfluence = (mainConfidence, esotericScore, mainDirection, esotericFavored) => {
+  const bothHigh = mainConfidence >= 70 && esotericScore >= 65;
+  const sameDirection = mainDirection === esotericFavored || !esotericFavored;
+
+  if (bothHigh && sameDirection) {
+    return {
+      hasConfluence: true,
+      level: mainConfidence >= 80 && esotericScore >= 75 ? 'PERFECT' : 'STRONG',
+      emoji: mainConfidence >= 80 && esotericScore >= 75 ? '🌟🔥' : '⭐💪',
+      message: mainConfidence >= 80 && esotericScore >= 75
+        ? 'PERFECT COSMIC CONFLUENCE: Sharps + Stars aligned!'
+        : 'STRONG CONFLUENCE: Research & cosmos agree',
+      boost: mainConfidence >= 80 && esotericScore >= 75 ? 5 : 3
+    };
+  }
+
+  if (bothHigh && !sameDirection) {
+    return {
+      hasConfluence: false,
+      level: 'DIVERGENT',
+      emoji: '⚡',
+      message: 'Divergence: Strong signals but different directions',
+      boost: 0
+    };
+  }
+
+  if (mainConfidence >= 70 || esotericScore >= 70) {
+    return {
+      hasConfluence: false,
+      level: 'PARTIAL',
+      emoji: '🔮',
+      message: 'Partial alignment - one system strong',
+      boost: 0
+    };
+  }
+
+  return {
+    hasConfluence: false,
+    level: 'NONE',
+    emoji: '📊',
+    message: 'No special alignment',
+    boost: 0
+  };
 };
 
 // ============================================================================
@@ -930,8 +1476,25 @@ export const calculateConfidence = (game, sport, contextData = {}) => {
   else if (confidence >= 60) recommendation = 'PLAY';
   else if (confidence < 55) recommendation = 'PASS';
 
-  return {
+  // Calculate separate esoteric score (dual-score system)
+  const esotericAnalysis = calculateEsotericScore(game);
+
+  // Check for cosmic confluence
+  const confluence = checkCosmicConfluence(
     confidence,
+    esotericAnalysis.esotericScore,
+    recommendation === 'SMASH' || recommendation === 'STRONG' ? 'home' : null,
+    esotericAnalysis.components.gematria.favored
+  );
+
+  // Apply confluence boost if applicable
+  let finalConfidence = confidence;
+  if (confluence.hasConfluence && confluence.boost > 0) {
+    finalConfidence = Math.min(100, confidence + confluence.boost);
+  }
+
+  return {
+    confidence: finalConfidence,
     tier,
     recommendation,
     signals: rankedSignals,
@@ -953,7 +1516,30 @@ export const calculateConfidence = (game, sport, contextData = {}) => {
       )
     },
     moonPhase: getMoonPhase(),
-    lifePath: getLifePath()
+    lifePath: getLifePath(),
+
+    // DUAL-SCORE SYSTEM: Esoteric Edge (showcased separately)
+    esotericEdge: {
+      score: esotericAnalysis.esotericScore,
+      tier: esotericAnalysis.esotericTier,
+      emoji: esotericAnalysis.esotericEmoji,
+      gematria: esotericAnalysis.components.gematria,
+      moon: esotericAnalysis.components.moon,
+      numerology: esotericAnalysis.components.numerology,
+      geometry: esotericAnalysis.components.geometry,
+      zodiac: esotericAnalysis.components.zodiac,
+      dailyReading: esotericAnalysis.dailyReading,
+      topInsights: esotericAnalysis.topInsights
+    },
+
+    // COSMIC CONFLUENCE: When both systems align
+    confluence: {
+      hasConfluence: confluence.hasConfluence,
+      level: confluence.level,
+      emoji: confluence.emoji,
+      message: confluence.message,
+      boost: confluence.boost
+    }
   };
 };
 
@@ -1055,10 +1641,76 @@ export const getRecommendationDisplay = (recommendation) => {
   return displays[recommendation] || displays.LEAN;
 };
 
+// Esoteric tier display info
+export const getEsotericTierInfo = (tier) => {
+  const tiers = {
+    COSMIC_ALIGNMENT: {
+      label: '🌟 COSMIC ALIGNMENT',
+      color: '#9333EA',
+      description: 'All esoteric signals converge'
+    },
+    STARS_FAVOR: {
+      label: '⭐ STARS FAVOR',
+      color: '#A855F7',
+      description: 'Strong esoteric alignment'
+    },
+    MILD_ALIGNMENT: {
+      label: '✨ MILD ALIGNMENT',
+      color: '#C084FC',
+      description: 'Some cosmic support'
+    },
+    NEUTRAL: {
+      label: '🔮 NEUTRAL',
+      color: '#9ca3af',
+      description: 'No strong esoteric signals'
+    }
+  };
+
+  return tiers[tier] || tiers.NEUTRAL;
+};
+
+// Confluence display info
+export const getConfluenceDisplay = (confluence) => {
+  if (confluence.level === 'PERFECT') {
+    return {
+      label: '🌟🔥 PERFECT CONFLUENCE',
+      color: 'linear-gradient(135deg, #FFD700, #9333EA)',
+      description: 'Sharps + Stars perfectly aligned - maximum conviction'
+    };
+  }
+  if (confluence.level === 'STRONG') {
+    return {
+      label: '⭐💪 STRONG CONFLUENCE',
+      color: 'linear-gradient(135deg, #00FF88, #A855F7)',
+      description: 'Research & cosmos agree - high conviction'
+    };
+  }
+  if (confluence.level === 'DIVERGENT') {
+    return {
+      label: '⚡ DIVERGENT',
+      color: '#F59E0B',
+      description: 'Strong signals but different directions'
+    };
+  }
+  return {
+    label: '📊 STANDARD',
+    color: '#6B7280',
+    description: 'No special alignment'
+  };
+};
+
 export default {
   calculateConfidence,
   fetchSignalContext,
   getTierInfo,
   getRecommendationDisplay,
-  DEFAULT_WEIGHTS
+  getEsotericTierInfo,
+  getConfluenceDisplay,
+  getGematriaAnalysis,
+  getDailyEsotericReading,
+  calculateEsotericScore,
+  checkCosmicConfluence,
+  DEFAULT_WEIGHTS,
+  GEMATRIA_CIPHERS,
+  POWER_NUMBERS
 };
