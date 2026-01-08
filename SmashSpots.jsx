@@ -5,6 +5,7 @@ import { recordPick, getAllPicks } from './clvTracker';
 import { explainPick, quickExplain } from './pickExplainer';
 import { analyzeCorrelation, checkPickCorrelation } from './correlationDetector';
 import { ConsensusMeter, ConsensusMiniBadge, ConsensusAlert, calculateConsensus } from './ConsensusMeter';
+import CommunityVote from './CommunityVote';
 
 // Floating Glow Badge for special convergence picks
 const ConvergenceGlowBadge = ({ tier }) => {
@@ -739,6 +740,19 @@ const SmashSpots = () => {
                         <BookBadge book={game.totalEdge.book} />
                       </div>
                     </div>
+                  </div>
+
+                  {/* Man vs Machine - Community Vote */}
+                  <div style={{ marginTop: '12px' }}>
+                    <CommunityVote
+                      game={game}
+                      betType={game.bestPick}
+                      aiPick={game.bestPick === 'spread'
+                        ? (mainPick.side?.toLowerCase() === 'home' ? 'home' : 'away')
+                        : mainPick.recommendation_side?.toLowerCase()
+                      }
+                      aiConfidence={confidence}
+                    />
                   </div>
 
                   {/* All Books */}

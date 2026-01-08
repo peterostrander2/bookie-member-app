@@ -132,6 +132,41 @@ const api = {
   getTeams: async (sport) => {
     const res = await fetch(`${BASE_URL}/teams/${sport}`);
     return res.json();
+  },
+
+  // Community Voting - Man vs Machine
+  getVotes: async (gameVoteId) => {
+    try {
+      const res = await fetch(`${BASE_URL}/votes/${gameVoteId}`);
+      if (!res.ok) return null;
+      return res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  submitVote: async (gameVoteId, side) => {
+    try {
+      const res = await fetch(`${BASE_URL}/votes/${gameVoteId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ side })
+      });
+      if (!res.ok) return null;
+      return res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  getVoteLeaderboard: async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/votes/leaderboard`);
+      if (!res.ok) return null;
+      return res.json();
+    } catch {
+      return null;
+    }
   }
 };
 
