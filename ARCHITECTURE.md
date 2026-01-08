@@ -391,7 +391,7 @@ if (!game) return { confidence: 50, tier: 'PARTIAL_ALIGNMENT' }
 3. **Mobile app** - React Native wrapper
 4. **User accounts** - Sync picks across devices
 5. **Backtesting engine** - Historical simulation
-6. **Auto-betting** - Direct sportsbook integration (with caution)
+6. **Export/Import** - Backup and restore pick history
 
 ---
 
