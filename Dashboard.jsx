@@ -98,7 +98,7 @@ const Dashboard = () => {
   const quickLinks = [
     { path: '/smash-spots', icon: '🔥', title: 'Smash Spots', desc: "Today's best bets with full breakdown", color: '#00FF88' },
     { path: '/sharp', icon: '💵', title: 'Sharp Money', desc: 'Track where pros are betting', color: '#00FF88' },
-    { path: '/odds', icon: '🎯', title: 'Best Odds', desc: 'Find best lines across books', color: '#00D4FF' },
+    { path: '/odds', icon: '🔍', title: 'Best Odds Finder', desc: 'Compare lines across 8+ sportsbooks', color: '#00D4FF', badge: '8+ BOOKS', featured: true },
     { path: '/injuries', icon: '🏥', title: 'Injuries', desc: 'Usage vacuum & beneficiaries', color: '#FF6B6B' },
     { path: '/performance', icon: '📈', title: 'Performance', desc: 'Win rate, CLV, accuracy tracking', color: '#4ECDC4' },
     { path: '/bankroll', icon: '💰', title: 'Bankroll', desc: 'Kelly sizing & bet tracking', color: '#FFD700' }
@@ -275,13 +275,15 @@ const Dashboard = () => {
               key={i}
               to={link.path}
               style={{
-                backgroundColor: '#1a1a2e',
+                backgroundColor: link.featured ? '#0a1a2a' : '#1a1a2e',
                 borderRadius: '12px',
                 padding: '20px',
                 textDecoration: 'none',
-                border: '1px solid #333',
+                border: link.featured ? `2px solid ${link.color}50` : '1px solid #333',
                 transition: 'transform 0.2s, border-color 0.2s',
-                display: 'block'
+                display: 'block',
+                position: 'relative',
+                overflow: 'hidden'
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = 'translateY(-2px)';
@@ -289,9 +291,25 @@ const Dashboard = () => {
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.borderColor = '#333';
+                e.currentTarget.style.borderColor = link.featured ? `${link.color}50` : '#333';
               }}
             >
+              {link.badge && (
+                <div style={{
+                  position: 'absolute',
+                  top: '10px',
+                  right: '10px',
+                  backgroundColor: link.color + '25',
+                  color: link.color,
+                  padding: '3px 8px',
+                  borderRadius: '4px',
+                  fontSize: '10px',
+                  fontWeight: 'bold',
+                  border: `1px solid ${link.color}40`
+                }}>
+                  {link.badge}
+                </div>
+              )}
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                 <div style={{ fontSize: '32px' }}>{link.icon}</div>
                 <div>
@@ -303,6 +321,17 @@ const Dashboard = () => {
                   </div>
                 </div>
               </div>
+              {link.featured && (
+                <div style={{
+                  position: 'absolute',
+                  bottom: '-20px',
+                  right: '-20px',
+                  width: '80px',
+                  height: '80px',
+                  background: `radial-gradient(circle, ${link.color}15 0%, transparent 70%)`,
+                  borderRadius: '50%'
+                }} />
+              )}
             </Link>
           ))}
         </div>
