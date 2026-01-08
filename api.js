@@ -145,6 +145,16 @@ const api = {
     return res.json();
   },
 
+  getGradedPicks: async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/grader/picks`);
+      if (!res.ok) return [];
+      return res.json();
+    } catch {
+      return [];
+    }
+  },
+
   gradePick: async (data) => {
     const res = await fetch(`${BASE_URL}/grader/grade`, {
       method: 'POST',
