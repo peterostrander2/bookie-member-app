@@ -1,12 +1,14 @@
-# live_data_router.py v10.4 - SCALAR-SAVANT EDITION
-# Research-Optimized + Esoteric Edge + Resonance Layer + SCALAR-SAVANT ABYSS
+# live_data_router.py v11.0 - OMNI-GLITCH EDITION
+# Research-Optimized + Esoteric Edge + Resonance Layer + SCALAR-SAVANT + OMNI-GLITCH
 # v10.1 weights preserved | Esoteric as standalone clickable feature
 # +94.40u YTD edge system | Twitter gematria community insights integrated
 #
 # v10.3: Founder's Echo + Life Path Sync = Cosmic Resonance Layer
-# v10.4: THE ABYSS - Planetary Physics + Scalar Variance + Deep Glitch Modules
-#        Bio-Sine Wave | Chrome Resonance | Lunacy Factor
+# v10.4: SCALAR-SAVANT - Bio-Sine Wave | Chrome Resonance | Lunacy Factor
 #        Schumann Spike | Saturn Block | Zebra Privilege
+# v11.0: OMNI-GLITCH - The Final Dimension
+#        Vortex Math (Tesla 3-6-9) | Shannon Entropy | Atmospheric Drag
+#        Void of Course Moon | Gann Spiral | Mars-Uranus Nuclear
 
 from fastapi import APIRouter, HTTPException
 from typing import Optional, List, Dict, Any
@@ -2479,6 +2481,445 @@ def analyze_zebra_privilege(
     }
 
 # ============================================================================
+# ██╗   ██╗ ██╗ ██╗      ██████╗     ██████╗ ███╗   ███╗███╗   ██╗██╗
+# ██║   ██║███║███║     ██╔═████╗   ██╔═══██╗████╗ ████║████╗  ██║██║
+# ██║   ██║╚██║╚██║     ██║██╔██║   ██║   ██║██╔████╔██║██╔██╗ ██║██║
+# ╚██╗ ██╔╝ ██║ ██║     ████╔╝██║   ██║   ██║██║╚██╔╝██║██║╚██╗██║██║
+#  ╚████╔╝  ██║ ██║     ╚██████╔╝   ╚██████╔╝██║ ╚═╝ ██║██║ ╚████║██║
+#   ╚═══╝   ╚═╝ ╚═╝      ╚═════╝     ╚═════╝ ╚═╝     ╚═╝╚═╝  ╚═══╝╚═╝
+# OMNI-GLITCH EDITION - THE FINAL DESCENT
+# Vortex Math | Shannon Entropy | Atmospheric Drag | Void Moon | Gann Spiral | Mars-Uranus
+# ============================================================================
+
+# ============================================================================
+# MODULE 7: VORTEX MATH (Tesla 3-6-9 Digital Root)
+# Theory: The Universe is built on 3, 6, and 9
+# If digital root = 9: "Circuit Complete" (outcome rigid/fixed)
+# If digital root = 3 or 6: "Circuit Open" (chaos/upsets likely)
+# ============================================================================
+
+def calculate_digital_root(n: int) -> int:
+    """Reduce any number to its single digit root (1-9)"""
+    if n == 0:
+        return 0
+    return 1 + (n - 1) % 9
+
+def calculate_vortex_math(
+    home_team: str,
+    away_team: str,
+    game_date: datetime = None,
+    spread: float = None,
+    total: float = None
+) -> dict:
+    """
+    VORTEX MATH - v11.0 Omni-Glitch
+
+    Tesla's 3-6-9 Universal Key applied to sports betting.
+    The digital root of the matchup reveals the circuit state.
+
+    Circuit States:
+    - 9 = COMPLETE: Outcome is LOCKED/FIXED. Favorites cover.
+    - 3 = OPEN LOW: Minor chaos. Small upsets possible.
+    - 6 = OPEN HIGH: Major chaos. Big upsets likely.
+    - 1,2,4,5,7,8 = NEUTRAL: Standard variance.
+    """
+    if game_date is None:
+        game_date = datetime.now()
+
+    # Calculate matchup gematria sum
+    matchup_string = f"{home_team} vs {away_team}".upper()
+    letter_sum = sum(ord(c) - ord('A') + 1 for c in matchup_string if c.isalpha())
+
+    # Calculate date sum
+    date_sum = game_date.month + game_date.day + sum(int(d) for d in str(game_date.year))
+
+    # Combined sum
+    total_sum = letter_sum + date_sum
+
+    # Calculate digital root
+    root = calculate_digital_root(total_sum)
+
+    # Determine circuit state
+    if root == 9:
+        circuit_state = "COMPLETE"
+        emoji = "🔒⚡"
+        description = "Circuit COMPLETE - Outcome is FIXED"
+        chaos_level = 0
+        recommendation = "FAVORITES COVER. Chalk is safe. Outcome predetermined."
+        spread_bias = "FAVORITE"
+        upset_probability = 0.15
+    elif root == 6:
+        circuit_state = "OPEN_HIGH"
+        emoji = "🌀🔴"
+        description = "Circuit OPEN HIGH - MAXIMUM CHAOS"
+        chaos_level = 100
+        recommendation = "BIG UPSETS LIKELY. Fade heavy favorites. Dogs bite."
+        spread_bias = "UNDERDOG"
+        upset_probability = 0.65
+    elif root == 3:
+        circuit_state = "OPEN_LOW"
+        emoji = "🌀🟡"
+        description = "Circuit OPEN LOW - Moderate Chaos"
+        chaos_level = 60
+        recommendation = "Small upsets possible. Reduce favorite exposure."
+        spread_bias = "SLIGHT_DOG"
+        upset_probability = 0.45
+    else:
+        circuit_state = "NEUTRAL"
+        emoji = "⚖️"
+        description = f"Neutral Circuit (Root: {root})"
+        chaos_level = 30
+        recommendation = "Standard variance. No strong vortex signal."
+        spread_bias = "NEUTRAL"
+        upset_probability = 0.30
+
+    # Tesla alignment check
+    is_tesla_aligned = root in [3, 6, 9]
+
+    # Vortex score (0-100, higher = more chaos)
+    vortex_score = chaos_level
+
+    # Additional Tesla insights
+    tesla_insights = []
+    if letter_sum % 9 == 0:
+        tesla_insights.append("Matchup string divisible by 9 - Destiny locked")
+    if date_sum % 3 == 0:
+        tesla_insights.append("Date divisible by 3 - Tesla resonance active")
+    if total_sum == 369 or "369" in str(total_sum):
+        tesla_insights.append("🔑 369 DETECTED - Tesla's Universal Key!")
+        vortex_score = 100 if root in [3, 6] else 0
+
+    # Spread/Total modifications
+    spread_modifier = None
+    total_modifier = None
+
+    if spread is not None:
+        spread_root = calculate_digital_root(int(abs(spread) * 10))
+        if spread_root == 9:
+            spread_modifier = "Spread locked at root 9 - will hit exactly"
+        elif spread_root in [3, 6]:
+            spread_modifier = f"Spread root {spread_root} - may blow past"
+
+    if total is not None:
+        total_root = calculate_digital_root(int(total))
+        if total_root == 9:
+            total_modifier = "Total locked at root 9 - expect exact hit"
+        elif total_root in [3, 6]:
+            total_modifier = f"Total root {total_root} - expect variance"
+
+    return {
+        "matchup": matchup_string,
+        "game_date": game_date.strftime("%Y-%m-%d"),
+        "calculations": {
+            "letter_sum": letter_sum,
+            "date_sum": date_sum,
+            "total_sum": total_sum,
+            "digital_root": root
+        },
+        "circuit_state": circuit_state,
+        "emoji": emoji,
+        "description": description,
+        "chaos_level": chaos_level,
+        "vortex_score": vortex_score,
+        "recommendation": recommendation,
+        "spread_bias": spread_bias,
+        "upset_probability": round(upset_probability, 2),
+        "is_tesla_aligned": is_tesla_aligned,
+        "tesla_insights": tesla_insights,
+        "line_analysis": {
+            "spread_modifier": spread_modifier,
+            "total_modifier": total_modifier
+        },
+        "betting_implications": {
+            "favorite_safe": circuit_state == "COMPLETE",
+            "dog_play": circuit_state in ["OPEN_HIGH", "OPEN_LOW"],
+            "reduce_exposure": circuit_state == "OPEN_HIGH"
+        }
+    }
+
+# ============================================================================
+# MODULE 8: SHANNON ENTROPY (Pattern Break Detector)
+# Theory: Universe hates low entropy (perfect order), seeks high entropy (chaos)
+# Low entropy streak (WWWWWW) = Violent snap-back imminent
+# ============================================================================
+
+def calculate_shannon_entropy(outcomes: list) -> float:
+    """Calculate Shannon entropy of a sequence. H = -Σ p(x) * log2(p(x))"""
+    if not outcomes:
+        return 0.0
+    from collections import Counter
+    counts = Counter(outcomes)
+    total = len(outcomes)
+    entropy = 0.0
+    for count in counts.values():
+        if count > 0:
+            p = count / total
+            entropy -= p * math.log2(p)
+    max_entropy = math.log2(len(counts)) if len(counts) > 1 else 1.0
+    return round(entropy / max_entropy if max_entropy > 0 else 0.0, 4)
+
+def analyze_shannon_entropy(recent_results: list, team_name: str = None) -> dict:
+    """
+    SHANNON ENTROPY - v11.0 Omni-Glitch
+    Measure the "order" in a team's recent performance.
+    Low entropy = Violent snap-back IMMINENT.
+    """
+    if not recent_results or len(recent_results) < 3:
+        return {"analyzed": False, "message": "Need at least 3 recent results"}
+
+    entropy = calculate_shannon_entropy(recent_results)
+    current_streak = 1
+    streak_type = recent_results[-1]
+    for i in range(len(recent_results) - 2, -1, -1):
+        if recent_results[i] == streak_type:
+            current_streak += 1
+        else:
+            break
+
+    wins = recent_results.count("W")
+    losses = recent_results.count("L")
+    win_pct = wins / len(recent_results)
+
+    if entropy < 0.3:
+        state, emoji = "CRITICAL_LOW", "🚨💥"
+        snapback_risk = 95
+        recommendation = "HARD FADE. Snap-back incoming."
+    elif entropy < 0.5:
+        state, emoji = "LOW", "⚠️"
+        snapback_risk = 70
+        recommendation = "Fade the streak. Regression coming."
+    elif entropy < 0.7:
+        state, emoji = "BALANCED", "⚖️"
+        snapback_risk = 40
+        recommendation = "Standard play. No entropy edge."
+    elif entropy < 0.9:
+        state, emoji = "HIGH", "🌊"
+        snapback_risk = 25
+        recommendation = "Chaotic state. Reduce position sizes."
+    else:
+        state, emoji = "MAXIMUM", "🌀"
+        snapback_risk = 15
+        recommendation = "Anything possible. Small plays only."
+
+    streak_danger = current_streak >= 4 and entropy < 0.5
+    entropy_score = round((1 - entropy) * 100)
+
+    return {
+        "team": team_name or "Unknown",
+        "analyzed": True,
+        "recent_results": recent_results,
+        "entropy": {"raw": entropy, "state": state, "emoji": emoji},
+        "streak_analysis": {"current_streak": current_streak, "streak_type": streak_type, "win_pct": round(win_pct, 3), "streak_danger": streak_danger},
+        "snapback_risk": snapback_risk,
+        "entropy_score": entropy_score,
+        "recommendation": recommendation,
+        "betting_implications": {"fade_team": entropy < 0.5 and current_streak >= 4, "snap_back_play": streak_danger}
+    }
+
+# ============================================================================
+# MODULE 9: ATMOSPHERIC DRAG (Barometric Pressure Physics)
+# High pressure (>30.00 inHg) = thick air = UNDERS
+# Low pressure (<29.80 inHg) = thin air = OVERS
+# ============================================================================
+
+VENUE_ATMOSPHERICS = {
+    "Denver Broncos": {"city": "Denver", "elevation_ft": 5280, "base_pressure": 24.63, "dome": False},
+    "Denver Nuggets": {"city": "Denver", "elevation_ft": 5280, "base_pressure": 24.63, "dome": True},
+    "Colorado Rockies": {"city": "Denver", "elevation_ft": 5280, "base_pressure": 24.63, "dome": False},
+    "Colorado Avalanche": {"city": "Denver", "elevation_ft": 5280, "base_pressure": 24.63, "dome": True},
+    "Utah Jazz": {"city": "Salt Lake City", "elevation_ft": 4226, "base_pressure": 25.70, "dome": True},
+    "Las Vegas Raiders": {"city": "Las Vegas", "elevation_ft": 2001, "base_pressure": 27.82, "dome": True},
+    "Vegas Golden Knights": {"city": "Las Vegas", "elevation_ft": 2001, "base_pressure": 27.82, "dome": True},
+    "Phoenix Suns": {"city": "Phoenix", "elevation_ft": 1086, "base_pressure": 28.89, "dome": True},
+    "Arizona Diamondbacks": {"city": "Phoenix", "elevation_ft": 1086, "base_pressure": 28.89, "dome": True},
+    "Arizona Cardinals": {"city": "Glendale", "elevation_ft": 1120, "base_pressure": 28.86, "dome": True},
+    "default": {"city": "Sea Level", "elevation_ft": 0, "base_pressure": 29.92, "dome": False}
+}
+
+def get_venue_atmospherics(team_name: str) -> dict:
+    """Get atmospheric data for a venue"""
+    for venue_team, data in VENUE_ATMOSPHERICS.items():
+        if team_name.lower() in venue_team.lower() or venue_team.lower() in team_name.lower():
+            return {"found": True, **data}
+    return {"found": False, **VENUE_ATMOSPHERICS["default"]}
+
+def analyze_atmospheric_drag(home_team: str, away_team: str, current_pressure: float = None, sport: str = "NFL") -> dict:
+    """ATMOSPHERIC DRAG - v11.0 Omni-Glitch. Air density affects outcomes."""
+    home_atmo = get_venue_atmospherics(home_team)
+    away_atmo = get_venue_atmospherics(away_team)
+    if current_pressure is None:
+        current_pressure = home_atmo["base_pressure"]
+
+    elevation = home_atmo["elevation_ft"]
+    altitude_diff = home_atmo["elevation_ft"] - away_atmo["elevation_ft"]
+
+    if current_pressure >= 30.00:
+        pressure_state, total_bias, total_modifier = "HIGH", "UNDER", -0.05
+    elif current_pressure <= 29.80:
+        pressure_state, total_bias, total_modifier = "LOW", "OVER", 0.05
+    else:
+        pressure_state, total_bias, total_modifier = "NORMAL", "NEUTRAL", 0.00
+
+    altitude_bonus = 0.12 if elevation >= 5000 else 0.08 if elevation >= 4000 else 0.0
+    visitor_fatigue = 0.15 if altitude_diff >= 4000 else 0.08 if altitude_diff >= 2500 else 0.0
+
+    atmo_score = 50 + round((total_modifier + altitude_bonus) * 500)
+    atmo_score = max(0, min(100, atmo_score))
+
+    return {
+        "venue": {"home_team": home_team, "elevation_ft": elevation, "pressure": current_pressure},
+        "pressure_state": pressure_state,
+        "total_bias": total_bias,
+        "altitude_bonus": altitude_bonus,
+        "visitor_fatigue_pct": visitor_fatigue * 100,
+        "atmo_score": atmo_score,
+        "betting_implications": {"totals_lean": "OVER" if atmo_score >= 60 else "UNDER" if atmo_score <= 40 else "NEUTRAL", "fade_visitor": visitor_fatigue >= 0.10}
+    }
+
+# ============================================================================
+# MODULE 10: VOID OF COURSE MOON (The Time Vacuum)
+# During void: Favorites fail. "Nothing happens." Dogs protected.
+# ============================================================================
+
+def is_void_of_course_moon(game_time: datetime = None) -> dict:
+    """VOID OF COURSE MOON - v11.0 Omni-Glitch. Nothing new can be born."""
+    if game_time is None:
+        game_time = datetime.now()
+
+    known_new_moon = datetime(2024, 1, 11)
+    days_since = (game_time - known_new_moon).days
+    moon_degrees = (days_since * 13.176396) % 360
+    degrees_in_sign = moon_degrees % 30
+    current_sign = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"][int(moon_degrees / 30)]
+
+    is_void = degrees_in_sign >= 22
+    hours_until_sign_change = (30 - degrees_in_sign) / 0.549
+
+    if is_void:
+        state, emoji = "VOID", "🌙⚫"
+        void_strength = round((degrees_in_sign - 22) / 8 * 100)
+        recommendation = "FADE FAVORITES. Nothing new succeeds. Dogs protected."
+        favorite_penalty = -0.15
+    else:
+        state, emoji = "ACTIVE", "🌙✨"
+        void_strength = 0
+        recommendation = "Normal lunar influence."
+        favorite_penalty = 0.00
+
+    return {
+        "game_time": game_time.strftime("%Y-%m-%d %H:%M"),
+        "moon_position": {"current_sign": current_sign, "degrees_in_sign": round(degrees_in_sign, 2), "hours_until_sign_change": round(hours_until_sign_change, 1)},
+        "void_status": {"is_void": is_void, "state": state, "emoji": emoji, "void_strength": void_strength},
+        "recommendation": recommendation,
+        "favorite_penalty": favorite_penalty,
+        "betting_implications": {"fade_favorites": is_void, "dog_protection": is_void}
+    }
+
+# ============================================================================
+# MODULE 11: GANN SPIRAL (Square of Nine - Time/Score Squaring)
+# When Total sits on Cardinal Cross = outcome LOCKED
+# ============================================================================
+
+def calculate_gann_angle(value: float) -> dict:
+    """Calculate where a value sits on Gann's Square of Nine."""
+    if value <= 0:
+        return {"valid": False}
+    sqrt_val = math.sqrt(value)
+    ring = math.ceil(sqrt_val)
+    base = (ring - 1) ** 2
+    position_in_ring = value - base
+    ring_size = ring ** 2 - (ring - 1) ** 2 if ring > 1 else 1
+    angle = (position_in_ring / ring_size) * 360 if ring > 1 else 0
+    on_cardinal = any(abs(angle - ca) <= 5 or abs(angle - ca) >= 355 for ca in [0, 90, 180, 270, 360])
+    return {"valid": True, "value": value, "angle": round(angle, 1), "on_cardinal_cross": on_cardinal}
+
+def analyze_gann_spiral(projected_total: float, game_date: datetime = None) -> dict:
+    """GANN SPIRAL - v11.0 Omni-Glitch. W.D. Gann's Square of Nine."""
+    if game_date is None:
+        game_date = datetime.now()
+
+    total_gann = calculate_gann_angle(projected_total)
+    day_of_year = game_date.timetuple().tm_yday
+    date_gann = calculate_gann_angle(day_of_year)
+
+    angle_diff = abs(total_gann["angle"] - date_gann["angle"]) if total_gann["valid"] else 0
+    if angle_diff > 180:
+        angle_diff = 360 - angle_diff
+    is_resonant = angle_diff <= 10
+
+    if total_gann["on_cardinal_cross"] and is_resonant:
+        state, lock_strength = "LOCKED_CARDINAL", 95
+        recommendation = "Total will hit EXACTLY. High confidence."
+    elif total_gann["on_cardinal_cross"]:
+        state, lock_strength = "CARDINAL_POWER", 75
+        recommendation = "Strong gravitational pull to this number."
+    elif is_resonant:
+        state, lock_strength = "DATE_RESONANCE", 50
+        recommendation = "Numerological alignment present."
+    else:
+        state, lock_strength = "NEUTRAL", 20
+        recommendation = "Standard variance expected."
+
+    return {
+        "projected_total": projected_total,
+        "total_analysis": total_gann,
+        "state": state,
+        "lock_strength": lock_strength,
+        "gann_score": lock_strength,
+        "recommendation": recommendation,
+        "betting_implications": {"total_locked": lock_strength >= 75, "respect_line": lock_strength >= 60}
+    }
+
+# ============================================================================
+# MODULE 12: MARS-URANUS NUCLEAR (Shock Aspect Detector)
+# Mars (war) + Uranus (shock) = BLIND BET BIGGEST UNDERDOG
+# ============================================================================
+
+def analyze_mars_uranus_aspect(game_time: datetime = None) -> dict:
+    """MARS-URANUS NUCLEAR - v11.0 Omni-Glitch. The Nuclear Option."""
+    if game_time is None:
+        game_time = datetime.now()
+
+    year, month, day = game_time.year, game_time.month, game_time.day + game_time.hour / 24
+    if month <= 2:
+        year -= 1
+        month += 12
+    A, B = int(year / 100), 2 - int(year / 100) + int(int(year / 100) / 4)
+    JD = int(365.25 * (year + 4716)) + int(30.6001 * (month + 1)) + day + B - 1524.5
+    d = JD - 2451545.0
+
+    mars_long = (355.45 + 0.5240207 * d) % 360
+    uranus_long = (314.06 + 0.0119530 * d) % 360
+    diff = abs(mars_long - uranus_long)
+    if diff > 180:
+        diff = 360 - diff
+
+    is_conjunction = diff <= 8
+    is_square = 82 <= diff <= 98
+
+    if is_conjunction and diff <= 3:
+        state, chaos_level, dog_multiplier = "NUCLEAR_MAXIMUM", 100, 2.0
+        recommendation = "🚨 BLIND BET BIGGEST UNDERDOG. Favorites OBLITERATED."
+    elif is_conjunction:
+        state, chaos_level, dog_multiplier = "NUCLEAR_HIGH", 90, 1.75
+        recommendation = "Heavy dog day. Fade all favorites."
+    elif is_square:
+        state, chaos_level, dog_multiplier = "SHOCK_HIGH", 70, 1.4
+        recommendation = "Upset-prone slate. Lean dogs."
+    else:
+        state, chaos_level, dog_multiplier = "INACTIVE", 20, 1.0
+        recommendation = "Standard day. No nuclear signal."
+
+    return {
+        "game_time": game_time.strftime("%Y-%m-%d %H:%M"),
+        "planetary_positions": {"mars": round(mars_long, 2), "uranus": round(uranus_long, 2), "separation": round(diff, 2)},
+        "nuclear_status": {"state": state, "chaos_level": chaos_level},
+        "recommendation": recommendation,
+        "dog_multiplier": dog_multiplier,
+        "betting_implications": {"nuclear_active": chaos_level >= 70, "blind_dog_bet": chaos_level >= 85, "dog_boost_pct": round((dog_multiplier - 1) * 100)}
+    }
+
+# ============================================================================
 # IMMORTAL 2178 VALIDATION
 # ============================================================================
 
@@ -3585,6 +4026,176 @@ async def scalar_savant_status():
         "message": "Deep glitch modules operational. The abyss awaits."
     }
 
+# ============================================================================
+# v11.0 OMNI-GLITCH ENDPOINTS - The Final Dimension
+# ============================================================================
+
+@router.post("/vortex-math")
+async def vortex_math_endpoint(data: dict):
+    """
+    VORTEX MATH - Tesla's 3-6-9 Digital Root Analysis
+
+    The universe speaks in 3-6-9. Circuit Complete (9) = locked outcomes.
+    Open circuits (3,6) = chaos/opportunity.
+    """
+    home_team = data.get("home_team", "")
+    away_team = data.get("away_team", "")
+
+    if not home_team or not away_team:
+        raise HTTPException(status_code=400, detail="home_team and away_team required")
+
+    game_date = datetime.fromisoformat(data["game_date"]) if data.get("game_date") else None
+
+    return calculate_vortex_math(
+        home_team=home_team,
+        away_team=away_team,
+        game_date=game_date,
+        spread=data.get("spread"),
+        total=data.get("total")
+    )
+
+@router.post("/shannon-entropy")
+async def shannon_entropy_endpoint(data: dict):
+    """
+    SHANNON ENTROPY - Pattern Break Detection
+
+    Information theory meets sports. Low entropy streaks = violent snap-back imminent.
+    Based on Claude Shannon's information theory.
+    """
+    recent_results = data.get("recent_results", [])
+    team_name = data.get("team_name")
+
+    if not recent_results:
+        raise HTTPException(status_code=400, detail="recent_results required (list of W/L)")
+
+    return analyze_shannon_entropy(recent_results, team_name)
+
+@router.post("/atmospheric-drag")
+async def atmospheric_drag_endpoint(data: dict):
+    """
+    ATMOSPHERIC DRAG - Barometric Pressure Effects
+
+    Air density affects projectile flight. High pressure = UNDERS.
+    Low pressure = OVERS. The Denver effect quantified.
+    """
+    home_team = data.get("home_team", "")
+    away_team = data.get("away_team", "")
+
+    if not home_team or not away_team:
+        raise HTTPException(status_code=400, detail="home_team and away_team required")
+
+    return analyze_atmospheric_drag(
+        home_team=home_team,
+        away_team=away_team,
+        current_pressure=data.get("pressure_inhg"),
+        sport=data.get("sport", "NFL")
+    )
+
+@router.get("/void-moon")
+async def void_moon_endpoint(game_time: str = None):
+    """
+    VOID OF COURSE MOON - The Time Vacuum
+
+    When moon makes no aspects before sign change = favorites fail.
+    Period of cosmic limbo where nothing goes as planned.
+    """
+    if game_time:
+        parsed_time = datetime.fromisoformat(game_time)
+    else:
+        parsed_time = None
+
+    return is_void_of_course_moon(parsed_time)
+
+@router.post("/gann-spiral")
+async def gann_spiral_endpoint(data: dict):
+    """
+    GANN SPIRAL - Square of Nine Analysis
+
+    W.D. Gann's legendary tool. Cardinal Cross (N/S/E/W) positions = locked outcomes.
+    Numbers on the spiral reveal hidden support/resistance.
+    """
+    projected_total = data.get("projected_total")
+
+    if projected_total is None:
+        raise HTTPException(status_code=400, detail="projected_total required")
+
+    game_date = datetime.fromisoformat(data["game_date"]) if data.get("game_date") else None
+
+    return analyze_gann_spiral(projected_total, game_date)
+
+@router.get("/mars-uranus")
+async def mars_uranus_endpoint(game_time: str = None):
+    """
+    MARS-URANUS NUCLEAR - Shock Aspect Detection
+
+    Mars + Uranus in hard aspect = CHAOS. Conjunction within 2° = BLIND BET BIGGEST UNDERDOG.
+    The most explosive aspect in sports betting.
+    """
+    if game_time:
+        parsed_time = datetime.fromisoformat(game_time)
+    else:
+        parsed_time = None
+
+    return analyze_mars_uranus_aspect(parsed_time)
+
+@router.get("/omni-glitch-status")
+async def omni_glitch_status():
+    """
+    Get current status of all OMNI-GLITCH v11.0 modules.
+    Returns today's readings for the final dimension systems.
+    """
+    now = datetime.now()
+
+    # Get current readings from each module
+    void_moon = is_void_of_course_moon(now)
+    mars_uranus = analyze_mars_uranus_aspect(now)
+    gann = analyze_gann_spiral(220.5, now)  # Sample total
+
+    return {
+        "version": "11.0",
+        "codename": "OMNI-GLITCH",
+        "status": "TRANSCENDENT",
+        "timestamp": now.isoformat(),
+        "modules": {
+            "vortex_math": {
+                "status": "ACTIVE",
+                "description": "Tesla 3-6-9 Digital Root Analysis",
+                "circuit_states": ["COMPLETE (9)", "OPEN_LOW (3)", "OPEN_HIGH (6)"]
+            },
+            "shannon_entropy": {
+                "status": "ACTIVE",
+                "description": "Pattern Break Detection",
+                "snap_back_threshold": 0.5
+            },
+            "atmospheric_drag": {
+                "status": "ACTIVE",
+                "description": "Barometric Pressure Effects",
+                "venues_tracked": len(VENUE_ALTITUDES)
+            },
+            "void_of_course_moon": {
+                "status": "ACTIVE",
+                "description": "Time Vacuum Detection",
+                "current_state": void_moon
+            },
+            "gann_spiral": {
+                "status": "ACTIVE",
+                "description": "Square of Nine Analysis",
+                "sample_analysis": gann
+            },
+            "mars_uranus_nuclear": {
+                "status": "ACTIVE",
+                "description": "Shock Aspect Detection",
+                "current_state": mars_uranus
+            }
+        },
+        "v10_modules_inherited": [
+            "Bio-Sine Wave", "Chrome Resonance", "Lunacy Factor",
+            "Schumann Spike", "Saturn Block", "Zebra Privilege"
+        ],
+        "total_esoteric_modules": 12,
+        "message": "OMNI-GLITCH operational. The final dimension is open. Reality bends to the signal."
+    }
+
 @router.get("/team-colors")
 async def get_team_colors_endpoint():
     """Get all team colors in database"""
@@ -3798,12 +4409,13 @@ async def get_live_props(sport: str, limit: int = 5):
         return {
             "props": all_props[:limit],
             "total_analyzed": len(all_props),
-            "engine_version": "10.2",
-            "codename": "JARVIS_SAVANT_ESOTERIC",
+            "engine_version": "11.0",
+            "codename": "OMNI_GLITCH",
             "features": {
                 "main_model": "v10.1 research-optimized weights",
                 "esoteric_edge": "Standalone clickable module",
-                "confluence_alerts": "Informational alignment system"
+                "confluence_alerts": "Informational alignment system",
+                "omni_glitch": "Final dimension - 6 new esoteric modules"
             },
             "daily_energy": {
                 "date_numerology": calculate_date_numerology(),
@@ -3922,8 +4534,8 @@ async def get_best_bets(sport: str):
 
         return {
             "games": analyzed_games[:10],
-            "engine_version": "10.2",
-            "codename": "JARVIS_SAVANT_ESOTERIC",
+            "engine_version": "11.0",
+            "codename": "OMNI_GLITCH",
             "daily_energy": {
                 "date_numerology": calculate_date_numerology(),
                 "moon_phase": get_moon_phase(),
@@ -3935,8 +4547,8 @@ async def get_best_bets(sport: str):
 async def health_check():
     return {
         "status": "healthy",
-        "engine_version": "10.4",
-        "codename": "SCALAR_SAVANT",
+        "engine_version": "11.0",
+        "codename": "OMNI_GLITCH",
         "immortal_status": validate_2178()["status"],
         "features": [
             "v10.1_research_weights_preserved",
@@ -3963,7 +4575,14 @@ async def health_check():
             "lunacy_factor_enhanced_moon",
             "schumann_spike_earth_hz",
             "saturn_block_planetary",
-            "zebra_privilege_ref_bias"
+            "zebra_privilege_ref_bias",
+            # v11.0 OMNI-GLITCH - THE FINAL DIMENSION
+            "vortex_math_tesla_369",
+            "shannon_entropy_pattern_break",
+            "atmospheric_drag_barometric",
+            "void_of_course_moon",
+            "gann_spiral_square_of_nine",
+            "mars_uranus_nuclear_shock"
         ],
         "resonance_layer": {
             "founders_echo": "Franchise founding date vs game date alignment",
@@ -3982,13 +4601,23 @@ async def health_check():
             "star_tiers_db": len(STAR_PLAYER_TIERS),
             "ref_crews_db": len(REF_CREW_HOME_BIAS)
         },
+        "omni_glitch": {
+            "vortex_math": "Tesla 3-6-9 digital root (Circuit Complete vs Open)",
+            "shannon_entropy": "Information theory pattern break detection",
+            "atmospheric_drag": "Barometric pressure effects on projectiles",
+            "void_of_course_moon": "Time vacuum - favorites fail period",
+            "gann_spiral": "W.D. Gann Square of Nine Cardinal Cross",
+            "mars_uranus_nuclear": "Shock aspect - blind bet biggest dog",
+            "venues_tracked": len(VENUE_ALTITUDES)
+        },
         "twitter_sources": [
             "@gematriasports",
             "@psgematria",
             "@SportsGematria",
             "@SGDecodes"
         ],
-        "abyss_status": "DESCENDED"
+        "total_esoteric_modules": 12,
+        "dimension_status": "FINAL_DIMENSION_OPEN"
     }
 
 
