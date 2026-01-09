@@ -1,5 +1,5 @@
-# live_data_router.py v13.0 - GANN PHYSICS EDITION
-# Research-Optimized + Esoteric Edge + SCALAR-SAVANT + OMNI-GLITCH + GANN PHYSICS
+# live_data_router.py v14.0 - NOOSPHERE VELOCITY EDITION
+# Research-Optimized + Esoteric Edge + SCALAR-SAVANT + OMNI-GLITCH + GANN PHYSICS + NOOSPHERE
 # v10.1 weights preserved | Esoteric as standalone clickable feature
 # +94.40u YTD edge system | Twitter gematria community insights integrated
 #
@@ -13,6 +13,10 @@
 #        W.D. Gann's $130 → $12,000 geometric principles
 #        50% Retracement (Gravity Check) | Rule of Three (Exhaustion Node)
 #        Annulifier Cycle (Harmonic Lock)
+# v14.0: NOOSPHERE VELOCITY - The Global Mind (MAIN MODEL INTEGRATION)
+#        Princeton Global Consciousness Project meets Sports Betting
+#        Insider Leak (Silent Spike) | Main Character Syndrome | Phantom Injury
+#        "Someone always knows." - Information Asymmetry Detection
 
 from fastapi import APIRouter, HTTPException
 from typing import Optional, List, Dict, Any
@@ -3301,6 +3305,478 @@ def get_gann_physics_composite(
 
     return results
 
+# ============================================================================
+# v14.0: NOOSPHERE VELOCITY - The Global Mind Signal (MAIN MODEL)
+# "Someone always knows." - Information Asymmetry Detection
+# Princeton Global Consciousness Project meets Sports Betting
+# ============================================================================
+
+# Baseline search volumes (relative scale 0-100) for calibration
+TEAM_BASELINE_VOLUMES = {
+    # NBA - High interest
+    "Lakers": 85, "Celtics": 80, "Warriors": 82, "Knicks": 78, "Bulls": 70,
+    "Heat": 72, "Nets": 65, "76ers": 68, "Mavericks": 70, "Suns": 65,
+    "Nuggets": 55, "Bucks": 58, "Clippers": 60, "Grizzlies": 45, "Kings": 42,
+    "Cavaliers": 50, "Hawks": 48, "Raptors": 52, "Wizards": 40, "Pacers": 38,
+    "Magic": 42, "Hornets": 35, "Pistons": 38, "Thunder": 45, "Pelicans": 40,
+    "Timberwolves": 42, "Trail Blazers": 45, "Jazz": 40, "Spurs": 50, "Rockets": 55,
+
+    # NFL - Highest interest
+    "Cowboys": 95, "Patriots": 88, "Packers": 85, "Chiefs": 90, "Eagles": 82,
+    "49ers": 80, "Steelers": 78, "Raiders": "75", "Giants": 72, "Bears": 70,
+    "Bills": 72, "Ravens": 68, "Broncos": 65, "Dolphins": 68, "Jets": 65,
+    "Seahawks": 70, "Lions": 60, "Vikings": 62, "Saints": 65, "Bengals": 65,
+    "Browns": 62, "Chargers": 60, "Cardinals": 55, "Rams": 65, "Falcons": 55,
+    "Panthers": 52, "Buccaneers": 68, "Commanders": 55, "Colts": 58, "Texans": 55,
+    "Titans": 52, "Jaguars": 48,
+
+    # College - Variable
+    "Alabama": 88, "Ohio State": 85, "Michigan": 82, "Georgia": 80, "Texas": 78,
+    "Notre Dame": 75, "USC": 72, "LSU": 70, "Clemson": 68, "Florida": 65,
+    "Duke": 75, "Kentucky": 72, "North Carolina": 70, "Kansas": 68, "UCLA": 65,
+
+    # Default for unknown teams
+    "default": 30
+}
+
+# Injury-related search terms that indicate "Phantom Injury"
+INJURY_RELATED_TERMS = [
+    "injury", "injured", "hurt", "limp", "limping", "grimace", "grimacing",
+    "questionable", "doubtful", "out", "DNP", "rest", "load management",
+    "ankle", "knee", "hamstring", "back", "shoulder", "wrist", "concussion",
+    "illness", "sick", "flu", "covid", "protocol", "warmups", "practice"
+]
+
+
+def get_baseline_volume(team_name: str) -> int:
+    """Get baseline search volume for a team"""
+    for key in TEAM_BASELINE_VOLUMES:
+        if key.lower() in team_name.lower() or team_name.lower() in key.lower():
+            val = TEAM_BASELINE_VOLUMES[key]
+            return int(val) if isinstance(val, (int, float)) else 30
+    return TEAM_BASELINE_VOLUMES.get("default", 30)
+
+
+def calculate_volume_velocity(current_volume: float, baseline_volume: float) -> dict:
+    """
+    Calculate search volume velocity (rate of change)
+
+    Returns velocity metrics:
+    - velocity_pct: Percentage above/below baseline
+    - velocity_tier: SILENT_SPIKE, LOUD_SPIKE, NORMAL, DEAD
+    """
+    if baseline_volume <= 0:
+        baseline_volume = 30
+
+    velocity_pct = ((current_volume - baseline_volume) / baseline_volume) * 100
+
+    if velocity_pct >= 300:
+        tier = "EXTREME_SPIKE"
+        description = "Massive unexplained interest"
+    elif velocity_pct >= 200:
+        tier = "SILENT_SPIKE"
+        description = "Strong phantom signal"
+    elif velocity_pct >= 100:
+        tier = "ELEVATED"
+        description = "Above normal interest"
+    elif velocity_pct >= 50:
+        tier = "MILD_SPIKE"
+        description = "Slightly elevated"
+    elif velocity_pct <= -50:
+        tier = "DEAD"
+        description = "Unusually low interest"
+    else:
+        tier = "NORMAL"
+        description = "Baseline activity"
+
+    return {
+        "current_volume": current_volume,
+        "baseline_volume": baseline_volume,
+        "velocity_pct": round(velocity_pct, 1),
+        "tier": tier,
+        "description": description
+    }
+
+
+def detect_insider_leak(
+    team_name: str,
+    current_volume: float,
+    has_news: bool = False,
+    news_sentiment: str = "neutral"  # "positive", "negative", "neutral"
+) -> dict:
+    """
+    INSIDER LEAK DETECTION (The Line-Mover)
+
+    Silent Spike (High volume + No news) = Someone knows something
+    FADE the team with the unexplained spike - bad news is coming.
+
+    The Science: Information leaks to cousins, trainers, beat writers.
+    They search to confirm the rumor before news breaks.
+    """
+    baseline = get_baseline_volume(team_name)
+    velocity = calculate_volume_velocity(current_volume, baseline)
+
+    # The key insight: High volume WITHOUT news = insider activity
+    is_silent_spike = velocity["velocity_pct"] >= 200 and not has_news
+
+    # If there IS news, the spike is "loud" and oddsmakers already adjusted
+    is_loud_spike = velocity["velocity_pct"] >= 200 and has_news
+
+    if is_silent_spike:
+        signal = "INSIDER_LEAK_DETECTED"
+        confidence = min(95, 70 + (velocity["velocity_pct"] - 200) / 10)
+        recommendation = f"🚨 FADE {team_name}. Silent spike ({velocity['velocity_pct']:.0f}%) with NO news. Someone knows."
+        action = "FADE"
+        edge_score = min(100, velocity["velocity_pct"] / 3)
+    elif is_loud_spike:
+        signal = "LOUD_SPIKE_NO_EDGE"
+        confidence = 50
+        recommendation = f"Loud spike but news is public. Line already adjusted. No edge."
+        action = "NEUTRAL"
+        edge_score = 0
+    elif velocity["tier"] == "DEAD":
+        signal = "DEAD_INTEREST"
+        confidence = 60
+        recommendation = f"Unusually low interest in {team_name}. Potential trap game."
+        action = "CAUTION"
+        edge_score = 25
+    else:
+        signal = "NO_ANOMALY"
+        confidence = 50
+        recommendation = "Normal search activity. No insider signal detected."
+        action = "NEUTRAL"
+        edge_score = 0
+
+    return {
+        "team": team_name,
+        "signal_type": "INSIDER_LEAK",
+        "velocity": velocity,
+        "has_news": has_news,
+        "news_sentiment": news_sentiment,
+        "is_silent_spike": is_silent_spike,
+        "is_loud_spike": is_loud_spike,
+        "signal": signal,
+        "confidence": round(confidence),
+        "recommendation": recommendation,
+        "action": action,
+        "edge_score": round(edge_score),
+        "principle": "Silent Spike = Information asymmetry. Someone always knows first."
+    }
+
+
+def detect_main_character_syndrome(
+    underdog_name: str,
+    favorite_name: str,
+    underdog_volume: float,
+    favorite_volume: float,
+    underdog_spread: float,
+    sentiment: str = "manic"  # "manic", "negative", "neutral"
+) -> dict:
+    """
+    MAIN CHARACTER SYNDROME (The Energy Shift)
+
+    When underdog has HIGHER search volume than favorite = Collective manifestation.
+    The Noosphere has decided this is the "Upset of the Night."
+
+    The Science: Memes, hype videos, "belief" energy.
+    The collective consciousness wills the ball into the hoop.
+    """
+    underdog_baseline = get_baseline_volume(underdog_name)
+    favorite_baseline = get_baseline_volume(favorite_name)
+
+    underdog_velocity = calculate_volume_velocity(underdog_volume, underdog_baseline)
+    favorite_velocity = calculate_volume_velocity(favorite_volume, favorite_baseline)
+
+    # Main Character = Underdog has more volume than favorite (adjusted for baseline)
+    volume_ratio = underdog_volume / max(favorite_volume, 1)
+    adjusted_ratio = (underdog_volume / underdog_baseline) / max((favorite_volume / favorite_baseline), 0.1)
+
+    is_main_character = adjusted_ratio > 1.5 and sentiment == "manic"
+    is_strong_main_character = adjusted_ratio > 2.0 and sentiment == "manic"
+
+    if is_strong_main_character:
+        signal = "STRONG_MAIN_CHARACTER"
+        confidence = min(92, 75 + (adjusted_ratio - 2) * 10)
+        recommendation = f"⭐ BET {underdog_name} (DOG). STRONG Main Character energy. The Noosphere chose this upset."
+        action = "BET_DOG"
+        edge_score = min(100, adjusted_ratio * 35)
+    elif is_main_character:
+        signal = "MAIN_CHARACTER_ACTIVE"
+        confidence = min(82, 65 + (adjusted_ratio - 1.5) * 15)
+        recommendation = f"🎬 BET {underdog_name} (DOG). Main Character syndrome detected. Collective belief active."
+        action = "BET_DOG"
+        edge_score = min(85, adjusted_ratio * 30)
+    elif adjusted_ratio > 1.2:
+        signal = "MILD_ENERGY_SHIFT"
+        confidence = 58
+        recommendation = f"Slight energy toward {underdog_name}. Monitor for escalation."
+        action = "WATCH"
+        edge_score = 15
+    else:
+        signal = "NO_ENERGY_SHIFT"
+        confidence = 50
+        recommendation = "Normal volume distribution. Favorite remains the narrative."
+        action = "NEUTRAL"
+        edge_score = 0
+
+    return {
+        "underdog": underdog_name,
+        "favorite": favorite_name,
+        "signal_type": "MAIN_CHARACTER",
+        "underdog_velocity": underdog_velocity,
+        "favorite_velocity": favorite_velocity,
+        "volume_ratio": round(volume_ratio, 2),
+        "adjusted_ratio": round(adjusted_ratio, 2),
+        "sentiment": sentiment,
+        "spread": underdog_spread,
+        "is_main_character": is_main_character or is_strong_main_character,
+        "signal": signal,
+        "confidence": round(confidence),
+        "recommendation": recommendation,
+        "action": action,
+        "edge_score": round(edge_score),
+        "principle": "The Hive Mind chose the upset. Collective belief manifests outcomes."
+    }
+
+
+def detect_phantom_injury(
+    player_name: str,
+    player_volume: float,
+    player_baseline: float = 50,
+    related_queries: list = None,
+    has_official_injury_report: bool = False
+) -> dict:
+    """
+    PHANTOM INJURY DETECTION (The Prop Killer)
+
+    Player search spike + injury-related queries + NO official report = Hidden limitation.
+    Fans at arena/warmups saw something beat writers ignored.
+
+    The Science: The Hive sees physical weakness before stats reflect it.
+    """
+    related_queries = related_queries or []
+
+    velocity = calculate_volume_velocity(player_volume, player_baseline)
+
+    # Check for injury-related search terms
+    injury_query_count = 0
+    injury_queries_found = []
+    for query in related_queries:
+        query_lower = query.lower()
+        for term in INJURY_RELATED_TERMS:
+            if term in query_lower:
+                injury_query_count += 1
+                injury_queries_found.append(query)
+                break
+
+    injury_query_ratio = injury_query_count / max(len(related_queries), 1)
+
+    # Phantom Injury = Volume spike + Injury queries + NO official report
+    is_phantom_injury = (
+        velocity["velocity_pct"] >= 100 and
+        injury_query_ratio >= 0.3 and
+        not has_official_injury_report
+    )
+
+    is_strong_phantom = (
+        velocity["velocity_pct"] >= 200 and
+        injury_query_ratio >= 0.5 and
+        not has_official_injury_report
+    )
+
+    if is_strong_phantom:
+        signal = "STRONG_PHANTOM_INJURY"
+        confidence = min(90, 72 + injury_query_ratio * 30)
+        recommendation = f"🩹 BET UNDER on {player_name} props. Strong phantom injury signal. The Hive sees limitation."
+        action = "BET_UNDER"
+        edge_score = min(95, velocity["velocity_pct"] / 2.5 + injury_query_ratio * 50)
+    elif is_phantom_injury:
+        signal = "PHANTOM_INJURY_DETECTED"
+        confidence = min(78, 60 + injury_query_ratio * 25)
+        recommendation = f"⚠️ Lean UNDER on {player_name}. Phantom injury queries detected. Monitor warmups."
+        action = "LEAN_UNDER"
+        edge_score = min(75, velocity["velocity_pct"] / 3 + injury_query_ratio * 40)
+    elif has_official_injury_report:
+        signal = "OFFICIAL_INJURY"
+        confidence = 50
+        recommendation = f"Official injury report exists. Line already adjusted."
+        action = "NEUTRAL"
+        edge_score = 0
+    else:
+        signal = "NO_PHANTOM"
+        confidence = 50
+        recommendation = "No phantom injury signals. Normal activity."
+        action = "NEUTRAL"
+        edge_score = 0
+
+    return {
+        "player": player_name,
+        "signal_type": "PHANTOM_INJURY",
+        "velocity": velocity,
+        "related_queries": related_queries,
+        "injury_queries_found": injury_queries_found,
+        "injury_query_ratio": round(injury_query_ratio, 2),
+        "has_official_report": has_official_injury_report,
+        "is_phantom_injury": is_phantom_injury or is_strong_phantom,
+        "signal": signal,
+        "confidence": round(confidence),
+        "recommendation": recommendation,
+        "action": action,
+        "edge_score": round(edge_score),
+        "principle": "The Hive sees physical weakness before stats reflect it."
+    }
+
+
+def calculate_noosphere_velocity(
+    team_name: str,
+    opponent_name: str = None,
+    team_volume: float = None,
+    opponent_volume: float = None,
+    has_news: bool = False,
+    is_underdog: bool = False,
+    spread: float = None,
+    sentiment: str = "neutral",
+    player_name: str = None,
+    player_volume: float = None,
+    player_queries: list = None
+) -> dict:
+    """
+    NOOSPHERE VELOCITY - Composite Signal for Main Model
+
+    Combines all three detection methods:
+    1. Insider Leak (Silent Spike) - FADE team with unexplained spike
+    2. Main Character Syndrome - BET underdog with higher volume
+    3. Phantom Injury - BET UNDER on player props
+
+    Returns weighted signal for main confidence calculation.
+    """
+    results = {
+        "team": team_name,
+        "version": "14.0",
+        "codename": "NOOSPHERE_VELOCITY",
+        "active_signals": [],
+        "signals": {}
+    }
+
+    total_edge = 0
+    signal_count = 0
+
+    # 1. Insider Leak Detection
+    if team_volume is not None:
+        insider = detect_insider_leak(team_name, team_volume, has_news)
+        results["signals"]["insider_leak"] = insider
+        if insider["signal"] == "INSIDER_LEAK_DETECTED":
+            results["active_signals"].append("INSIDER_LEAK")
+            total_edge += insider["edge_score"]
+            signal_count += 1
+
+    # 2. Main Character Syndrome
+    if opponent_name and team_volume is not None and opponent_volume is not None and is_underdog:
+        main_char = detect_main_character_syndrome(
+            underdog_name=team_name,
+            favorite_name=opponent_name,
+            underdog_volume=team_volume,
+            favorite_volume=opponent_volume,
+            underdog_spread=spread or 0,
+            sentiment=sentiment
+        )
+        results["signals"]["main_character"] = main_char
+        if main_char["is_main_character"]:
+            results["active_signals"].append("MAIN_CHARACTER")
+            total_edge += main_char["edge_score"]
+            signal_count += 1
+
+    # 3. Phantom Injury (Player Props)
+    if player_name and player_volume is not None:
+        phantom = detect_phantom_injury(
+            player_name=player_name,
+            player_volume=player_volume,
+            related_queries=player_queries or []
+        )
+        results["signals"]["phantom_injury"] = phantom
+        if phantom["is_phantom_injury"]:
+            results["active_signals"].append("PHANTOM_INJURY")
+            total_edge += phantom["edge_score"]
+            signal_count += 1
+
+    # Calculate composite score for main model integration
+    if signal_count > 0:
+        composite_edge = total_edge / signal_count
+
+        # Confluence bonus - multiple Noosphere signals = stronger
+        if signal_count >= 2:
+            composite_edge = min(100, composite_edge * 1.25)
+
+        if signal_count >= 3:
+            noosphere_tier = "FULL_NOOSPHERE"
+            message = "🌐 ALL NOOSPHERE SIGNALS ACTIVE. Maximum information asymmetry."
+        elif signal_count == 2:
+            noosphere_tier = "DUAL_SIGNAL"
+            message = "🌐 Two Noosphere signals aligned. Strong edge."
+        else:
+            noosphere_tier = "SINGLE_SIGNAL"
+            message = "🌐 Noosphere signal detected."
+    else:
+        composite_edge = 0
+        noosphere_tier = "SILENT"
+        message = "No Noosphere anomalies detected."
+
+    # Convert edge to main model score (0-100 scale)
+    # High edge = high score, which boosts confidence
+    noosphere_score = min(100, 50 + composite_edge * 0.5)
+
+    results["composite"] = {
+        "signal_count": signal_count,
+        "total_edge": round(total_edge),
+        "composite_edge": round(composite_edge),
+        "noosphere_score": round(noosphere_score),  # For main model integration
+        "noosphere_tier": noosphere_tier,
+        "message": message
+    }
+
+    # Determine primary action
+    if "INSIDER_LEAK" in results["active_signals"]:
+        results["primary_action"] = "FADE"
+        results["primary_target"] = team_name
+    elif "MAIN_CHARACTER" in results["active_signals"]:
+        results["primary_action"] = "BET_DOG"
+        results["primary_target"] = team_name
+    elif "PHANTOM_INJURY" in results["active_signals"]:
+        results["primary_action"] = "BET_UNDER"
+        results["primary_target"] = player_name
+    else:
+        results["primary_action"] = "NEUTRAL"
+        results["primary_target"] = None
+
+    return results
+
+
+def get_noosphere_main_model_signal(noosphere_data: dict) -> dict:
+    """
+    Extract the signal for main model integration.
+
+    Returns a signal dict compatible with calculate_main_confidence().
+    """
+    composite = noosphere_data.get("composite", {})
+    score = composite.get("noosphere_score", 50)
+    tier = composite.get("noosphere_tier", "SILENT")
+    active = noosphere_data.get("active_signals", [])
+
+    if tier == "FULL_NOOSPHERE":
+        contribution = f"🌐 FULL NOOSPHERE: {', '.join(active)}"
+    elif tier == "DUAL_SIGNAL":
+        contribution = f"🌐 Dual Noosphere: {', '.join(active)}"
+    elif tier == "SINGLE_SIGNAL":
+        contribution = f"🌐 Noosphere: {active[0] if active else 'Active'}"
+    else:
+        contribution = "No Noosphere signal"
+
+    return {
+        "score": score,
+        "contribution": contribution
+    }
+
+
 def validate_2178() -> dict:
     """Prove the mathematical uniqueness of 2178"""
     n = 2178
@@ -3858,6 +4334,7 @@ def check_confluence_alert(
 SIGNAL_WEIGHTS = {
     "sharp_money": 22,
     "line_edge": 18,
+    "noosphere_velocity": 17,  # v14.0 - Information asymmetry detection (MAIN MODEL)
     "injury_vacuum": 16,
     "game_pace": 15,
     "travel_fatigue": 14,
@@ -4088,6 +4565,24 @@ def calculate_main_confidence(game_data: dict, context: dict = None) -> dict:
             signals["nhl_protocol"] = {"score": 70, "contribution": "Partial NHL protocol"}
         else:
             signals["nhl_protocol"] = {"score": 50, "contribution": "NHL protocol inactive"}
+
+    # v14.0 NOOSPHERE VELOCITY - Information asymmetry detection
+    # This is a MAIN MODEL signal - "Someone always knows"
+    noosphere_data = context.get("noosphere_data")
+    if noosphere_data:
+        noosphere_signal = get_noosphere_main_model_signal(noosphere_data)
+        signals["noosphere_velocity"] = noosphere_signal
+
+        # If Noosphere detects INSIDER_LEAK, apply penalty to confidence
+        if "INSIDER_LEAK" in noosphere_data.get("active_signals", []):
+            # The team being analyzed has a silent spike - this is BAD for them
+            # So we want to reduce confidence if backing them, increase if fading
+            if not game_data.get("is_fade_pick", False):
+                # We're backing the team with the leak - reduce score
+                signals["noosphere_velocity"]["score"] = max(20, signals["noosphere_velocity"]["score"] - 30)
+                signals["noosphere_velocity"]["contribution"] += " (FADE SIGNAL - reduce confidence)"
+    else:
+        signals["noosphere_velocity"] = {"score": 50, "contribution": "No Noosphere data"}
 
     # Fill remaining
     for signal in ["injury_vacuum", "travel_fatigue", "back_to_back", "defense_vs_position",
@@ -4737,6 +5232,176 @@ async def gann_physics_status():
         "message": "The geometry of the universe reveals all. W.D. Gann's laws now govern the field."
     }
 
+# ============================================================================
+# v14.0: NOOSPHERE VELOCITY ENDPOINTS - The Global Mind (MAIN MODEL)
+# "Someone always knows." - Information Asymmetry Detection
+# ============================================================================
+
+@router.post("/noosphere/insider-leak")
+async def noosphere_insider_leak_endpoint(data: dict):
+    """
+    INSIDER LEAK DETECTION (The Line-Mover)
+
+    Detects Silent Spikes - high search volume with NO news = someone knows.
+    FADE the team with the unexplained spike.
+
+    Required: team_name, current_volume
+    Optional: has_news (default False), news_sentiment
+    """
+    team_name = data.get("team_name", "")
+    current_volume = data.get("current_volume")
+
+    if not team_name or current_volume is None:
+        raise HTTPException(status_code=400, detail="team_name and current_volume required")
+
+    return detect_insider_leak(
+        team_name=team_name,
+        current_volume=float(current_volume),
+        has_news=data.get("has_news", False),
+        news_sentiment=data.get("news_sentiment", "neutral")
+    )
+
+@router.post("/noosphere/main-character")
+async def noosphere_main_character_endpoint(data: dict):
+    """
+    MAIN CHARACTER SYNDROME (The Energy Shift)
+
+    When underdog has HIGHER search volume than favorite = Collective manifestation.
+    The Noosphere chose this upset. BET THE DOG.
+
+    Required: underdog_name, favorite_name, underdog_volume, favorite_volume
+    Optional: underdog_spread, sentiment (manic/negative/neutral)
+    """
+    underdog_name = data.get("underdog_name", "")
+    favorite_name = data.get("favorite_name", "")
+    underdog_volume = data.get("underdog_volume")
+    favorite_volume = data.get("favorite_volume")
+
+    if not underdog_name or not favorite_name or underdog_volume is None or favorite_volume is None:
+        raise HTTPException(
+            status_code=400,
+            detail="underdog_name, favorite_name, underdog_volume, favorite_volume required"
+        )
+
+    return detect_main_character_syndrome(
+        underdog_name=underdog_name,
+        favorite_name=favorite_name,
+        underdog_volume=float(underdog_volume),
+        favorite_volume=float(favorite_volume),
+        underdog_spread=data.get("underdog_spread", 0),
+        sentiment=data.get("sentiment", "manic")
+    )
+
+@router.post("/noosphere/phantom-injury")
+async def noosphere_phantom_injury_endpoint(data: dict):
+    """
+    PHANTOM INJURY DETECTION (The Prop Killer)
+
+    Player search spike + injury queries + NO official report = Hidden limitation.
+    BET UNDER on player props.
+
+    Required: player_name, player_volume
+    Optional: player_baseline, related_queries (list), has_official_injury_report
+    """
+    player_name = data.get("player_name", "")
+    player_volume = data.get("player_volume")
+
+    if not player_name or player_volume is None:
+        raise HTTPException(status_code=400, detail="player_name and player_volume required")
+
+    return detect_phantom_injury(
+        player_name=player_name,
+        player_volume=float(player_volume),
+        player_baseline=data.get("player_baseline", 50),
+        related_queries=data.get("related_queries", []),
+        has_official_injury_report=data.get("has_official_injury_report", False)
+    )
+
+@router.post("/noosphere/composite")
+async def noosphere_composite_endpoint(data: dict):
+    """
+    NOOSPHERE VELOCITY COMPOSITE - Full analysis for main model
+
+    Combines all three detection methods:
+    1. Insider Leak (Silent Spike) - FADE team
+    2. Main Character Syndrome - BET underdog
+    3. Phantom Injury - BET UNDER on props
+
+    Returns weighted signal for main confidence calculation.
+
+    Required: team_name
+    Optional: All other parameters for individual detectors
+    """
+    team_name = data.get("team_name", "")
+
+    if not team_name:
+        raise HTTPException(status_code=400, detail="team_name required")
+
+    return calculate_noosphere_velocity(
+        team_name=team_name,
+        opponent_name=data.get("opponent_name"),
+        team_volume=data.get("team_volume"),
+        opponent_volume=data.get("opponent_volume"),
+        has_news=data.get("has_news", False),
+        is_underdog=data.get("is_underdog", False),
+        spread=data.get("spread"),
+        sentiment=data.get("sentiment", "neutral"),
+        player_name=data.get("player_name"),
+        player_volume=data.get("player_volume"),
+        player_queries=data.get("player_queries")
+    )
+
+@router.get("/noosphere/status")
+async def noosphere_status():
+    """
+    Get current status of v14.0 NOOSPHERE VELOCITY module.
+    Returns the three detection methods and their principles.
+    """
+    return {
+        "version": "14.0",
+        "codename": "NOOSPHERE_VELOCITY",
+        "status": "GLOBAL_MIND_ACTIVE",
+        "integration": "MAIN_MODEL",
+        "signal_weight": SIGNAL_WEIGHTS.get("noosphere_velocity", 17),
+        "inspiration": {
+            "source": "Princeton Global Consciousness Project",
+            "principle": "Someone always knows. Information asymmetry is the edge.",
+            "science": "RNGs deviate from randomness before major emotional events"
+        },
+        "detection_methods": {
+            "insider_leak": {
+                "name": "The Line-Mover",
+                "trigger": "Silent Spike - High volume + No news",
+                "action": "FADE the team",
+                "principle": "Information leaks to insiders first"
+            },
+            "main_character_syndrome": {
+                "name": "The Energy Shift",
+                "trigger": "Underdog volume > Favorite volume + Manic sentiment",
+                "action": "BET the underdog",
+                "principle": "Collective consciousness manifests outcomes"
+            },
+            "phantom_injury": {
+                "name": "The Prop Killer",
+                "trigger": "Player spike + Injury queries + No report",
+                "action": "BET UNDER on props",
+                "principle": "The Hive sees physical weakness first"
+            }
+        },
+        "signal_types": {
+            "SILENT_SPIKE": "200%+ volume increase with no news",
+            "MAIN_CHARACTER": "Underdog narrative domination",
+            "PHANTOM_INJURY": "Hidden player limitation"
+        },
+        "confluence_levels": {
+            "SINGLE_SIGNAL": "One Noosphere signal active",
+            "DUAL_SIGNAL": "Two signals aligned (1.25x boost)",
+            "FULL_NOOSPHERE": "All three active (maximum information asymmetry)"
+        },
+        "teams_tracked": len(TEAM_BASELINE_VOLUMES) - 1,  # Exclude 'default'
+        "message": "The Global Mind sees what oddsmakers don't. Someone always knows."
+    }
+
 @router.get("/team-colors")
 async def get_team_colors_endpoint():
     """Get all team colors in database"""
@@ -4950,14 +5615,15 @@ async def get_live_props(sport: str, limit: int = 5):
         return {
             "props": all_props[:limit],
             "total_analyzed": len(all_props),
-            "engine_version": "13.0",
-            "codename": "GANN_PHYSICS",
+            "engine_version": "14.0",
+            "codename": "NOOSPHERE_VELOCITY",
             "features": {
                 "main_model": "v10.1 research-optimized weights",
                 "esoteric_edge": "Standalone clickable module",
                 "confluence_alerts": "Informational alignment system",
                 "omni_glitch": "Final dimension - 6 esoteric modules",
-                "gann_physics": "Financial laws applied to sports - 3 geometric modules"
+                "gann_physics": "Financial laws applied to sports - 3 geometric modules",
+                "noosphere_velocity": "Global mind signal - Information asymmetry (MAIN MODEL)"
             },
             "daily_energy": {
                 "date_numerology": calculate_date_numerology(),
@@ -5076,8 +5742,8 @@ async def get_best_bets(sport: str):
 
         return {
             "games": analyzed_games[:10],
-            "engine_version": "13.0",
-            "codename": "GANN_PHYSICS",
+            "engine_version": "14.0",
+            "codename": "NOOSPHERE_VELOCITY",
             "daily_energy": {
                 "date_numerology": calculate_date_numerology(),
                 "moon_phase": get_moon_phase(),
@@ -5089,8 +5755,8 @@ async def get_best_bets(sport: str):
 async def health_check():
     return {
         "status": "healthy",
-        "engine_version": "13.0",
-        "codename": "GANN_PHYSICS",
+        "engine_version": "14.0",
+        "codename": "NOOSPHERE_VELOCITY",
         "immortal_status": validate_2178()["status"],
         "features": [
             "v10.1_research_weights_preserved",
@@ -5128,7 +5794,11 @@ async def health_check():
             # v13.0 GANN PHYSICS - Financial Laws Applied to Sports
             "gann_50_percent_retracement",
             "gann_rule_of_three_exhaustion",
-            "gann_annulifier_cycle_harmonic"
+            "gann_annulifier_cycle_harmonic",
+            # v14.0 NOOSPHERE VELOCITY - Global Mind (MAIN MODEL)
+            "noosphere_insider_leak_detection",
+            "noosphere_main_character_syndrome",
+            "noosphere_phantom_injury_detection"
         ],
         "resonance_layer": {
             "founders_echo": "Franchise founding date vs game date alignment",
@@ -5164,14 +5834,24 @@ async def health_check():
             "annulifier_cycle": "Harmonic Lock - W-L-W-L pattern = 5th result LOCKED",
             "confluence_levels": ["SINGLE_LAW", "DUAL_GEOMETRY", "GANN_TRIFECTA"]
         },
+        "noosphere_velocity": {
+            "integration": "MAIN_MODEL",
+            "signal_weight": 17,
+            "source": "Princeton Global Consciousness Project",
+            "principle": "Someone always knows. Information asymmetry is the edge.",
+            "insider_leak": "Silent Spike - High volume + No news = FADE",
+            "main_character": "Underdog volume > Favorite = BET DOG",
+            "phantom_injury": "Player spike + Injury queries = BET UNDER",
+            "teams_tracked": len(TEAM_BASELINE_VOLUMES) - 1
+        },
         "twitter_sources": [
             "@gematriasports",
             "@psgematria",
             "@SportsGematria",
             "@SGDecodes"
         ],
-        "total_esoteric_modules": 15,
-        "gann_physics_status": "GEOMETRIC_LAWS_ACTIVE"
+        "total_esoteric_modules": 18,
+        "noosphere_status": "GLOBAL_MIND_ACTIVE"
     }
 
 
