@@ -5043,7 +5043,7 @@ async def omni_glitch_status():
             "atmospheric_drag": {
                 "status": "ACTIVE",
                 "description": "Barometric Pressure Effects",
-                "venues_tracked": len(VENUE_ALTITUDES)
+                "venues_tracked": len(VENUE_ATMOSPHERICS)
             },
             "void_of_course_moon": {
                 "status": "ACTIVE",
@@ -5824,7 +5824,7 @@ async def health_check():
             "void_of_course_moon": "Time vacuum - favorites fail period",
             "gann_spiral": "W.D. Gann Square of Nine Cardinal Cross",
             "mars_uranus_nuclear": "Shock aspect - blind bet biggest dog",
-            "venues_tracked": len(VENUE_ALTITUDES)
+            "venues_tracked": len(VENUE_ATMOSPHERICS)
         },
         "gann_physics": {
             "inspiration": "W.D. Gann - $130 → $12,000 in 30 days (9,000% return)",
