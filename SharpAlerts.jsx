@@ -6,10 +6,12 @@
  * professional betting action.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import api from './api';
 import { ListSkeleton, CardSkeleton } from './Skeletons';
 import { ConnectionError } from './ErrorBoundary';
+import { useAutoRefresh } from './useAutoRefresh';
+import { LastUpdated, LiveBadge, RefreshIntervalSelector } from './LiveIndicators';
 
 const SharpAlerts = () => {
   const [sport, setSport] = useState('NBA');
@@ -19,6 +21,20 @@ const SharpAlerts = () => {
   const [splits, setSplits] = useState([]);
 
   const sports = ['NBA', 'NFL', 'MLB', 'NHL', 'NCAAB'];
+
+  // Auto-refresh hook
+  const {
+    lastUpdated,
+    isRefreshing,
+    refresh,
+    setInterval: setRefreshInterval,
+    interval: refreshInterval,
+    isPaused,
+    togglePause
+  } = useAutoRefresh(
+    useCallback(() => fetchSharpData(), [sport]),
+    { interval: 120000, immediate: false, deps: [sport] }
+  );
 
   useEffect(() => {
     fetchSharpData();
@@ -163,13 +179,28 @@ const SharpAlerts = () => {
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
 
         {/* Header */}
-        <div style={{ marginBottom: '25px' }}>
+        <div style={{ marginBottom: '15px' }}>
           <h1 style={{ color: '#fff', fontSize: '28px', margin: '0 0 5px', display: 'flex', alignItems: 'center', gap: '10px' }}>
             🦈 Sharp Money Alerts
           </h1>
           <p style={{ color: '#6b7280', margin: 0, fontSize: '14px' }}>
             Where the smart money is going • Ticket % vs Money % divergence
           </p>
+        </div>
+
+        {/* Real-time Controls */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
+          <LastUpdated
+            timestamp={lastUpdated}
+            isRefreshing={isRefreshing || loading}
+            onRefresh={refresh}
+            isPaused={isPaused}
+            onTogglePause={togglePause}
+          />
+          <RefreshIntervalSelector
+            interval={refreshInterval}
+            onChange={setRefreshInterval}
+          />
         </div>
 
         {/* Legend */}
@@ -254,8 +285,11 @@ const SharpAlerts = () => {
                       <div style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>
                         {alert.away_team} @ {alert.home_team}
                       </div>
-                      <div style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px' }}>
-                        {alert.time || 'TBD'} • Spread: {alert.spread > 0 ? '+' : ''}{alert.spread}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                        <LiveBadge gameTime={alert.commence_time || alert.time} size="small" />
+                        <span style={{ color: '#6b7280', fontSize: '12px' }}>
+                          {alert.time || 'TBD'} • Spread: {alert.spread > 0 ? '+' : ''}{alert.spread}
+                        </span>
                       </div>
                     </div>
                     <div style={{

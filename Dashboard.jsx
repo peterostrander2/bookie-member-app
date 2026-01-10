@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import api from './api';
 import { getAllPicks, getStats } from './clvTracker';
@@ -6,6 +6,8 @@ import { analyzeCorrelation } from './correlationDetector';
 import SharpMoneyWidget from './SharpMoneyWidget';
 import { StatsGridSkeleton, CardSkeleton } from './Skeletons';
 import { ConnectionError } from './ErrorBoundary';
+import { useAutoRefresh } from './useAutoRefresh';
+import { LastUpdated, ConnectionStatus } from './LiveIndicators';
 
 // What's New items - update this when adding features
 const WHATS_NEW = [
@@ -28,6 +30,21 @@ const Dashboard = () => {
   const [dailySummary, setDailySummary] = useState(null);
   const [showWhatsNew, setShowWhatsNew] = useState(true);
   const [nextGameCountdown, setNextGameCountdown] = useState(null);
+
+  // Auto-refresh hook for dashboard data
+  const {
+    lastUpdated,
+    isRefreshing,
+    refresh,
+    isPaused,
+    togglePause
+  } = useAutoRefresh(
+    useCallback(() => {
+      fetchData();
+      loadTrackedStats();
+    }, []),
+    { interval: 120000, immediate: false }
+  );
 
   useEffect(() => {
     fetchData();
@@ -278,6 +295,18 @@ const Dashboard = () => {
             }} />
             {loading ? 'Checking...' : health?.status === 'healthy' ? 'Systems Online' : 'Systems Offline'}
           </div>
+        </div>
+
+        {/* Real-time Status Bar */}
+        <div style={{ marginBottom: '20px' }}>
+          <LastUpdated
+            timestamp={lastUpdated}
+            isRefreshing={isRefreshing || loading}
+            onRefresh={refresh}
+            isPaused={isPaused}
+            onTogglePause={togglePause}
+            compact={false}
+          />
         </div>
 
         {/* Alerts Section */}
