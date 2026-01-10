@@ -6,6 +6,8 @@ import { explainPick, quickExplain } from './pickExplainer';
 import { analyzeCorrelation, checkPickCorrelation } from './correlationDetector';
 import { ConsensusMeter, ConsensusMiniBadge, ConsensusAlert, calculateConsensus } from './ConsensusMeter';
 import CommunityVote from './CommunityVote';
+import { GameCardSkeleton } from './Skeletons';
+import { ErrorMessage, ConnectionError } from './ErrorBoundary';
 
 // Floating Glow Badge for special convergence picks
 const ConvergenceGlowBadge = ({ tier }) => {
@@ -90,6 +92,7 @@ const SmashSpots = () => {
   const [sport, setSport] = useState('NBA');
   const [picks, setPicks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [signalContext, setSignalContext] = useState(null);
   const [trackedPicks, setTrackedPicks] = useState(new Set());
   const [expandedExplanations, setExpandedExplanations] = useState(new Set());
@@ -173,6 +176,7 @@ const SmashSpots = () => {
 
   const fetchPicks = async () => {
     setLoading(true);
+    setError(null);
     try {
       // Fetch game data and signal context in parallel
       const [slateData, context] = await Promise.all([
@@ -253,6 +257,7 @@ const SmashSpots = () => {
       }
     } catch (err) {
       console.error('Error fetching picks:', err);
+      setError(err.message || 'Failed to fetch picks');
       setPicks([]);
     }
     setLoading(false);
@@ -413,10 +418,11 @@ const SmashSpots = () => {
 
         {/* Picks Grid */}
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '60px', color: '#9ca3af' }}>
-            <div style={{ fontSize: '24px', marginBottom: '10px' }}>⚡</div>
-            Analyzing signals...
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '20px' }}>
+            <GameCardSkeleton count={4} />
           </div>
+        ) : error ? (
+          <ConnectionError onRetry={fetchPicks} serviceName="picks API" />
         ) : picks.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px', color: '#9ca3af', backgroundColor: '#1a1a2e', borderRadius: '12px' }}>
             <div style={{ fontSize: '48px', marginBottom: '15px' }}>🔍</div>

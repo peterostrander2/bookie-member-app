@@ -10,11 +10,14 @@
 
 import React, { useState, useEffect } from 'react';
 import api from './api';
+import { CardSkeleton } from './Skeletons';
+import { ConnectionError } from './ErrorBoundary';
 
 const InjuryVacuum = () => {
   const [sport, setSport] = useState('NBA');
   const [injuries, setInjuries] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const sports = ['NBA', 'NFL', 'MLB', 'NHL'];
 
@@ -24,6 +27,7 @@ const InjuryVacuum = () => {
 
   const fetchInjuries = async () => {
     setLoading(true);
+    setError(null);
     try {
       const data = await api.getInjuries(sport);
 
@@ -37,6 +41,7 @@ const InjuryVacuum = () => {
       }
     } catch (err) {
       console.error('Error fetching injuries:', err);
+      setError(err.message || 'Failed to fetch injury data');
       setInjuries(generateMockInjuries(sport));
     }
     setLoading(false);
@@ -276,11 +281,17 @@ const InjuryVacuum = () => {
           ))}
         </div>
 
+        {/* Error State */}
+        {error && !loading && (
+          <div style={{ marginBottom: '20px' }}>
+            <ConnectionError onRetry={fetchInjuries} serviceName="injuries API" />
+          </div>
+        )}
+
         {/* Injury Cards */}
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '60px', color: '#9ca3af' }}>
-            <div style={{ fontSize: '24px', marginBottom: '10px' }}>🏥</div>
-            Scanning injury reports...
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <CardSkeleton count={3} />
           </div>
         ) : injuries.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px', color: '#9ca3af', backgroundColor: '#1a1a2e', borderRadius: '12px' }}>

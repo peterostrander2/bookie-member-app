@@ -18,6 +18,7 @@ import PerformanceDashboard from './PerformanceDashboard';
 import ConsensusMeterPage from './ConsensusMeter';
 import DailySummary from './DailySummary';
 import ComplianceFooter from './ComplianceFooter';
+import ErrorBoundary from './ErrorBoundary';
 import api from './api';
 
 const Navbar = () => {
@@ -125,25 +126,27 @@ const App = () => {
       <div style={{ backgroundColor: '#0a0a0f', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
         <Navbar />
         <div style={{ flex: 1 }}>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/smash-spots" element={<SmashSpots />} />
-            <Route path="/sharp" element={<SharpAlerts />} />
-            <Route path="/odds" element={<BestOdds />} />
-            <Route path="/injuries" element={<InjuryVacuum />} />
-            <Route path="/performance" element={<PerformanceDashboard />} />
-            <Route path="/consensus" element={<ConsensusMeterPage />} />
-            <Route path="/summary" element={<DailySummary />} />
-            <Route path="/splits" element={<Splits />} />
-            <Route path="/clv" element={<CLVDashboard />} />
-            <Route path="/backtest" element={<BacktestDashboard />} />
-            <Route path="/bankroll" element={<BankrollManager />} />
-            <Route path="/esoteric" element={<Esoteric />} />
-            <Route path="/signals" element={<Signals />} />
-            <Route path="/grading" element={<Grading />} />
-            <Route path="/admin" element={<AdminCockpit />} />
-            <Route path="/profile" element={<Profile />} />
-          </Routes>
+          <ErrorBoundary>
+            <Routes>
+              <Route path="/" element={<ErrorBoundary><Dashboard /></ErrorBoundary>} />
+              <Route path="/smash-spots" element={<ErrorBoundary><SmashSpots /></ErrorBoundary>} />
+              <Route path="/sharp" element={<ErrorBoundary><SharpAlerts /></ErrorBoundary>} />
+              <Route path="/odds" element={<ErrorBoundary><BestOdds /></ErrorBoundary>} />
+              <Route path="/injuries" element={<ErrorBoundary><InjuryVacuum /></ErrorBoundary>} />
+              <Route path="/performance" element={<ErrorBoundary><PerformanceDashboard /></ErrorBoundary>} />
+              <Route path="/consensus" element={<ErrorBoundary><ConsensusMeterPage /></ErrorBoundary>} />
+              <Route path="/summary" element={<ErrorBoundary><DailySummary /></ErrorBoundary>} />
+              <Route path="/splits" element={<ErrorBoundary><Splits /></ErrorBoundary>} />
+              <Route path="/clv" element={<ErrorBoundary><CLVDashboard /></ErrorBoundary>} />
+              <Route path="/backtest" element={<ErrorBoundary><BacktestDashboard /></ErrorBoundary>} />
+              <Route path="/bankroll" element={<ErrorBoundary><BankrollManager /></ErrorBoundary>} />
+              <Route path="/esoteric" element={<ErrorBoundary><Esoteric /></ErrorBoundary>} />
+              <Route path="/signals" element={<ErrorBoundary><Signals /></ErrorBoundary>} />
+              <Route path="/grading" element={<ErrorBoundary><Grading /></ErrorBoundary>} />
+              <Route path="/admin" element={<ErrorBoundary><AdminCockpit /></ErrorBoundary>} />
+              <Route path="/profile" element={<ErrorBoundary><Profile /></ErrorBoundary>} />
+            </Routes>
+          </ErrorBoundary>
         </div>
         <ComplianceFooter />
       </div>

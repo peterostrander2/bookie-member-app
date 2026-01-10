@@ -4,11 +4,14 @@ import api from './api';
 import { getAllPicks, getStats } from './clvTracker';
 import { analyzeCorrelation } from './correlationDetector';
 import SharpMoneyWidget from './SharpMoneyWidget';
+import { StatsGridSkeleton, CardSkeleton } from './Skeletons';
+import { ConnectionError } from './ErrorBoundary';
 
 const Dashboard = () => {
   const [health, setHealth] = useState(null);
   const [todayEnergy, setTodayEnergy] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [trackedStats, setTrackedStats] = useState(null);
   const [correlationStatus, setCorrelationStatus] = useState(null);
   const [alerts, setAlerts] = useState([]);
@@ -82,6 +85,7 @@ const Dashboard = () => {
   };
 
   const fetchData = async () => {
+    setError(null);
     try {
       const [healthData, energyData] = await Promise.all([
         api.getHealth().catch(() => ({ status: 'offline' })),
@@ -89,8 +93,12 @@ const Dashboard = () => {
       ]);
       setHealth(healthData);
       setTodayEnergy(energyData);
+      if (healthData?.status === 'offline') {
+        setError('Unable to connect to server');
+      }
     } catch (err) {
       console.error(err);
+      setError(err.message || 'Failed to load dashboard data');
     }
     setLoading(false);
   };
@@ -172,6 +180,13 @@ const Dashboard = () => {
           </div>
         )}
 
+        {/* Connection Error */}
+        {error && !loading && (
+          <div style={{ marginBottom: '20px' }}>
+            <ConnectionError onRetry={fetchData} serviceName="dashboard API" />
+          </div>
+        )}
+
         {/* Sport Selector + Sharp Money Widget */}
         <div style={{ marginBottom: '20px' }}>
           <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
@@ -237,7 +252,17 @@ const Dashboard = () => {
         )}
 
         {/* Cosmic Energy */}
-        {todayEnergy && (
+        {loading ? (
+          <div style={{
+            background: 'linear-gradient(135deg, #1a1a2e 0%, #2d1f4e 100%)',
+            borderRadius: '16px',
+            padding: '20px',
+            marginBottom: '25px',
+            border: '1px solid #8B5CF640'
+          }}>
+            <StatsGridSkeleton count={3} />
+          </div>
+        ) : todayEnergy && (
           <div style={{
             background: 'linear-gradient(135deg, #1a1a2e 0%, #2d1f4e 100%)',
             borderRadius: '16px',

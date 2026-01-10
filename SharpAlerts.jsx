@@ -8,11 +8,14 @@
 
 import React, { useState, useEffect } from 'react';
 import api from './api';
+import { ListSkeleton, CardSkeleton } from './Skeletons';
+import { ConnectionError } from './ErrorBoundary';
 
 const SharpAlerts = () => {
   const [sport, setSport] = useState('NBA');
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [splits, setSplits] = useState([]);
 
   const sports = ['NBA', 'NFL', 'MLB', 'NHL', 'NCAAB'];
@@ -23,6 +26,7 @@ const SharpAlerts = () => {
 
   const fetchSharpData = async () => {
     setLoading(true);
+    setError(null);
     try {
       // Fetch both sharp money and splits data
       const [sharpRes, splitsRes] = await Promise.all([
@@ -72,6 +76,7 @@ const SharpAlerts = () => {
       setSplits(splitsRes?.games || splitsRes || []);
     } catch (err) {
       console.error('Error fetching sharp data:', err);
+      setError(err.message || 'Failed to fetch sharp money data');
       setAlerts(generateMockAlerts(sport));
     }
     setLoading(false);
@@ -213,11 +218,17 @@ const SharpAlerts = () => {
           ))}
         </div>
 
+        {/* Error State */}
+        {error && !loading && (
+          <div style={{ marginBottom: '20px' }}>
+            <ConnectionError onRetry={fetchSharpData} serviceName="sharp money API" />
+          </div>
+        )}
+
         {/* Alerts */}
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '60px', color: '#9ca3af' }}>
-            <div style={{ fontSize: '24px', marginBottom: '10px' }}>🦈</div>
-            Scanning for sharp action...
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <CardSkeleton count={3} />
           </div>
         ) : alerts.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px', color: '#9ca3af', backgroundColor: '#1a1a2e', borderRadius: '12px' }}>
