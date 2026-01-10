@@ -195,4 +195,158 @@ export const ConvergenceIndicator = ({ mlConfidence, esotericScore }) => {
   );
 };
 
+/**
+ * GoldenConvergenceBadge - The ultimate indicator
+ * When ML + Sharp Money + Esoteric ALL align
+ */
+export const GoldenConvergenceBadge = ({
+  mlConfidence,
+  sharpSignal,
+  esotericScore,
+  direction,
+  size = 'normal'
+}) => {
+  const mlAligned = mlConfidence >= 75;
+  const sharpAligned = sharpSignal && sharpSignal.divergence >= 15;
+  const esotericAligned = esotericScore >= 3;
+
+  // Check if all three align
+  const isGolden = mlAligned && sharpAligned && esotericAligned;
+
+  if (!isGolden) return null;
+
+  const sizes = {
+    small: { padding: '6px 12px', fontSize: '11px' },
+    normal: { padding: '10px 20px', fontSize: '14px' },
+    large: { padding: '14px 28px', fontSize: '18px' }
+  };
+
+  const s = sizes[size];
+
+  return (
+    <div style={{
+      background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF6B00 100%)',
+      padding: '3px',
+      borderRadius: '16px',
+      display: 'inline-block',
+      animation: 'pulse 2s infinite'
+    }}>
+      <div style={{
+        backgroundColor: '#0a0a0f',
+        borderRadius: '14px',
+        padding: s.padding,
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px'
+      }}>
+        <span style={{ fontSize: '24px' }}>🏆</span>
+        <div>
+          <div style={{
+            background: 'linear-gradient(90deg, #FFD700, #FFA500)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            fontWeight: 'bold',
+            fontSize: s.fontSize,
+            letterSpacing: '1px'
+          }}>
+            GOLDEN CONVERGENCE
+          </div>
+          <div style={{ color: '#FFD700', fontSize: '11px', marginTop: '2px' }}>
+            ML ({mlConfidence}%) + Sharp ({sharpSignal?.divergence}%) + Magic ({esotericScore}/5)
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * TripleAlignmentMeter - Visual meter showing alignment of all 3 signal types
+ */
+export const TripleAlignmentMeter = ({ mlScore, sharpScore, esotericScore }) => {
+  const getColor = (score) => {
+    if (score >= 80) return '#00FF88';
+    if (score >= 65) return '#00D4FF';
+    if (score >= 50) return '#FFD700';
+    return '#9ca3af';
+  };
+
+  const signals = [
+    { label: 'ML', icon: '🧠', score: mlScore, color: getColor(mlScore) },
+    { label: 'Sharp', icon: '🦈', score: sharpScore, color: getColor(sharpScore) },
+    { label: 'Esoteric', icon: '🔮', score: esotericScore, color: getColor(esotericScore) }
+  ];
+
+  const avgScore = Math.round((mlScore + sharpScore + esotericScore) / 3);
+  const allAligned = signals.every(s => s.score >= 65);
+
+  return (
+    <div style={{
+      padding: '15px',
+      backgroundColor: '#0a0a0f',
+      borderRadius: '10px',
+      border: allAligned ? '1px solid #FFD70050' : '1px solid #333'
+    }}>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '12px'
+      }}>
+        <span style={{ color: '#6b7280', fontSize: '11px', textTransform: 'uppercase' }}>
+          Triple Alignment
+        </span>
+        <span style={{
+          color: allAligned ? '#FFD700' : '#9ca3af',
+          fontSize: '12px',
+          fontWeight: 'bold'
+        }}>
+          {allAligned ? '🏆 GOLDEN' : `${avgScore}% AVG`}
+        </span>
+      </div>
+
+      <div style={{ display: 'flex', gap: '10px' }}>
+        {signals.map((signal, idx) => (
+          <div key={idx} style={{ flex: 1, textAlign: 'center' }}>
+            <div style={{ fontSize: '16px', marginBottom: '4px' }}>{signal.icon}</div>
+            <div style={{
+              height: '40px',
+              backgroundColor: '#1a1a2e',
+              borderRadius: '4px',
+              overflow: 'hidden',
+              position: 'relative'
+            }}>
+              <div style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: `${signal.score}%`,
+                backgroundColor: signal.color,
+                opacity: 0.7,
+                transition: 'height 0.5s ease'
+              }} />
+              <div style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                color: '#fff',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                textShadow: '0 1px 2px rgba(0,0,0,0.8)'
+              }}>
+                {signal.score}
+              </div>
+            </div>
+            <div style={{ color: '#6b7280', fontSize: '9px', marginTop: '4px' }}>
+              {signal.label}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 export default HarmonicBadge;

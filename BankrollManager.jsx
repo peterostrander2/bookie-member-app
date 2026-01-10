@@ -1,0 +1,742 @@
+/**
+ * BANKROLL MANAGER
+ *
+ * Professional bankroll management using Kelly Criterion.
+ * Track your bets, manage risk, and optimize bet sizing.
+ */
+
+import React, { useState, useEffect } from 'react';
+import {
+  getBankrollSettings,
+  saveBankrollSettings,
+  getBankrollStats,
+  getBetHistory,
+  gradeBet,
+  calculateBetSize,
+  calculateRiskOfRuin,
+  simulateBankroll
+} from './kellyCalculator';
+
+const BankrollManager = () => {
+  const [settings, setSettings] = useState(null);
+  const [stats, setStats] = useState(null);
+  const [betHistory, setBetHistory] = useState([]);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [editingSettings, setEditingSettings] = useState(false);
+  const [tempSettings, setTempSettings] = useState({});
+
+  // Calculator state
+  const [calcConfidence, setCalcConfidence] = useState(70);
+  const [calcOdds, setCalcOdds] = useState(-110);
+  const [calcResult, setCalcResult] = useState(null);
+
+  // Simulation state
+  const [simResult, setSimResult] = useState(null);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  useEffect(() => {
+    if (calcConfidence && calcOdds) {
+      const result = calculateBetSize(calcConfidence, calcOdds, settings);
+      setCalcResult(result);
+    }
+  }, [calcConfidence, calcOdds, settings]);
+
+  const loadData = () => {
+    const s = getBankrollSettings();
+    setSettings(s);
+    setTempSettings(s);
+    setStats(getBankrollStats());
+    setBetHistory(getBetHistory(30));
+  };
+
+  const handleSaveSettings = () => {
+    saveBankrollSettings(tempSettings);
+    setSettings(tempSettings);
+    setEditingSettings(false);
+    loadData();
+  };
+
+  const handleGradeBet = (betId, result) => {
+    gradeBet(betId, result);
+    loadData();
+  };
+
+  const runSimulation = () => {
+    if (!stats || !settings) return;
+
+    const result = simulateBankroll(
+      settings.currentBankroll,
+      stats.winRate || 52,
+      settings.unitSize,
+      100, // 100 bets
+      -110,
+      1000
+    );
+    setSimResult(result);
+  };
+
+  if (!settings || !stats) {
+    return (
+      <div style={{ padding: '20px', backgroundColor: '#0a0a0f', minHeight: '100vh' }}>
+        <div style={{ textAlign: 'center', padding: '60px', color: '#9ca3af' }}>
+          Loading bankroll data...
+        </div>
+      </div>
+    );
+  }
+
+  const riskAnalysis = calculateRiskOfRuin(stats.winRate || 52, -110, Math.floor(settings.currentBankroll / settings.unitSize));
+
+  return (
+    <div style={{ padding: '20px', backgroundColor: '#0a0a0f', minHeight: '100vh' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+
+        {/* Header */}
+        <div style={{ marginBottom: '25px' }}>
+          <h1 style={{ color: '#fff', fontSize: '28px', margin: '0 0 5px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            💰 Bankroll Manager
+          </h1>
+          <p style={{ color: '#6b7280', margin: 0, fontSize: '14px' }}>
+            Kelly Criterion bet sizing • Risk management • Performance tracking
+          </p>
+        </div>
+
+        {/* Stop Loss Warning */}
+        {stats.stopLossTriggered && (
+          <div style={{
+            backgroundColor: '#FF444420',
+            border: '1px solid #FF4444',
+            borderRadius: '12px',
+            padding: '15px 20px',
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px'
+          }}>
+            <span style={{ fontSize: '24px' }}>⚠️</span>
+            <div>
+              <div style={{ color: '#FF4444', fontWeight: 'bold' }}>Stop Loss Triggered</div>
+              <div style={{ color: '#9ca3af', fontSize: '13px' }}>
+                You've hit {settings.stopLossPercent}% drawdown. Consider taking a break.
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tabs */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '25px' }}>
+          {['overview', 'calculator', 'history', 'settings'].map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              style={{
+                padding: '10px 20px',
+                backgroundColor: activeTab === tab ? '#00D4FF' : '#1a1a2e',
+                color: activeTab === tab ? '#000' : '#9ca3af',
+                border: activeTab === tab ? 'none' : '1px solid #333',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: activeTab === tab ? 'bold' : 'normal',
+                fontSize: '14px',
+                textTransform: 'capitalize'
+              }}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        {/* Overview Tab */}
+        {activeTab === 'overview' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+            {/* Main Stats */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              gap: '15px'
+            }}>
+              <StatCard
+                label="Current Bankroll"
+                value={`$${stats.currentBankroll.toLocaleString()}`}
+                subValue={`Started: $${stats.startingBankroll.toLocaleString()}`}
+                color={stats.currentBankroll >= stats.startingBankroll ? '#00FF88' : '#FF4444'}
+              />
+              <StatCard
+                label="Total P/L"
+                value={`${stats.totalPnl >= 0 ? '+' : ''}$${stats.totalPnl.toLocaleString()}`}
+                subValue={`${stats.roi >= 0 ? '+' : ''}${stats.roi}% ROI`}
+                color={stats.totalPnl >= 0 ? '#00FF88' : '#FF4444'}
+              />
+              <StatCard
+                label="Record"
+                value={`${stats.record.wins}-${stats.record.losses}`}
+                subValue={`${stats.winRate}% win rate`}
+                color={stats.winRate >= 52 ? '#00FF88' : '#9ca3af'}
+              />
+              <StatCard
+                label="Max Drawdown"
+                value={`${stats.maxDrawdown}%`}
+                subValue={`Current: ${stats.currentDrawdown}%`}
+                color={stats.maxDrawdown < 15 ? '#00FF88' : stats.maxDrawdown < 25 ? '#FFD700' : '#FF4444'}
+              />
+            </div>
+
+            {/* Risk Analysis */}
+            <div style={{
+              backgroundColor: '#1a1a2e',
+              borderRadius: '12px',
+              padding: '20px'
+            }}>
+              <h3 style={{ color: '#fff', marginTop: 0, marginBottom: '15px', fontSize: '16px' }}>
+                Risk Analysis
+              </h3>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '15px'
+              }}>
+                <div style={{ padding: '15px', backgroundColor: '#0a0a0f', borderRadius: '8px' }}>
+                  <div style={{ color: '#6b7280', fontSize: '11px', marginBottom: '5px' }}>EDGE</div>
+                  <div style={{
+                    color: riskAnalysis.edge > 0 ? '#00FF88' : '#FF4444',
+                    fontSize: '24px',
+                    fontWeight: 'bold'
+                  }}>
+                    {riskAnalysis.edge > 0 ? '+' : ''}{riskAnalysis.edge}%
+                  </div>
+                </div>
+                <div style={{ padding: '15px', backgroundColor: '#0a0a0f', borderRadius: '8px' }}>
+                  <div style={{ color: '#6b7280', fontSize: '11px', marginBottom: '5px' }}>RISK OF RUIN</div>
+                  <div style={{
+                    color: riskAnalysis.riskOfRuin < 5 ? '#00FF88' : riskAnalysis.riskOfRuin < 15 ? '#FFD700' : '#FF4444',
+                    fontSize: '24px',
+                    fontWeight: 'bold'
+                  }}>
+                    {riskAnalysis.riskOfRuin}%
+                  </div>
+                </div>
+                <div style={{ padding: '15px', backgroundColor: '#0a0a0f', borderRadius: '8px' }}>
+                  <div style={{ color: '#6b7280', fontSize: '11px', marginBottom: '5px' }}>BANKROLL UNITS</div>
+                  <div style={{ color: '#00D4FF', fontSize: '24px', fontWeight: 'bold' }}>
+                    {Math.floor(settings.currentBankroll / settings.unitSize)}
+                  </div>
+                </div>
+                <div style={{ padding: '15px', backgroundColor: '#0a0a0f', borderRadius: '8px' }}>
+                  <div style={{ color: '#6b7280', fontSize: '11px', marginBottom: '5px' }}>ASSESSMENT</div>
+                  <div style={{ color: '#9ca3af', fontSize: '14px' }}>
+                    {riskAnalysis.message}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Simulation */}
+            <div style={{
+              backgroundColor: '#1a1a2e',
+              borderRadius: '12px',
+              padding: '20px'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                <h3 style={{ color: '#fff', margin: 0, fontSize: '16px' }}>
+                  100-Bet Simulation
+                </h3>
+                <button
+                  onClick={runSimulation}
+                  style={{
+                    padding: '8px 16px',
+                    backgroundColor: '#00D4FF',
+                    color: '#000',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                    fontSize: '13px'
+                  }}
+                >
+                  Run Simulation
+                </button>
+              </div>
+
+              {simResult ? (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))',
+                  gap: '10px'
+                }}>
+                  <SimCard label="Worst Case" value={`$${simResult.worst}`} color="#FF4444" />
+                  <SimCard label="5th %ile" value={`$${simResult.p5}`} color="#FF8888" />
+                  <SimCard label="25th %ile" value={`$${simResult.p25}`} color="#FFD700" />
+                  <SimCard label="Median" value={`$${simResult.median}`} color="#00D4FF" />
+                  <SimCard label="75th %ile" value={`$${simResult.p75}`} color="#00FF88" />
+                  <SimCard label="Best Case" value={`$${simResult.best}`} color="#00FF88" />
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '30px', color: '#6b7280' }}>
+                  Click "Run Simulation" to see projected outcomes
+                </div>
+              )}
+
+              {simResult && (
+                <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#0a0a0f', borderRadius: '6px' }}>
+                  <span style={{ color: '#6b7280', fontSize: '12px' }}>
+                    Bust Rate: <span style={{ color: simResult.bustRate < 5 ? '#00FF88' : '#FF4444' }}>
+                      {simResult.bustRate}%
+                    </span>
+                    {' '} • Based on {stats.winRate || 52}% win rate at ${ settings.unitSize} per bet
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Calculator Tab */}
+        {activeTab === 'calculator' && (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '20px'
+          }}>
+
+            {/* Input */}
+            <div style={{
+              backgroundColor: '#1a1a2e',
+              borderRadius: '12px',
+              padding: '20px'
+            }}>
+              <h3 style={{ color: '#fff', marginTop: 0, marginBottom: '20px', fontSize: '16px' }}>
+                Bet Size Calculator
+              </h3>
+
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', color: '#9ca3af', fontSize: '12px', marginBottom: '8px' }}>
+                  Confidence Level: {calcConfidence}%
+                </label>
+                <input
+                  type="range"
+                  min="50"
+                  max="95"
+                  value={calcConfidence}
+                  onChange={(e) => setCalcConfidence(parseInt(e.target.value))}
+                  style={{ width: '100%' }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', color: '#9ca3af', fontSize: '12px', marginBottom: '8px' }}>
+                  Odds (American)
+                </label>
+                <input
+                  type="number"
+                  value={calcOdds}
+                  onChange={(e) => setCalcOdds(parseInt(e.target.value) || -110)}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    backgroundColor: '#0a0a0f',
+                    color: '#fff',
+                    border: '1px solid #333',
+                    borderRadius: '8px',
+                    fontSize: '16px'
+                  }}
+                />
+              </div>
+
+              <div style={{
+                padding: '15px',
+                backgroundColor: '#0a0a0f',
+                borderRadius: '8px',
+                marginTop: '10px'
+              }}>
+                <div style={{ color: '#6b7280', fontSize: '11px', marginBottom: '5px' }}>
+                  KELLY FRACTION
+                </div>
+                <div style={{ color: '#fff', fontSize: '14px' }}>
+                  {settings.kellyFraction * 100}% Kelly ({settings.kellyFraction === 0.25 ? 'Quarter' : settings.kellyFraction === 0.5 ? 'Half' : 'Custom'})
+                </div>
+              </div>
+            </div>
+
+            {/* Result */}
+            <div style={{
+              backgroundColor: '#1a1a2e',
+              borderRadius: '12px',
+              padding: '20px'
+            }}>
+              <h3 style={{ color: '#fff', marginTop: 0, marginBottom: '20px', fontSize: '16px' }}>
+                Recommended Bet
+              </h3>
+
+              {calcResult && (
+                <>
+                  <div style={{
+                    textAlign: 'center',
+                    padding: '30px',
+                    backgroundColor: calcResult.hasEdge ? '#00FF8810' : '#FF444410',
+                    borderRadius: '12px',
+                    marginBottom: '20px'
+                  }}>
+                    <div style={{
+                      color: calcResult.recommendation.color,
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      marginBottom: '5px'
+                    }}>
+                      {calcResult.recommendation.action}
+                    </div>
+                    <div style={{
+                      color: '#fff',
+                      fontSize: '36px',
+                      fontWeight: 'bold'
+                    }}>
+                      ${calcResult.betAmount}
+                    </div>
+                    <div style={{ color: '#9ca3af', fontSize: '14px' }}>
+                      {calcResult.units} units • {calcResult.betPercent.toFixed(1)}% of bankroll
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px', backgroundColor: '#0a0a0f', borderRadius: '6px' }}>
+                      <span style={{ color: '#9ca3af' }}>Your Edge</span>
+                      <span style={{ color: calcResult.edge > 0 ? '#00FF88' : '#FF4444', fontWeight: 'bold' }}>
+                        {calcResult.edge > 0 ? '+' : ''}{calcResult.edge.toFixed(1)}%
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px', backgroundColor: '#0a0a0f', borderRadius: '6px' }}>
+                      <span style={{ color: '#9ca3af' }}>Expected Value</span>
+                      <span style={{ color: calcResult.expectedValue > 0 ? '#00FF88' : '#FF4444', fontWeight: 'bold' }}>
+                        {calcResult.expectedValue > 0 ? '+' : ''}${(calcResult.expectedValue * calcResult.betAmount / 100).toFixed(2)}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px', backgroundColor: '#0a0a0f', borderRadius: '6px' }}>
+                      <span style={{ color: '#9ca3af' }}>Win Probability</span>
+                      <span style={{ color: '#00D4FF' }}>
+                        {calcResult.yourProbability.toFixed(1)}%
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px', backgroundColor: '#0a0a0f', borderRadius: '6px' }}>
+                      <span style={{ color: '#9ca3af' }}>Break Even</span>
+                      <span style={{ color: '#9ca3af' }}>
+                        {calcResult.impliedProbability.toFixed(1)}%
+                      </span>
+                    </div>
+                    {calcResult.limitApplied && (
+                      <div style={{ padding: '10px', backgroundColor: '#FFD70020', borderRadius: '6px', fontSize: '12px', color: '#FFD700' }}>
+                        ⚠️ Bet capped at {settings.maxBetPercent}% max
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* History Tab */}
+        {activeTab === 'history' && (
+          <div style={{
+            backgroundColor: '#1a1a2e',
+            borderRadius: '12px',
+            padding: '20px'
+          }}>
+            <h3 style={{ color: '#fff', marginTop: 0, marginBottom: '15px', fontSize: '16px' }}>
+              Bet History ({stats.pendingBets} pending)
+            </h3>
+
+            {betHistory.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
+                <div style={{ fontSize: '32px', marginBottom: '10px' }}>📝</div>
+                No bets recorded yet.
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {betHistory.map((bet) => (
+                  <div key={bet.id} style={{
+                    display: 'grid',
+                    gridTemplateColumns: '120px 1fr 80px 80px 100px',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '12px',
+                    backgroundColor: '#0a0a0f',
+                    borderRadius: '6px'
+                  }}>
+                    <span style={{ color: '#6b7280', fontSize: '12px' }}>
+                      {new Date(bet.timestamp).toLocaleDateString()}
+                    </span>
+                    <span style={{ color: '#fff', fontSize: '13px' }}>
+                      {bet.game || bet.description || 'Bet'}
+                    </span>
+                    <span style={{ color: '#9ca3af', textAlign: 'right' }}>
+                      ${bet.betAmount}
+                    </span>
+                    <span style={{
+                      color: bet.result === 'WIN' ? '#00FF88' : bet.result === 'LOSS' ? '#FF4444' : '#9ca3af',
+                      textAlign: 'right',
+                      fontWeight: bet.result ? 'bold' : 'normal'
+                    }}>
+                      {bet.result || 'Pending'}
+                    </span>
+                    <div style={{ textAlign: 'right' }}>
+                      {!bet.result ? (
+                        <div style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end' }}>
+                          <button
+                            onClick={() => handleGradeBet(bet.id, 'WIN')}
+                            style={{
+                              padding: '4px 8px',
+                              backgroundColor: '#00FF8820',
+                              color: '#00FF88',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '10px'
+                            }}
+                          >
+                            W
+                          </button>
+                          <button
+                            onClick={() => handleGradeBet(bet.id, 'LOSS')}
+                            style={{
+                              padding: '4px 8px',
+                              backgroundColor: '#FF444420',
+                              color: '#FF4444',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '10px'
+                            }}
+                          >
+                            L
+                          </button>
+                          <button
+                            onClick={() => handleGradeBet(bet.id, 'PUSH')}
+                            style={{
+                              padding: '4px 8px',
+                              backgroundColor: '#33333380',
+                              color: '#9ca3af',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '10px'
+                            }}
+                          >
+                            P
+                          </button>
+                        </div>
+                      ) : (
+                        <span style={{
+                          color: bet.pnl >= 0 ? '#00FF88' : '#FF4444',
+                          fontSize: '13px'
+                        }}>
+                          {bet.pnl >= 0 ? '+' : ''}${bet.pnl}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Settings Tab */}
+        {activeTab === 'settings' && (
+          <div style={{
+            backgroundColor: '#1a1a2e',
+            borderRadius: '12px',
+            padding: '20px'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 style={{ color: '#fff', margin: 0, fontSize: '16px' }}>
+                Bankroll Settings
+              </h3>
+              {!editingSettings ? (
+                <button
+                  onClick={() => setEditingSettings(true)}
+                  style={{
+                    padding: '8px 16px',
+                    backgroundColor: '#00D4FF',
+                    color: '#000',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                    fontSize: '13px'
+                  }}
+                >
+                  Edit Settings
+                </button>
+              ) : (
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button
+                    onClick={() => {
+                      setTempSettings(settings);
+                      setEditingSettings(false);
+                    }}
+                    style={{
+                      padding: '8px 16px',
+                      backgroundColor: 'transparent',
+                      color: '#9ca3af',
+                      border: '1px solid #333',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontSize: '13px'
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveSettings}
+                    style={{
+                      padding: '8px 16px',
+                      backgroundColor: '#00FF88',
+                      color: '#000',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontWeight: 'bold',
+                      fontSize: '13px'
+                    }}
+                  >
+                    Save
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+              gap: '15px'
+            }}>
+              <SettingInput
+                label="Starting Bankroll"
+                value={tempSettings.startingBankroll}
+                onChange={(v) => setTempSettings({ ...tempSettings, startingBankroll: parseFloat(v) || 0 })}
+                disabled={!editingSettings}
+                prefix="$"
+              />
+              <SettingInput
+                label="Current Bankroll"
+                value={tempSettings.currentBankroll}
+                onChange={(v) => setTempSettings({ ...tempSettings, currentBankroll: parseFloat(v) || 0 })}
+                disabled={!editingSettings}
+                prefix="$"
+              />
+              <SettingInput
+                label="Unit Size"
+                value={tempSettings.unitSize}
+                onChange={(v) => setTempSettings({ ...tempSettings, unitSize: parseFloat(v) || 50 })}
+                disabled={!editingSettings}
+                prefix="$"
+              />
+              <SettingInput
+                label="Kelly Fraction"
+                value={tempSettings.kellyFraction}
+                onChange={(v) => setTempSettings({ ...tempSettings, kellyFraction: parseFloat(v) || 0.25 })}
+                disabled={!editingSettings}
+                suffix="(0.25 = 1/4 Kelly)"
+              />
+              <SettingInput
+                label="Max Bet %"
+                value={tempSettings.maxBetPercent}
+                onChange={(v) => setTempSettings({ ...tempSettings, maxBetPercent: parseFloat(v) || 5 })}
+                disabled={!editingSettings}
+                suffix="%"
+              />
+              <SettingInput
+                label="Min Bet %"
+                value={tempSettings.minBetPercent}
+                onChange={(v) => setTempSettings({ ...tempSettings, minBetPercent: parseFloat(v) || 0.5 })}
+                disabled={!editingSettings}
+                suffix="%"
+              />
+              <SettingInput
+                label="Stop Loss"
+                value={tempSettings.stopLossPercent}
+                onChange={(v) => setTempSettings({ ...tempSettings, stopLossPercent: parseFloat(v) || 25 })}
+                disabled={!editingSettings}
+                suffix="% drawdown"
+              />
+            </div>
+
+            <div style={{
+              marginTop: '20px',
+              padding: '15px',
+              backgroundColor: '#0a0a0f',
+              borderRadius: '8px',
+              fontSize: '13px',
+              color: '#9ca3af'
+            }}>
+              <strong style={{ color: '#00D4FF' }}>Kelly Fraction Guide:</strong>
+              <br />• 0.25 (Quarter Kelly) - Conservative, recommended for most
+              <br />• 0.50 (Half Kelly) - Moderate, for confident bettors
+              <br />• 1.00 (Full Kelly) - Aggressive, high variance
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const StatCard = ({ label, value, subValue, color = '#00D4FF' }) => (
+  <div style={{
+    backgroundColor: '#1a1a2e',
+    borderRadius: '12px',
+    padding: '20px',
+    textAlign: 'center'
+  }}>
+    <div style={{ color: '#6b7280', fontSize: '11px', marginBottom: '8px', textTransform: 'uppercase' }}>
+      {label}
+    </div>
+    <div style={{ color: color, fontSize: '24px', fontWeight: 'bold' }}>
+      {value}
+    </div>
+    {subValue && (
+      <div style={{ color: '#9ca3af', fontSize: '12px', marginTop: '4px' }}>
+        {subValue}
+      </div>
+    )}
+  </div>
+);
+
+const SimCard = ({ label, value, color }) => (
+  <div style={{ textAlign: 'center', padding: '10px', backgroundColor: '#0a0a0f', borderRadius: '6px' }}>
+    <div style={{ color: '#6b7280', fontSize: '10px', marginBottom: '4px' }}>{label}</div>
+    <div style={{ color: color, fontWeight: 'bold' }}>{value}</div>
+  </div>
+);
+
+const SettingInput = ({ label, value, onChange, disabled, prefix, suffix }) => (
+  <div>
+    <label style={{ display: 'block', color: '#9ca3af', fontSize: '12px', marginBottom: '8px' }}>
+      {label}
+    </label>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      {prefix && <span style={{ color: '#6b7280' }}>{prefix}</span>}
+      <input
+        type="number"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={disabled}
+        style={{
+          flex: 1,
+          padding: '10px',
+          backgroundColor: disabled ? '#1a1a2e' : '#0a0a0f',
+          color: disabled ? '#6b7280' : '#fff',
+          border: '1px solid #333',
+          borderRadius: '6px',
+          fontSize: '14px'
+        }}
+      />
+      {suffix && <span style={{ color: '#6b7280', fontSize: '12px' }}>{suffix}</span>}
+    </div>
+  </div>
+);
+
+export default BankrollManager;

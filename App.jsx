@@ -8,6 +8,15 @@ import Signals from './Signals';
 import Grading from './Grading';
 import AdminCockpit from './AdminCockpit';
 import Profile from './Profile';
+import CLVDashboard from './CLVDashboard';
+import BacktestDashboard from './BacktestDashboard';
+import BankrollManager from './BankrollManager';
+import SharpAlerts from './SharpAlerts';
+import BestOdds from './BestOdds';
+import InjuryVacuum from './InjuryVacuum';
+import PerformanceDashboard from './PerformanceDashboard';
+import ConsensusMeterPage from './ConsensusMeter';
+import DailySummary from './DailySummary';
 import ComplianceFooter from './ComplianceFooter';
 import api from './api';
 
@@ -22,7 +31,13 @@ const Navbar = () => {
   const links = [
     { path: '/', label: 'Dashboard', icon: '🏠' },
     { path: '/smash-spots', label: 'Smash Spots', icon: '🔥' },
-    { path: '/splits', label: 'Splits', icon: '📊' },
+    { path: '/sharp', label: 'Sharp Money', icon: '💵' },
+    { path: '/odds', label: 'Best Odds', icon: '🎯' },
+    { path: '/injuries', label: 'Injuries', icon: '🏥' },
+    { path: '/performance', label: 'Performance', icon: '📊' },
+    { path: '/clv', label: 'CLV', icon: '📈' },
+    { path: '/backtest', label: 'Backtest', icon: '🔬' },
+    { path: '/bankroll', label: 'Bankroll', icon: '💰' },
     { path: '/esoteric', label: 'Esoteric', icon: '🔮' },
     { path: '/signals', label: 'Signals', icon: '⚡' },
     { path: '/grading', label: 'Grading', icon: '📝' },
@@ -113,7 +128,16 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/smash-spots" element={<SmashSpots />} />
+            <Route path="/sharp" element={<SharpAlerts />} />
+            <Route path="/odds" element={<BestOdds />} />
+            <Route path="/injuries" element={<InjuryVacuum />} />
+            <Route path="/performance" element={<PerformanceDashboard />} />
+            <Route path="/consensus" element={<ConsensusMeterPage />} />
+            <Route path="/summary" element={<DailySummary />} />
             <Route path="/splits" element={<Splits />} />
+            <Route path="/clv" element={<CLVDashboard />} />
+            <Route path="/backtest" element={<BacktestDashboard />} />
+            <Route path="/bankroll" element={<BankrollManager />} />
             <Route path="/esoteric" element={<Esoteric />} />
             <Route path="/signals" element={<Signals />} />
             <Route path="/grading" element={<Grading />} />
