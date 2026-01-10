@@ -311,7 +311,7 @@ bookie-member-app/
 ├── SmashSpots.jsx             # Main picks page
 │
 ├── # Signal & Analysis
-├── signalEngine.js            # Signal aggregation
+├── signalEngine.js            # Signal aggregation (17 signals)
 ├── clvTracker.js              # CLV tracking
 ├── kellyCalculator.js         # Kelly sizing
 ├── pickExplainer.js           # Plain English explanations
@@ -321,7 +321,7 @@ bookie-member-app/
 ├── # Dashboard Pages
 ├── CLVDashboard.jsx           # CLV UI
 ├── BacktestDashboard.jsx      # Backtest UI
-├── BankrollManager.jsx        # Bankroll UI
+├── BankrollManager.jsx        # Bankroll UI (~2,500 lines)
 ├── PerformanceDashboard.jsx   # Historical accuracy
 ├── SharpAlerts.jsx            # Sharp money page
 ├── BestOdds.jsx               # Odds comparison
@@ -329,7 +329,32 @@ bookie-member-app/
 ├── ConsensusMeter.jsx         # Consensus visualization
 ├── DailySummary.jsx           # Daily recap
 │
-├── # Feature Pages
+├── # Enhanced Feature Pages (v2.0)
+├── SmashSpotsEnhanced.jsx     # All 17 signals, expand/collapse (~1,700 lines)
+├── InjuryVacuumEnhanced.jsx   # Flowchart, severity badges (~1,800 lines)
+├── EsotericEnhanced.jsx       # Historical validation (~1,400 lines)
+├── AdvancedAnalytics.jsx      # Simulator, parlays, hedge, arb (~2,300 lines)
+│
+├── # Community Features (v2.0)
+├── CommunityHub.jsx           # Leaderboard, voting, following (~1,100 lines)
+├── communityService.js        # Community data layer (~800 lines)
+│
+├── # Notifications (v2.0)
+├── NotificationCenter.jsx     # Alert center UI (~1,200 lines)
+├── notifications.js           # Push/email notifications (~800 lines)
+│
+├── # Mobile & PWA (v2.0)
+├── MobileOptimization.jsx     # Responsive, touch, gestures (~850 lines)
+├── PWAManager.jsx             # Service worker, install (~700 lines)
+├── serviceWorker.js           # Offline caching (~350 lines)
+├── manifest.json              # PWA manifest
+│
+├── # UX Enhancements (v2.0)
+├── InteractionEnhancements.jsx # Hover, tooltips, shortcuts (~1,500 lines)
+├── EmptyStates.jsx            # Smart empty states (~1,000 lines)
+├── Accessibility.jsx          # A11y, ARIA, keyboard (~1,330 lines)
+│
+├── # Original Feature Pages
 ├── Esoteric.jsx               # Gematria/numerology
 ├── Signals.jsx                # Signal display
 ├── Grading.jsx                # Pick grading
@@ -337,31 +362,38 @@ bookie-member-app/
 ├── Profile.jsx                # User profile
 ├── AdminCockpit.jsx           # Admin tools
 │
-├── # Supporting
+├── # Supporting Components
+├── Navigation.jsx             # Main navigation
+├── LiveIndicators.jsx         # Live status indicators
+├── ErrorBoundary.jsx          # Error handling
+├── Skeletons.jsx              # Loading skeletons
 ├── HarmonicBadge.jsx          # Convergence badges
 ├── ComplianceFooter.jsx       # Legal disclaimer
 ├── SportTabs.jsx              # Sport selector
 ├── SystemHealthPanel.jsx      # Backend status
 ├── ValueWaterfall.jsx         # Value visualization
 ├── CommunityVote.jsx          # Man vs Machine voting
+├── SharpMoneyWidget.jsx       # Sharp money widget
 │
 ├── # Utilities
-├── notifications.js           # Browser notifications
+├── useAutoRefresh.js          # Auto-refresh hook
 ├── storageUtils.js            # localStorage helpers
 │
-├── # Config
-├── index.html
+├── # Config & Docs
+├── index.html                 # PWA meta tags
 ├── index.css
 ├── main.jsx
 ├── package.json
 ├── vite.config.js
+├── ARCHITECTURE.md            # This file
+├── CHANGELOG.md               # Version history
 │
-└── backend/                   # Python Backend (also in ai-betting-backend)
+└── backend/                   # Python Backend
     ├── main.py                # FastAPI app
     ├── live_data_router.py    # 5,869 lines - ALL modules
-    ├── requirements.txt       # Dependencies
-    ├── Procfile               # Railway config
-    └── runtime.txt            # Python version
+    ├── requirements.txt
+    ├── Procfile
+    └── runtime.txt
 ```
 
 ---
@@ -395,17 +427,119 @@ uvicorn main:app --reload
 
 ---
 
-## Future Roadmap
+## Version 2.0 Feature Modules
 
-1. **Real-time updates** - WebSocket for live odds
-2. **Push notifications** - Service worker integration
-3. **Discord Bot** - Daily Man vs Machine results
-4. **Whop Integration** - User tracking with membership ID
-5. **Vote History** - Track AI vs Community accuracy
-6. **Mobile app** - React Native wrapper
+### Community Features
+| Component | Purpose | Key Features |
+|-----------|---------|--------------|
+| `CommunityHub.jsx` | Social features | Leaderboard, voting, following |
+| `communityService.js` | Data layer | localStorage + events |
+
+### Enhanced Pages
+| Component | Upgrade From | New Features |
+|-----------|--------------|--------------|
+| `SmashSpotsEnhanced.jsx` | SmashSpots | 17 signals, expand/collapse, comparison |
+| `InjuryVacuumEnhanced.jsx` | InjuryVacuum | Flowchart, severity, impact scoring |
+| `EsotericEnhanced.jsx` | Esoteric | Historical validation, AI agreement |
+
+### Advanced Analytics
+| Tool | Purpose | Key Features |
+|------|---------|--------------|
+| Bet Simulator | Strategy backtesting | ROI, drawdown, multiple strategies |
+| Parlays Optimizer | Parlay EV | Correlation detection, warnings |
+| Hedge Calculator | Lock in profit | Guarantee/minimize modes |
+| Arbitrage Finder | Risk-free profit | Cross-book scanning |
+
+### Mobile & PWA
+| Component | Purpose |
+|-----------|---------|
+| `MobileOptimization.jsx` | Responsive breakpoints, touch, gestures |
+| `PWAManager.jsx` | Install prompts, offline, push |
+| `serviceWorker.js` | Caching strategies, background sync |
+| `manifest.json` | App metadata, icons, shortcuts |
+
+### UX Enhancements
+| Component | Purpose |
+|-----------|---------|
+| `InteractionEnhancements.jsx` | Hover, ripple, tooltips, shortcuts |
+| `EmptyStates.jsx` | Contextual empty states, tips |
+| `Accessibility.jsx` | ARIA, keyboard, screen readers |
 
 ---
 
-*Last Updated: January 2026*
-*Version: 14.0 NOOSPHERE VELOCITY*
+## Hooks & Utilities Reference
+
+### Mobile Hooks
+```javascript
+useBreakpoint()        // { breakpoint, isMobile, isTablet, isDesktop }
+usePullToRefresh()     // Pull gesture handling
+useInfiniteScroll()    // Infinite scroll logic
+useSwipeGesture()      // Swipe detection
+useNativeShare()       // Web Share API
+```
+
+### Interaction Hooks
+```javascript
+useToast()             // Toast notifications
+useConfetti()          // Celebration animation
+useShake()             // Error shake animation
+useKeyboardShortcuts() // Keyboard navigation
+useRipple()            // Material ripple effect
+```
+
+### A11y Hooks
+```javascript
+useA11y()              // Announcements, preferences
+useFocusManagement()   // Programmatic focus
+```
+
+### PWA Hooks
+```javascript
+usePWA()               // Install, offline, push state
+useConnectionStatus()  // Online/offline, connection type
+useBackgroundSync()    // Background sync triggers
+useOfflineData()       // Offline-first data fetching
+```
+
+---
+
+## Future Roadmap
+
+### Completed ✅
+1. ~~Push notifications~~ - Service worker integration
+2. ~~Mobile app~~ - PWA with install prompt
+
+### In Progress
+3. **Real-time updates** - WebSocket for live odds
+4. **Discord Bot** - Daily Man vs Machine results
+5. **Whop Integration** - User tracking with membership ID
+6. **Vote History** - Track AI vs Community accuracy
+
+### Planned
+7. **Data Export** - CSV, Excel, PDF reports
+8. **Advanced Filters** - Multi-criteria search
+9. **Social Proof** - Trending picks, hot streaks
+10. **Gamification** - Achievements, badges, streaks
+
+---
+
+## Code Statistics
+
+| Category | Files | Lines |
+|----------|-------|-------|
+| Enhanced Features | 4 | ~7,200 |
+| Community | 2 | ~1,900 |
+| Mobile/PWA | 4 | ~2,000 |
+| UX/A11y | 3 | ~3,800 |
+| Notifications | 2 | ~2,000 |
+| Analytics | 1 | ~2,300 |
+| **New Total** | **16** | **~19,200** |
+| Original Files | 38 | ~15,000 |
+| **Grand Total** | **54** | **~34,200** |
+
+---
+
+*Last Updated: January 10, 2026*
+*Version: 2.0.0 COMMUNITY VELOCITY*
 *Total Esoteric Modules: 18*
+*Total React Components: 54*
