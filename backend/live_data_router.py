@@ -3885,16 +3885,18 @@ def get_daily_energy(date: datetime = None) -> dict:
     return day_energies[date.weekday()]
 
 # ============================================================================
-# ESOTERIC EDGE WEIGHTS v2.0 - REFINED COSMIC SYSTEM
-# New balanced weights for comprehensive esoteric analysis
+# ESOTERIC EDGE WEIGHTS v2.0 - BOSS APPROVED GEMATRIA BOOST
+# Core weights preserved with enhanced cosmic confluence system
 # ============================================================================
 
 ESOTERIC_WEIGHTS = {
-    "gematria": 0.35,        # 35% - 6 cipher methods (ordinal, reverse, reduction, jewish, sumerian, english)
-    "moon_phase": 0.20,      # 20% - Full/new moon chaos theory (underdogs/favorites)
-    "numerology": 0.20,      # 20% - Daily life path, master numbers (11, 22, 33)
-    "sacred_geometry": 0.15, # 15% - Fibonacci sequences, Tesla divisibility (3-6-9)
-    "zodiac": 0.10           # 10% - Planetary rulers (Mars=aggression, Saturn=discipline)
+    "gematria": 0.52,        # 52% - Boss approved dominant weight
+    "numerology": 0.20,      # 20% - Daily life path, master numbers
+    "astro": 0.13,           # 13% - Moon phase chaos theory
+    "vedic": 0.10,           # 10% - Vedic astrology influence
+    "sacred": 0.05,          # 5% - Sacred geometry patterns
+    "fib_phi": 0.05,         # 5% - Fibonacci/golden ratio
+    "vortex": 0.05           # 5% - Tesla 3-6-9 vortex math
 }
 
 # Cosmic Confluence - when 3+ esoteric signals align
@@ -4163,13 +4165,22 @@ def calculate_standalone_esoteric(
 
     zodiac_score = min(100, zodiac_score)
 
-    # === APPLY v2.0 ESOTERIC WEIGHTS ===
+    # === APPLY BOSS APPROVED ESOTERIC WEIGHTS ===
+    # Map component scores to weight keys
+    astro_score = moon_phase_score
+    vedic_score = 50 + (life_path * 3) if life_path in [3, 6, 9, 11, 22, 33] else 50
+    sacred_score = sacred_geometry_score
+    fib_phi_score = 70 if line_analysis and any("Fibonacci" in str(i) for i in sacred_signals) else 50
+    vortex_score = 65 if any("Tesla" in str(s) for s in sacred_signals) else zodiac_score
+
     weighted_score = (
-        gematria_score * ESOTERIC_WEIGHTS["gematria"] +           # 35%
-        moon_phase_score * ESOTERIC_WEIGHTS["moon_phase"] +       # 20%
-        numerology_score * ESOTERIC_WEIGHTS["numerology"] +       # 20%
-        sacred_geometry_score * ESOTERIC_WEIGHTS["sacred_geometry"] +  # 15%
-        zodiac_score * ESOTERIC_WEIGHTS["zodiac"]                 # 10%
+        gematria_score * ESOTERIC_WEIGHTS["gematria"] +     # 52%
+        numerology_score * ESOTERIC_WEIGHTS["numerology"] + # 20%
+        astro_score * ESOTERIC_WEIGHTS["astro"] +           # 13%
+        vedic_score * ESOTERIC_WEIGHTS["vedic"] +           # 10%
+        sacred_score * ESOTERIC_WEIGHTS["sacred"] +         # 5%
+        fib_phi_score * ESOTERIC_WEIGHTS["fib_phi"] +       # 5%
+        vortex_score * ESOTERIC_WEIGHTS["vortex"]           # 5%
     )
 
     # === COSMIC CONFLUENCE DETECTION ===
@@ -4180,19 +4191,14 @@ def calculate_standalone_esoteric(
 
     # Build component breakdown for transparency
     component_breakdown = {
-        "gematria": {"score": gematria_score, "weight": "35%", "signals": gematria_signals[:3]},
-        "moon_phase": {"score": moon_phase_score, "weight": "20%", "phase": moon_phase, "logic": moon_logic},
+        "gematria": {"score": gematria_score, "weight": "52%", "signals": gematria_signals[:3]},
         "numerology": {"score": numerology_score, "weight": "20%", "life_path": life_path, "master": life_path in MASTER_NUMBERS},
-        "sacred_geometry": {"score": sacred_geometry_score, "weight": "15%", "signals": sacred_signals},
-        "zodiac": {"score": zodiac_score, "weight": "10%", "planet": zodiac_info["planet"], "energy": zodiac_info["energy"]}
+        "astro": {"score": astro_score, "weight": "13%", "phase": moon_phase, "logic": moon_logic},
+        "vedic": {"score": vedic_score, "weight": "10%"},
+        "sacred": {"score": sacred_score, "weight": "5%", "signals": sacred_signals},
+        "fib_phi": {"score": fib_phi_score, "weight": "5%"},
+        "vortex": {"score": vortex_score, "weight": "5%", "planet": zodiac_info["planet"], "energy": zodiac_info["energy"]}
     }
-
-    # Legacy score variables for backward compatibility
-    astro_score = moon_phase_score
-    vedic_score = numerology_score
-    sacred_score = sacred_geometry_score
-    fib_phi_score = sacred_geometry_score
-    vortex_score = zodiac_score
 
     esoteric_score = round(weighted_score)
 
@@ -4311,9 +4317,9 @@ def calculate_standalone_esoteric(
         "bet_recommendation": bet_recommendation,
         "top_insights": top_insights[:5],
 
-        # v2.0 ESOTERIC EDGE WEIGHTS BREAKDOWN
+        # v2.0 ESOTERIC EDGE WEIGHTS BREAKDOWN - BOSS APPROVED
         "esoteric_weights_v2": {
-            "formula": "Gematria 35% + Moon Phase 20% + Numerology 20% + Sacred Geometry 15% + Zodiac 10%",
+            "formula": "Gematria 52% + Numerology 20% + Astro 13% + Vedic 10% + Sacred 5% + Fib/Phi 5% + Vortex 5%",
             "version": "2.0",
             "components": component_breakdown,
             "modifiers_applied": {

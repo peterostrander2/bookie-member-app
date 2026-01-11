@@ -81,9 +81,9 @@ async def esoteric_today_energy():
         "date_numerology": date_numerology,
         "moon_phase": moon_phase,
         "daily_energy": daily_energy,
-        # v2.0 Esoteric Edge weights
+        # v2.0 Esoteric Edge weights - BOSS APPROVED
         "esoteric_weights": {
-            "formula": "Gematria 35% + Moon Phase 20% + Numerology 20% + Sacred Geometry 15% + Zodiac 10%",
+            "formula": "Gematria 52% + Numerology 20% + Astro 13% + Vedic 10% + Sacred 5% + Fib/Phi 5% + Vortex 5%",
             "version": "2.0",
             "weights": ESOTERIC_WEIGHTS
         },
