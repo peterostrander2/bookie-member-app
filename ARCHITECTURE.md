@@ -2,7 +2,9 @@
 
 ## System Overview
 
-Bookie-o-em is an AI-powered sports betting analysis platform that combines machine learning signals, professional bettor tracking, and esoteric indicators to generate high-conviction betting recommendations.
+Bookie-o-em is an AI-powered sports betting analysis platform that combines machine learning signals, professional bettor tracking, and 18 esoteric indicator modules to generate high-conviction betting recommendations.
+
+**Current Version: v14.0 NOOSPHERE VELOCITY**
 
 ---
 
@@ -13,9 +15,9 @@ Bookie-o-em is an AI-powered sports betting analysis platform that combines mach
 | **Frontend** | React 18 + Vite |
 | **Backend** | FastAPI (Python) |
 | **Hosting** | Vercel (Frontend) + Railway (Backend) |
-| **Data APIs** | The Odds API, Playbook API |
+| **Data APIs** | The Odds API |
 | **Auth** | Whop (Membership) |
-| **Storage** | localStorage (Client), Railway DB (Server) |
+| **Storage** | localStorage (Client), Railway (Server) |
 
 ---
 
@@ -38,10 +40,6 @@ Bookie-o-em is an AI-powered sports betting analysis platform that combines mach
 │  │  │  │ signalEngine │ │ clvTracker   │ │ kelly     │  │    │  │
 │  │  │  │ .js          │ │ .js          │ │ Calculator│  │    │  │
 │  │  │  └──────────────┘ └──────────────┘ └───────────┘  │    │  │
-│  │  │  ┌──────────────┐ ┌──────────────┐ ┌───────────┐  │    │  │
-│  │  │  │ pickExplainer│ │ correlation  │ │ backtest  │  │    │  │
-│  │  │  │ .js          │ │ Detector.js  │ │ Storage.js│  │    │  │
-│  │  │  └──────────────┘ └──────────────┘ └───────────┘  │    │  │
 │  │  └────────────────────────────────────────────────────┘    │  │
 │  └───────────────────────────────────────────────────────────┘  │
 │                               │ api.js                           │
@@ -49,195 +47,236 @@ Bookie-o-em is an AI-powered sports betting analysis platform that combines mach
                                 │
                     ┌───────────┴───────────┐
                     │   BACKEND (FastAPI)    │
+                    │   v14.0 NOOSPHERE      │
                     │  ┌─────────────────┐  │
-                    │  │ /live/slate     │  │
-                    │  │ /splits/{sport} │  │
-                    │  │ /injuries       │  │
-                    │  │ /sharp-money    │  │
-                    │  │ /esoteric       │  │
+                    │  │ live_data_router│  │
+                    │  │ (5,869 lines)   │  │
+                    │  │ 18 modules      │  │
                     │  └─────────────────┘  │
                     └───────────┬───────────┘
                                 │
               ┌─────────────────┼─────────────────┐
               │                 │                 │
      ┌────────┴────────┐ ┌─────┴─────┐ ┌─────────┴─────────┐
-     │  The Odds API   │ │ Playbook  │ │ Internal Models   │
-     │  (Live Odds)    │ │   API     │ │ (ML/Esoteric)     │
+     │  The Odds API   │ │  Esoteric │ │ Noosphere Engine  │
+     │  (Live Odds)    │ │  Modules  │ │ (Info Asymmetry)  │
      └─────────────────┘ └───────────┘ └───────────────────┘
 ```
 
 ---
 
-## Core Components
+## Backend Engine Versions
+
+### v14.0 NOOSPHERE VELOCITY (Current - MAIN MODEL)
+*"Someone always knows." - Information Asymmetry Detection*
+
+| Module | Signal | Action |
+|--------|--------|--------|
+| **Insider Leak** | Silent Spike (volume + no news) | FADE team |
+| **Main Character Syndrome** | Underdog volume > Favorite | BET DOG |
+| **Phantom Injury** | Player spike + injury queries | BET UNDER |
+
+**Weight in Main Model: 17** (3rd highest)
+
+### v13.0 GANN PHYSICS
+*W.D. Gann's $130 → $12,000 geometric principles*
+
+| Module | Principle | Signal |
+|--------|-----------|--------|
+| **50% Retracement** | Gravity Check | Fade at 50% zone after blowouts |
+| **Rule of Three** | Exhaustion Node | 3 consecutive covers = FADE 4th |
+| **Annulifier Cycle** | Harmonic Lock | W-L-W-L pattern = 5th LOCKED |
+
+### v11.0 OMNI-GLITCH
+*The Final Dimension - 6 Chaos Modules*
+
+| Module | Theory | Signal |
+|--------|--------|--------|
+| **Vortex Math** | Tesla 3-6-9 | Root 9 = LOCKED, Root 3/6 = CHAOS |
+| **Shannon Entropy** | Pattern Break | Low entropy streak = SNAP-BACK |
+| **Atmospheric Drag** | Barometric | High pressure = UNDERS |
+| **Void of Course Moon** | Time Vacuum | FADE FAVORITES |
+| **Gann Spiral** | Square of Nine | Cardinal Cross = LOCKED |
+| **Mars-Uranus Nuclear** | Shock Aspect | BLIND BET BIGGEST DOG |
+
+### v10.4 SCALAR-SAVANT
+*The Abyss - 6 Deep Glitch Modules*
+
+| Module | Theory | Signal |
+|--------|--------|--------|
+| **Bio-Sine Wave** | Biorhythms (23/28/33 day cycles) | Peak = OVER, Trough = UNDER |
+| **Chrome Resonance** | Color Psychology | RED teams +60% in close games |
+| **Lunacy Factor** | Enhanced Moon | Full = Dogs/Overs, New = Favs/Unders |
+| **Schumann Spike** | Earth Hz (7.83 baseline) | High Hz = Fade shooters |
+| **Saturn Block** | Planetary | Jupiter = Overs, Saturn = Unders |
+| **Zebra Privilege** | Ref Bias + Star Tiers | Star protection in crunch time |
+
+### v10.3 RESONANCE LAYER
+*Cosmic Alignment Detection*
+
+| Module | Data | Signal |
+|--------|------|--------|
+| **Founder's Echo** | 124 franchise founding dates | Anniversary/date alignment boost |
+| **Life Path Sync** | 90+ star player birthdates | Destiny game detection |
+
+---
+
+## Main Model Signal Weights
+
+```
+SIGNAL_WEIGHTS = {
+    # DATA SIGNALS (Highest Impact)
+    "sharp_money": 22,        # Professional bettor action
+    "line_edge": 18,          # Best odds vs market
+    "noosphere_velocity": 17, # v14.0 - Information asymmetry (NEW)
+    "injury_vacuum": 16,      # Usage vacuum calculation
+    "game_pace": 15,          # Pace-adjusted projections
+    "travel_fatigue": 14,     # Schedule/travel impact
+    "back_to_back": 13,       # Rest disadvantage
+    "defense_vs_position": 12,# Matchup analysis
+    "public_fade": 11,        # Fade public money (65%+ = CRUSH)
+    "steam_moves": 10,        # Line movement detection
+    "home_court": 10,         # Home advantage
+    "weather": 10,            # Outdoor game conditions
+    "minutes_projection": 10, # Playing time estimates
+    "referee": 8,             # Ref crew tendencies
+    "game_script": 8,         # Projected game flow
+    "ensemble_ml": 8,         # ML model ensemble
+
+    # JARVIS EDGE SIGNALS
+    "jarvis_trigger": 5,      # 2178, 201, 33, 93, 322
+    "crush_zone": 4,          # Public 65%+ fade zone
+    "goldilocks": 3,          # Mid-spread sweet spot (+4 to +9)
+    "nhl_protocol": 4,        # NHL dog protocol
+
+    # ESOTERIC SIGNALS (Standalone Module)
+    "gematria": 3,            # 6-cipher system
+    "moon_phase": 2,          # Lunar cycle
+    "numerology": 2,          # Date/jersey alignment
+    "sacred_geometry": 2,     # Tesla 3-6-9, Fibonacci
+    "zodiac": 1               # Planetary energy
+}
+```
+
+---
+
+## Databases
+
+| Database | Count | Used By |
+|----------|-------|---------|
+| `FRANCHISE_FOUNDING_DATES` | 124 teams | Founder's Echo |
+| `STAR_PLAYER_BIRTHDATES` | 90+ players | Life Path Sync |
+| `TEAM_COLORS` | 124 teams | Chrome Resonance |
+| `TEAM_BASELINE_VOLUMES` | 77 teams | Noosphere Velocity |
+| `VENUE_ATMOSPHERICS` | 11 venues | Atmospheric Drag |
+| `STAR_PLAYER_TIERS` | 30+ players | Zebra Privilege |
+| `REF_CREW_HOME_BIAS` | 10 crews | Zebra Privilege |
+| `JARVIS_TRIGGERS` | 5 numbers | Gematria Edge |
+| `POWER_NUMBERS` | 7 categories | Numerology |
+
+---
+
+## API Endpoints (Backend)
+
+### Core Endpoints
+```
+GET  /health                    # System status + all module info
+GET  /live/health               # Detailed health with DB counts
+GET  /live/today-energy         # Daily esoteric reading
+GET  /live/props/{sport}        # Player props with confidence
+GET  /live/best-bets/{sport}    # Top game picks
+```
+
+### v10.3 Resonance Layer
+```
+POST /live/founders-echo        # Franchise founding alignment
+POST /live/life-path-sync       # Player destiny game check
+GET  /live/star-players         # All players with birthdates
+GET  /live/franchise-dates      # All franchise founding dates
+```
+
+### v10.4 SCALAR-SAVANT
+```
+POST /live/biorhythm            # Player biorhythm state
+POST /live/chrome-resonance     # Team color matchup
+GET  /live/lunacy-factor        # Enhanced moon phase
+GET  /live/schumann-spike       # Earth frequency
+POST /live/saturn-block         # Planetary aspects
+POST /live/zebra-privilege      # Ref bias + star protection
+GET  /live/scalar-savant-status # All module status
+```
+
+### v11.0 OMNI-GLITCH
+```
+POST /live/vortex-math          # Tesla 3-6-9 circuit
+POST /live/shannon-entropy      # Pattern break detection
+POST /live/atmospheric-drag     # Barometric effects
+GET  /live/void-moon            # Void of course moon
+POST /live/gann-spiral          # Square of Nine
+GET  /live/mars-uranus          # Nuclear shock aspect
+GET  /live/omni-glitch-status   # All chaos module status
+```
+
+### v13.0 GANN PHYSICS
+```
+POST /live/gann-retracement     # 50% gravity check
+POST /live/gann-rule-of-three   # Exhaustion node
+POST /live/gann-annulifier      # Harmonic lock
+POST /live/gann-physics-full    # All three combined
+GET  /live/gann-physics-status  # Module status
+```
+
+### v14.0 NOOSPHERE VELOCITY
+```
+POST /live/noosphere/insider-leak      # Silent spike detection
+POST /live/noosphere/main-character    # Underdog energy
+POST /live/noosphere/phantom-injury    # Hidden injury signal
+POST /live/noosphere/full-analysis     # All three combined
+GET  /live/noosphere/status            # Module status
+```
+
+### Esoteric Tools
+```
+POST /live/calculate-ciphers    # 6-cipher gematria
+POST /live/date-numerology      # Date breakdown
+POST /live/jersey-analysis      # Jersey number alignment
+POST /live/check-trigger        # Jarvis trigger check
+GET  /live/jarvis-triggers      # All trigger numbers
+GET  /live/validate-immortal    # Validate 2178
+```
+
+---
+
+## Core Frontend Components
 
 ### 1. Signal Engine (`signalEngine.js`)
 
-The brain of the system. Aggregates 17 signals into a single confidence score.
-
-```javascript
-// Signal Categories
-DATA SIGNALS (Highest Impact):
-├── sharp_money (18)    // Professional bettor action
-├── line_value (15)     // Best odds vs market
-├── ml_value (14)       // Moneyline discrepancies
-└── market_lean (13)    // Juice/vig analysis
-
-ML/AI SIGNALS:
-├── key_spread (12)     // Key numbers (3, 7 in NFL)
-├── kelly_edge (12)     // Calculated edge metric
-├── ensemble (10)       // XGBoost + LightGBM + RF
-├── lstm_brain (10)     // Neural network trends
-├── injury_impact (10)  // Usage vacuum calculation
-├── rest_fatigue (8)    // Schedule/travel
-├── public_fade (8)     // Fade public money
-└── key_number (6)      // Live odds key levels
-
-ESOTERIC SIGNALS:
-├── numerology (4)      // Life path numbers
-├── moon_phase (3)      // Lunar cycle impact
-├── gematria (3)        // Team name numerology
-├── sacred_geometry (2) // Tesla 3-6-9, Fibonacci
-└── zodiac (2)          // Astrological elements
-```
-
-**Sport Modifiers:**
-```javascript
-NFL: key_spread × 1.5, sharp_money × 1.2
-NBA: rest_fatigue × 1.4, injury_impact × 1.3
-MLB: sharp_money × 1.3
-NCAAB: public_fade × 1.5
-```
+The brain of the frontend. Aggregates signals into confidence score.
 
 **Tier Classification:**
-| Confidence | Tier | Expected WR |
-|------------|------|-------------|
-| 80%+ | GOLDEN_CONVERGENCE | 62-65% |
-| 70-79% | SUPER_SIGNAL | 58-62% |
-| 60-69% | HARMONIC_ALIGNMENT | 55-58% |
-| <60% | PARTIAL_ALIGNMENT | 52-55% |
-
----
+| Confidence | Tier | Recommendation |
+|------------|------|----------------|
+| 80%+ | GOLDEN_CONVERGENCE | SMASH |
+| 70-79% | SUPER_SIGNAL | STRONG |
+| 60-69% | HARMONIC_ALIGNMENT | PLAY |
+| 55-59% | PARTIAL_ALIGNMENT | LEAN |
+| <55% | - | PASS |
 
 ### 2. CLV Tracker (`clvTracker.js`)
 
 Tracks Closing Line Value - the gold standard for measuring betting edge.
 
-```
-Flow:
-1. recordPick() → Saves opening line when pick is made
-2. recordClosingLine() → Saves closing line at game start
-3. gradePick() → Records win/loss result
-4. getStats() → Calculates CLV metrics by tier/sport
-
-Storage: localStorage (bookie_clv_picks)
-```
-
-**Why CLV Matters:**
-- Beating closing lines = long-term profitability
-- Even losing bets with positive CLV indicate edge
-- Tracks if you're getting good numbers
-
----
-
 ### 3. Kelly Calculator (`kellyCalculator.js`)
 
-Optimal bet sizing using Kelly Criterion.
-
-```
-Formula: f* = (bp - q) / b
-  Where:
-  - f* = fraction of bankroll to bet
-  - b = net odds (decimal - 1)
-  - p = probability of winning
-  - q = probability of losing
-
-Default: Quarter Kelly (0.25) for safety
-```
-
-**Risk Metrics:**
-- Risk of Ruin calculation
-- Monte Carlo simulation
-- Bet history tracking
-
----
+Optimal bet sizing using Kelly Criterion (default: Quarter Kelly).
 
 ### 4. Correlation Detector (`correlationDetector.js`)
 
 Identifies portfolio risk from correlated picks.
 
-```
-Correlation Types:
-├── Same Game (30 points) - Multiple bets on one game
-├── Same Team (20 points) - Team appears in multiple bets
-├── Directional Bias (15-25 points) - All favorites/underdogs
-├── Spread Clustering (15 points) - Similar spread sizes
-└── Total Clustering (15 points) - Similar totals
-
-Diversification Score: 100 - correlation_points
-- 80-100: Good
-- 60-79: Caution
-- 40-59: Warning
-- 0-39: Danger
-```
-
----
-
 ### 5. Pick Explainer (`pickExplainer.js`)
 
-Translates signals into plain English.
-
-```
-Output:
-├── headline: "🔥 SMASH 85%: Multiple edges converging"
-├── summary: Plain English explanation
-├── bullets: Key factors with levels (high/medium/low)
-├── risks: Potential concerns
-└── confidenceBreakdown: {data, ml, esoteric}
-```
-
----
-
-### 6. Consensus Meter (`ConsensusMeter.jsx`)
-
-Visual indicator of signal alignment.
-
-```
-Triple Alignment (🎯): ML + Sharp + Esoteric all agree
-Double Alignment (⚡): 2 of 3 categories agree
-Single Signal (📊): Only 1 category strong
-No Alignment (⚠️): Mixed signals
-```
-
----
-
-## Data Flow
-
-### Pick Generation Flow
-
-```
-1. User selects sport
-2. SmashSpots calls api.getSmashSpots(sport)
-3. Backend fetches from Odds API + internal models
-4. Frontend receives game data
-5. signalEngine.calculateConfidence() processes each game
-6. Games filtered by confidence >= 55%
-7. Sorted by confidence descending
-8. Displayed with tier badges, signals, explanations
-```
-
-### Pick Tracking Flow
-
-```
-1. User clicks "Track" button
-2. recordPick() saves to localStorage with:
-   - Opening line, odds, book
-   - Confidence, tier, signals
-   - Timestamp
-3. At game start: recordClosingLine()
-4. After game: gradePick() with WIN/LOSS/PUSH
-5. CLV calculated: closing_implied - opening_implied
-6. Stats aggregated by tier, sport, signal
-```
+Translates signals into plain English explanations.
 
 ---
 
@@ -245,153 +284,20 @@ No Alignment (⚠️): Mixed signals
 
 | Route | Component | Purpose |
 |-------|-----------|---------|
-| `/` | Dashboard | Home with stats, alerts, quick links |
-| `/smash-spots` | SmashSpots | Today's picks with full analysis |
+| `/` | Dashboard | Home with stats, alerts |
+| `/smash-spots` | SmashSpots | Today's picks |
 | `/sharp` | SharpAlerts | Sharp money tracking |
-| `/odds` | BestOdds | Odds comparison across books |
-| `/injuries` | InjuryVacuum | Injury impact analysis |
+| `/odds` | BestOdds | Odds comparison |
+| `/injuries` | InjuryVacuum | Injury impact |
 | `/performance` | PerformanceDashboard | Historical accuracy |
-| `/consensus` | ConsensusMeterPage | Signal alignment info |
-| `/summary` | DailySummary | End-of-day recap |
 | `/clv` | CLVDashboard | CLV tracking |
 | `/backtest` | BacktestDashboard | Signal validation |
 | `/bankroll` | BankrollManager | Kelly sizing |
-| `/esoteric` | Esoteric | Gematria/numerology tools |
-| `/signals` | Signals | View all 17 signals |
+| `/esoteric` | Esoteric | Gematria/numerology |
+| `/signals` | Signals | View all signals |
 | `/grading` | Grading | Grade picks |
 | `/profile` | Profile | User settings |
 | `/admin` | AdminCockpit | Admin tools |
-
----
-
-## Storage Schema
-
-### localStorage Keys
-
-```javascript
-// CLV Tracker
-bookie_clv_picks: [
-  {
-    id: "pick_1704067200000_abc123",
-    sport: "NBA",
-    home_team: "Lakers",
-    away_team: "Celtics",
-    side: "HOME",
-    bet_type: "spread",
-    opening_line: -3.5,
-    opening_odds: -110,
-    closing_line: -4.5,
-    confidence: 78,
-    tier: "SUPER_SIGNAL",
-    result: "WIN",
-    clv: 1.2,
-    timestamp: 1704067200000
-  }
-]
-
-// Backtest Storage
-bookie_backtest_predictions: [
-  {
-    id: "pred_...",
-    gameId: "...",
-    signals: { sharp_money: 85, line_value: 72, ... },
-    prediction: "HOME",
-    confidence: 78,
-    result: "WIN"
-  }
-]
-
-// Bankroll
-bookie_bankroll_settings: {
-  bankroll: 10000,
-  kellyFraction: 0.25,
-  maxBetPercent: 5
-}
-
-bookie_bet_history: [
-  {
-    id: "bet_...",
-    amount: 250,
-    odds: -110,
-    result: "WIN",
-    pnl: 227.27
-  }
-]
-
-// Notifications
-bookie_notification_settings: {
-  enabled: true,
-  goldenPicks: true,
-  sharpAlerts: true,
-  lineMoves: false,
-  gameStarts: false,
-  results: true
-}
-```
-
----
-
-## API Endpoints (Backend)
-
-```
-GET /health
-GET /live/slate/{sport}
-GET /splits/{sport}
-GET /injuries/{sport}
-GET /sharp-money/{sport}
-GET /esoteric/today-energy
-GET /esoteric/analyze
-GET /grader/weights
-POST /grader/grade
-```
-
----
-
-## Error Handling Strategy
-
-```javascript
-// API calls: Graceful degradation
-api.getSplits(sport).catch(() => null)
-
-// localStorage: Try/catch with fallbacks
-try {
-  localStorage.setItem(key, value);
-} catch (e) {
-  console.error('Storage error:', e);
-}
-
-// Signal calculations: Safe defaults
-if (!game) return { confidence: 50, tier: 'PARTIAL_ALIGNMENT' }
-```
-
----
-
-## Performance Considerations
-
-1. **Parallel API calls** - fetchSignalContext uses Promise.all
-2. **Memoization** - Use React.useMemo for expensive calculations
-3. **localStorage limits** - Trim old data (1000 predictions max)
-4. **Lazy loading** - Routes load on demand
-
----
-
-## Security Notes
-
-1. **No secrets in frontend** - API keys on backend only
-2. **Input validation** - All user inputs validated
-3. **XSS prevention** - React escapes by default
-4. **No raw localStorage access in UI** - Always through utility functions
-
----
-
-## Future Considerations
-
-1. **Real-time updates** - WebSocket for live odds
-2. **Push notifications** - Service worker integration
-3. **Mobile app** - React Native wrapper
-4. **User accounts** - Sync picks across devices
-5. **Backtesting engine** - Historical simulation
-6. **Export/Import** - Backup and restore pick history
 
 ---
 
@@ -404,57 +310,236 @@ bookie-member-app/
 ├── Dashboard.jsx              # Home page
 ├── SmashSpots.jsx             # Main picks page
 │
-├── # Phase 1: Foundation
-├── signalEngine.js            # Signal aggregation
+├── # Signal & Analysis
+├── signalEngine.js            # Signal aggregation (17 signals)
 ├── clvTracker.js              # CLV tracking
-├── CLVDashboard.jsx           # CLV UI
-├── backtestStorage.js         # Backtest data
-├── BacktestDashboard.jsx      # Backtest UI
 ├── kellyCalculator.js         # Kelly sizing
-├── BankrollManager.jsx        # Bankroll UI
+├── pickExplainer.js           # Plain English explanations
+├── correlationDetector.js     # Portfolio correlation
+├── backtestStorage.js         # Backtest data
 │
-├── # Phase 2: Signal Enhancement
+├── # Dashboard Pages
+├── CLVDashboard.jsx           # CLV UI
+├── BacktestDashboard.jsx      # Backtest UI
+├── BankrollManager.jsx        # Bankroll UI (~2,500 lines)
+├── PerformanceDashboard.jsx   # Historical accuracy
 ├── SharpAlerts.jsx            # Sharp money page
 ├── BestOdds.jsx               # Odds comparison
 ├── InjuryVacuum.jsx           # Injury analysis
-├── HarmonicBadge.jsx          # Convergence badges
-│
-├── # Phase 3: Intelligence
-├── pickExplainer.js           # Plain English explanations
-├── correlationDetector.js     # Portfolio correlation
-├── PerformanceDashboard.jsx   # Historical accuracy
-│
-├── # Phase 4: Integration
 ├── ConsensusMeter.jsx         # Consensus visualization
 ├── DailySummary.jsx           # Daily recap
-├── notifications.js           # Browser notifications
 │
-├── # Supporting
+├── # Enhanced Feature Pages (v2.0)
+├── SmashSpotsEnhanced.jsx     # All 17 signals, expand/collapse (~1,700 lines)
+├── InjuryVacuumEnhanced.jsx   # Flowchart, severity badges (~1,800 lines)
+├── EsotericEnhanced.jsx       # Historical validation (~1,400 lines)
+├── AdvancedAnalytics.jsx      # Simulator, parlays, hedge, arb (~2,300 lines)
+│
+├── # Community Features (v2.0)
+├── CommunityHub.jsx           # Leaderboard, voting, following (~1,100 lines)
+├── communityService.js        # Community data layer (~800 lines)
+│
+├── # Notifications (v2.0)
+├── NotificationCenter.jsx     # Alert center UI (~1,200 lines)
+├── notifications.js           # Push/email notifications (~800 lines)
+│
+├── # Mobile & PWA (v2.0)
+├── MobileOptimization.jsx     # Responsive, touch, gestures (~850 lines)
+├── PWAManager.jsx             # Service worker, install (~700 lines)
+├── serviceWorker.js           # Offline caching (~350 lines)
+├── manifest.json              # PWA manifest
+│
+├── # UX Enhancements (v2.0)
+├── InteractionEnhancements.jsx # Hover, tooltips, shortcuts (~1,500 lines)
+├── EmptyStates.jsx            # Smart empty states (~1,000 lines)
+├── Accessibility.jsx          # A11y, ARIA, keyboard (~1,330 lines)
+│
+├── # Original Feature Pages
 ├── Esoteric.jsx               # Gematria/numerology
 ├── Signals.jsx                # Signal display
 ├── Grading.jsx                # Pick grading
 ├── Splits.jsx                 # Betting splits
 ├── Profile.jsx                # User profile
 ├── AdminCockpit.jsx           # Admin tools
-└── ComplianceFooter.jsx       # Legal disclaimer
+│
+├── # Supporting Components
+├── Navigation.jsx             # Main navigation
+├── LiveIndicators.jsx         # Live status indicators
+├── ErrorBoundary.jsx          # Error handling
+├── Skeletons.jsx              # Loading skeletons
+├── HarmonicBadge.jsx          # Convergence badges
+├── ComplianceFooter.jsx       # Legal disclaimer
+├── SportTabs.jsx              # Sport selector
+├── SystemHealthPanel.jsx      # Backend status
+├── ValueWaterfall.jsx         # Value visualization
+├── CommunityVote.jsx          # Man vs Machine voting
+├── SharpMoneyWidget.jsx       # Sharp money widget
+│
+├── # Utilities
+├── useAutoRefresh.js          # Auto-refresh hook
+├── storageUtils.js            # localStorage helpers
+│
+├── # Config & Docs
+├── index.html                 # PWA meta tags
+├── index.css
+├── main.jsx
+├── package.json
+├── vite.config.js
+├── ARCHITECTURE.md            # This file
+├── CHANGELOG.md               # Version history
+│
+└── backend/                   # Python Backend
+    ├── main.py                # FastAPI app
+    ├── live_data_router.py    # 5,869 lines - ALL modules
+    ├── requirements.txt
+    ├── Procfile
+    └── runtime.txt
 ```
+
+---
+
+## Repository Structure
+
+| Repository | Purpose | Deployment |
+|------------|---------|------------|
+| `ai-betting-backend` | Production backend | Railway |
+| `bookie-frontend` | Web UI | Vercel |
+| `bookie-member-app` | Member app + backup backend | Vercel |
 
 ---
 
 ## Build Commands
 
 ```bash
-# Development
+# Frontend Development
 npm run dev
 
-# Production build
+# Frontend Production build
 npm run build
 
-# Preview production
-npm run preview
+# Backend Development (local)
+cd backend
+pip install -r requirements.txt
+uvicorn main:app --reload
+
+# Backend runs on Railway automatically
 ```
 
 ---
 
-*Last Updated: January 2026*
-*Version: 1.0 (Phase 1-4 Complete)*
+## Version 2.0 Feature Modules
+
+### Community Features
+| Component | Purpose | Key Features |
+|-----------|---------|--------------|
+| `CommunityHub.jsx` | Social features | Leaderboard, voting, following |
+| `communityService.js` | Data layer | localStorage + events |
+
+### Enhanced Pages
+| Component | Upgrade From | New Features |
+|-----------|--------------|--------------|
+| `SmashSpotsEnhanced.jsx` | SmashSpots | 17 signals, expand/collapse, comparison |
+| `InjuryVacuumEnhanced.jsx` | InjuryVacuum | Flowchart, severity, impact scoring |
+| `EsotericEnhanced.jsx` | Esoteric | Historical validation, AI agreement |
+
+### Advanced Analytics
+| Tool | Purpose | Key Features |
+|------|---------|--------------|
+| Bet Simulator | Strategy backtesting | ROI, drawdown, multiple strategies |
+| Parlays Optimizer | Parlay EV | Correlation detection, warnings |
+| Hedge Calculator | Lock in profit | Guarantee/minimize modes |
+| Arbitrage Finder | Risk-free profit | Cross-book scanning |
+
+### Mobile & PWA
+| Component | Purpose |
+|-----------|---------|
+| `MobileOptimization.jsx` | Responsive breakpoints, touch, gestures |
+| `PWAManager.jsx` | Install prompts, offline, push |
+| `serviceWorker.js` | Caching strategies, background sync |
+| `manifest.json` | App metadata, icons, shortcuts |
+
+### UX Enhancements
+| Component | Purpose |
+|-----------|---------|
+| `InteractionEnhancements.jsx` | Hover, ripple, tooltips, shortcuts |
+| `EmptyStates.jsx` | Contextual empty states, tips |
+| `Accessibility.jsx` | ARIA, keyboard, screen readers |
+
+---
+
+## Hooks & Utilities Reference
+
+### Mobile Hooks
+```javascript
+useBreakpoint()        // { breakpoint, isMobile, isTablet, isDesktop }
+usePullToRefresh()     // Pull gesture handling
+useInfiniteScroll()    // Infinite scroll logic
+useSwipeGesture()      // Swipe detection
+useNativeShare()       // Web Share API
+```
+
+### Interaction Hooks
+```javascript
+useToast()             // Toast notifications
+useConfetti()          // Celebration animation
+useShake()             // Error shake animation
+useKeyboardShortcuts() // Keyboard navigation
+useRipple()            // Material ripple effect
+```
+
+### A11y Hooks
+```javascript
+useA11y()              // Announcements, preferences
+useFocusManagement()   // Programmatic focus
+```
+
+### PWA Hooks
+```javascript
+usePWA()               // Install, offline, push state
+useConnectionStatus()  // Online/offline, connection type
+useBackgroundSync()    // Background sync triggers
+useOfflineData()       // Offline-first data fetching
+```
+
+---
+
+## Future Roadmap
+
+### Completed ✅
+1. ~~Push notifications~~ - Service worker integration
+2. ~~Mobile app~~ - PWA with install prompt
+
+### In Progress
+3. **Real-time updates** - WebSocket for live odds
+4. **Discord Bot** - Daily Man vs Machine results
+5. **Whop Integration** - User tracking with membership ID
+6. **Vote History** - Track AI vs Community accuracy
+
+### Planned
+7. **Data Export** - CSV, Excel, PDF reports
+8. **Advanced Filters** - Multi-criteria search
+9. **Social Proof** - Trending picks, hot streaks
+10. **Gamification** - Achievements, badges, streaks
+
+---
+
+## Code Statistics
+
+| Category | Files | Lines |
+|----------|-------|-------|
+| Enhanced Features | 4 | ~7,200 |
+| Community | 2 | ~1,900 |
+| Mobile/PWA | 4 | ~2,000 |
+| UX/A11y | 3 | ~3,800 |
+| Notifications | 2 | ~2,000 |
+| Analytics | 1 | ~2,300 |
+| **New Total** | **16** | **~19,200** |
+| Original Files | 38 | ~15,000 |
+| **Grand Total** | **54** | **~34,200** |
+
+---
+
+*Last Updated: January 10, 2026*
+*Version: 2.0.0 COMMUNITY VELOCITY*
+*Total Esoteric Modules: 18*
+*Total React Components: 54*
