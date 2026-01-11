@@ -64,11 +64,38 @@ async def health():
 # Esoteric today energy (frontend expects this at /esoteric/today-energy)
 @app.get("/esoteric/today-energy")
 async def esoteric_today_energy():
-    from live_data_router import calculate_date_numerology, get_moon_phase, get_daily_energy
+    from live_data_router import (
+        calculate_date_numerology, get_moon_phase, get_daily_energy,
+        ESOTERIC_WEIGHTS, MOON_PHASE_LOGIC, PLANETARY_RULERS, MASTER_NUMBERS
+    )
+    from datetime import datetime
+
+    today = datetime.now()
+    moon_phase = get_moon_phase()
+    daily_energy = get_daily_energy()
+    date_numerology = calculate_date_numerology()
+    zodiac_info = PLANETARY_RULERS.get(today.weekday(), PLANETARY_RULERS[6])
+    moon_logic = MOON_PHASE_LOGIC.get(moon_phase, MOON_PHASE_LOGIC["first_quarter"])
+
     return {
-        "date_numerology": calculate_date_numerology(),
-        "moon_phase": get_moon_phase(),
-        "daily_energy": get_daily_energy()
+        "date_numerology": date_numerology,
+        "moon_phase": moon_phase,
+        "daily_energy": daily_energy,
+        # v2.0 Esoteric Edge weights
+        "esoteric_weights": {
+            "formula": "Gematria 35% + Moon Phase 20% + Numerology 20% + Sacred Geometry 15% + Zodiac 10%",
+            "version": "2.0",
+            "weights": ESOTERIC_WEIGHTS
+        },
+        "moon_phase_logic": moon_logic,
+        "zodiac_today": {
+            "planet": zodiac_info["planet"],
+            "ruler": zodiac_info["ruler"],
+            "energy": zodiac_info["energy"],
+            "bias": zodiac_info["bias"],
+            "aggression": zodiac_info["aggression"]
+        },
+        "master_number_active": date_numerology.get("life_path") in MASTER_NUMBERS
     }
 
 if __name__ == "__main__":

@@ -3885,19 +3885,49 @@ def get_daily_energy(date: datetime = None) -> dict:
     return day_energies[date.weekday()]
 
 # ============================================================================
-# JARVIS SAVANT ESOTERIC WEIGHTS - +94.40u YTD PRESERVED
-# These weights produced the winning edge - DO NOT CHANGE
+# ESOTERIC EDGE WEIGHTS v2.0 - REFINED COSMIC SYSTEM
+# New balanced weights for comprehensive esoteric analysis
 # ============================================================================
 
-JARVIS_ESOTERIC_WEIGHTS = {
-    "gematria": 0.52,      # Boss approved - dominant
-    "numerology": 0.20,
-    "astro": 0.13,
-    "vedic": 0.10,
-    "sacred": 0.05,
-    "fib_phi": 0.05,
-    "vortex": 0.05
+ESOTERIC_WEIGHTS = {
+    "gematria": 0.35,        # 35% - 6 cipher methods (ordinal, reverse, reduction, jewish, sumerian, english)
+    "moon_phase": 0.20,      # 20% - Full/new moon chaos theory (underdogs/favorites)
+    "numerology": 0.20,      # 20% - Daily life path, master numbers (11, 22, 33)
+    "sacred_geometry": 0.15, # 15% - Fibonacci sequences, Tesla divisibility (3-6-9)
+    "zodiac": 0.10           # 10% - Planetary rulers (Mars=aggression, Saturn=discipline)
 }
+
+# Cosmic Confluence - when 3+ esoteric signals align
+COSMIC_CONFLUENCE_THRESHOLD = 3
+
+# Moon phase game theory
+MOON_PHASE_LOGIC = {
+    "full": {"bias": "underdogs", "chaos_factor": 1.25, "description": "Full moon chaos - underdogs thrive"},
+    "new": {"bias": "favorites", "chaos_factor": 0.75, "description": "New moon order - favorites prevail"},
+    "waxing_gibbous": {"bias": "slight_underdog", "chaos_factor": 1.1, "description": "Building energy - mild upset potential"},
+    "waning_gibbous": {"bias": "slight_favorite", "chaos_factor": 0.9, "description": "Fading chaos - favorites edge"},
+    "first_quarter": {"bias": "neutral", "chaos_factor": 1.0, "description": "Balance point - coin flip"},
+    "last_quarter": {"bias": "neutral", "chaos_factor": 1.0, "description": "Balance point - coin flip"},
+    "waxing_crescent": {"bias": "favorites", "chaos_factor": 0.85, "description": "Early wax - order emerging"},
+    "waning_crescent": {"bias": "underdogs", "chaos_factor": 1.15, "description": "Late wane - chaos brewing"}
+}
+
+# Zodiac planetary rulers for daily energy
+PLANETARY_RULERS = {
+    0: {"planet": "Moon", "ruler": "Cancer", "energy": "emotional", "bias": "home_teams", "aggression": 0.3},      # Monday
+    1: {"planet": "Mars", "ruler": "Aries/Scorpio", "energy": "aggressive", "bias": "overs", "aggression": 1.0},   # Tuesday
+    2: {"planet": "Mercury", "ruler": "Gemini/Virgo", "energy": "volatile", "bias": "live_dogs", "aggression": 0.6}, # Wednesday
+    3: {"planet": "Jupiter", "ruler": "Sagittarius", "energy": "expansive", "bias": "overs", "aggression": 0.7},   # Thursday
+    4: {"planet": "Venus", "ruler": "Taurus/Libra", "energy": "harmony", "bias": "close_games", "aggression": 0.4}, # Friday
+    5: {"planet": "Saturn", "ruler": "Capricorn", "energy": "discipline", "bias": "unders", "aggression": 0.5},    # Saturday
+    6: {"planet": "Sun", "ruler": "Leo", "energy": "victory", "bias": "favorites", "aggression": 0.8}              # Sunday
+}
+
+# Master numbers carry special significance
+MASTER_NUMBERS = [11, 22, 33]
+
+# Legacy alias for backward compatibility
+JARVIS_ESOTERIC_WEIGHTS = ESOTERIC_WEIGHTS
 
 # Public Fade (Exoteric King) - ≥65% chalk = crush
 PUBLIC_FADE_PENALTY = -0.13
@@ -4027,27 +4057,142 @@ def calculate_standalone_esoteric(
             "jarvis_check": line_jarvis
         }
 
-    # 8. CALCULATE ESOTERIC SCORE (standalone) - USING JARVIS SAVANT +94.40u WEIGHTS
+    # 8. CALCULATE ESOTERIC SCORE - v2.0 COSMIC SYSTEM WITH NEW WEIGHTS
+    # Weights: Gematria 35%, Moon Phase 20%, Numerology 20%, Sacred Geometry 15%, Zodiac 10%
 
-    # Calculate component scores (0-100 scale)
+    # Track signals for Cosmic Confluence detection
+    cosmic_signals = []
+
+    # === GEMATRIA SCORE (35%) - 6 cipher methods ===
+    # Uses all 6 ciphers: ordinal, reverse, reduction, jewish, sumerian, english
+    home_gem_total = sum(home_ciphers.values()) if home_ciphers else 0
+    away_gem_total = sum(away_ciphers.values()) if away_ciphers else 0
     gematria_score = min(100, storyline["home_score"] if storyline["favored"] == "home" else storyline["away_score"])
-    numerology_score = min(100, 50 + len(date_analysis["alignments"]) * 10)
-    astro_score = 70 if moon_phase in ['full', 'new'] else 55 if moon_phase in ['waxing_gibbous', 'first_quarter'] else 50
-    vedic_score = 50 + (date_analysis["life_path"] * 3) if date_analysis["life_path"] in [3, 6, 9, 11, 22, 33] else 50
-    sacred_score = 60 if line_analysis and line_analysis["insights"] else 50
-    fib_phi_score = 70 if line_analysis and any("Fibonacci" in i for i in line_analysis.get("insights", [])) else 50
-    vortex_score = 65 if any("TESLA" in str(a) for a in date_analysis.get("alignments", [])) else 50
 
-    # Apply JARVIS SAVANT WEIGHTS (the +94.40u formula)
+    # Check for power number alignments in team gematria
+    gematria_signals = []
+    for cipher_name, value in home_ciphers.items():
+        if value in POWER_NUMBERS.get("master", []) or value in POWER_NUMBERS.get("sacred", []):
+            gematria_signals.append(f"{home_team} {cipher_name}={value}")
+            gematria_score = min(100, gematria_score + 5)
+    for cipher_name, value in away_ciphers.items():
+        if value in POWER_NUMBERS.get("master", []) or value in POWER_NUMBERS.get("sacred", []):
+            gematria_signals.append(f"{away_team} {cipher_name}={value}")
+
+    if storyline.get("has_jarvis_trigger"):
+        cosmic_signals.append("gematria_power")
+        gematria_score = min(100, gematria_score + 10)
+
+    # === MOON PHASE SCORE (20%) - Chaos theory ===
+    moon_logic = MOON_PHASE_LOGIC.get(moon_phase, MOON_PHASE_LOGIC["first_quarter"])
+    moon_phase_score = 50  # baseline
+
+    if moon_phase == 'full':
+        # Full moon = chaos = underdogs thrive
+        moon_phase_score = 85
+        cosmic_signals.append("full_moon_chaos")
+    elif moon_phase == 'new':
+        # New moon = order = favorites prevail
+        moon_phase_score = 80
+        cosmic_signals.append("new_moon_order")
+    elif moon_phase in ['waxing_gibbous', 'waning_crescent']:
+        moon_phase_score = 70
+    elif moon_phase in ['waning_gibbous', 'waxing_crescent']:
+        moon_phase_score = 65
+    else:
+        moon_phase_score = 55
+
+    # === NUMEROLOGY SCORE (20%) - Daily life path & master numbers ===
+    life_path = date_analysis.get("life_path", 0)
+    numerology_score = 50 + len(date_analysis.get("alignments", [])) * 8
+
+    # Master number bonus (11, 22, 33)
+    if life_path in MASTER_NUMBERS:
+        numerology_score += 20
+        cosmic_signals.append(f"master_number_{life_path}")
+    elif life_path in [3, 6, 9]:  # Tesla numbers
+        numerology_score += 10
+        cosmic_signals.append("tesla_numerology")
+
+    numerology_score = min(100, numerology_score)
+
+    # === SACRED GEOMETRY SCORE (15%) - Fibonacci & Tesla divisibility ===
+    sacred_geometry_score = 50  # baseline
+    sacred_signals = []
+
+    if line_analysis:
+        analyzed_line = line_analysis.get("analyzed_line", 0)
+
+        # Fibonacci check
+        if analyzed_line in POWER_NUMBERS.get("fibonacci", []):
+            sacred_geometry_score += 25
+            sacred_signals.append(f"Fibonacci line {analyzed_line}")
+            cosmic_signals.append("fibonacci_alignment")
+
+        # Tesla divisibility (3-6-9)
+        if analyzed_line > 0 and analyzed_line % 3 == 0:
+            sacred_geometry_score += 15
+            sacred_signals.append(f"Tesla divisible {analyzed_line}")
+            if analyzed_line % 9 == 0:
+                sacred_geometry_score += 10
+                cosmic_signals.append("tesla_369")
+
+        # Sacred number check
+        if analyzed_line in POWER_NUMBERS.get("sacred", []):
+            sacred_geometry_score += 20
+            sacred_signals.append(f"Sacred number {analyzed_line}")
+
+    sacred_geometry_score = min(100, sacred_geometry_score)
+
+    # === ZODIAC SCORE (10%) - Planetary rulers ===
+    zodiac_info = PLANETARY_RULERS.get(game_date.weekday(), PLANETARY_RULERS[6])
+    zodiac_score = 50 + int(zodiac_info["aggression"] * 30)
+
+    # Mars day (Tuesday) = high aggression = overs
+    if zodiac_info["planet"] == "Mars":
+        zodiac_score = 85
+        cosmic_signals.append("mars_aggression")
+    # Saturn day (Saturday) = discipline = unders
+    elif zodiac_info["planet"] == "Saturn":
+        zodiac_score = 80
+        cosmic_signals.append("saturn_discipline")
+    # Sun day (Sunday) = victory = favorites
+    elif zodiac_info["planet"] == "Sun":
+        zodiac_score = 75
+        cosmic_signals.append("sun_victory")
+
+    zodiac_score = min(100, zodiac_score)
+
+    # === APPLY v2.0 ESOTERIC WEIGHTS ===
     weighted_score = (
-        gematria_score * JARVIS_ESOTERIC_WEIGHTS["gematria"] +
-        numerology_score * JARVIS_ESOTERIC_WEIGHTS["numerology"] +
-        astro_score * JARVIS_ESOTERIC_WEIGHTS["astro"] +
-        vedic_score * JARVIS_ESOTERIC_WEIGHTS["vedic"] +
-        sacred_score * JARVIS_ESOTERIC_WEIGHTS["sacred"] +
-        fib_phi_score * JARVIS_ESOTERIC_WEIGHTS["fib_phi"] +
-        vortex_score * JARVIS_ESOTERIC_WEIGHTS["vortex"]
+        gematria_score * ESOTERIC_WEIGHTS["gematria"] +           # 35%
+        moon_phase_score * ESOTERIC_WEIGHTS["moon_phase"] +       # 20%
+        numerology_score * ESOTERIC_WEIGHTS["numerology"] +       # 20%
+        sacred_geometry_score * ESOTERIC_WEIGHTS["sacred_geometry"] +  # 15%
+        zodiac_score * ESOTERIC_WEIGHTS["zodiac"]                 # 10%
     )
+
+    # === COSMIC CONFLUENCE DETECTION ===
+    cosmic_confluence = len(cosmic_signals) >= COSMIC_CONFLUENCE_THRESHOLD
+    if cosmic_confluence:
+        # Boost score when 3+ cosmic signals align
+        weighted_score = min(100, weighted_score * 1.15)
+
+    # Build component breakdown for transparency
+    component_breakdown = {
+        "gematria": {"score": gematria_score, "weight": "35%", "signals": gematria_signals[:3]},
+        "moon_phase": {"score": moon_phase_score, "weight": "20%", "phase": moon_phase, "logic": moon_logic},
+        "numerology": {"score": numerology_score, "weight": "20%", "life_path": life_path, "master": life_path in MASTER_NUMBERS},
+        "sacred_geometry": {"score": sacred_geometry_score, "weight": "15%", "signals": sacred_signals},
+        "zodiac": {"score": zodiac_score, "weight": "10%", "planet": zodiac_info["planet"], "energy": zodiac_info["energy"]}
+    }
+
+    # Legacy score variables for backward compatibility
+    astro_score = moon_phase_score
+    vedic_score = numerology_score
+    sacred_score = sacred_geometry_score
+    fib_phi_score = sacred_geometry_score
+    vortex_score = zodiac_score
 
     esoteric_score = round(weighted_score)
 
@@ -4166,23 +4311,25 @@ def calculate_standalone_esoteric(
         "bet_recommendation": bet_recommendation,
         "top_insights": top_insights[:5],
 
-        # JARVIS SAVANT +94.40u WEIGHTS BREAKDOWN
-        "jarvis_weights": {
-            "formula": "Gematria 52% + Numerology 20% + Astro 13% + Vedic 10% + Sacred 5% + Fib/Phi 5% + Vortex 5%",
-            "ytd_record": "+94.40u",
-            "components": {
-                "gematria": {"score": gematria_score, "weight": "52%"},
-                "numerology": {"score": numerology_score, "weight": "20%"},
-                "astro": {"score": astro_score, "weight": "13%"},
-                "vedic": {"score": vedic_score, "weight": "10%"},
-                "sacred": {"score": sacred_score, "weight": "5%"},
-                "fib_phi": {"score": fib_phi_score, "weight": "5%"},
-                "vortex": {"score": vortex_score, "weight": "5%"}
-            },
+        # v2.0 ESOTERIC EDGE WEIGHTS BREAKDOWN
+        "esoteric_weights_v2": {
+            "formula": "Gematria 35% + Moon Phase 20% + Numerology 20% + Sacred Geometry 15% + Zodiac 10%",
+            "version": "2.0",
+            "components": component_breakdown,
             "modifiers_applied": {
                 "mid_spread_amplifier": spread is not None and 4 <= abs(spread) <= 9,
-                "large_spread_trap": spread is not None and abs(spread) > 15
+                "large_spread_trap": spread is not None and abs(spread) > 15,
+                "cosmic_confluence": cosmic_confluence
             }
+        },
+
+        # COSMIC CONFLUENCE - when 3+ signals align
+        "cosmic_confluence": {
+            "active": cosmic_confluence,
+            "signals_count": len(cosmic_signals),
+            "signals": cosmic_signals,
+            "threshold": COSMIC_CONFLUENCE_THRESHOLD,
+            "boost_applied": cosmic_confluence
         },
 
         # NHL ML Dog special play
@@ -4211,9 +4358,11 @@ def calculate_standalone_esoteric(
         "cosmic": {
             "moon_phase": moon_phase,
             "moon_emoji": moon_emoji,
-            "planetary_ruler": daily_energy["planet"],
-            "daily_energy": daily_energy["energy"],
-            "natural_bias": daily_energy["bias"],
+            "moon_logic": moon_logic,
+            "planetary_ruler": zodiac_info["planet"],
+            "zodiac_ruler": zodiac_info["ruler"],
+            "daily_energy": zodiac_info["energy"],
+            "natural_bias": zodiac_info["bias"],
             "planet_emoji": daily_energy["emoji"]
         },
         "immortal_status": validate_2178()["status"],
