@@ -6,6 +6,7 @@ import { explainPick, quickExplain } from './pickExplainer';
 import { analyzeCorrelation, checkPickCorrelation } from './correlationDetector';
 import { ConsensusMeter, ConsensusMiniBadge, ConsensusAlert, calculateConsensus } from './ConsensusMeter';
 import CommunityVote from './CommunityVote';
+import { useToast } from './Toast';
 
 // Floating Glow Badge for special convergence picks
 const ConvergenceGlowBadge = ({ tier }) => {
@@ -87,6 +88,7 @@ const ConvergenceGlowBadge = ({ tier }) => {
 };
 
 const SmashSpots = () => {
+  const toast = useToast();
   const [sport, setSport] = useState('NBA');
   const [picks, setPicks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -95,7 +97,18 @@ const SmashSpots = () => {
   const [expandedExplanations, setExpandedExplanations] = useState(new Set());
   const [correlationWarning, setCorrelationWarning] = useState(null);
 
+  // Filter & Sort State
+  const [minConfidence, setMinConfidence] = useState(50);
+  const [sortBy, setSortBy] = useState('confidence');
+  const [showFilters, setShowFilters] = useState(false);
+
   const sports = ['NBA', 'NFL', 'MLB', 'NHL', 'NCAAB'];
+  const confidenceOptions = [50, 60, 70, 80];
+  const sortOptions = [
+    { value: 'confidence', label: 'Confidence (High → Low)' },
+    { value: 'time', label: 'Game Time (Soonest)' },
+    { value: 'tier', label: 'Tier (Best First)' }
+  ];
 
   // Load already tracked picks on mount and analyze correlation
   useEffect(() => {
@@ -152,6 +165,9 @@ const SmashSpots = () => {
     const pickId = `${game.home_team}-${game.away_team}-${pickData.side}-${betType}`;
     setTrackedPicks(prev => new Set([...prev, pickId]));
 
+    // Show toast
+    toast.success(`Pick tracked: ${pickData.side} ${betType === 'spread' ? pickData.line : pickData.line}`);
+
     // Re-analyze correlation with new pick
     const allPicks = getAllPicks();
     if (allPicks.length >= 2) {
@@ -165,6 +181,22 @@ const SmashSpots = () => {
     const side = betType === 'spread' ? edge.side : edge.recommendation_side;
     const pickId = `${game.home_team}-${game.away_team}-${side}-${betType}`;
     return trackedPicks.has(pickId);
+  };
+
+  // Copy pick to clipboard for bet slip
+  const [copiedPick, setCopiedPick] = useState(null);
+  const copyToClipboard = (game, betType) => {
+    const edge = betType === 'spread' ? game.spreadEdge : game.totalEdge;
+    const pickText = betType === 'spread'
+      ? `${game.away_team} @ ${game.home_team} | ${edge.side} ${game.spread > 0 ? '+' : ''}${game.spread} (${formatOdds(edge.odds)}) | ${edge.confidence}% conf | ${edge.book}`
+      : `${game.away_team} @ ${game.home_team} | ${edge.recommendation_side} ${game.total} (${formatOdds(edge.recommendation_side === 'OVER' ? edge.overOdds : edge.underOdds)}) | ${edge.confidence}% conf | ${edge.book}`;
+
+    navigator.clipboard.writeText(pickText).then(() => {
+      const pickId = `${game.home_team}-${game.away_team}-${betType}`;
+      setCopiedPick(pickId);
+      setTimeout(() => setCopiedPick(null), 2000);
+      toast.info('Copied to clipboard');
+    });
   };
 
   useEffect(() => {
@@ -234,20 +266,8 @@ const SmashSpots = () => {
           };
         });
 
-        // Debug: log all games and their confidence
-        console.log('All games with confidence:', gamePicks.map(g => ({
-          game: `${g.away_team} @ ${g.home_team}`,
-          spreadConf: g.spreadEdge.confidence,
-          totalConf: g.totalEdge.confidence
-        })));
-
-        // Filter and sort - use 50% threshold to show more picks
-        const filteredPicks = gamePicks
-          .filter(g => g.spreadEdge.confidence >= 50 || g.totalEdge.confidence >= 50)
-          .sort((a, b) => Math.max(b.spreadEdge.confidence, b.totalEdge.confidence) -
-                         Math.max(a.spreadEdge.confidence, a.totalEdge.confidence));
-
-        setPicks(filteredPicks);
+        // Store all picks - filtering happens in render
+        setPicks(gamePicks);
       } else {
         setPicks([]);
       }
@@ -285,10 +305,10 @@ const SmashSpots = () => {
       'betrivers': '#1A6B3C',
       'unibet': '#147B45',
     };
-    
+
     const bgColor = colors[book?.toLowerCase()] || '#444';
     const displayName = book?.replace('_us', '').replace('_', ' ').toUpperCase() || 'N/A';
-    
+
     return (
       <span style={{
         backgroundColor: bgColor,
@@ -304,6 +324,43 @@ const SmashSpots = () => {
     );
   };
 
+  // Tier ranking for sorting
+  const tierRank = {
+    'GOLDEN_CONVERGENCE': 1,
+    'HARMONIC_ALIGNMENT': 2,
+    'SUPER_SIGNAL': 3,
+    'PARTIAL_ALIGNMENT': 4,
+    'STANDARD': 5
+  };
+
+  // Filter and sort picks based on user preferences
+  const filteredPicks = picks
+    .filter(g => {
+      const maxConf = Math.max(g.spreadEdge?.confidence || 0, g.totalEdge?.confidence || 0);
+      return maxConf >= minConfidence;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'confidence') {
+        return Math.max(b.spreadEdge?.confidence || 0, b.totalEdge?.confidence || 0) -
+               Math.max(a.spreadEdge?.confidence || 0, a.totalEdge?.confidence || 0);
+      } else if (sortBy === 'time') {
+        return new Date(a.commence_time) - new Date(b.commence_time);
+      } else if (sortBy === 'tier') {
+        const aTier = a.bestPick === 'spread' ? a.spreadEdge?.tier : a.totalEdge?.tier;
+        const bTier = b.bestPick === 'spread' ? b.spreadEdge?.tier : b.totalEdge?.tier;
+        return (tierRank[aTier] || 99) - (tierRank[bTier] || 99);
+      }
+      return 0;
+    });
+
+  // Count picks by confidence tier for filter badges
+  const pickCounts = {
+    50: picks.filter(g => Math.max(g.spreadEdge?.confidence || 0, g.totalEdge?.confidence || 0) >= 50).length,
+    60: picks.filter(g => Math.max(g.spreadEdge?.confidence || 0, g.totalEdge?.confidence || 0) >= 60).length,
+    70: picks.filter(g => Math.max(g.spreadEdge?.confidence || 0, g.totalEdge?.confidence || 0) >= 70).length,
+    80: picks.filter(g => Math.max(g.spreadEdge?.confidence || 0, g.totalEdge?.confidence || 0) >= 80).length
+  };
+
   return (
     <div style={{ padding: '20px', backgroundColor: '#0a0a0f', minHeight: '100vh' }}>
       <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
@@ -315,7 +372,7 @@ const SmashSpots = () => {
               🔥 Today's Smash Spots
             </h1>
             <p style={{ color: '#6b7280', margin: 0, fontSize: '14px' }}>
-              {picks.length} plays • Best odds from {picks[0]?.books_compared || 10}+ sportsbooks
+              {filteredPicks.length} plays • Best odds from {filteredPicks[0]?.books_compared || 10}+ sportsbooks
             </p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
@@ -335,7 +392,7 @@ const SmashSpots = () => {
         </div>
 
         {/* Sport Tabs */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '25px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '15px', flexWrap: 'wrap' }}>
           {sports.map(s => (
             <button
               key={s}
@@ -354,6 +411,80 @@ const SmashSpots = () => {
               {s}
             </button>
           ))}
+        </div>
+
+        {/* Filter & Sort Toolbar */}
+        <div style={{
+          backgroundColor: '#1a1a2e',
+          borderRadius: '10px',
+          padding: '12px 16px',
+          marginBottom: '20px',
+          border: '1px solid #333'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+            {/* Confidence Filter */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ color: '#6b7280', fontSize: '12px' }}>Min Confidence:</span>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                {confidenceOptions.map(conf => (
+                  <button
+                    key={conf}
+                    onClick={() => setMinConfidence(conf)}
+                    style={{
+                      padding: '6px 12px',
+                      backgroundColor: minConfidence === conf ? '#00D4FF' : '#0a0a0f',
+                      color: minConfidence === conf ? '#000' : '#9ca3af',
+                      border: minConfidence === conf ? 'none' : '1px solid #444',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      fontWeight: minConfidence === conf ? 'bold' : 'normal',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    {conf}%+
+                    <span style={{
+                      backgroundColor: minConfidence === conf ? 'rgba(0,0,0,0.2)' : '#333',
+                      padding: '1px 5px',
+                      borderRadius: '4px',
+                      fontSize: '10px'
+                    }}>
+                      {pickCounts[conf]}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Sort Options */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ color: '#6b7280', fontSize: '12px' }}>Sort:</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                style={{
+                  padding: '6px 12px',
+                  backgroundColor: '#0a0a0f',
+                  color: '#fff',
+                  border: '1px solid #444',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  cursor: 'pointer'
+                }}
+              >
+                {sortOptions.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Results Count */}
+            <div style={{ color: '#9ca3af', fontSize: '12px' }}>
+              Showing <span style={{ color: '#00D4FF', fontWeight: 'bold' }}>{filteredPicks.length}</span> of {picks.length} picks
+            </div>
+          </div>
         </div>
 
         {/* Correlation Warning */}
@@ -417,15 +548,40 @@ const SmashSpots = () => {
             <div style={{ fontSize: '24px', marginBottom: '10px' }}>⚡</div>
             Analyzing signals...
           </div>
-        ) : picks.length === 0 ? (
+        ) : filteredPicks.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px', color: '#9ca3af', backgroundColor: '#1a1a2e', borderRadius: '12px' }}>
-            <div style={{ fontSize: '48px', marginBottom: '15px' }}>🔍</div>
-            <h3 style={{ color: '#fff', marginBottom: '10px' }}>No High-Confidence Picks</h3>
-            <p>Check back closer to game time for today's {sport} picks.</p>
+            <div style={{ fontSize: '48px', marginBottom: '15px' }}>{picks.length > 0 ? '🎯' : '🔍'}</div>
+            <h3 style={{ color: '#fff', marginBottom: '10px' }}>
+              {picks.length > 0 ? `No Picks Above ${minConfidence}% Confidence` : 'No Picks Available'}
+            </h3>
+            <p>
+              {picks.length > 0
+                ? `Try lowering the confidence threshold. ${picks.length} picks available at lower confidence levels.`
+                : `Check back closer to game time for today's ${sport} picks.`
+              }
+            </p>
+            {picks.length > 0 && minConfidence > 50 && (
+              <button
+                onClick={() => setMinConfidence(50)}
+                style={{
+                  marginTop: '15px',
+                  padding: '10px 20px',
+                  backgroundColor: '#00D4FF',
+                  color: '#000',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  fontSize: '14px'
+                }}
+              >
+                Show All Picks (50%+)
+              </button>
+            )}
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '20px' }}>
-            {picks.map((game, idx) => {
+            {filteredPicks.map((game, idx) => {
               const mainPick = game.bestPick === 'spread' ? game.spreadEdge : game.totalEdge;
               const mainAnalysis = game.bestPick === 'spread' ? game.spreadAnalysis : game.totalAnalysis;
               const confidence = mainPick.confidence;
@@ -529,8 +685,27 @@ const SmashSpots = () => {
                         )}
                         <BookBadge book={mainPick.book} />
                       </div>
-                      <div style={{ color: '#6b7280', fontSize: '11px', marginTop: '3px' }}>
-                        Expected: {tierInfo.winRate} win rate • {tierInfo.roi} ROI
+                      <div style={{ color: '#6b7280', fontSize: '11px', marginTop: '3px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <span>Expected: {tierInfo.winRate} win rate • {tierInfo.roi} ROI</span>
+                        {/* Model Agreement Badge */}
+                        {mainPick.signals && mainPick.signals.length > 0 && (() => {
+                          const strongSignals = mainPick.signals.filter(s => s.score >= 60).length;
+                          const totalSignals = Math.min(mainPick.signals.length, 8);
+                          const agreementColor = strongSignals >= 6 ? '#00FF88' : strongSignals >= 4 ? '#00D4FF' : '#FFD700';
+                          return (
+                            <span style={{
+                              backgroundColor: agreementColor + '20',
+                              color: agreementColor,
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                              fontSize: '10px',
+                              fontWeight: 'bold',
+                              border: `1px solid ${agreementColor}40`
+                            }}>
+                              {strongSignals}/{totalSignals} models agree
+                            </span>
+                          );
+                        })()}
                       </div>
                     </div>
                   </div>
@@ -708,11 +883,27 @@ const SmashSpots = () => {
                       <div style={{ color: '#fff', fontSize: '13px', fontWeight: 'bold' }}>
                         {game.spreadEdge.side} {game.spread > 0 ? '+' : ''}{game.spread}
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '3px' }}>
-                        <span style={{ color: getConfidenceColor(game.spreadEdge.confidence), fontSize: '12px', fontWeight: 'bold' }}>
-                          {game.spreadEdge.confidence}%
-                        </span>
-                        <BookBadge book={game.spreadEdge.book} />
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '3px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                          <span style={{ color: getConfidenceColor(game.spreadEdge.confidence), fontSize: '12px', fontWeight: 'bold' }}>
+                            {game.spreadEdge.confidence}%
+                          </span>
+                          <BookBadge book={game.spreadEdge.book} />
+                        </div>
+                        <button
+                          onClick={() => copyToClipboard(game, 'spread')}
+                          style={{
+                            padding: '2px 6px',
+                            fontSize: '9px',
+                            backgroundColor: copiedPick === `${game.home_team}-${game.away_team}-spread` ? '#00FF8820' : 'transparent',
+                            color: copiedPick === `${game.home_team}-${game.away_team}-spread` ? '#00FF88' : '#6b7280',
+                            border: '1px solid #444',
+                            borderRadius: '4px',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          {copiedPick === `${game.home_team}-${game.away_team}-spread` ? '✓ Copied' : '📋'}
+                        </button>
                       </div>
                     </div>
 
@@ -744,11 +935,27 @@ const SmashSpots = () => {
                       <div style={{ color: '#fff', fontSize: '13px', fontWeight: 'bold' }}>
                         {game.totalEdge.recommendation_side} {game.total}
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '3px' }}>
-                        <span style={{ color: getConfidenceColor(game.totalEdge.confidence), fontSize: '12px', fontWeight: 'bold' }}>
-                          {game.totalEdge.confidence}%
-                        </span>
-                        <BookBadge book={game.totalEdge.book} />
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '3px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                          <span style={{ color: getConfidenceColor(game.totalEdge.confidence), fontSize: '12px', fontWeight: 'bold' }}>
+                            {game.totalEdge.confidence}%
+                          </span>
+                          <BookBadge book={game.totalEdge.book} />
+                        </div>
+                        <button
+                          onClick={() => copyToClipboard(game, 'total')}
+                          style={{
+                            padding: '2px 6px',
+                            fontSize: '9px',
+                            backgroundColor: copiedPick === `${game.home_team}-${game.away_team}-total` ? '#00FF8820' : 'transparent',
+                            color: copiedPick === `${game.home_team}-${game.away_team}-total` ? '#00FF88' : '#6b7280',
+                            border: '1px solid #444',
+                            borderRadius: '4px',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          {copiedPick === `${game.home_team}-${game.away_team}-total` ? '✓ Copied' : '📋'}
+                        </button>
                       </div>
                     </div>
                   </div>

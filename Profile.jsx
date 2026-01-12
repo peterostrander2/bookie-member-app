@@ -1,6 +1,10 @@
-import api from './api'
+import React, { useState } from 'react';
+import api from './api';
+import { resetOnboarding } from './Onboarding';
+import { useToast } from './Toast';
 
 const Profile = () => {
+  const toast = useToast();
   const [user, setUser] = useState({
     name: 'Member',
     email: 'member@example.com',
@@ -43,6 +47,11 @@ const Profile = () => {
   const managePlan = () => {
     // Would redirect to Whop billing
     window.open('https://whop.com/hub', '_blank');
+  };
+
+  const handleRestartTour = () => {
+    resetOnboarding();
+    toast.info('Tour reset! Refresh to see the onboarding wizard.');
   };
 
   const roi = ((bankroll.current - bankroll.starting) / bankroll.starting * 100).toFixed(1);
@@ -345,6 +354,46 @@ const Profile = () => {
                 </button>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* App Settings */}
+        <div style={{
+          backgroundColor: '#1a1a2e',
+          borderRadius: '12px',
+          padding: '20px',
+          border: '1px solid #333'
+        }}>
+          <h3 style={{ color: '#fff', fontSize: '16px', margin: '0 0 20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            ⚙️ App Settings
+          </h3>
+
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '12px',
+            backgroundColor: '#12121f',
+            borderRadius: '8px'
+          }}>
+            <div>
+              <div style={{ color: '#fff', fontSize: '14px', marginBottom: '2px' }}>Restart Onboarding Tour</div>
+              <div style={{ color: '#6b7280', fontSize: '12px' }}>See the welcome wizard again</div>
+            </div>
+            <button
+              onClick={handleRestartTour}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#00D4FF20',
+                color: '#00D4FF',
+                border: '1px solid #00D4FF40',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '13px'
+              }}
+            >
+              Restart Tour
+            </button>
           </div>
         </div>
       </div>

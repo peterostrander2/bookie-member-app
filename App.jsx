@@ -17,7 +17,14 @@ import InjuryVacuum from './InjuryVacuum';
 import PerformanceDashboard from './PerformanceDashboard';
 import ConsensusMeterPage from './ConsensusMeter';
 import DailySummary from './DailySummary';
+import Leaderboard from './Leaderboard';
+import Props from './Props';
 import ComplianceFooter from './ComplianceFooter';
+import { ToastProvider } from './Toast';
+import OnboardingWizard, { isOnboardingComplete } from './Onboarding';
+import { ThemeProvider, ThemeToggle, useTheme } from './ThemeContext';
+import { GamificationProvider, LevelBadge } from './Gamification';
+import AchievementsPage from './Gamification';
 import api from './api';
 
 const Navbar = () => {
@@ -41,6 +48,9 @@ const Navbar = () => {
     { path: '/esoteric', label: 'Esoteric', icon: '🔮' },
     { path: '/signals', label: 'Signals', icon: '⚡' },
     { path: '/grading', label: 'Grading', icon: '📝' },
+    { path: '/leaderboard', label: 'Leaders', icon: '🏆' },
+    { path: '/props', label: 'Props', icon: '🎯' },
+    { path: '/achievements', label: 'Badges', icon: '🏅' },
     { path: '/profile', label: 'Profile', icon: '👤' }
   ];
 
@@ -96,57 +106,84 @@ const Navbar = () => {
           ))}
         </div>
 
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          backgroundColor: health?.status === 'healthy' || health?.status === 'online' ? '#00FF8815' : '#FF444415',
-          padding: '6px 12px',
-          borderRadius: '20px',
-          fontSize: '12px',
-          color: health?.status === 'healthy' || health?.status === 'online' ? '#00FF88' : '#FF4444'
-        }}>
-          <span style={{
-            width: '6px',
-            height: '6px',
-            borderRadius: '50%',
-            backgroundColor: health?.status === 'healthy' || health?.status === 'online' ? '#00FF88' : '#FF4444'
-          }} />
-          {health?.status === 'healthy' || health?.status === 'online' ? 'Online' : 'Offline'}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <LevelBadge />
+          <ThemeToggle />
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            backgroundColor: health?.status === 'healthy' || health?.status === 'online' ? '#00FF8815' : '#FF444415',
+            padding: '6px 12px',
+            borderRadius: '20px',
+            fontSize: '12px',
+            color: health?.status === 'healthy' || health?.status === 'online' ? '#00FF88' : '#FF4444'
+          }}>
+            <span style={{
+              width: '6px',
+              height: '6px',
+              borderRadius: '50%',
+              backgroundColor: health?.status === 'healthy' || health?.status === 'online' ? '#00FF88' : '#FF4444'
+            }} />
+            {health?.status === 'healthy' || health?.status === 'online' ? 'Online' : 'Offline'}
+          </div>
         </div>
       </div>
     </nav>
   );
 };
 
+const AppContent = () => {
+  const { theme } = useTheme();
+  const [showOnboarding, setShowOnboarding] = useState(!isOnboardingComplete());
+
+  return (
+    <>
+      {showOnboarding && (
+        <OnboardingWizard onComplete={() => setShowOnboarding(false)} />
+      )}
+      <div style={{ backgroundColor: theme.bg, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+          <Navbar />
+          <div style={{ flex: 1 }}>
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/smash-spots" element={<SmashSpots />} />
+              <Route path="/sharp" element={<SharpAlerts />} />
+              <Route path="/odds" element={<BestOdds />} />
+              <Route path="/injuries" element={<InjuryVacuum />} />
+              <Route path="/performance" element={<PerformanceDashboard />} />
+              <Route path="/consensus" element={<ConsensusMeterPage />} />
+              <Route path="/summary" element={<DailySummary />} />
+              <Route path="/splits" element={<Splits />} />
+              <Route path="/clv" element={<CLVDashboard />} />
+              <Route path="/backtest" element={<BacktestDashboard />} />
+              <Route path="/bankroll" element={<BankrollManager />} />
+              <Route path="/esoteric" element={<Esoteric />} />
+              <Route path="/signals" element={<Signals />} />
+              <Route path="/grading" element={<Grading />} />
+              <Route path="/admin" element={<AdminCockpit />} />
+              <Route path="/leaderboard" element={<Leaderboard />} />
+              <Route path="/props" element={<Props />} />
+              <Route path="/achievements" element={<AchievementsPage />} />
+              <Route path="/profile" element={<Profile />} />
+            </Routes>
+          </div>
+          <ComplianceFooter />
+        </div>
+    </>
+  );
+};
+
 const App = () => {
   return (
     <BrowserRouter>
-      <div style={{ backgroundColor: '#0a0a0f', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-        <Navbar />
-        <div style={{ flex: 1 }}>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/smash-spots" element={<SmashSpots />} />
-            <Route path="/sharp" element={<SharpAlerts />} />
-            <Route path="/odds" element={<BestOdds />} />
-            <Route path="/injuries" element={<InjuryVacuum />} />
-            <Route path="/performance" element={<PerformanceDashboard />} />
-            <Route path="/consensus" element={<ConsensusMeterPage />} />
-            <Route path="/summary" element={<DailySummary />} />
-            <Route path="/splits" element={<Splits />} />
-            <Route path="/clv" element={<CLVDashboard />} />
-            <Route path="/backtest" element={<BacktestDashboard />} />
-            <Route path="/bankroll" element={<BankrollManager />} />
-            <Route path="/esoteric" element={<Esoteric />} />
-            <Route path="/signals" element={<Signals />} />
-            <Route path="/grading" element={<Grading />} />
-            <Route path="/admin" element={<AdminCockpit />} />
-            <Route path="/profile" element={<Profile />} />
-          </Routes>
-        </div>
-        <ComplianceFooter />
-      </div>
+      <ThemeProvider>
+        <GamificationProvider>
+          <ToastProvider>
+            <AppContent />
+          </ToastProvider>
+        </GamificationProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 };

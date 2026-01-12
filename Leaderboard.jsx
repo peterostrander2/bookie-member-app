@@ -1,0 +1,321 @@
+import React, { useState, useEffect } from 'react';
+import api from './api';
+
+// Mock data for leaderboard (will be replaced by API)
+const mockLeaders = {
+  monthly: [
+    { rank: 1, username: 'SharpShooter99', roi: 34.5, winRate: 67, picks: 45, streak: 8 },
+    { rank: 2, username: 'EsotericEdge', roi: 28.2, winRate: 63, picks: 52, streak: 5 },
+    { rank: 3, username: 'ModelMaster', roi: 24.8, winRate: 61, picks: 38, streak: 3 },
+    { rank: 4, username: 'ValueHunter', roi: 21.3, winRate: 59, picks: 67, streak: 4 },
+    { rank: 5, username: 'CLVKing', roi: 19.7, winRate: 58, picks: 41, streak: 2 },
+    { rank: 6, username: 'SteamChaser', roi: 17.2, winRate: 56, picks: 55, streak: 0 },
+    { rank: 7, username: 'PickPro', roi: 15.8, winRate: 55, picks: 48, streak: 1 },
+    { rank: 8, username: 'EdgeSeeker', roi: 13.4, winRate: 54, picks: 62, streak: 0 },
+    { rank: 9, username: 'BeatTheBooks', roi: 11.9, winRate: 53, picks: 44, streak: 2 },
+    { rank: 10, username: 'SignalSage', roi: 10.2, winRate: 52, picks: 51, streak: 0 }
+  ],
+  weekly: [
+    { rank: 1, username: 'HotStreak', roi: 45.2, winRate: 78, picks: 9, streak: 7 },
+    { rank: 2, username: 'SharpShooter99', roi: 38.6, winRate: 71, picks: 14, streak: 4 },
+    { rank: 3, username: 'EsotericEdge', roi: 32.1, winRate: 67, picks: 12, streak: 3 },
+    { rank: 4, username: 'ModelMaster', roi: 28.5, winRate: 64, picks: 11, streak: 2 },
+    { rank: 5, username: 'ValueHunter', roi: 24.3, winRate: 62, picks: 16, streak: 1 }
+  ],
+  streaks: [
+    { rank: 1, username: 'HotStreak', streak: 12, lastWin: 'Lakers -4.5' },
+    { rank: 2, username: 'SharpShooter99', streak: 8, lastWin: 'Chiefs ML' },
+    { rank: 3, username: 'EsotericEdge', streak: 7, lastWin: 'Celtics -6' },
+    { rank: 4, username: 'ModelMaster', streak: 5, lastWin: 'Dodgers -1.5' },
+    { rank: 5, username: 'ValueHunter', streak: 4, lastWin: 'Bills -3' }
+  ]
+};
+
+const Leaderboard = () => {
+  const [activeTab, setActiveTab] = useState('monthly');
+  const [leaders, setLeaders] = useState(mockLeaders);
+  const [loading, setLoading] = useState(false);
+
+  const tabs = [
+    { id: 'monthly', label: 'This Month', icon: '📅' },
+    { id: 'weekly', label: 'This Week', icon: '📆' },
+    { id: 'streaks', label: 'Win Streaks', icon: '🔥' }
+  ];
+
+  const getRankBadge = (rank) => {
+    if (rank === 1) return { emoji: '🥇', color: '#FFD700' };
+    if (rank === 2) return { emoji: '🥈', color: '#C0C0C0' };
+    if (rank === 3) return { emoji: '🥉', color: '#CD7F32' };
+    return { emoji: `#${rank}`, color: '#6b7280' };
+  };
+
+  const getRoiColor = (roi) => {
+    if (roi >= 20) return '#00FF88';
+    if (roi >= 10) return '#00D4FF';
+    if (roi >= 0) return '#FFD700';
+    return '#FF4444';
+  };
+
+  const currentLeaders = leaders[activeTab] || [];
+
+  return (
+    <div style={{ padding: '20px', backgroundColor: '#0a0a0f', minHeight: '100vh' }}>
+      <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+
+        {/* Header */}
+        <div style={{ marginBottom: '25px' }}>
+          <h1 style={{ color: '#fff', fontSize: '28px', margin: '0 0 5px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            🏆 Leaderboard
+          </h1>
+          <p style={{ color: '#6b7280', margin: 0, fontSize: '14px' }}>
+            Top performers in the community
+          </p>
+        </div>
+
+        {/* Tabs */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '25px', flexWrap: 'wrap' }}>
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                padding: '10px 20px',
+                backgroundColor: activeTab === tab.id ? '#00D4FF' : '#1a1a2e',
+                color: activeTab === tab.id ? '#000' : '#9ca3af',
+                border: activeTab === tab.id ? 'none' : '1px solid #333',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: activeTab === tab.id ? 'bold' : 'normal',
+                fontSize: '14px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+            >
+              <span>{tab.icon}</span>
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Top 3 Podium */}
+        {activeTab !== 'streaks' && currentLeaders.length >= 3 && (
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'flex-end',
+            gap: '20px',
+            marginBottom: '30px',
+            padding: '20px'
+          }}>
+            {/* Second Place */}
+            <div style={{ textAlign: 'center' }}>
+              <div style={{
+                width: '80px',
+                height: '80px',
+                borderRadius: '50%',
+                backgroundColor: '#1a1a2e',
+                border: '3px solid #C0C0C0',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 10px',
+                fontSize: '32px'
+              }}>
+                🥈
+              </div>
+              <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>{currentLeaders[1]?.username}</div>
+              <div style={{ color: '#00FF88', fontSize: '16px', fontWeight: 'bold' }}>+{currentLeaders[1]?.roi}%</div>
+              <div style={{ color: '#6b7280', fontSize: '12px' }}>{currentLeaders[1]?.winRate}% WR</div>
+            </div>
+
+            {/* First Place */}
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <div style={{
+                width: '100px',
+                height: '100px',
+                borderRadius: '50%',
+                backgroundColor: '#1a1a2e',
+                border: '4px solid #FFD700',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 10px',
+                fontSize: '40px',
+                boxShadow: '0 0 30px rgba(255, 215, 0, 0.3)'
+              }}>
+                🥇
+              </div>
+              <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '16px' }}>{currentLeaders[0]?.username}</div>
+              <div style={{ color: '#00FF88', fontSize: '20px', fontWeight: 'bold' }}>+{currentLeaders[0]?.roi}%</div>
+              <div style={{ color: '#6b7280', fontSize: '12px' }}>{currentLeaders[0]?.winRate}% WR</div>
+            </div>
+
+            {/* Third Place */}
+            <div style={{ textAlign: 'center' }}>
+              <div style={{
+                width: '70px',
+                height: '70px',
+                borderRadius: '50%',
+                backgroundColor: '#1a1a2e',
+                border: '3px solid #CD7F32',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 10px',
+                fontSize: '28px'
+              }}>
+                🥉
+              </div>
+              <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>{currentLeaders[2]?.username}</div>
+              <div style={{ color: '#00FF88', fontSize: '16px', fontWeight: 'bold' }}>+{currentLeaders[2]?.roi}%</div>
+              <div style={{ color: '#6b7280', fontSize: '12px' }}>{currentLeaders[2]?.winRate}% WR</div>
+            </div>
+          </div>
+        )}
+
+        {/* Leaderboard Table */}
+        <div style={{
+          backgroundColor: '#1a1a2e',
+          borderRadius: '12px',
+          overflow: 'hidden',
+          border: '1px solid #333'
+        }}>
+          {/* Table Header */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: activeTab === 'streaks' ? '60px 1fr 100px 1fr' : '60px 1fr 100px 100px 80px 80px',
+            padding: '15px 20px',
+            backgroundColor: '#12121f',
+            borderBottom: '1px solid #333',
+            color: '#6b7280',
+            fontSize: '12px',
+            textTransform: 'uppercase',
+            fontWeight: 'bold'
+          }}>
+            <span>Rank</span>
+            <span>User</span>
+            {activeTab === 'streaks' ? (
+              <>
+                <span>Streak</span>
+                <span>Last Win</span>
+              </>
+            ) : (
+              <>
+                <span style={{ textAlign: 'right' }}>ROI</span>
+                <span style={{ textAlign: 'right' }}>Win Rate</span>
+                <span style={{ textAlign: 'right' }}>Picks</span>
+                <span style={{ textAlign: 'right' }}>Streak</span>
+              </>
+            )}
+          </div>
+
+          {/* Table Rows */}
+          {currentLeaders.map((leader, idx) => {
+            const rankBadge = getRankBadge(leader.rank);
+            return (
+              <div
+                key={idx}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: activeTab === 'streaks' ? '60px 1fr 100px 1fr' : '60px 1fr 100px 100px 80px 80px',
+                  padding: '15px 20px',
+                  borderBottom: idx < currentLeaders.length - 1 ? '1px solid #333' : 'none',
+                  alignItems: 'center',
+                  backgroundColor: leader.rank <= 3 ? `${rankBadge.color}08` : 'transparent'
+                }}
+              >
+                <span style={{
+                  color: rankBadge.color,
+                  fontWeight: 'bold',
+                  fontSize: leader.rank <= 3 ? '20px' : '14px'
+                }}>
+                  {leader.rank <= 3 ? rankBadge.emoji : rankBadge.emoji}
+                </span>
+                <span style={{ color: '#fff', fontWeight: '500' }}>{leader.username}</span>
+                {activeTab === 'streaks' ? (
+                  <>
+                    <span style={{
+                      color: '#FF6B00',
+                      fontWeight: 'bold',
+                      fontSize: '16px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}>
+                      🔥 {leader.streak}
+                    </span>
+                    <span style={{ color: '#9ca3af', fontSize: '13px' }}>{leader.lastWin}</span>
+                  </>
+                ) : (
+                  <>
+                    <span style={{
+                      color: getRoiColor(leader.roi),
+                      fontWeight: 'bold',
+                      textAlign: 'right'
+                    }}>
+                      +{leader.roi}%
+                    </span>
+                    <span style={{ color: '#9ca3af', textAlign: 'right' }}>{leader.winRate}%</span>
+                    <span style={{ color: '#9ca3af', textAlign: 'right' }}>{leader.picks}</span>
+                    <span style={{
+                      textAlign: 'right',
+                      color: leader.streak > 0 ? '#FF6B00' : '#6b7280'
+                    }}>
+                      {leader.streak > 0 ? `🔥${leader.streak}` : '-'}
+                    </span>
+                  </>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Your Ranking */}
+        <div style={{
+          marginTop: '25px',
+          backgroundColor: '#00D4FF15',
+          border: '1px solid #00D4FF40',
+          borderRadius: '12px',
+          padding: '20px'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <div style={{ color: '#00D4FF', fontSize: '12px', marginBottom: '5px' }}>YOUR RANKING</div>
+              <div style={{ color: '#fff', fontSize: '20px', fontWeight: 'bold' }}>#47 of 1,234</div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ color: '#6b7280', fontSize: '12px' }}>This Month</div>
+              <div style={{ color: '#00FF88', fontSize: '18px', fontWeight: 'bold' }}>+8.5% ROI</div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ color: '#6b7280', fontSize: '12px' }}>Win Rate</div>
+              <div style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>54%</div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ color: '#6b7280', fontSize: '12px' }}>Picks</div>
+              <div style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>23</div>
+            </div>
+          </div>
+        </div>
+
+        {/* How Rankings Work */}
+        <div style={{
+          marginTop: '20px',
+          padding: '15px 20px',
+          backgroundColor: '#1a1a2e',
+          borderRadius: '10px',
+          border: '1px solid #333'
+        }}>
+          <div style={{ color: '#6b7280', fontSize: '12px', marginBottom: '8px' }}>HOW RANKINGS WORK</div>
+          <p style={{ color: '#9ca3af', fontSize: '13px', margin: 0, lineHeight: '1.5' }}>
+            Rankings are based on ROI (Return on Investment) for tracked picks.
+            Only picks made through the platform count. Minimum 10 picks required to appear on leaderboards.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Leaderboard;
