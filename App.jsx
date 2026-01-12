@@ -17,6 +17,7 @@ import InjuryVacuum from './InjuryVacuum';
 import PerformanceDashboard from './PerformanceDashboard';
 import ConsensusMeterPage from './ConsensusMeter';
 import DailySummary from './DailySummary';
+import Leaderboard from './Leaderboard';
 import ComplianceFooter from './ComplianceFooter';
 import { ToastProvider } from './Toast';
 import OnboardingWizard, { isOnboardingComplete } from './Onboarding';
@@ -44,6 +45,7 @@ const Navbar = () => {
     { path: '/esoteric', label: 'Esoteric', icon: '🔮' },
     { path: '/signals', label: 'Signals', icon: '⚡' },
     { path: '/grading', label: 'Grading', icon: '📝' },
+    { path: '/leaderboard', label: 'Leaders', icon: '🏆' },
     { path: '/profile', label: 'Profile', icon: '👤' }
   ];
 
@@ -154,6 +156,7 @@ const AppContent = () => {
               <Route path="/signals" element={<Signals />} />
               <Route path="/grading" element={<Grading />} />
               <Route path="/admin" element={<AdminCockpit />} />
+              <Route path="/leaderboard" element={<Leaderboard />} />
               <Route path="/profile" element={<Profile />} />
             </Routes>
           </div>
