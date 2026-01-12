@@ -23,6 +23,8 @@ import ComplianceFooter from './ComplianceFooter';
 import { ToastProvider } from './Toast';
 import OnboardingWizard, { isOnboardingComplete } from './Onboarding';
 import { ThemeProvider, ThemeToggle, useTheme } from './ThemeContext';
+import { GamificationProvider, LevelBadge } from './Gamification';
+import AchievementsPage from './Gamification';
 import api from './api';
 
 const Navbar = () => {
@@ -48,6 +50,7 @@ const Navbar = () => {
     { path: '/grading', label: 'Grading', icon: '📝' },
     { path: '/leaderboard', label: 'Leaders', icon: '🏆' },
     { path: '/props', label: 'Props', icon: '🎯' },
+    { path: '/achievements', label: 'Badges', icon: '🏅' },
     { path: '/profile', label: 'Profile', icon: '👤' }
   ];
 
@@ -104,6 +107,7 @@ const Navbar = () => {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <LevelBadge />
           <ThemeToggle />
           <div style={{
             display: 'flex',
@@ -160,6 +164,7 @@ const AppContent = () => {
               <Route path="/admin" element={<AdminCockpit />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
               <Route path="/props" element={<Props />} />
+              <Route path="/achievements" element={<AchievementsPage />} />
               <Route path="/profile" element={<Profile />} />
             </Routes>
           </div>
@@ -173,9 +178,11 @@ const App = () => {
   return (
     <BrowserRouter>
       <ThemeProvider>
-        <ToastProvider>
-          <AppContent />
-        </ToastProvider>
+        <GamificationProvider>
+          <ToastProvider>
+            <AppContent />
+          </ToastProvider>
+        </GamificationProvider>
       </ThemeProvider>
     </BrowserRouter>
   );
