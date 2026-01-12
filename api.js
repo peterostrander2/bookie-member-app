@@ -1,10 +1,21 @@
-const BASE_URL = 'https://web-production-7b2a.up.railway.app';
+// Use environment variable for API URL, fallback to Railway deployment
+const BASE_URL = import.meta.env.VITE_API_URL || 'https://web-production-7b2a.up.railway.app';
 
 const api = {
-  // Health
+  // Health & Status
   getHealth: async () => {
     try {
       const res = await fetch(`${BASE_URL}/health`);
+      if (!res.ok) return { status: 'offline' };
+      return res.json();
+    } catch {
+      return { status: 'offline' };
+    }
+  },
+
+  getLiveHealth: async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/live/health`);
       if (!res.ok) return { status: 'offline' };
       return res.json();
     } catch {
@@ -22,10 +33,40 @@ const api = {
     }
   },
 
+  getNoosphereStatus: async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/live/noosphere/status`);
+      if (!res.ok) return null;
+      return res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  getGannPhysicsStatus: async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/live/gann-physics-status`);
+      if (!res.ok) return null;
+      return res.json();
+    } catch {
+      return null;
+    }
+  },
+
   // Esoteric - Today's Energy
   getTodayEnergy: async () => {
     try {
       const res = await fetch(`${BASE_URL}/esoteric/today-energy`);
+      if (!res.ok) return null;
+      return res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  getEsotericEdge: async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/live/esoteric-edge`);
       if (!res.ok) return null;
       return res.json();
     } catch {
@@ -62,6 +103,16 @@ const api = {
       return res.json();
     } catch {
       return [];
+    }
+  },
+
+  getBestBets: async (sport = 'NBA') => {
+    try {
+      const res = await fetch(`${BASE_URL}/live/best-bets/${sport}`);
+      if (!res.ok) return { sport, source: 'offline', count: 0, data: [] };
+      return res.json();
+    } catch {
+      return { sport, source: 'offline', count: 0, data: [] };
     }
   },
 
