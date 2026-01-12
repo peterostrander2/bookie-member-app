@@ -7,6 +7,7 @@ import { analyzeCorrelation, checkPickCorrelation } from './correlationDetector'
 import { ConsensusMeter, ConsensusMiniBadge, ConsensusAlert, calculateConsensus } from './ConsensusMeter';
 import CommunityVote from './CommunityVote';
 import { useToast } from './Toast';
+import { PlaceBetButton } from './BetslipModal';
 
 // Floating Glow Badge for special convergence picks
 const ConvergenceGlowBadge = ({ tier }) => {
@@ -890,20 +891,35 @@ const SmashSpots = () => {
                           </span>
                           <BookBadge book={game.spreadEdge.book} />
                         </div>
-                        <button
-                          onClick={() => copyToClipboard(game, 'spread')}
-                          style={{
-                            padding: '2px 6px',
-                            fontSize: '9px',
-                            backgroundColor: copiedPick === `${game.home_team}-${game.away_team}-spread` ? '#00FF8820' : 'transparent',
-                            color: copiedPick === `${game.home_team}-${game.away_team}-spread` ? '#00FF88' : '#6b7280',
-                            border: '1px solid #444',
-                            borderRadius: '4px',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          {copiedPick === `${game.home_team}-${game.away_team}-spread` ? '✓ Copied' : '📋'}
-                        </button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <button
+                            onClick={() => copyToClipboard(game, 'spread')}
+                            style={{
+                              padding: '2px 6px',
+                              fontSize: '9px',
+                              backgroundColor: copiedPick === `${game.home_team}-${game.away_team}-spread` ? '#00FF8820' : 'transparent',
+                              color: copiedPick === `${game.home_team}-${game.away_team}-spread` ? '#00FF88' : '#6b7280',
+                              border: '1px solid #444',
+                              borderRadius: '4px',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            {copiedPick === `${game.home_team}-${game.away_team}-spread` ? '✓ Copied' : '📋'}
+                          </button>
+                          <PlaceBetButton
+                            bet={{
+                              game_id: game.id || `${game.away_team}_${game.home_team}`,
+                              team: game.spreadEdge.side === 'HOME' ? game.home_team : game.away_team,
+                              side: game.spreadEdge.side,
+                              line: game.spread,
+                              odds: game.spreadEdge.odds,
+                              bet_type: 'spread',
+                              game: `${game.away_team} @ ${game.home_team}`
+                            }}
+                            sport={sport}
+                            size="small"
+                          />
+                        </div>
                       </div>
                     </div>
 
@@ -942,20 +958,35 @@ const SmashSpots = () => {
                           </span>
                           <BookBadge book={game.totalEdge.book} />
                         </div>
-                        <button
-                          onClick={() => copyToClipboard(game, 'total')}
-                          style={{
-                            padding: '2px 6px',
-                            fontSize: '9px',
-                            backgroundColor: copiedPick === `${game.home_team}-${game.away_team}-total` ? '#00FF8820' : 'transparent',
-                            color: copiedPick === `${game.home_team}-${game.away_team}-total` ? '#00FF88' : '#6b7280',
-                            border: '1px solid #444',
-                            borderRadius: '4px',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          {copiedPick === `${game.home_team}-${game.away_team}-total` ? '✓ Copied' : '📋'}
-                        </button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <button
+                            onClick={() => copyToClipboard(game, 'total')}
+                            style={{
+                              padding: '2px 6px',
+                              fontSize: '9px',
+                              backgroundColor: copiedPick === `${game.home_team}-${game.away_team}-total` ? '#00FF8820' : 'transparent',
+                              color: copiedPick === `${game.home_team}-${game.away_team}-total` ? '#00FF88' : '#6b7280',
+                              border: '1px solid #444',
+                              borderRadius: '4px',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            {copiedPick === `${game.home_team}-${game.away_team}-total` ? '✓ Copied' : '📋'}
+                          </button>
+                          <PlaceBetButton
+                            bet={{
+                              game_id: game.id || `${game.away_team}_${game.home_team}`,
+                              team: `${game.away_team} vs ${game.home_team}`,
+                              side: game.totalEdge.recommendation_side,
+                              line: game.total,
+                              odds: game.totalEdge.recommendation_side === 'OVER' ? game.totalEdge.overOdds : game.totalEdge.underOdds,
+                              bet_type: 'total',
+                              game: `${game.away_team} @ ${game.home_team}`
+                            }}
+                            sport={sport}
+                            size="small"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
