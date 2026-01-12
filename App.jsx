@@ -19,6 +19,7 @@ import ConsensusMeterPage from './ConsensusMeter';
 import DailySummary from './DailySummary';
 import ComplianceFooter from './ComplianceFooter';
 import { ToastProvider } from './Toast';
+import OnboardingWizard, { isOnboardingComplete } from './Onboarding';
 import api from './api';
 
 const Navbar = () => {
@@ -121,9 +122,14 @@ const Navbar = () => {
 };
 
 const App = () => {
+  const [showOnboarding, setShowOnboarding] = useState(!isOnboardingComplete());
+
   return (
     <BrowserRouter>
       <ToastProvider>
+        {showOnboarding && (
+          <OnboardingWizard onComplete={() => setShowOnboarding(false)} />
+        )}
         <div style={{ backgroundColor: '#0a0a0f', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
           <Navbar />
           <div style={{ flex: 1 }}>
