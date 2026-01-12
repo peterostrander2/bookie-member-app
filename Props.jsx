@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from './api';
 import { useToast } from './Toast';
+import { AddToSlipButton } from './BetSlip';
 
 const Props = () => {
   const toast = useToast();
@@ -281,35 +282,55 @@ const Props = () => {
                     </div>
                   )}
 
-                  {/* Sportsbook */}
+                  {/* Actions */}
                   <div style={{
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     paddingTop: '10px',
-                    borderTop: '1px solid #333'
+                    borderTop: '1px solid #333',
+                    gap: '10px'
                   }}>
                     <span style={{ color: '#6b7280', fontSize: '12px' }}>
                       Best at: {prop.book || 'Multiple'}
                     </span>
-                    <button
-                      onClick={() => {
-                        const text = `${prop.player_name} ${prop.pick || 'OVER'} ${prop.line} ${formatPropType(prop.prop_type)} (${prop.odds || '-110'})`;
-                        navigator.clipboard.writeText(text);
-                        toast.info('Copied to clipboard');
-                      }}
-                      style={{
-                        padding: '5px 10px',
-                        backgroundColor: 'transparent',
-                        color: '#6b7280',
-                        border: '1px solid #444',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '11px'
-                      }}
-                    >
-                      📋 Copy
-                    </button>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        onClick={() => {
+                          const text = `${prop.player_name} ${prop.pick || 'OVER'} ${prop.line} ${formatPropType(prop.prop_type)} (${prop.odds || '-110'})`;
+                          navigator.clipboard.writeText(text);
+                          toast.info('Copied to clipboard');
+                        }}
+                        style={{
+                          padding: '5px 10px',
+                          backgroundColor: 'transparent',
+                          color: '#6b7280',
+                          border: '1px solid #444',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '11px'
+                        }}
+                      >
+                        📋
+                      </button>
+                      <AddToSlipButton
+                        pick={{
+                          id: `${prop.player_name}_${prop.prop_type}_${prop.line}`,
+                          game_id: prop.game_id || `${prop.player_name}_${idx}`,
+                          player: prop.player_name,
+                          team: prop.team,
+                          sport: sport,
+                          bet_type: 'prop',
+                          side: prop.pick || prop.recommendation || 'OVER',
+                          line: prop.line,
+                          stat: prop.prop_type,
+                          odds: prop.odds || -110,
+                          confidence: confidence,
+                          edge: edge
+                        }}
+                        size="small"
+                      />
+                    </div>
                   </div>
                 </div>
               );

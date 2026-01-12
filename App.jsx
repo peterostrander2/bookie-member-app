@@ -25,6 +25,8 @@ import OnboardingWizard, { isOnboardingComplete } from './Onboarding';
 import { ThemeProvider, ThemeToggle, useTheme } from './ThemeContext';
 import { GamificationProvider, LevelBadge } from './Gamification';
 import AchievementsPage from './Gamification';
+import { SignalNotificationProvider, SignalBell } from './SignalNotifications';
+import { BetSlipProvider, FloatingBetSlip } from './BetSlip';
 import api from './api';
 
 const Navbar = () => {
@@ -107,6 +109,7 @@ const Navbar = () => {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <SignalBell />
           <LevelBadge />
           <ThemeToggle />
           <div style={{
@@ -180,7 +183,12 @@ const App = () => {
       <ThemeProvider>
         <GamificationProvider>
           <ToastProvider>
-            <AppContent />
+            <SignalNotificationProvider>
+              <BetSlipProvider>
+                <AppContent />
+                <FloatingBetSlip />
+              </BetSlipProvider>
+            </SignalNotificationProvider>
           </ToastProvider>
         </GamificationProvider>
       </ThemeProvider>
