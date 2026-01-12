@@ -41,3 +41,15 @@ React/Vite, JavaScript, Tailwind CSS
 - Use fetch for API calls (see api.js)
 - Handle loading/error states for all endpoints
 - Cache responses client-side when appropriate
+
+## GitHub Workflow
+**Repo:** https://github.com/peterostrander2/bookie-member-app
+
+### Creating PRs Manually
+Since `gh` CLI may not be available, create PRs directly via:
+```
+https://github.com/peterostrander2/bookie-member-app/pull/new/{branch-name}
+```
+
+### Branch Naming
+Claude branches follow pattern: `claude/{feature-name}-{sessionId}`
