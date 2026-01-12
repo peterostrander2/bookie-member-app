@@ -714,6 +714,239 @@ const Esoteric = () => {
             </div>
           </div>
         </div>
+
+        {/* GEMATRIA COMMUNITY SOURCES */}
+        <div style={{
+          backgroundColor: '#1a1a2e',
+          borderRadius: '16px',
+          padding: '25px',
+          marginTop: '25px',
+          border: '1px solid #333'
+        }}>
+          <h3 style={{ color: '#00D4FF', fontSize: '16px', margin: '0 0 15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '20px' }}>𝕏</span> Gematria Research Community
+          </h3>
+          <p style={{ color: '#6b7280', fontSize: '13px', margin: '0 0 20px' }}>
+            The algo's esoteric layer pulls from multi-ciphers, mod9 roots, and trigger stacks (33/93/201/322)
+            inspired by these community researchers. Follow for daily decodes and narrative analysis.
+          </p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
+            {/* @GematriaClub */}
+            <a
+              href="https://x.com/GematriaClub"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                backgroundColor: '#12121f',
+                borderRadius: '12px',
+                padding: '15px',
+                border: '1px solid #333',
+                textDecoration: 'none',
+                transition: 'border-color 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.borderColor = '#00D4FF'}
+              onMouseLeave={(e) => e.currentTarget.style.borderColor = '#333'}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                <div style={{
+                  backgroundColor: '#FFD70020',
+                  padding: '8px',
+                  borderRadius: '8px',
+                  fontSize: '16px'
+                }}>🏆</div>
+                <div>
+                  <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>@GematriaClub</div>
+                  <div style={{ color: '#FFD700', fontSize: '11px' }}>OG Account</div>
+                </div>
+              </div>
+              <div style={{ color: '#9ca3af', fontSize: '12px', lineHeight: '1.4' }}>
+                Classic sports gematria. Heavy on rigged outcomes, triggers, and daily decodes. One of the OGs.
+              </div>
+            </a>
+
+            {/* @ScriptLeaker */}
+            <a
+              href="https://x.com/ScriptLeaker"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                backgroundColor: '#12121f',
+                borderRadius: '12px',
+                padding: '15px',
+                border: '1px solid #333',
+                textDecoration: 'none',
+                transition: 'border-color 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.borderColor = '#00D4FF'}
+              onMouseLeave={(e) => e.currentTarget.style.borderColor = '#333'}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                <div style={{
+                  backgroundColor: '#8B5CF620',
+                  padding: '8px',
+                  borderRadius: '8px',
+                  fontSize: '16px'
+                }}>📜</div>
+                <div>
+                  <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>@ScriptLeaker</div>
+                  <div style={{ color: '#8B5CF6', fontSize: '11px' }}>Narrative Scripts</div>
+                </div>
+              </div>
+              <div style={{ color: '#9ca3af', fontSize: '12px', lineHeight: '1.4' }}>
+                Detailed MLB/NFL picks with gematria. Series scores, player milestones, venue echoes. Direct scripting style.
+              </div>
+            </a>
+
+            {/* @GematriaEffect */}
+            <a
+              href="https://x.com/GematriaEffect"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                backgroundColor: '#12121f',
+                borderRadius: '12px',
+                padding: '15px',
+                border: '1px solid #333',
+                textDecoration: 'none',
+                transition: 'border-color 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.borderColor = '#00D4FF'}
+              onMouseLeave={(e) => e.currentTarget.style.borderColor = '#333'}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                <div style={{
+                  backgroundColor: '#00FF8820',
+                  padding: '8px',
+                  borderRadius: '8px',
+                  fontSize: '16px'
+                }}>📚</div>
+                <div>
+                  <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>@GematriaEffect</div>
+                  <div style={{ color: '#00FF88', fontSize: '11px' }}>Zach Hubbard</div>
+                </div>
+              </div>
+              <div style={{ color: '#9ca3af', fontSize: '12px', lineHeight: '1.4' }}>
+                Foundational researcher. Books and videos on gematria in sports, news, and world events.
+              </div>
+            </a>
+
+            {/* @psgematria */}
+            <a
+              href="https://x.com/psgematria"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                backgroundColor: '#12121f',
+                borderRadius: '12px',
+                padding: '15px',
+                border: '1px solid #333',
+                textDecoration: 'none',
+                transition: 'border-color 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.borderColor = '#00D4FF'}
+              onMouseLeave={(e) => e.currentTarget.style.borderColor = '#333'}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                <div style={{
+                  backgroundColor: '#00D4FF20',
+                  padding: '8px',
+                  borderRadius: '8px',
+                  fontSize: '16px'
+                }}>🎯</div>
+                <div>
+                  <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>@psgematria</div>
+                  <div style={{ color: '#00D4FF', fontSize: '11px' }}>Pro Sports Gematria</div>
+                </div>
+              </div>
+              <div style={{ color: '#9ca3af', fontSize: '12px', lineHeight: '1.4' }}>
+                Professional sports focused decodes. Clean analysis and daily picks.
+              </div>
+            </a>
+
+            {/* @HitaLickPicks */}
+            <a
+              href="https://x.com/HitaLickPicks"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                backgroundColor: '#12121f',
+                borderRadius: '12px',
+                padding: '15px',
+                border: '1px solid #333',
+                textDecoration: 'none',
+                transition: 'border-color 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.borderColor = '#00D4FF'}
+              onMouseLeave={(e) => e.currentTarget.style.borderColor = '#333'}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                <div style={{
+                  backgroundColor: '#EC489920',
+                  padding: '8px',
+                  borderRadius: '8px',
+                  fontSize: '16px'
+                }}>🔥</div>
+                <div>
+                  <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>@HitaLickPicks</div>
+                  <div style={{ color: '#EC4899', fontSize: '11px' }}>Futures & Daily</div>
+                </div>
+              </div>
+              <div style={{ color: '#9ca3af', fontSize: '12px', lineHeight: '1.4' }}>
+                Rigged sports decoding with gematria. Futures plays and daily breakdowns.
+              </div>
+            </a>
+
+            {/* @GiveMeCloutBets */}
+            <a
+              href="https://x.com/GiveMeCloutBets"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                backgroundColor: '#12121f',
+                borderRadius: '12px',
+                padding: '15px',
+                border: '1px solid #333',
+                textDecoration: 'none',
+                transition: 'border-color 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.borderColor = '#00D4FF'}
+              onMouseLeave={(e) => e.currentTarget.style.borderColor = '#333'}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                <div style={{
+                  backgroundColor: '#F59E0B20',
+                  padding: '8px',
+                  borderRadius: '8px',
+                  fontSize: '16px'
+                }}>📊</div>
+                <div>
+                  <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>@GiveMeCloutBets</div>
+                  <div style={{ color: '#F59E0B', fontSize: '11px' }}>Sheets & Stats</div>
+                </div>
+              </div>
+              <div style={{ color: '#9ca3af', fontSize: '12px', lineHeight: '1.4' }}>
+                Exposing rigged games with detailed gematria sheets and statistical breakdowns.
+              </div>
+            </a>
+          </div>
+
+          <div style={{
+            marginTop: '20px',
+            padding: '15px',
+            backgroundColor: '#00D4FF10',
+            borderRadius: '10px',
+            border: '1px solid #00D4FF30'
+          }}>
+            <div style={{ color: '#00D4FF', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span>💡</span>
+              <span>
+                Our dual engine fuses these community methods probabilistically for EV, not pure rigging claims.
+                Use these accounts for deeper dives and narrative context.
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

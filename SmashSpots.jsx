@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import api from './api';
 import { calculateConfidence, fetchSignalContext, getTierInfo, getRecommendationDisplay } from './signalEngine';
 import { recordPick, getAllPicks } from './clvTracker';
@@ -6,6 +6,10 @@ import { explainPick, quickExplain } from './pickExplainer';
 import { analyzeCorrelation, checkPickCorrelation } from './correlationDetector';
 import { ConsensusMeter, ConsensusMiniBadge, ConsensusAlert, calculateConsensus } from './ConsensusMeter';
 import CommunityVote from './CommunityVote';
+import { GameCardSkeleton } from './Skeletons';
+import { ErrorMessage, ConnectionError } from './ErrorBoundary';
+import { useAutoRefresh } from './useAutoRefresh';
+import { LastUpdated, LiveBadge, RefreshIntervalSelector } from './LiveIndicators';
 
 // Floating Glow Badge for special convergence picks
 const ConvergenceGlowBadge = ({ tier }) => {
@@ -90,12 +94,27 @@ const SmashSpots = () => {
   const [sport, setSport] = useState('NBA');
   const [picks, setPicks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [signalContext, setSignalContext] = useState(null);
   const [trackedPicks, setTrackedPicks] = useState(new Set());
   const [expandedExplanations, setExpandedExplanations] = useState(new Set());
   const [correlationWarning, setCorrelationWarning] = useState(null);
 
   const sports = ['NBA', 'NFL', 'MLB', 'NHL', 'NCAAB'];
+
+  // Auto-refresh hook
+  const {
+    lastUpdated,
+    isRefreshing,
+    refresh,
+    setInterval: setRefreshInterval,
+    interval: refreshInterval,
+    isPaused,
+    togglePause
+  } = useAutoRefresh(
+    useCallback(() => fetchPicks(), [sport]),
+    { interval: 120000, immediate: false, deps: [sport] }
+  );
 
   // Load already tracked picks on mount and analyze correlation
   useEffect(() => {
@@ -173,6 +192,7 @@ const SmashSpots = () => {
 
   const fetchPicks = async () => {
     setLoading(true);
+    setError(null);
     try {
       // Fetch game data and signal context in parallel
       const [slateData, context] = await Promise.all([
@@ -253,6 +273,7 @@ const SmashSpots = () => {
       }
     } catch (err) {
       console.error('Error fetching picks:', err);
+      setError(err.message || 'Failed to fetch picks');
       setPicks([]);
     }
     setLoading(false);
@@ -309,7 +330,7 @@ const SmashSpots = () => {
       <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
         
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', flexWrap: 'wrap', gap: '15px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', flexWrap: 'wrap', gap: '15px' }}>
           <div>
             <h1 style={{ color: '#fff', fontSize: '28px', margin: '0 0 5px', display: 'flex', alignItems: 'center', gap: '10px' }}>
               🔥 Today's Smash Spots
@@ -332,6 +353,21 @@ const SmashSpots = () => {
               <span style={{ color: '#9ca3af' }}>&lt;70% LEAN</span>
             </span>
           </div>
+        </div>
+
+        {/* Real-time Controls */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
+          <LastUpdated
+            timestamp={lastUpdated}
+            isRefreshing={isRefreshing || loading}
+            onRefresh={refresh}
+            isPaused={isPaused}
+            onTogglePause={togglePause}
+          />
+          <RefreshIntervalSelector
+            interval={refreshInterval}
+            onChange={setRefreshInterval}
+          />
         </div>
 
         {/* Sport Tabs */}
@@ -413,10 +449,11 @@ const SmashSpots = () => {
 
         {/* Picks Grid */}
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '60px', color: '#9ca3af' }}>
-            <div style={{ fontSize: '24px', marginBottom: '10px' }}>⚡</div>
-            Analyzing signals...
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '20px' }}>
+            <GameCardSkeleton count={4} />
           </div>
+        ) : error ? (
+          <ConnectionError onRetry={fetchPicks} serviceName="picks API" />
         ) : picks.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px', color: '#9ca3af', backgroundColor: '#1a1a2e', borderRadius: '12px' }}>
             <div style={{ fontSize: '48px', marginBottom: '15px' }}>🔍</div>
@@ -471,8 +508,11 @@ const SmashSpots = () => {
                     <div>
                       <div style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>{game.away_team}</div>
                       <div style={{ color: '#9ca3af', fontSize: '14px' }}>@ {game.home_team}</div>
-                      <div style={{ color: '#6b7280', fontSize: '12px', marginTop: '5px' }}>
-                        {formatTime(game.commence_time)} • {game.books_compared || 10}+ books
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '5px' }}>
+                        <LiveBadge gameTime={game.commence_time} size="small" />
+                        <span style={{ color: '#6b7280', fontSize: '12px' }}>
+                          {formatTime(game.commence_time)} • {game.books_compared || 10}+ books
+                        </span>
                       </div>
                     </div>
                   </div>
