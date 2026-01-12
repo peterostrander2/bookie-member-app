@@ -20,6 +20,7 @@ import {
 } from './backtestStorage';
 import { getBankrollStats } from './kellyCalculator';
 import { analyzeCorrelation } from './correlationDetector';
+import { ROIChart, WinRateChart, LineChart, Sparkline } from './Charts';
 
 const PerformanceDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -464,13 +465,39 @@ const PerformanceDashboard = () => {
         {/* Trends Tab */}
         {activeTab === 'trends' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+            {/* ROI Chart */}
             <div style={{
               backgroundColor: '#1a1a2e',
               borderRadius: '12px',
               padding: '20px'
             }}>
               <h3 style={{ color: '#fff', marginTop: 0, marginBottom: '15px', fontSize: '16px' }}>
-                Recent Performance Trend
+                Cumulative P/L Over Time
+              </h3>
+              <ROIChart picks={recentPicks} width={Math.min(window.innerWidth - 100, 800)} height={220} />
+            </div>
+
+            {/* Win Rate Rolling Average */}
+            <div style={{
+              backgroundColor: '#1a1a2e',
+              borderRadius: '12px',
+              padding: '20px'
+            }}>
+              <h3 style={{ color: '#fff', marginTop: 0, marginBottom: '15px', fontSize: '16px' }}>
+                Rolling Win Rate Trend
+              </h3>
+              <WinRateChart picks={recentPicks} window={10} width={Math.min(window.innerWidth - 100, 800)} height={180} />
+            </div>
+
+            {/* Recent Results Grid */}
+            <div style={{
+              backgroundColor: '#1a1a2e',
+              borderRadius: '12px',
+              padding: '20px'
+            }}>
+              <h3 style={{ color: '#fff', marginTop: 0, marginBottom: '15px', fontSize: '16px' }}>
+                Recent Results
               </h3>
 
               {recentPicks.length < 5 ? (
