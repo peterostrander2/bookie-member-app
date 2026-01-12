@@ -18,6 +18,7 @@ import PerformanceDashboard from './PerformanceDashboard';
 import ConsensusMeterPage from './ConsensusMeter';
 import DailySummary from './DailySummary';
 import Leaderboard from './Leaderboard';
+import Props from './Props';
 import ComplianceFooter from './ComplianceFooter';
 import { ToastProvider } from './Toast';
 import OnboardingWizard, { isOnboardingComplete } from './Onboarding';
@@ -46,6 +47,7 @@ const Navbar = () => {
     { path: '/signals', label: 'Signals', icon: '⚡' },
     { path: '/grading', label: 'Grading', icon: '📝' },
     { path: '/leaderboard', label: 'Leaders', icon: '🏆' },
+    { path: '/props', label: 'Props', icon: '🎯' },
     { path: '/profile', label: 'Profile', icon: '👤' }
   ];
 
@@ -157,6 +159,7 @@ const AppContent = () => {
               <Route path="/grading" element={<Grading />} />
               <Route path="/admin" element={<AdminCockpit />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
+              <Route path="/props" element={<Props />} />
               <Route path="/profile" element={<Profile />} />
             </Routes>
           </div>
