@@ -20,6 +20,7 @@ import DailySummary from './DailySummary';
 import ComplianceFooter from './ComplianceFooter';
 import { ToastProvider } from './Toast';
 import OnboardingWizard, { isOnboardingComplete } from './Onboarding';
+import { ThemeProvider, ThemeToggle, useTheme } from './ThemeContext';
 import api from './api';
 
 const Navbar = () => {
@@ -98,39 +99,42 @@ const Navbar = () => {
           ))}
         </div>
 
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          backgroundColor: health?.status === 'healthy' || health?.status === 'online' ? '#00FF8815' : '#FF444415',
-          padding: '6px 12px',
-          borderRadius: '20px',
-          fontSize: '12px',
-          color: health?.status === 'healthy' || health?.status === 'online' ? '#00FF88' : '#FF4444'
-        }}>
-          <span style={{
-            width: '6px',
-            height: '6px',
-            borderRadius: '50%',
-            backgroundColor: health?.status === 'healthy' || health?.status === 'online' ? '#00FF88' : '#FF4444'
-          }} />
-          {health?.status === 'healthy' || health?.status === 'online' ? 'Online' : 'Offline'}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <ThemeToggle />
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            backgroundColor: health?.status === 'healthy' || health?.status === 'online' ? '#00FF8815' : '#FF444415',
+            padding: '6px 12px',
+            borderRadius: '20px',
+            fontSize: '12px',
+            color: health?.status === 'healthy' || health?.status === 'online' ? '#00FF88' : '#FF4444'
+          }}>
+            <span style={{
+              width: '6px',
+              height: '6px',
+              borderRadius: '50%',
+              backgroundColor: health?.status === 'healthy' || health?.status === 'online' ? '#00FF88' : '#FF4444'
+            }} />
+            {health?.status === 'healthy' || health?.status === 'online' ? 'Online' : 'Offline'}
+          </div>
         </div>
       </div>
     </nav>
   );
 };
 
-const App = () => {
+const AppContent = () => {
+  const { theme } = useTheme();
   const [showOnboarding, setShowOnboarding] = useState(!isOnboardingComplete());
 
   return (
-    <BrowserRouter>
-      <ToastProvider>
-        {showOnboarding && (
-          <OnboardingWizard onComplete={() => setShowOnboarding(false)} />
-        )}
-        <div style={{ backgroundColor: '#0a0a0f', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <>
+      {showOnboarding && (
+        <OnboardingWizard onComplete={() => setShowOnboarding(false)} />
+      )}
+      <div style={{ backgroundColor: theme.bg, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
           <Navbar />
           <div style={{ flex: 1 }}>
             <Routes>
@@ -155,7 +159,18 @@ const App = () => {
           </div>
           <ComplianceFooter />
         </div>
-      </ToastProvider>
+    </>
+  );
+};
+
+const App = () => {
+  return (
+    <BrowserRouter>
+      <ThemeProvider>
+        <ToastProvider>
+          <AppContent />
+        </ToastProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 };
