@@ -45,11 +45,12 @@ React/Vite, JavaScript, Tailwind CSS
 ## GitHub Workflow
 **Repo:** https://github.com/peterostrander2/bookie-member-app
 
-### Creating PRs Manually
-Since `gh` CLI may not be available, create PRs directly via:
+### Creating PRs
+Always generate a clickable PR link for the user:
 ```
 https://github.com/peterostrander2/bookie-member-app/pull/new/{branch-name}
 ```
+User will click the link to create the PR manually.
 
 ### Branch Naming
 Claude branches follow pattern: `claude/{feature-name}-{sessionId}`
