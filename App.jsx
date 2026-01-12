@@ -27,15 +27,22 @@ import { GamificationProvider, LevelBadge } from './Gamification';
 import AchievementsPage from './Gamification';
 import { SignalNotificationProvider, SignalBell } from './SignalNotifications';
 import { BetSlipProvider, FloatingBetSlip } from './BetSlip';
+import ErrorBoundary from './ErrorBoundary';
 import api from './api';
 
 const Navbar = () => {
   const location = useLocation();
   const [health, setHealth] = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     api.getHealth().then(setHealth).catch(() => setHealth({ status: 'offline' }));
   }, []);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
 
   const links = [
     { path: '/', label: 'Dashboard', icon: '🏠' },
@@ -84,7 +91,8 @@ const Navbar = () => {
           </span>
         </Link>
 
-        <div style={{ display: 'flex', gap: '5px' }}>
+        {/* Desktop Nav */}
+        <div className="desktop-nav" style={{ display: 'flex', gap: '5px' }}>
           {links.map(link => (
             <Link
               key={link.path}
@@ -108,11 +116,12 @@ const Navbar = () => {
           ))}
         </div>
 
+        {/* Right side actions */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <SignalBell />
           <LevelBadge />
           <ThemeToggle />
-          <div style={{
+          <div className="desktop-only" style={{
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
@@ -130,8 +139,74 @@ const Navbar = () => {
             }} />
             {health?.status === 'healthy' || health?.status === 'online' ? 'Online' : 'Offline'}
           </div>
+
+          {/* Mobile hamburger */}
+          <button
+            className="mobile-menu-btn"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            style={{
+              display: 'none',
+              background: 'none',
+              border: 'none',
+              color: '#fff',
+              fontSize: '24px',
+              cursor: 'pointer',
+              padding: '8px'
+            }}
+          >
+            {mobileMenuOpen ? '✕' : '☰'}
+          </button>
         </div>
       </div>
+
+      {/* Mobile menu dropdown */}
+      {mobileMenuOpen && (
+        <div className="mobile-menu" style={{
+          position: 'absolute',
+          top: '60px',
+          left: 0,
+          right: 0,
+          backgroundColor: '#12121f',
+          borderBottom: '1px solid #333',
+          padding: '10px 20px 20px',
+          display: 'none',
+          flexDirection: 'column',
+          gap: '5px',
+          maxHeight: 'calc(100vh - 60px)',
+          overflowY: 'auto'
+        }}>
+          {links.map(link => (
+            <Link
+              key={link.path}
+              to={link.path}
+              style={{
+                padding: '12px 14px',
+                backgroundColor: location.pathname === link.path ? '#00D4FF20' : 'transparent',
+                color: location.pathname === link.path ? '#00D4FF' : '#9ca3af',
+                textDecoration: 'none',
+                borderRadius: '8px',
+                fontSize: '15px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px'
+              }}
+            >
+              <span>{link.icon}</span>
+              <span>{link.label}</span>
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {/* Mobile responsive styles */}
+      <style>{`
+        @media (max-width: 1024px) {
+          .desktop-nav { display: none !important; }
+          .desktop-only { display: none !important; }
+          .mobile-menu-btn { display: block !important; }
+          .mobile-menu { display: ${mobileMenuOpen ? 'flex' : 'none'} !important; }
+        }
+      `}</style>
     </nav>
   );
 };
@@ -148,28 +223,30 @@ const AppContent = () => {
       <div style={{ backgroundColor: theme.bg, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
           <Navbar />
           <div style={{ flex: 1 }}>
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/smash-spots" element={<SmashSpots />} />
-              <Route path="/sharp" element={<SharpAlerts />} />
-              <Route path="/odds" element={<BestOdds />} />
-              <Route path="/injuries" element={<InjuryVacuum />} />
-              <Route path="/performance" element={<PerformanceDashboard />} />
-              <Route path="/consensus" element={<ConsensusMeterPage />} />
-              <Route path="/summary" element={<DailySummary />} />
-              <Route path="/splits" element={<Splits />} />
-              <Route path="/clv" element={<CLVDashboard />} />
-              <Route path="/backtest" element={<BacktestDashboard />} />
-              <Route path="/bankroll" element={<BankrollManager />} />
-              <Route path="/esoteric" element={<Esoteric />} />
-              <Route path="/signals" element={<Signals />} />
-              <Route path="/grading" element={<Grading />} />
-              <Route path="/admin" element={<AdminCockpit />} />
-              <Route path="/leaderboard" element={<Leaderboard />} />
-              <Route path="/props" element={<Props />} />
-              <Route path="/achievements" element={<AchievementsPage />} />
-              <Route path="/profile" element={<Profile />} />
-            </Routes>
+            <ErrorBoundary>
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/smash-spots" element={<SmashSpots />} />
+                <Route path="/sharp" element={<SharpAlerts />} />
+                <Route path="/odds" element={<BestOdds />} />
+                <Route path="/injuries" element={<InjuryVacuum />} />
+                <Route path="/performance" element={<PerformanceDashboard />} />
+                <Route path="/consensus" element={<ConsensusMeterPage />} />
+                <Route path="/summary" element={<DailySummary />} />
+                <Route path="/splits" element={<Splits />} />
+                <Route path="/clv" element={<CLVDashboard />} />
+                <Route path="/backtest" element={<BacktestDashboard />} />
+                <Route path="/bankroll" element={<BankrollManager />} />
+                <Route path="/esoteric" element={<Esoteric />} />
+                <Route path="/signals" element={<Signals />} />
+                <Route path="/grading" element={<Grading />} />
+                <Route path="/admin" element={<AdminCockpit />} />
+                <Route path="/leaderboard" element={<Leaderboard />} />
+                <Route path="/props" element={<Props />} />
+                <Route path="/achievements" element={<AchievementsPage />} />
+                <Route path="/profile" element={<Profile />} />
+              </Routes>
+            </ErrorBoundary>
           </div>
           <ComplianceFooter />
         </div>
