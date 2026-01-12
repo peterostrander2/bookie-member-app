@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import api from './api';
 import { useToast } from './Toast';
 import { AddToSlipButton } from './BetSlip';
+import { PropsSkeleton } from './Skeleton';
+import { PullToRefresh, RefreshButton } from './PullToRefresh';
 
 const Props = () => {
   const toast = useToast();
@@ -79,13 +81,16 @@ const Props = () => {
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
 
         {/* Header */}
-        <div style={{ marginBottom: '25px' }}>
-          <h1 style={{ color: '#fff', fontSize: '28px', margin: '0 0 5px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            🎯 Player Props
-          </h1>
-          <p style={{ color: '#6b7280', margin: 0, fontSize: '14px' }}>
-            AI-analyzed player prop bets with edge detection
-          </p>
+        <div style={{ marginBottom: '25px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '15px' }}>
+          <div>
+            <h1 style={{ color: '#fff', fontSize: '28px', margin: '0 0 5px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              🎯 Player Props
+            </h1>
+            <p style={{ color: '#6b7280', margin: 0, fontSize: '14px' }}>
+              AI-analyzed player prop bets with edge detection
+            </p>
+          </div>
+          <RefreshButton onRefresh={fetchProps} isRefreshing={loading} />
         </div>
 
         {/* Sport Tabs */}
@@ -176,9 +181,10 @@ const Props = () => {
 
         {/* Props Grid */}
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '60px', color: '#9ca3af' }}>
-            <div style={{ fontSize: '24px', marginBottom: '10px' }}>⚡</div>
-            Loading props...
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '15px' }}>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <PropsSkeleton key={i} />
+            ))}
           </div>
         ) : filteredProps.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px', color: '#9ca3af', backgroundColor: '#1a1a2e', borderRadius: '12px' }}>
