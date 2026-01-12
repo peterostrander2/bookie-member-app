@@ -280,6 +280,41 @@ const api = {
     } catch {
       return null;
     }
+  },
+
+  // Click-to-Bet Sportsbook Integration
+  getSportsbooks: async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/live/sportsbooks`);
+      if (!res.ok) return [];
+      return res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  getLineShop: async (sport = 'NBA') => {
+    try {
+      const res = await fetch(`${BASE_URL}/live/line-shop/${sport.toLowerCase()}`);
+      if (!res.ok) return { games: [] };
+      return res.json();
+    } catch {
+      return { games: [] };
+    }
+  },
+
+  generateBetslip: async (betData) => {
+    try {
+      const res = await fetch(`${BASE_URL}/live/betslip/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(betData)
+      });
+      if (!res.ok) return null;
+      return res.json();
+    } catch {
+      return null;
+    }
   }
 };
 

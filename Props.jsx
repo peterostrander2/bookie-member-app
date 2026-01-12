@@ -4,6 +4,7 @@ import { useToast } from './Toast';
 import { AddToSlipButton } from './BetSlip';
 import { PropsSkeleton } from './Skeleton';
 import { PullToRefresh, RefreshButton } from './PullToRefresh';
+import { PlaceBetButton } from './BetslipModal';
 
 const Props = () => {
   const toast = useToast();
@@ -319,6 +320,21 @@ const Props = () => {
                       >
                         📋
                       </button>
+                      <PlaceBetButton
+                        bet={{
+                          game_id: prop.game_id || `${prop.player_name}_${idx}`,
+                          player: prop.player_name,
+                          team: prop.team,
+                          side: prop.pick || prop.recommendation || 'OVER',
+                          line: prop.line,
+                          odds: prop.odds || -110,
+                          bet_type: 'prop',
+                          stat: prop.prop_type,
+                          game: prop.game
+                        }}
+                        sport={sport}
+                        size="small"
+                      />
                       <AddToSlipButton
                         pick={{
                           id: `${prop.player_name}_${prop.prop_type}_${prop.line}`,
