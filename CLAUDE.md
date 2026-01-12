@@ -14,6 +14,9 @@ GET /live/splits/{sport}      # Betting splits
 GET /live/props/{sport}       # Player props
 GET /live/esoteric-edge       # Esoteric analysis
 GET /esoteric/today-energy    # Daily energy reading
+GET /live/sportsbooks         # Available sportsbooks
+GET /live/line-shop/{sport}   # Line shopping across books
+POST /live/betslip/generate   # Generate sportsbook deep links
 ```
 
 ### Sports
@@ -54,3 +57,107 @@ User will click the link to create the PR manually.
 
 ### Branch Naming
 Claude branches follow pattern: `claude/{feature-name}-{sessionId}`
+
+---
+
+## Current Feature Implementation Status
+
+### Core Components (Completed)
+| Component | File | Description |
+|-----------|------|-------------|
+| SmashSpots | `SmashSpots.jsx` | Main picks display with filtering, sorting, confidence tiers |
+| Props | `Props.jsx` | Player props with edge calculation, skeleton loading |
+| BetslipModal | `BetslipModal.jsx` | Click-to-bet sportsbook selection (8 books) |
+| BetSlip | `BetSlip.jsx` | Floating bet slip with parlay calculator |
+| Gamification | `Gamification.jsx` | XP, levels, achievements system |
+| Leaderboard | `Leaderboard.jsx` | Community rankings with backend integration |
+| Charts | `Charts.jsx` | SVG performance charts (no external deps) |
+
+### UI/UX Components (Completed)
+| Component | File | Description |
+|-----------|------|-------------|
+| Toast | `Toast.jsx` | Global notification system |
+| Skeleton | `Skeleton.jsx` | Loading skeletons with shimmer |
+| ErrorBoundary | `ErrorBoundary.jsx` | Error catching with fallback UI |
+| PullToRefresh | `PullToRefresh.jsx` | Mobile touch gesture refresh |
+| ThemeContext | `ThemeContext.jsx` | Dark/light mode toggle |
+| Onboarding | `Onboarding.jsx` | 5-step new user wizard |
+| SignalNotifications | `SignalNotifications.jsx` | Real-time signal alerts |
+
+### PWA Support (Completed)
+- `public/manifest.json` - Web app manifest
+- `public/sw.js` - Service worker for offline caching
+- `index.html` - PWA meta tags
+
+### Click-to-Bet Integration (Completed)
+**Sportsbooks supported:**
+- DraftKings, FanDuel, BetMGM, Caesars
+- PointsBet, William Hill, Barstool, BetRivers
+
+**Features:**
+- Odds comparison grid across all 8 books
+- "BEST" badge highlights best odds
+- Deep links to sportsbook betslips (when available)
+- Fallback to sportsbook homepage
+
+### API Client (`api.js`)
+All endpoints implemented:
+- Health/status checks
+- Live data (games, props, splits, sharp)
+- Esoteric (today-energy, edge analysis)
+- Predictions (brain, live)
+- Grading system
+- Community voting
+- Click-to-bet (sportsbooks, line-shop, betslip/generate)
+
+---
+
+## Context Providers (App.jsx)
+```jsx
+<ThemeProvider>
+  <GamificationProvider>
+    <ToastProvider>
+      <SignalNotificationProvider>
+        <BetSlipProvider>
+          <App />
+        </BetSlipProvider>
+      </SignalNotificationProvider>
+    </ToastProvider>
+  </GamificationProvider>
+</ThemeProvider>
+```
+
+## Mobile Responsiveness
+- Hamburger menu at 1024px breakpoint
+- Pull-to-refresh on touch devices
+- PWA installable
+
+---
+
+## Handoff Notes for Future Sessions
+
+### What's Complete
+1. Full UI/UX overhaul with dark theme
+2. Click-to-bet sportsbook integration
+3. Gamification system (XP, levels, achievements)
+4. Signal notifications
+5. Floating bet slip with parlay calc
+6. Loading skeletons and error boundaries
+7. PWA support
+8. All backend endpoints connected
+
+### Potential Future Work
+- Unit tests for components
+- E2E tests with Playwright
+- Performance optimization (React.memo, useMemo)
+- Analytics integration
+- Push notifications (Firebase)
+- Social features (sharing picks)
+- Advanced charting (historical performance)
+
+### Key Files to Review First
+1. `api.js` - All backend connections
+2. `App.jsx` - Routing and providers
+3. `SmashSpots.jsx` - Main picks UI
+4. `BetslipModal.jsx` - Click-to-bet feature
+5. `Gamification.jsx` - XP/achievements system
