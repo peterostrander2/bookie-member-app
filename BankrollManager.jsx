@@ -16,14 +16,53 @@ import {
   calculateRiskOfRuin,
   simulateBankroll
 } from './kellyCalculator';
+import { useToast } from './Toast';
 
 const BankrollManager = () => {
+  const toast = useToast();
   const [settings, setSettings] = useState(null);
   const [stats, setStats] = useState(null);
   const [betHistory, setBetHistory] = useState([]);
   const [activeTab, setActiveTab] = useState('overview');
   const [editingSettings, setEditingSettings] = useState(false);
   const [tempSettings, setTempSettings] = useState({});
+
+  // Export bet history to CSV
+  const exportToCSV = () => {
+    if (betHistory.length === 0) {
+      toast.warning('No bet history to export');
+      return;
+    }
+
+    const headers = ['Date', 'Sport', 'Game', 'Bet Type', 'Side', 'Line', 'Odds', 'Stake', 'Result', 'P&L', 'Confidence', 'Tier'];
+    const rows = betHistory.map(bet => [
+      new Date(bet.timestamp).toLocaleDateString(),
+      bet.sport || 'N/A',
+      bet.game?.away_team && bet.game?.home_team ? `${bet.game.away_team} @ ${bet.game.home_team}` : 'N/A',
+      bet.bet_type || 'N/A',
+      bet.side || 'N/A',
+      bet.line || 'N/A',
+      bet.odds || 'N/A',
+      bet.stake || settings?.unitSize || 'N/A',
+      bet.result || 'PENDING',
+      bet.pnl !== undefined ? bet.pnl : 'N/A',
+      bet.confidence || 'N/A',
+      bet.tier || 'N/A'
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `bookie-bet-history-${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+
+    toast.success(`Exported ${betHistory.length} bets to CSV`);
+  };
 
   // Calculator state
   const [calcConfidence, setCalcConfidence] = useState(70);
@@ -57,6 +96,7 @@ const BankrollManager = () => {
     setSettings(tempSettings);
     setEditingSettings(false);
     loadData();
+    toast.success('Bankroll settings saved');
   };
 
   const handleGradeBet = (betId, result) => {
@@ -444,9 +484,28 @@ const BankrollManager = () => {
             borderRadius: '12px',
             padding: '20px'
           }}>
-            <h3 style={{ color: '#fff', marginTop: 0, marginBottom: '15px', fontSize: '16px' }}>
-              Bet History ({stats.pendingBets} pending)
-            </h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+              <h3 style={{ color: '#fff', margin: 0, fontSize: '16px' }}>
+                Bet History ({stats.pendingBets} pending)
+              </h3>
+              <button
+                onClick={exportToCSV}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#00D4FF20',
+                  color: '#00D4FF',
+                  border: '1px solid #00D4FF40',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                📥 Export CSV
+              </button>
+            </div>
 
             {betHistory.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
