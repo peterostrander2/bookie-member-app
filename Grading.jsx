@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import api from './api'
+import api from './api';
+import { useGamification } from './Gamification';
+import { useToast } from './Toast';
+
 const Grading = () => {
+  const { recordPick, checkAchievements, newAchievements, clearNewAchievement, ACHIEVEMENTS } = useGamification();
+  const toast = useToast();
   const [tab, setTab] = useState('pending');
   const [picks, setPicks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -36,14 +41,51 @@ const Grading = () => {
   };
   stats.winRate = stats.total > 0 ? ((stats.wins / stats.total) * 100).toFixed(1) : 0;
 
-  const gradePick = async (pickId, result) => {
+  const gradePick = async (pickId, result, pick) => {
     try {
       await api.gradePick({ pick_id: pickId, result });
+
+      // Record in gamification system
+      recordPick({
+        result,
+        tier: pick?.tier || 'STANDARD',
+        sport: pick?.sport || 'NBA',
+        hasJarvisTrigger: pick?.hasJarvisTrigger || false
+      });
+
+      // Check for new achievements
+      setTimeout(() => {
+        checkAchievements();
+      }, 100);
+
+      // Show result toast
+      if (result === 'WIN') {
+        toast.success(`Pick graded as WIN!`);
+      } else if (result === 'LOSS') {
+        toast.error(`Pick graded as LOSS`);
+      } else {
+        toast.info(`Pick graded as PUSH`);
+      }
+
       fetchPicks();
     } catch (err) {
       console.error(err);
+      toast.error('Failed to grade pick');
     }
   };
+
+  // Show achievement notifications
+  useEffect(() => {
+    if (newAchievements && newAchievements.length > 0) {
+      newAchievements.forEach(achievementId => {
+        const achievement = ACHIEVEMENTS[achievementId];
+        if (achievement) {
+          toast.success(`Achievement Unlocked: ${achievement.name}! +${achievement.xp} XP`);
+          clearNewAchievement(achievementId);
+        }
+      });
+    }
+  }, [newAchievements]);
 
   return (
     <div style={{ padding: '20px', backgroundColor: '#0a0a0f', minHeight: '100vh' }}>
@@ -174,7 +216,7 @@ const Grading = () => {
                 ) : (
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button
-                      onClick={() => gradePick(pick.id, 'WIN')}
+                      onClick={() => gradePick(pick.id, 'WIN', pick)}
                       style={{
                         padding: '8px 16px',
                         backgroundColor: '#00FF8830',
@@ -189,7 +231,7 @@ const Grading = () => {
                       WIN
                     </button>
                     <button
-                      onClick={() => gradePick(pick.id, 'LOSS')}
+                      onClick={() => gradePick(pick.id, 'LOSS', pick)}
                       style={{
                         padding: '8px 16px',
                         backgroundColor: '#FF444430',
@@ -204,7 +246,7 @@ const Grading = () => {
                       LOSS
                     </button>
                     <button
-                      onClick={() => gradePick(pick.id, 'PUSH')}
+                      onClick={() => gradePick(pick.id, 'PUSH', pick)}
                       style={{
                         padding: '8px 16px',
                         backgroundColor: '#FFD70030',

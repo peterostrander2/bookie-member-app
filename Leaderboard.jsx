@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import api from './api';
+import { getStats } from './clvTracker';
 
-// Mock data for leaderboard (will be replaced by API)
+// Fallback mock data for leaderboard
 const mockLeaders = {
   monthly: [
     { rank: 1, username: 'SharpShooter99', roi: 34.5, winRate: 67, picks: 45, streak: 8 },
@@ -34,7 +35,64 @@ const mockLeaders = {
 const Leaderboard = () => {
   const [activeTab, setActiveTab] = useState('monthly');
   const [leaders, setLeaders] = useState(mockLeaders);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [userStats, setUserStats] = useState(null);
+  const [userRank, setUserRank] = useState(null);
+
+  // Fetch leaderboard data from API
+  useEffect(() => {
+    const fetchLeaderboard = async () => {
+      setLoading(true);
+      try {
+        const data = await api.getVoteLeaderboard();
+        if (data && data.leaders) {
+          // Transform API data to match our format
+          const transformedLeaders = {
+            monthly: data.leaders.monthly?.map((l, i) => ({
+              rank: i + 1,
+              username: l.username || l.user_id,
+              roi: l.roi || 0,
+              winRate: l.win_rate || 0,
+              picks: l.total_picks || 0,
+              streak: l.current_streak || 0
+            })) || mockLeaders.monthly,
+            weekly: data.leaders.weekly?.map((l, i) => ({
+              rank: i + 1,
+              username: l.username || l.user_id,
+              roi: l.roi || 0,
+              winRate: l.win_rate || 0,
+              picks: l.total_picks || 0,
+              streak: l.current_streak || 0
+            })) || mockLeaders.weekly,
+            streaks: data.leaders.streaks?.map((l, i) => ({
+              rank: i + 1,
+              username: l.username || l.user_id,
+              streak: l.streak || 0,
+              lastWin: l.last_win || 'N/A'
+            })) || mockLeaders.streaks
+          };
+          setLeaders(transformedLeaders);
+
+          // Set user rank if available
+          if (data.user_rank) {
+            setUserRank(data.user_rank);
+          }
+        }
+      } catch (err) {
+        console.log('Using mock leaderboard data');
+        // Keep mock data on error
+      }
+      setLoading(false);
+    };
+
+    fetchLeaderboard();
+
+    // Get local user stats
+    const stats = getStats();
+    if (stats) {
+      setUserStats(stats);
+    }
+  }, []);
 
   const tabs = [
     { id: 'monthly', label: 'This Month', icon: '📅' },
@@ -279,22 +337,41 @@ const Leaderboard = () => {
           borderRadius: '12px',
           padding: '20px'
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
             <div>
               <div style={{ color: '#00D4FF', fontSize: '12px', marginBottom: '5px' }}>YOUR RANKING</div>
-              <div style={{ color: '#fff', fontSize: '20px', fontWeight: 'bold' }}>#47 of 1,234</div>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ color: '#6b7280', fontSize: '12px' }}>This Month</div>
-              <div style={{ color: '#00FF88', fontSize: '18px', fontWeight: 'bold' }}>+8.5% ROI</div>
+              <div style={{ color: '#fff', fontSize: '20px', fontWeight: 'bold' }}>
+                {userRank ? `#${userRank.rank} of ${userRank.total}` :
+                 userStats?.gradedPicks >= 10 ? 'Calculating...' : 'Need 10+ picks'}
+              </div>
             </div>
             <div style={{ textAlign: 'right' }}>
               <div style={{ color: '#6b7280', fontSize: '12px' }}>Win Rate</div>
-              <div style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>54%</div>
+              <div style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>
+                {userStats?.winRate?.toFixed(1) || 0}%
+              </div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ color: '#6b7280', fontSize: '12px' }}>Avg CLV</div>
+              <div style={{
+                color: (userStats?.avgCLV || 0) >= 0 ? '#00FF88' : '#FF4444',
+                fontSize: '18px',
+                fontWeight: 'bold'
+              }}>
+                {(userStats?.avgCLV || 0) >= 0 ? '+' : ''}{userStats?.avgCLV?.toFixed(2) || '0.00'}
+              </div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ color: '#6b7280', fontSize: '12px' }}>Record</div>
+              <div style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>
+                {userStats?.wins || 0}-{userStats?.losses || 0}
+              </div>
             </div>
             <div style={{ textAlign: 'right' }}>
               <div style={{ color: '#6b7280', fontSize: '12px' }}>Picks</div>
-              <div style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>23</div>
+              <div style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>
+                {userStats?.gradedPicks || 0}
+              </div>
             </div>
           </div>
         </div>
