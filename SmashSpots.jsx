@@ -6,6 +6,7 @@ import { explainPick, quickExplain } from './pickExplainer';
 import { analyzeCorrelation, checkPickCorrelation } from './correlationDetector';
 import { ConsensusMeter, ConsensusMiniBadge, ConsensusAlert, calculateConsensus } from './ConsensusMeter';
 import CommunityVote from './CommunityVote';
+import { useToast } from './Toast';
 
 // Floating Glow Badge for special convergence picks
 const ConvergenceGlowBadge = ({ tier }) => {
@@ -87,6 +88,7 @@ const ConvergenceGlowBadge = ({ tier }) => {
 };
 
 const SmashSpots = () => {
+  const toast = useToast();
   const [sport, setSport] = useState('NBA');
   const [picks, setPicks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -163,6 +165,9 @@ const SmashSpots = () => {
     const pickId = `${game.home_team}-${game.away_team}-${pickData.side}-${betType}`;
     setTrackedPicks(prev => new Set([...prev, pickId]));
 
+    // Show toast
+    toast.success(`Pick tracked: ${pickData.side} ${betType === 'spread' ? pickData.line : pickData.line}`);
+
     // Re-analyze correlation with new pick
     const allPicks = getAllPicks();
     if (allPicks.length >= 2) {
@@ -190,6 +195,7 @@ const SmashSpots = () => {
       const pickId = `${game.home_team}-${game.away_team}-${betType}`;
       setCopiedPick(pickId);
       setTimeout(() => setCopiedPick(null), 2000);
+      toast.info('Copied to clipboard');
     });
   };
 

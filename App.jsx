@@ -18,6 +18,7 @@ import PerformanceDashboard from './PerformanceDashboard';
 import ConsensusMeterPage from './ConsensusMeter';
 import DailySummary from './DailySummary';
 import ComplianceFooter from './ComplianceFooter';
+import { ToastProvider } from './Toast';
 import api from './api';
 
 const Navbar = () => {
@@ -122,31 +123,33 @@ const Navbar = () => {
 const App = () => {
   return (
     <BrowserRouter>
-      <div style={{ backgroundColor: '#0a0a0f', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-        <Navbar />
-        <div style={{ flex: 1 }}>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/smash-spots" element={<SmashSpots />} />
-            <Route path="/sharp" element={<SharpAlerts />} />
-            <Route path="/odds" element={<BestOdds />} />
-            <Route path="/injuries" element={<InjuryVacuum />} />
-            <Route path="/performance" element={<PerformanceDashboard />} />
-            <Route path="/consensus" element={<ConsensusMeterPage />} />
-            <Route path="/summary" element={<DailySummary />} />
-            <Route path="/splits" element={<Splits />} />
-            <Route path="/clv" element={<CLVDashboard />} />
-            <Route path="/backtest" element={<BacktestDashboard />} />
-            <Route path="/bankroll" element={<BankrollManager />} />
-            <Route path="/esoteric" element={<Esoteric />} />
-            <Route path="/signals" element={<Signals />} />
-            <Route path="/grading" element={<Grading />} />
-            <Route path="/admin" element={<AdminCockpit />} />
-            <Route path="/profile" element={<Profile />} />
-          </Routes>
+      <ToastProvider>
+        <div style={{ backgroundColor: '#0a0a0f', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+          <Navbar />
+          <div style={{ flex: 1 }}>
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/smash-spots" element={<SmashSpots />} />
+              <Route path="/sharp" element={<SharpAlerts />} />
+              <Route path="/odds" element={<BestOdds />} />
+              <Route path="/injuries" element={<InjuryVacuum />} />
+              <Route path="/performance" element={<PerformanceDashboard />} />
+              <Route path="/consensus" element={<ConsensusMeterPage />} />
+              <Route path="/summary" element={<DailySummary />} />
+              <Route path="/splits" element={<Splits />} />
+              <Route path="/clv" element={<CLVDashboard />} />
+              <Route path="/backtest" element={<BacktestDashboard />} />
+              <Route path="/bankroll" element={<BankrollManager />} />
+              <Route path="/esoteric" element={<Esoteric />} />
+              <Route path="/signals" element={<Signals />} />
+              <Route path="/grading" element={<Grading />} />
+              <Route path="/admin" element={<AdminCockpit />} />
+              <Route path="/profile" element={<Profile />} />
+            </Routes>
+          </div>
+          <ComplianceFooter />
         </div>
-        <ComplianceFooter />
-      </div>
+      </ToastProvider>
     </BrowserRouter>
   );
 };
