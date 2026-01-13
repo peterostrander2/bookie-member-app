@@ -1,15 +1,13 @@
 const BASE_URL = 'https://web-production-7b2a.up.railway.app';
 
-// API Key for authenticated endpoints (set in environment)
+// API Key for authenticated endpoints
 const API_KEY = import.meta.env.VITE_API_KEY || '';
 
-// Helper for authenticated GET requests
 const authFetch = async (url) => {
   const headers = API_KEY ? { 'X-API-Key': API_KEY } : {};
   return fetch(url, { headers });
 };
 
-// Helper to get headers for authenticated POST requests
 const getAuthHeaders = () => {
   const headers = { 'Content-Type': 'application/json' };
   if (API_KEY) headers['X-API-Key'] = API_KEY;
