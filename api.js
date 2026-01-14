@@ -20,12 +20,12 @@ const getAuthHeaders = () => {
 
 export const api = {
   // Health (public)
-  async getHealth() { 
-    return (await fetch(`${API_BASE_URL}/health`)).json() 
+  async getHealth() {
+    return (await fetch(`${API_BASE_URL}/health`)).json()
   },
-  
-  async getModelStatus() { 
-    return (await fetch(`${API_BASE_URL}/model-status`)).json() 
+
+  async getModelStatus() {
+    return (await fetch(`${API_BASE_URL}/model-status`)).json()
   },
 
   // Live Data (authenticated)
@@ -46,7 +46,7 @@ export const api = {
   },
 
   // Predictions (public)
-  async predictLive(data) { 
+  async predictLive(data) {
     return (await fetch(`${API_BASE_URL}/predict-live`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -58,9 +58,9 @@ export const api = {
         stat_type: data.statType || 'points',
         use_lstm_brain: data.useLstm !== false
       })
-    })).json() 
+    })).json()
   },
-  
+
   async predictContext(data) {
     return (await fetch(`${API_BASE_URL}/predict-context`, {
       method: 'POST',
@@ -80,30 +80,30 @@ export const api = {
   },
 
   // Esoteric (public)
-  async analyzeEsoteric(data) { 
+  async analyzeEsoteric(data) {
     return (await fetch(`${API_BASE_URL}/esoteric/analyze`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
-    })).json() 
+    })).json()
   },
 
   // Teams (public)
   async getTeams(sport) {
     return (await fetch(`${API_BASE_URL}/teams/${sport.toUpperCase()}`)).json()
   },
-  
+
   async normalizeTeam(teamInput, sport) {
     return (await fetch(`${API_BASE_URL}/teams/normalize?team_input=${encodeURIComponent(teamInput)}&sport=${sport}`)).json()
   },
 
   // Edge Calculator (public)
-  async calculateEdge(probability, odds) { 
+  async calculateEdge(probability, odds) {
     return (await fetch(`${API_BASE_URL}/calculate-edge`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ your_probability: probability, betting_odds: odds })
-    })).json() 
+    })).json()
   },
 
   // Scheduler (public)
@@ -117,17 +117,25 @@ export const api = {
 
   // Get list of supported sportsbooks with branding
   async getSportsbooks() {
-    const resp = await authFetch(`${API_BASE_URL}/live/sportsbooks`);
-    const data = await resp.json();
-    // Transform to match BetslipModal expected format
-    return (data.sportsbooks || []).map(book => ({
-      id: book.key,
-      name: book.name,
-      color: book.color,
-      logo: book.logo,
-      web_url: book.web_url,
-      available: true
-    }));
+    try {
+      const resp = await authFetch(`${API_BASE_URL}/live/sportsbooks`);
+      if (!resp.ok) return { sportsbooks: [], active_count: 0 };
+      const data = await resp.json();
+      // Defensive: ensure expected fields exist
+      return {
+        sportsbooks: (data.sportsbooks || []).map(book => ({
+          id: book.key,
+          name: book.name,
+          color: book.color,
+          logo: book.logo,
+          web_url: book.web_url,
+          available: true
+        })),
+        active_count: data.active_count ?? (data.sportsbooks?.length || 0)
+      };
+    } catch {
+      return { sportsbooks: [], active_count: 0 };
+    }
   },
 
   // Generate betslip options across sportsbooks for a specific bet
@@ -186,6 +194,11 @@ export const api = {
     };
   },
 
+  // Alias for compatibility
+  async getBestBets(sport = 'NBA') {
+    return this.getSmashSpots(sport);
+  },
+
   // Get sharp money data
   async getSharpMoney(sport = 'NBA') {
     return (await authFetch(`${API_BASE_URL}/live/sharp/${sport.toUpperCase()}`)).json();
@@ -206,9 +219,172 @@ export const api = {
     return (await authFetch(`${API_BASE_URL}/live/esoteric-edge`)).json();
   },
 
-  // Get today's energy
+  // Get today's energy (with defensive handling)
   async getTodayEnergy() {
-    return (await fetch(`${API_BASE_URL}/esoteric/today-energy`)).json();
+    try {
+      const res = await fetch(`${API_BASE_URL}/esoteric/today-energy`);
+      if (!res.ok) return { betting_outlook: 'NEUTRAL', overall_energy: 5.0 };
+      const data = await res.json();
+      // Defensive: ensure expected fields exist
+      return {
+        betting_outlook: data.betting_outlook || 'NEUTRAL',
+        overall_energy: data.overall_energy ?? 5.0,
+        ...data
+      };
+    } catch {
+      return { betting_outlook: 'NEUTRAL', overall_energy: 5.0 };
+    }
+  },
+
+  // ============================================================================
+  // BET TRACKING
+  // ============================================================================
+
+  async trackBet(betData) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/live/bets/track`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(betData)
+      });
+      if (!res.ok) return null;
+      return res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  async gradeBet(betId, outcome) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/live/bets/grade/${betId}`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ outcome })
+      });
+      if (!res.ok) return null;
+      return res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  async getBetHistory(userId) {
+    try {
+      const url = userId ? `${API_BASE_URL}/live/bets/history?user_id=${userId}` : `${API_BASE_URL}/live/bets/history`;
+      const res = await authFetch(url);
+      if (!res.ok) return { bets: [], stats: {} };
+      return res.json();
+    } catch {
+      return { bets: [], stats: {} };
+    }
+  },
+
+  // ============================================================================
+  // PARLAY BUILDER
+  // ============================================================================
+
+  async getParlay(userId) {
+    try {
+      const res = await authFetch(`${API_BASE_URL}/live/parlay/${userId}`);
+      if (!res.ok) return { legs: [], combined_odds: null };
+      return res.json();
+    } catch {
+      return { legs: [], combined_odds: null };
+    }
+  },
+
+  async addParlayLeg(legData) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/live/parlay/add`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(legData)
+      });
+      if (!res.ok) return null;
+      return res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  async calculateParlay(legs, stake) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/live/parlay/calculate`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ legs, stake })
+      });
+      if (!res.ok) return null;
+      return res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  async placeParlay(parlayData) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/live/parlay/place`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(parlayData)
+      });
+      if (!res.ok) return null;
+      return res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  async clearParlay(userId) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/live/parlay/clear/${userId}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      });
+      if (!res.ok) return null;
+      return res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  async getParlayHistory(userId) {
+    try {
+      const url = userId ? `${API_BASE_URL}/live/parlay/history?user_id=${userId}` : `${API_BASE_URL}/live/parlay/history`;
+      const res = await authFetch(url);
+      if (!res.ok) return { parlays: [], stats: {} };
+      return res.json();
+    } catch {
+      return { parlays: [], stats: {} };
+    }
+  },
+
+  // ============================================================================
+  // USER PREFERENCES
+  // ============================================================================
+
+  async getUserPreferences(userId) {
+    try {
+      const res = await authFetch(`${API_BASE_URL}/live/user/preferences/${userId}`);
+      if (!res.ok) return {};
+      return res.json();
+    } catch {
+      return {};
+    }
+  },
+
+  async setUserPreferences(userId, preferences) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/live/user/preferences/${userId}`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(preferences)
+      });
+      if (!res.ok) return null;
+      return res.json();
+    } catch {
+      return null;
+    }
   }
 };
 
