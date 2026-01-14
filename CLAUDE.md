@@ -110,6 +110,13 @@ All endpoints implemented:
 - Community voting
 - Click-to-bet (sportsbooks, line-shop, betslip/generate)
 
+### API Authentication (Completed)
+- `X-API-Key` header sent on all `/live/*` endpoints
+- Uses `VITE_API_KEY` environment variable
+- `authFetch` helper for authenticated GET requests
+- `getAuthHeaders` helper for authenticated POST requests
+- Set `VITE_API_KEY` in Railway Variables for production
+
 ---
 
 ## Context Providers (App.jsx)
@@ -138,26 +145,60 @@ All endpoints implemented:
 
 ### What's Complete
 1. Full UI/UX overhaul with dark theme
-2. Click-to-bet sportsbook integration
+2. Click-to-bet sportsbook integration (8 books)
 3. Gamification system (XP, levels, achievements)
-4. Signal notifications
-5. Floating bet slip with parlay calc
+4. Signal notifications with bell icon
+5. Floating bet slip with parlay calculator
 6. Loading skeletons and error boundaries
-7. PWA support
+7. PWA support (manifest, service worker)
 8. All backend endpoints connected
-
-### Potential Future Work
-- Unit tests for components
-- E2E tests with Playwright
-- Performance optimization (React.memo, useMemo)
-- Analytics integration
-- Push notifications (Firebase)
-- Social features (sharing picks)
-- Advanced charting (historical performance)
+9. API authentication for `/live/*` endpoints
 
 ### Key Files to Review First
-1. `api.js` - All backend connections
+1. `api.js` - All backend connections + auth helpers
 2. `App.jsx` - Routing and providers
 3. `SmashSpots.jsx` - Main picks UI
 4. `BetslipModal.jsx` - Click-to-bet feature
 5. `Gamification.jsx` - XP/achievements system
+
+---
+
+## Future Work Suggestions
+
+### Testing (Priority: High)
+| Task | Description | Effort |
+|------|-------------|--------|
+| Unit tests | Jest + React Testing Library for components | Medium |
+| E2E tests | Playwright for critical user flows | Medium |
+| API mocking | MSW for consistent test data | Low |
+
+### Performance (Priority: Medium)
+| Task | Description | Effort |
+|------|-------------|--------|
+| React.memo | Memoize expensive components (SmashSpots cards) | Low |
+| useMemo/useCallback | Optimize re-renders in lists | Low |
+| Code splitting | Lazy load routes with React.lazy | Medium |
+| Bundle analysis | Identify large dependencies | Low |
+
+### Features (Priority: Low-Medium)
+| Task | Description | Effort |
+|------|-------------|--------|
+| Push notifications | Firebase Cloud Messaging for SMASH alerts | High |
+| Social sharing | Share picks to Twitter/Discord | Medium |
+| Historical charts | Performance over time visualization | Medium |
+| User preferences | Persist filters, favorite sports | Low |
+| Offline mode | Cache picks for offline viewing | Medium |
+
+### Analytics (Priority: Low)
+| Task | Description | Effort |
+|------|-------------|--------|
+| Google Analytics | Track page views, user flows | Low |
+| Event tracking | Track bet placements, feature usage | Low |
+| Error monitoring | Sentry for production errors | Low |
+
+### Infrastructure (Priority: Low)
+| Task | Description | Effort |
+|------|-------------|--------|
+| CI/CD pipeline | GitHub Actions for auto-deploy | Medium |
+| Staging environment | Separate Railway env for testing | Low |
+| API rate limiting | Frontend throttling for API calls | Low |
