@@ -19,6 +19,29 @@ GET /live/line-shop/{sport}   # Line shopping across books
 POST /live/betslip/generate   # Generate sportsbook deep links
 ```
 
+### Bet Tracking Endpoints
+```
+POST /live/bets/track         # Record placed bet
+POST /live/bets/grade/{id}    # Mark outcome (WIN/LOSS/PUSH)
+GET  /live/bets/history       # Bet history with stats
+```
+
+### Parlay Builder Endpoints
+```
+GET  /live/parlay/{user_id}   # Fetch current parlay slip
+POST /live/parlay/add         # Add leg to parlay
+POST /live/parlay/calculate   # Preview odds without saving
+POST /live/parlay/place       # Submit parlay for tracking
+DEL  /live/parlay/clear/{id}  # Clear parlay slip
+GET  /live/parlay/history     # Parlay history and stats
+```
+
+### User Preferences
+```
+GET  /live/user/preferences/{user_id}  # Get preferences
+POST /live/user/preferences/{user_id}  # Set preferences
+```
+
 ### Sports
 `nba`, `nfl`, `mlb`, `nhl`
 
