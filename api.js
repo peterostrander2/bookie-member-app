@@ -109,6 +109,106 @@ export const api = {
   // Scheduler (public)
   async getSchedulerStatus() {
     return (await fetch(`${API_BASE_URL}/scheduler/status`)).json()
+  },
+
+  // ============================================================================
+  // CLICK-TO-BET / SPORTSBOOK INTEGRATION
+  // ============================================================================
+
+  // Get list of supported sportsbooks with branding
+  async getSportsbooks() {
+    const resp = await authFetch(`${API_BASE_URL}/live/sportsbooks`);
+    const data = await resp.json();
+    // Transform to match BetslipModal expected format
+    return (data.sportsbooks || []).map(book => ({
+      id: book.key,
+      name: book.name,
+      color: book.color,
+      logo: book.logo,
+      web_url: book.web_url,
+      available: true
+    }));
+  },
+
+  // Generate betslip options across sportsbooks for a specific bet
+  async generateBetslip({ game_id, bet_type, team, side, line, sport }) {
+    const selection = side || team;
+    const params = new URLSearchParams({
+      sport: sport?.toUpperCase() || 'NBA',
+      game_id: game_id || '',
+      bet_type: bet_type || 'spread',
+      selection: selection || ''
+    });
+
+    const resp = await authFetch(`${API_BASE_URL}/live/betslip/generate?${params}`);
+    const data = await resp.json();
+
+    // Transform to match BetslipModal expected format
+    return {
+      game: data.game,
+      bet_type: data.bet_type,
+      selection: data.selection,
+      best_odds: data.best_odds,
+      sportsbooks: (data.all_books || []).map(book => ({
+        id: book.book_key,
+        name: book.book_name,
+        color: book.book_color,
+        logo: book.book_logo,
+        odds: book.odds,
+        line: book.point,
+        link: book.deep_link?.web || null,
+        available: true
+      }))
+    };
+  },
+
+  // Line shopping - compare odds across all books for a sport
+  async getLineShop(sport, gameId = null) {
+    let url = `${API_BASE_URL}/live/line-shop/${sport.toUpperCase()}`;
+    if (gameId) {
+      url += `?game_id=${encodeURIComponent(gameId)}`;
+    }
+    return (await authFetch(url)).json();
+  },
+
+  // Get best bets / smash spots for a sport
+  async getSmashSpots(sport = 'NBA') {
+    const resp = await authFetch(`${API_BASE_URL}/live/best-bets/${sport.toUpperCase()}`);
+    const data = await resp.json();
+
+    // Return in format expected by SmashSpots.jsx
+    return {
+      sport: data.sport,
+      source: data.source,
+      slate: data.data || data.slate || [],
+      count: data.count || 0,
+      timestamp: data.timestamp
+    };
+  },
+
+  // Get sharp money data
+  async getSharpMoney(sport = 'NBA') {
+    return (await authFetch(`${API_BASE_URL}/live/sharp/${sport.toUpperCase()}`)).json();
+  },
+
+  // Get betting splits
+  async getSplits(sport = 'NBA') {
+    return (await authFetch(`${API_BASE_URL}/live/splits/${sport.toUpperCase()}`)).json();
+  },
+
+  // Get player props
+  async getProps(sport = 'NBA') {
+    return (await authFetch(`${API_BASE_URL}/live/props/${sport.toUpperCase()}`)).json();
+  },
+
+  // Get esoteric edge analysis
+  async getEsotericEdge() {
+    return (await authFetch(`${API_BASE_URL}/live/esoteric-edge`)).json();
+  },
+
+  // Get today's energy
+  async getTodayEnergy() {
+    return (await fetch(`${API_BASE_URL}/esoteric/today-energy`)).json();
   }
 };
 
