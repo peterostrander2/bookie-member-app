@@ -156,6 +156,117 @@ const getLifePath = (date = new Date()) => {
 // GEMATRIA CIPHERS
 // ============================================================================
 
+// ============================================================================
+// CHROME RESONANCE - ASCII HEX ANALYSIS
+// ============================================================================
+
+/**
+ * Chrome Resonance: Calculates ASCII hex-code average for stadium/city names
+ * Favored range: 65-90 (uppercase letter range) = "resonant frequency"
+ * Values close to 77 (M - middle of alphabet) are considered optimal
+ */
+export const calculateChromeResonance = (text) => {
+  if (!text || typeof text !== 'string') {
+    return { score: 50, hexAverage: 0, resonance: 'NEUTRAL', insight: 'No text provided' };
+  }
+
+  const chars = text.toUpperCase().split('').filter(c => /[A-Z]/.test(c));
+  if (chars.length === 0) {
+    return { score: 50, hexAverage: 0, resonance: 'NEUTRAL', insight: 'No letters found' };
+  }
+
+  const totalAscii = chars.reduce((sum, c) => sum + c.charCodeAt(0), 0);
+  const hexAverage = totalAscii / chars.length;
+
+  // Optimal resonance is around 77 (M = middle letter)
+  const distanceFromOptimal = Math.abs(hexAverage - 77);
+
+  let score, resonance, insight;
+
+  if (distanceFromOptimal <= 3) {
+    score = 85;
+    resonance = 'PEAK_RESONANCE';
+    insight = `Perfect chrome alignment (${hexAverage.toFixed(1)} ≈ 77)`;
+  } else if (distanceFromOptimal <= 6) {
+    score = 72;
+    resonance = 'HIGH_RESONANCE';
+    insight = `Strong chrome frequency (${hexAverage.toFixed(1)})`;
+  } else if (distanceFromOptimal <= 10) {
+    score = 62;
+    resonance = 'MODERATE_RESONANCE';
+    insight = `Moderate chrome signal (${hexAverage.toFixed(1)})`;
+  } else if (hexAverage >= 65 && hexAverage <= 90) {
+    score = 55;
+    resonance = 'MILD_RESONANCE';
+    insight = `Within resonant band (${hexAverage.toFixed(1)})`;
+  } else {
+    score = 45;
+    resonance = 'LOW_RESONANCE';
+    insight = `Outside resonant band (${hexAverage.toFixed(1)})`;
+  }
+
+  // Tesla 3-6-9 bonus: if hex average mod 9 = 3, 6, or 9
+  const mod9 = Math.round(hexAverage) % 9;
+  const teslaBonus = (mod9 === 3 || mod9 === 6 || mod9 === 0) ? 5 : 0;
+  if (teslaBonus) {
+    insight += ` + Tesla ⚡`;
+    score = Math.min(95, score + teslaBonus);
+  }
+
+  return {
+    score,
+    hexAverage: Math.round(hexAverage * 100) / 100,
+    hexTotal: totalAscii,
+    charCount: chars.length,
+    resonance,
+    insight,
+    teslaAligned: teslaBonus > 0
+  };
+};
+
+/**
+ * Compare Chrome Resonance between two teams/venues
+ */
+export const compareChromeResonance = (team1, team2, venue = null) => {
+  const res1 = calculateChromeResonance(team1);
+  const res2 = calculateChromeResonance(team2);
+  const venueRes = venue ? calculateChromeResonance(venue) : null;
+
+  let favored = null;
+  let favorReason = '';
+
+  if (res1.score > res2.score + 5) {
+    favored = 'team1';
+    favorReason = `${team1}: ${res1.resonance} (${res1.hexAverage})`;
+  } else if (res2.score > res1.score + 5) {
+    favored = 'team2';
+    favorReason = `${team2}: ${res2.resonance} (${res2.hexAverage})`;
+  }
+
+  // Venue can override if it matches one team's resonance
+  if (venueRes && venueRes.score >= 70) {
+    const team1Match = Math.abs(res1.hexAverage - venueRes.hexAverage) < 3;
+    const team2Match = Math.abs(res2.hexAverage - venueRes.hexAverage) < 3;
+
+    if (team1Match && !team2Match) {
+      favored = 'team1';
+      favorReason = `${team1} resonates with venue (${venue})`;
+    } else if (team2Match && !team1Match) {
+      favored = 'team2';
+      favorReason = `${team2} resonates with venue (${venue})`;
+    }
+  }
+
+  return {
+    team1: res1,
+    team2: res2,
+    venue: venueRes,
+    favored,
+    favorReason,
+    combinedScore: Math.round((res1.score + res2.score + (venueRes?.score || 50)) / (venueRes ? 3 : 2))
+  };
+};
+
 export const GEMATRIA_CIPHERS = {
   ordinal: (text) => {
     return (text || '').toUpperCase().split('').reduce((sum, char) => {
@@ -1515,6 +1626,125 @@ export const getConfluenceDisplay = (confluence) => {
   return { label: '📊 STANDARD', color: '#6B7280', description: 'No special alignment' };
 };
 
+// ============================================================================
+// VORTEX MATH (TESLA 3-6-9) FOR PARLAYS
+// ============================================================================
+
+/**
+ * Vortex Math: Analyze parlay legs for Tesla 3-6-9 synchronization
+ * When legs' odds/values multiply to produce 3, 6, or 9 remainder = "sync boost"
+ */
+export const calculateVortexSync = (legs) => {
+  if (!legs || legs.length < 2) {
+    return { hasSync: false, syncLevel: 'NONE', boost: 0, insight: 'Need 2+ legs' };
+  }
+
+  // Method 1: Multiply all decimal odds and check mod 9
+  let oddsProduct = 1;
+  legs.forEach(leg => {
+    const odds = leg.odds || -110;
+    const decimal = odds > 0 ? (odds / 100) + 1 : (100 / Math.abs(odds)) + 1;
+    oddsProduct *= decimal;
+  });
+
+  const oddsProductRounded = Math.round(oddsProduct * 100);
+  const mod9Odds = oddsProductRounded % 9;
+  const teslaOddsMatch = mod9Odds === 3 || mod9Odds === 6 || mod9Odds === 0;
+
+  // Method 2: Sum of leg count digits
+  const legCount = legs.length;
+  let legCountReduced = legCount;
+  while (legCountReduced > 9) {
+    legCountReduced = String(legCountReduced).split('').reduce((s, d) => s + parseInt(d), 0);
+  }
+  const teslaLegCount = [3, 6, 9].includes(legCountReduced);
+
+  // Method 3: Sum all odds and check
+  const oddsSum = legs.reduce((sum, leg) => sum + Math.abs(leg.odds || 110), 0);
+  const oddsSumMod9 = oddsSum % 9;
+  const teslaOddsSum = oddsSumMod9 === 3 || oddsSumMod9 === 6 || oddsSumMod9 === 0;
+
+  // Calculate sync level
+  const teslaHits = [teslaOddsMatch, teslaLegCount, teslaOddsSum].filter(Boolean).length;
+
+  let syncLevel, boost, insight;
+
+  if (teslaHits === 3) {
+    syncLevel = 'TRIPLE_VORTEX';
+    boost = 8;
+    insight = `⚡⚡⚡ TRIPLE TESLA SYNC! Odds×Legs×Sum all align (3-6-9)`;
+  } else if (teslaHits === 2) {
+    syncLevel = 'DOUBLE_VORTEX';
+    boost = 5;
+    insight = `⚡⚡ DOUBLE TESLA! ${teslaOddsMatch ? 'Odds' : teslaLegCount ? 'Legs' : 'Sum'}+${teslaOddsSum && !teslaOddsMatch ? 'Sum' : teslaLegCount && !teslaOddsMatch ? 'Legs' : 'Odds'} aligned`;
+  } else if (teslaHits === 1) {
+    syncLevel = 'SINGLE_VORTEX';
+    boost = 3;
+    insight = `⚡ Tesla sync: ${teslaOddsMatch ? 'Odds product' : teslaLegCount ? `${legCount} legs` : 'Odds sum'} = 3-6-9`;
+  } else {
+    syncLevel = 'NONE';
+    boost = 0;
+    insight = 'No Tesla synchronization';
+  }
+
+  return {
+    hasSync: teslaHits > 0,
+    syncLevel,
+    boost,
+    insight,
+    details: {
+      oddsProduct: oddsProductRounded,
+      oddsProductMod9: mod9Odds,
+      legCount,
+      legCountReduced,
+      oddsSum,
+      oddsSumMod9
+    },
+    teslaHits,
+    legCount
+  };
+};
+
+/**
+ * Get parlay esoteric analysis combining Vortex Math with other signals
+ */
+export const getParlayEsotericAnalysis = (legs) => {
+  const vortex = calculateVortexSync(legs);
+
+  // Check for power number leg counts
+  const isPowerLegCount = POWER_NUMBERS.fibonacci.includes(legs.length) ||
+                          POWER_NUMBERS.master.includes(legs.length);
+
+  // Check JARVIS on total odds sum
+  const totalOdds = legs.reduce((sum, leg) => {
+    const odds = leg.odds || -110;
+    return sum + (odds > 0 ? odds : odds);
+  }, 0);
+  const jarvisTrigger = checkJarvisTrigger(Math.abs(totalOdds));
+
+  let overallBoost = vortex.boost;
+  const insights = [vortex.insight];
+
+  if (isPowerLegCount) {
+    overallBoost += 3;
+    insights.push(`📐 ${legs.length} legs = ${POWER_NUMBERS.fibonacci.includes(legs.length) ? 'Fibonacci' : 'Master'} number`);
+  }
+
+  if (jarvisTrigger.triggered) {
+    overallBoost += Math.floor(jarvisTrigger.boost / 2);
+    insights.push(`🎯 ${jarvisTrigger.message}`);
+  }
+
+  return {
+    vortex,
+    isPowerLegCount,
+    jarvisTrigger: jarvisTrigger.triggered ? jarvisTrigger : null,
+    overallBoost,
+    insights,
+    esotericScore: Math.min(95, 50 + overallBoost * 3)
+  };
+};
+
 export default {
   calculateConfidence,
   fetchSignalContext,
@@ -1528,6 +1758,10 @@ export default {
   checkCosmicConfluence,
   checkJarvisTrigger,
   validate2178,
+  calculateChromeResonance,
+  compareChromeResonance,
+  calculateVortexSync,
+  getParlayEsotericAnalysis,
   DEFAULT_WEIGHTS,
   GEMATRIA_CIPHERS,
   POWER_NUMBERS
