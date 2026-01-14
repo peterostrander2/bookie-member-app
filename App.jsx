@@ -19,6 +19,8 @@ import ConsensusMeterPage from './ConsensusMeter';
 import DailySummary from './DailySummary';
 import Leaderboard from './Leaderboard';
 import Props from './Props';
+import BetHistory from './BetHistory';
+import ParlayBuilder from './ParlayBuilder';
 import ComplianceFooter from './ComplianceFooter';
 import { ToastProvider } from './Toast';
 import OnboardingWizard, { isOnboardingComplete } from './Onboarding';
@@ -47,11 +49,13 @@ const Navbar = () => {
   const links = [
     { path: '/', label: 'Dashboard', icon: '🏠' },
     { path: '/smash-spots', label: 'Smash Spots', icon: '🔥' },
+    { path: '/parlay', label: 'Parlay', icon: '🎰' },
+    { path: '/history', label: 'My Bets', icon: '📊' },
     { path: '/sharp', label: 'Sharp Money', icon: '💵' },
     { path: '/odds', label: 'Best Odds', icon: '🎯' },
     { path: '/injuries', label: 'Injuries', icon: '🏥' },
-    { path: '/performance', label: 'Performance', icon: '📊' },
-    { path: '/clv', label: 'CLV', icon: '📈' },
+    { path: '/performance', label: 'Performance', icon: '📈' },
+    { path: '/clv', label: 'CLV', icon: '📉' },
     { path: '/backtest', label: 'Backtest', icon: '🔬' },
     { path: '/bankroll', label: 'Bankroll', icon: '💰' },
     { path: '/esoteric', label: 'Esoteric', icon: '🔮' },
@@ -227,6 +231,8 @@ const AppContent = () => {
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/smash-spots" element={<SmashSpotsPage />} />
+                <Route path="/parlay" element={<ParlayBuilder />} />
+                <Route path="/history" element={<BetHistory />} />
                 <Route path="/sharp" element={<SharpAlerts />} />
                 <Route path="/odds" element={<BestOdds />} />
                 <Route path="/injuries" element={<InjuryVacuum />} />
