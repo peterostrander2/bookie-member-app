@@ -8,6 +8,7 @@
 import React, { useState, createContext, useContext, useEffect } from 'react';
 import { recordPick } from './clvTracker';
 import { useToast } from './Toast';
+import { calculateVortexSync, getParlayEsotericAnalysis } from './signalEngine';
 
 const STORAGE_KEY = 'bookie_bet_slip';
 
@@ -334,24 +335,66 @@ export const FloatingBetSlip = () => {
               borderTop: '1px solid #333'
             }}>
               {/* Parlay odds if applicable */}
-              {selections.length > 1 && (
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  marginBottom: '10px',
-                  padding: '8px 12px',
-                  backgroundColor: '#FFD70015',
-                  borderRadius: '8px',
-                  border: '1px solid #FFD70030'
-                }}>
-                  <span style={{ color: '#FFD700', fontSize: '12px' }}>
-                    {selections.length}-Leg Parlay
-                  </span>
-                  <span style={{ color: '#FFD700', fontWeight: 'bold' }}>
-                    {parlayOdds > 0 ? '+' : ''}{parlayOdds}
-                  </span>
-                </div>
-              )}
+              {selections.length > 1 && (() => {
+                const vortex = calculateVortexSync(selections);
+                const esoteric = getParlayEsotericAnalysis(selections);
+                return (
+                  <div style={{ marginBottom: '10px' }}>
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      padding: '8px 12px',
+                      backgroundColor: '#FFD70015',
+                      borderRadius: '8px 8px 0 0',
+                      border: '1px solid #FFD70030',
+                      borderBottom: vortex.hasSync ? 'none' : '1px solid #FFD70030'
+                    }}>
+                      <span style={{ color: '#FFD700', fontSize: '12px' }}>
+                        {selections.length}-Leg Parlay
+                      </span>
+                      <span style={{ color: '#FFD700', fontWeight: 'bold' }}>
+                        {parlayOdds > 0 ? '+' : ''}{parlayOdds}
+                      </span>
+                    </div>
+                    {/* Vortex Math Display */}
+                    {vortex.hasSync && (
+                      <div style={{
+                        padding: '8px 12px',
+                        backgroundColor: vortex.syncLevel === 'TRIPLE_VORTEX' ? '#8B5CF630' :
+                                        vortex.syncLevel === 'DOUBLE_VORTEX' ? '#8B5CF620' : '#8B5CF610',
+                        borderRadius: '0 0 8px 8px',
+                        border: '1px solid #8B5CF640',
+                        borderTop: 'none'
+                      }}>
+                        <div style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center'
+                        }}>
+                          <span style={{ color: '#D8B4FE', fontSize: '11px' }}>
+                            {vortex.insight}
+                          </span>
+                          <span style={{
+                            color: '#8B5CF6',
+                            fontSize: '10px',
+                            fontWeight: 'bold',
+                            backgroundColor: '#8B5CF620',
+                            padding: '2px 6px',
+                            borderRadius: '4px'
+                          }}>
+                            +{vortex.boost}% sync
+                          </span>
+                        </div>
+                        {esoteric.insights.length > 1 && (
+                          <div style={{ marginTop: '4px', color: '#9ca3af', fontSize: '10px' }}>
+                            {esoteric.insights.slice(1).join(' • ')}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* Stake input */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>

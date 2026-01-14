@@ -60,6 +60,201 @@ Display these scoring components to users:
 | 6.0-7.9 | MEDIUM | Standard play |
 | <6.0 | LOW | Weak signal |
 
+---
+
+## Esoteric Edge API Expectations
+
+### Frontend Implementations (signalEngine.js)
+These signals are calculated client-side:
+- **Gematria** (6 ciphers): ordinal, reverseOrdinal, reduction, reverseReduction, jewish, sumerian
+- **JARVIS Triggers**: 2178 (Immortal), 201, 33, 93, 322
+- **Moon Phase**: 8 phases with energy scoring
+- **Life Path Numerology**: Master numbers detection
+- **Tesla 3-6-9**: Mod-9 alignment checks
+- **Chrome Resonance**: ASCII hex-code analysis (NEW)
+- **Vortex Math**: Parlay leg synchronization (NEW)
+
+### Backend Expected Response: `GET /live/esoteric-edge`
+The backend should return signals that require external data or complex calculations:
+
+```json
+{
+  "timestamp": "2024-01-15T12:00:00Z",
+  "daily_energy": {
+    "betting_outlook": "BULLISH|NEUTRAL|BEARISH",
+    "overall_energy": 7.5,
+    "moon_phase": "waxing_gibbous",
+    "void_moon": {
+      "is_void": false,
+      "void_start": null,
+      "void_end": null,
+      "warning": null
+    },
+    "schumann_frequency": {
+      "current_hz": 7.83,
+      "deviation": 0.12,
+      "status": "NORMAL|ELEVATED|SUPPRESSED"
+    },
+    "planetary_hours": {
+      "current_ruler": "Jupiter",
+      "favorable_for": "expansion, underdogs"
+    }
+  },
+  "game_signals": [
+    {
+      "game_id": "abc123",
+      "home_team": "Lakers",
+      "away_team": "Celtics",
+      "signals": {
+        "founders_echo": {
+          "home_match": false,
+          "away_match": true,
+          "founding_year_home": 1947,
+          "founding_year_away": 1946,
+          "gematria_match": "away",
+          "boost": 5
+        },
+        "gann_square": {
+          "spread_angle": 180,
+          "total_angle": 270,
+          "resonant": true,
+          "insight": "Spread at 180° harmonic"
+        },
+        "fibonacci_retracement": {
+          "current_line": -5.5,
+          "season_high": -12,
+          "season_low": 3,
+          "retracement_pct": 43,
+          "near_50_pct": false
+        },
+        "atmospheric": {
+          "elevation_ft": 340,
+          "humidity_pct": 65,
+          "ball_travel_modifier": 1.02,
+          "applies": false
+        },
+        "hurst_exponent": {
+          "h_value": 0.62,
+          "regime": "TRENDING",
+          "insight": "Momentum favors continuation"
+        }
+      },
+      "esoteric_score": 72,
+      "esoteric_favored": "away"
+    }
+  ],
+  "prop_signals": [
+    {
+      "player_id": "lebron123",
+      "player_name": "LeBron James",
+      "signals": {
+        "biorhythms": {
+          "birth_date": "1984-12-30",
+          "physical": 85,
+          "emotional": 62,
+          "intellectual": 78,
+          "composite": 75,
+          "peak_type": "PHYSICAL"
+        },
+        "life_path_sync": {
+          "player_life_path": 6,
+          "game_date_life_path": 8,
+          "jersey_number": 23,
+          "jersey_reduced": 5,
+          "sync_score": 45
+        }
+      }
+    }
+  ],
+  "parlay_warnings": [
+    {
+      "type": "TEAMMATE_VOID",
+      "legs": ["LeBron James Over 25.5 pts", "Anthony Davis Over 28.5 pts"],
+      "reason": "Same-team props cannibalize each other",
+      "correlation": -0.35
+    },
+    {
+      "type": "NEGATIVE_CORRELATION",
+      "legs": ["Lakers -5.5", "Under 224.5"],
+      "reason": "Favorite cover + under has -0.22 correlation",
+      "correlation": -0.22
+    }
+  ],
+  "noosphere": {
+    "sentiment_velocity": 2.3,
+    "trending_direction": "BULLISH",
+    "social_volume_delta": 145,
+    "insight": "Rapid positive sentiment shift"
+  }
+}
+```
+
+### Backend Expected Response: `GET /esoteric/today-energy`
+```json
+{
+  "date": "2024-01-15",
+  "betting_outlook": "BULLISH",
+  "overall_energy": 7.8,
+  "moon_phase": "waxing_gibbous",
+  "moon_emoji": "🌔",
+  "life_path": 8,
+  "planetary_ruler": "Jupiter",
+  "day_energy": "expansion",
+  "natural_bias": "underdogs",
+  "tesla_number": 6,
+  "tesla_alignment": "STRONG",
+  "void_moon_periods": [
+    { "start": "2024-01-15T14:30:00Z", "end": "2024-01-15T18:45:00Z" }
+  ],
+  "schumann_reading": {
+    "frequency_hz": 7.95,
+    "status": "SLIGHTLY_ELEVATED",
+    "betting_impact": "Heightened intuition"
+  },
+  "recommendation": "Tesla alignment active. Trust underdogs today.",
+  "lucky_numbers": [6, 8, 15, 23],
+  "jarvis_day": false,
+  "power_numbers_active": ["Tesla 6"]
+}
+```
+
+---
+
+## Backend Esoteric Engine Checklist
+
+### esoteric.py - JARVIS / Symbolic Numerology
+| Signal | Status | Notes |
+|--------|--------|-------|
+| Gematria Calculator | Frontend | 6 ciphers in signalEngine.js |
+| Founder's Echo | **BACKEND NEEDED** | Requires team founding year database |
+| Life Path Sync | **BACKEND NEEDED** | Requires player birth dates, jersey numbers |
+| Biorhythms | **BACKEND NEEDED** | Requires player birth dates for sine-wave calc |
+| Chrome Resonance | Frontend | Added to signalEngine.js |
+
+### physics.py - Arcane Physics Engine
+| Signal | Status | Notes |
+|--------|--------|-------|
+| Gann's Square of Nine | **BACKEND NEEDED** | 180°/360° angle calculations on spread/total |
+| 50% Retracement | **BACKEND NEEDED** | Requires season-high/low line history |
+| Schumann Frequency | **BACKEND NEEDED** | Real-time 7.83 Hz API or simulation |
+| Atmospheric Drag | **BACKEND NEEDED** | Elevation + humidity for outdoor venues |
+| Hurst Exponent | **BACKEND NEEDED** | Point differential time series analysis |
+
+### hive_mind.py - Collective / Sentiment Layer
+| Signal | Status | Notes |
+|--------|--------|-------|
+| Noosphere Velocity | **BACKEND NEEDED** | Twitter/social sentiment API |
+| Void Moon Filter | **BACKEND NEEDED** | Astronomical API for void-of-course periods |
+
+### parlay_architect.py - Correlated Parlay Engine
+| Signal | Status | Notes |
+|--------|--------|-------|
+| Teammate Void | **BACKEND NEEDED** | Same-team prop detection with correlation |
+| Correlation Matrix | **BACKEND NEEDED** | Historical leg correlation data |
+| Vortex Math | Frontend | Added to BetSlip.jsx parlay calculator |
+
+---
+
 ## Stack
 React/Vite, JavaScript, Tailwind CSS
 
