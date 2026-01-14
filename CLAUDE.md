@@ -94,6 +94,8 @@ Claude branches follow pattern: `claude/{feature-name}-{sessionId}`
 | Props | `Props.jsx` | Player props with edge calculation, skeleton loading |
 | BetslipModal | `BetslipModal.jsx` | Click-to-bet sportsbook selection (8 books) |
 | BetSlip | `BetSlip.jsx` | Floating bet slip with parlay calculator |
+| BetHistory | `BetHistory.jsx` | Bet tracking history with WIN/LOSS/PUSH grading |
+| ParlayBuilder | `ParlayBuilder.jsx` | Multi-leg parlay builder with odds calculator |
 | Gamification | `Gamification.jsx` | XP, levels, achievements system |
 | Leaderboard | `Leaderboard.jsx` | Community rankings with backend integration |
 | Charts | `Charts.jsx` | SVG performance charts (no external deps) |
@@ -193,6 +195,8 @@ All endpoints implemented:
 8. All backend endpoints connected
 9. API authentication for `/live/*` endpoints
 10. Two-category Smash Spots (Props + Games tabs)
+11. Bet History page with WIN/LOSS/PUSH tracking
+12. Parlay Builder with odds calculator and history
 
 ### Key Files to Review First
 1. `api.js` - All backend connections + auth helpers
@@ -201,7 +205,9 @@ All endpoints implemented:
 4. `PropsSmashList.jsx` - Player props picks
 5. `GameSmashList.jsx` - Game picks (spreads/totals/ML)
 6. `BetslipModal.jsx` - Click-to-bet feature
-7. `Gamification.jsx` - XP/achievements system
+7. `BetHistory.jsx` - Bet tracking and grading
+8. `ParlayBuilder.jsx` - Parlay builder with calculator
+9. `Gamification.jsx` - XP/achievements system
 
 ---
 
