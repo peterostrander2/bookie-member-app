@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
 import Dashboard from './Dashboard';
-import SmashSpots from './SmashSpots';
+import SmashSpotsPage from './SmashSpotsPage';
 import Splits from './Splits';
 import Esoteric from './Esoteric';
 import Signals from './Signals';
@@ -226,7 +226,7 @@ const AppContent = () => {
             <ErrorBoundary>
               <Routes>
                 <Route path="/" element={<Dashboard />} />
-                <Route path="/smash-spots" element={<SmashSpots />} />
+                <Route path="/smash-spots" element={<SmashSpotsPage />} />
                 <Route path="/sharp" element={<SharpAlerts />} />
                 <Route path="/odds" element={<BestOdds />} />
                 <Route path="/injuries" element={<InjuryVacuum />} />
