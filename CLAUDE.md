@@ -65,13 +65,29 @@ Claude branches follow pattern: `claude/{feature-name}-{sessionId}`
 ### Core Components (Completed)
 | Component | File | Description |
 |-----------|------|-------------|
-| SmashSpots | `SmashSpots.jsx` | Main picks display with filtering, sorting, confidence tiers |
+| SmashSpotsPage | `SmashSpotsPage.jsx` | Two-tab container (Props/Games) with sport selector |
+| PropsSmashList | `PropsSmashList.jsx` | Player props tab (points, rebounds, assists) |
+| GameSmashList | `GameSmashList.jsx` | Game picks tab (spreads, totals, moneylines) |
 | Props | `Props.jsx` | Player props with edge calculation, skeleton loading |
 | BetslipModal | `BetslipModal.jsx` | Click-to-bet sportsbook selection (8 books) |
 | BetSlip | `BetSlip.jsx` | Floating bet slip with parlay calculator |
 | Gamification | `Gamification.jsx` | XP, levels, achievements system |
 | Leaderboard | `Leaderboard.jsx` | Community rankings with backend integration |
 | Charts | `Charts.jsx` | SVG performance charts (no external deps) |
+
+### Smash Spots Architecture
+```
+/smash-spots → SmashSpotsPage.jsx
+                ├── Tab 1: Player Props (PropsSmashList)
+                └── Tab 2: Game Picks (GameSmashList)
+```
+Both tabs pull from `/live/best-bets/{sport}` endpoint.
+
+**Confidence Tiers:**
+- SMASH (85%+) - Green
+- STRONG (75-84%) - Yellow
+- LEAN (65-74%) - Blue
+- WATCH (<65%) - Gray
 
 ### UI/UX Components (Completed)
 | Component | File | Description |
@@ -153,13 +169,16 @@ All endpoints implemented:
 7. PWA support (manifest, service worker)
 8. All backend endpoints connected
 9. API authentication for `/live/*` endpoints
+10. Two-category Smash Spots (Props + Games tabs)
 
 ### Key Files to Review First
 1. `api.js` - All backend connections + auth helpers
 2. `App.jsx` - Routing and providers
-3. `SmashSpots.jsx` - Main picks UI
-4. `BetslipModal.jsx` - Click-to-bet feature
-5. `Gamification.jsx` - XP/achievements system
+3. `SmashSpotsPage.jsx` - Main picks container with tabs
+4. `PropsSmashList.jsx` - Player props picks
+5. `GameSmashList.jsx` - Game picks (spreads/totals/ML)
+6. `BetslipModal.jsx` - Click-to-bet feature
+7. `Gamification.jsx` - XP/achievements system
 
 ---
 
