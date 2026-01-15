@@ -2,6 +2,7 @@ import React, { useState, useEffect, memo, useCallback } from 'react';
 import api from './api';
 import { useToast } from './Toast';
 import { PlaceBetButton } from './BetslipModal';
+import { ShareButton } from './ShareButton';
 
 // Memoized score badge - prevents re-renders when props unchanged
 const ScoreBadge = memo(({ score, maxScore, label }) => {
@@ -188,7 +189,18 @@ const PickCard = memo(({ pick }) => {
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+      <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', alignItems: 'center' }}>
+        <ShareButton
+          pick={{
+            team: pick.side || pick.team,
+            bet_type: pick.market,
+            selection: pick.side || pick.team,
+            spread: pick.point,
+            odds: pick.price,
+            confidence: pick.confidence,
+          }}
+          size="small"
+        />
         <PlaceBetButton bet={{
           sport: pick.sport,
           home_team: pick.home_team,

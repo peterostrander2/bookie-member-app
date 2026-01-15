@@ -402,21 +402,23 @@ All endpoints implemented:
 20. Comprehensive event tracking system
 21. API rate limiting (token bucket with queuing)
 22. Staging environment documentation
+23. Social sharing (Twitter/Discord/Clipboard)
 
 ### Key Files to Review First
 1. `api.js` - All backend connections + auth helpers + rate limiting
 2. `App.jsx` - Routing, providers, code splitting, page view tracking
 3. `sentry.js` - Error monitoring configuration
 4. `analytics.js` - Google Analytics + event tracking
-5. `rateLimit.js` - API rate limiting with token bucket
-6. `usePreferences.js` - User preferences hook
-7. `SmashSpotsPage.jsx` - Main picks container with tabs
-8. `PropsSmashList.jsx` - Player props picks
-9. `GameSmashList.jsx` - Game picks (spreads/totals/ML)
-10. `BetslipModal.jsx` - Click-to-bet feature
-11. `BetHistory.jsx` - Bet tracking and grading
-12. `ParlayBuilder.jsx` - Parlay builder with calculator
-13. `Gamification.jsx` - XP/achievements system
+5. `ShareButton.jsx` - Social sharing component
+6. `rateLimit.js` - API rate limiting with token bucket
+7. `usePreferences.js` - User preferences hook
+8. `SmashSpotsPage.jsx` - Main picks container with tabs
+9. `PropsSmashList.jsx` - Player props picks
+10. `GameSmashList.jsx` - Game picks (spreads/totals/ML)
+11. `BetslipModal.jsx` - Click-to-bet feature
+12. `BetHistory.jsx` - Bet tracking and grading
+13. `ParlayBuilder.jsx` - Parlay builder with calculator
+14. `Gamification.jsx` - XP/achievements system
 
 ---
 
@@ -748,6 +750,49 @@ deploy-staging:
 
 ---
 
+## Social Sharing
+
+### ShareButton Component (`ShareButton.jsx`)
+Share picks and parlays to Twitter/X, Discord, or clipboard.
+
+**Usage:**
+```jsx
+import { ShareButton } from './ShareButton';
+
+// Share a single pick
+<ShareButton
+  pick={{
+    player: 'LeBron James',
+    side: 'Over',
+    line: 25.5,
+    stat_type: 'points',
+    odds: -110,
+    confidence: 85,
+  }}
+  size="small"
+/>
+
+// Share a parlay
+<ShareButton
+  parlay={legs}
+  combinedOdds={+450}
+  stake={100}
+/>
+```
+
+**Features:**
+- Native share on mobile (Web Share API)
+- Post to X/Twitter with formatted text
+- Copy for Discord (with code block formatting)
+- Copy to clipboard
+
+**Integrated In:**
+- `PropsSmashList.jsx` - Share button on each prop card
+- `GameSmashList.jsx` - Share button on each game pick
+- `ParlayBuilder.jsx` - Share button when 2+ legs added
+
+---
+
 ## Future Work Suggestions
 
 ### Performance (Priority: Medium)
@@ -762,7 +807,7 @@ deploy-staging:
 | Task | Description | Effort |
 |------|-------------|--------|
 | Push notifications | Firebase Cloud Messaging for SMASH alerts | High |
-| Social sharing | Share picks to Twitter/Discord | Medium |
+| Social sharing | ✅ DONE - Twitter/Discord/Clipboard sharing | - |
 | Historical charts | Performance over time visualization | Medium |
 | User preferences | ✅ DONE - localStorage + backend sync | - |
 | Offline mode | Cache picks for offline viewing | Medium |
