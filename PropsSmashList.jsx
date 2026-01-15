@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo, useCallback } from 'react';
 import api from './api';
 import { useToast } from './Toast';
 import { PlaceBetButton } from './BetslipModal';
 
-const ScoreBadge = ({ score, maxScore, label }) => {
+// Memoized score badge - prevents re-renders when props unchanged
+const ScoreBadge = memo(({ score, maxScore, label }) => {
   const percentage = (score / maxScore) * 100;
   const getColor = () => {
     if (percentage >= 80) return '#10B981';
@@ -20,9 +21,11 @@ const ScoreBadge = ({ score, maxScore, label }) => {
       <span style={{ color: '#6B7280', fontSize: '10px', textTransform: 'uppercase' }}>{label}</span>
     </div>
   );
-};
+});
+ScoreBadge.displayName = 'ScoreBadge';
 
-const TierBadge = ({ confidence }) => {
+// Memoized tier badge - prevents re-renders when confidence unchanged
+const TierBadge = memo(({ confidence }) => {
   const getTierConfig = (conf) => {
     if (conf >= 85) return { label: 'SMASH', color: '#10B981', bg: 'rgba(16, 185, 129, 0.2)' };
     if (conf >= 75) return { label: 'STRONG', color: '#F59E0B', bg: 'rgba(245, 158, 11, 0.2)' };
@@ -36,7 +39,8 @@ const TierBadge = ({ confidence }) => {
       color: config.color, backgroundColor: config.bg, border: `1px solid ${config.color}`, letterSpacing: '0.5px'
     }}>{config.label}</span>
   );
-};
+});
+TierBadge.displayName = 'TierBadge';
 
 const formatOdds = (odds) => !odds ? '--' : odds > 0 ? `+${odds}` : odds.toString();
 
@@ -50,10 +54,11 @@ const getPropIcon = (market) => {
   return '📈';
 };
 
-const PropCard = ({ pick }) => {
+// Memoized prop card - only re-renders when pick data changes
+const PropCard = memo(({ pick }) => {
   const [expanded, setExpanded] = useState(false);
 
-  const getMarketLabel = (market) => {
+  const getMarketLabel = useCallback((market) => {
     if (market?.includes('points')) return 'POINTS';
     if (market?.includes('rebounds')) return 'REBOUNDS';
     if (market?.includes('assists')) return 'ASSISTS';
@@ -61,7 +66,7 @@ const PropCard = ({ pick }) => {
     if (market?.includes('steals')) return 'STEALS';
     if (market?.includes('blocks')) return 'BLOCKS';
     return market?.toUpperCase()?.replace('player_', '') || 'PROP';
-  };
+  }, []);
 
   return (
     <div style={{
@@ -156,7 +161,14 @@ const PropCard = ({ pick }) => {
       </div>
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison - only re-render if pick data changed
+  return prevProps.pick.player_name === nextProps.pick.player_name &&
+         prevProps.pick.confidence === nextProps.pick.confidence &&
+         prevProps.pick.price === nextProps.pick.price &&
+         prevProps.pick.point === nextProps.pick.point;
+});
+PropCard.displayName = 'PropCard';
 
 const PropsSmashList = ({ sport = 'NBA' }) => {
   const toast = useToast();
