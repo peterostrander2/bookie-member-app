@@ -16,7 +16,7 @@ describe('api', () => {
 
       const result = await api.getHealth()
 
-      expect(fetch).toHaveBeenCalledWith(`${API_BASE_URL}/health`)
+      expect(fetch).toHaveBeenCalledWith(`${API_BASE_URL}/health`, {})
       expect(result).toEqual({ status: 'healthy' })
     })
 
@@ -27,7 +27,7 @@ describe('api', () => {
 
       const result = await api.getModelStatus()
 
-      expect(fetch).toHaveBeenCalledWith(`${API_BASE_URL}/model-status`)
+      expect(fetch).toHaveBeenCalledWith(`${API_BASE_URL}/model-status`, {})
       expect(result).toEqual({ models: ['LSTM', 'Ensemble'] })
     })
   })

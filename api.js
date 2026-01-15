@@ -1,12 +1,24 @@
+import { rateLimitedFetch, RateLimitError } from './rateLimit';
+
 const API_BASE_URL = 'https://web-production-7b2a.up.railway.app';
 
 // API Key for authenticated endpoints (set in environment)
 const API_KEY = import.meta.env.VITE_API_KEY || '';
 
+// Fetch wrapper that optionally applies rate limiting
+// Rate limiting disabled when VITE_RATE_LIMIT=false (checked at runtime for testing)
+const apiFetch = async (url, options = {}) => {
+  const rateLimitEnabled = import.meta.env.VITE_RATE_LIMIT !== 'false';
+  if (rateLimitEnabled) {
+    return rateLimitedFetch(url, options);
+  }
+  return fetch(url, options);
+};
+
 // Helper for authenticated GET requests
 const authFetch = async (url) => {
   const headers = API_KEY ? { 'X-API-Key': API_KEY } : {};
-  return fetch(url, { headers });
+  return apiFetch(url, { headers });
 };
 
 // Helper to get headers for authenticated requests
@@ -18,14 +30,17 @@ const getAuthHeaders = () => {
   return headers;
 };
 
+// Export rate limit error for consumers
+export { RateLimitError };
+
 export const api = {
   // Health (public)
   async getHealth() {
-    return (await fetch(`${API_BASE_URL}/health`)).json()
+    return (await apiFetch(`${API_BASE_URL}/health`)).json()
   },
 
   async getModelStatus() {
-    return (await fetch(`${API_BASE_URL}/model-status`)).json()
+    return (await apiFetch(`${API_BASE_URL}/model-status`)).json()
   },
 
   // Live Data (authenticated)
@@ -47,7 +62,7 @@ export const api = {
 
   // Predictions (public)
   async predictLive(data) {
-    return (await fetch(`${API_BASE_URL}/predict-live`, {
+    return (await apiFetch(`${API_BASE_URL}/predict-live`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -62,7 +77,7 @@ export const api = {
   },
 
   async predictContext(data) {
-    return (await fetch(`${API_BASE_URL}/predict-context`, {
+    return (await apiFetch(`${API_BASE_URL}/predict-context`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -71,17 +86,17 @@ export const api = {
 
   // LSTM Brain (public)
   async getBrainStatus() {
-    return (await fetch(`${API_BASE_URL}/brain/status`)).json()
+    return (await apiFetch(`${API_BASE_URL}/brain/status`)).json()
   },
 
   // Grader (public)
   async getGraderWeights() {
-    return (await fetch(`${API_BASE_URL}/grader/weights`)).json()
+    return (await apiFetch(`${API_BASE_URL}/grader/weights`)).json()
   },
 
   // Esoteric (public)
   async analyzeEsoteric(data) {
-    return (await fetch(`${API_BASE_URL}/esoteric/analyze`, {
+    return (await apiFetch(`${API_BASE_URL}/esoteric/analyze`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -90,16 +105,16 @@ export const api = {
 
   // Teams (public)
   async getTeams(sport) {
-    return (await fetch(`${API_BASE_URL}/teams/${sport.toUpperCase()}`)).json()
+    return (await apiFetch(`${API_BASE_URL}/teams/${sport.toUpperCase()}`)).json()
   },
 
   async normalizeTeam(teamInput, sport) {
-    return (await fetch(`${API_BASE_URL}/teams/normalize?team_input=${encodeURIComponent(teamInput)}&sport=${sport}`)).json()
+    return (await apiFetch(`${API_BASE_URL}/teams/normalize?team_input=${encodeURIComponent(teamInput)}&sport=${sport}`)).json()
   },
 
   // Edge Calculator (public)
   async calculateEdge(probability, odds) {
-    return (await fetch(`${API_BASE_URL}/calculate-edge`, {
+    return (await apiFetch(`${API_BASE_URL}/calculate-edge`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ your_probability: probability, betting_odds: odds })
@@ -108,7 +123,7 @@ export const api = {
 
   // Scheduler (public)
   async getSchedulerStatus() {
-    return (await fetch(`${API_BASE_URL}/scheduler/status`)).json()
+    return (await apiFetch(`${API_BASE_URL}/scheduler/status`)).json()
   },
 
   // ============================================================================
@@ -222,7 +237,7 @@ export const api = {
   // Get today's energy (with defensive handling)
   async getTodayEnergy() {
     try {
-      const res = await fetch(`${API_BASE_URL}/esoteric/today-energy`);
+      const res = await apiFetch(`${API_BASE_URL}/esoteric/today-energy`);
       if (!res.ok) return { betting_outlook: 'NEUTRAL', overall_energy: 5.0 };
       const data = await res.json();
       // Defensive: ensure expected fields exist
@@ -242,7 +257,7 @@ export const api = {
 
   async trackBet(betData) {
     try {
-      const res = await fetch(`${API_BASE_URL}/live/bets/track`, {
+      const res = await apiFetch(`${API_BASE_URL}/live/bets/track`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify(betData)
@@ -256,7 +271,7 @@ export const api = {
 
   async gradeBet(betId, outcome) {
     try {
-      const res = await fetch(`${API_BASE_URL}/live/bets/grade/${betId}`, {
+      const res = await apiFetch(`${API_BASE_URL}/live/bets/grade/${betId}`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({ outcome })
@@ -295,7 +310,7 @@ export const api = {
 
   async addParlayLeg(legData) {
     try {
-      const res = await fetch(`${API_BASE_URL}/live/parlay/add`, {
+      const res = await apiFetch(`${API_BASE_URL}/live/parlay/add`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify(legData)
@@ -309,7 +324,7 @@ export const api = {
 
   async calculateParlay(legs, stake) {
     try {
-      const res = await fetch(`${API_BASE_URL}/live/parlay/calculate`, {
+      const res = await apiFetch(`${API_BASE_URL}/live/parlay/calculate`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({ legs, stake })
@@ -323,7 +338,7 @@ export const api = {
 
   async placeParlay(parlayData) {
     try {
-      const res = await fetch(`${API_BASE_URL}/live/parlay/place`, {
+      const res = await apiFetch(`${API_BASE_URL}/live/parlay/place`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify(parlayData)
@@ -337,7 +352,7 @@ export const api = {
 
   async clearParlay(userId) {
     try {
-      const res = await fetch(`${API_BASE_URL}/live/parlay/clear/${userId}`, {
+      const res = await apiFetch(`${API_BASE_URL}/live/parlay/clear/${userId}`, {
         method: 'DELETE',
         headers: getAuthHeaders()
       });
@@ -375,7 +390,7 @@ export const api = {
 
   async setUserPreferences(userId, preferences) {
     try {
-      const res = await fetch(`${API_BASE_URL}/live/user/preferences/${userId}`, {
+      const res = await apiFetch(`${API_BASE_URL}/live/user/preferences/${userId}`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify(preferences)

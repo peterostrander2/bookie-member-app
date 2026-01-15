@@ -398,19 +398,25 @@ All endpoints implemented:
 16. Error monitoring (Sentry integration)
 17. Bundle analysis (rollup-plugin-visualizer)
 18. User preferences persistence (localStorage + backend sync)
+19. Google Analytics 4 with page view tracking
+20. Comprehensive event tracking system
+21. API rate limiting (token bucket with queuing)
+22. Staging environment documentation
 
 ### Key Files to Review First
-1. `api.js` - All backend connections + auth helpers
-2. `App.jsx` - Routing, providers, code splitting
+1. `api.js` - All backend connections + auth helpers + rate limiting
+2. `App.jsx` - Routing, providers, code splitting, page view tracking
 3. `sentry.js` - Error monitoring configuration
-4. `usePreferences.js` - User preferences hook
-5. `SmashSpotsPage.jsx` - Main picks container with tabs
-6. `PropsSmashList.jsx` - Player props picks
-7. `GameSmashList.jsx` - Game picks (spreads/totals/ML)
-8. `BetslipModal.jsx` - Click-to-bet feature
-9. `BetHistory.jsx` - Bet tracking and grading
-10. `ParlayBuilder.jsx` - Parlay builder with calculator
-11. `Gamification.jsx` - XP/achievements system
+4. `analytics.js` - Google Analytics + event tracking
+5. `rateLimit.js` - API rate limiting with token bucket
+6. `usePreferences.js` - User preferences hook
+7. `SmashSpotsPage.jsx` - Main picks container with tabs
+8. `PropsSmashList.jsx` - Player props picks
+9. `GameSmashList.jsx` - Game picks (spreads/totals/ML)
+10. `BetslipModal.jsx` - Click-to-bet feature
+11. `BetHistory.jsx` - Bet tracking and grading
+12. `ParlayBuilder.jsx` - Parlay builder with calculator
+13. `Gamification.jsx` - XP/achievements system
 
 ---
 
@@ -610,6 +616,138 @@ Opens `stats.html` with interactive treemap visualization.
 
 ---
 
+## Analytics (Google Analytics 4)
+
+### Setup
+Analytics configured in `analytics.js` and initialized in `main.jsx`.
+
+**Required Environment Variable:**
+```
+VITE_GA_MEASUREMENT_ID=G-XXXXXXXXXX
+```
+
+Set this in Railway Variables for production.
+
+### Page View Tracking
+Automatic page view tracking on route changes (in `AppContent`):
+```javascript
+useEffect(() => {
+  import('./analytics').then(({ trackPageView }) => {
+    trackPageView(location.pathname, document.title);
+  });
+}, [location.pathname]);
+```
+
+### Event Tracking
+Pre-built event functions for common actions:
+```javascript
+import { BetEvents, ParlayEvents, FeatureEvents } from './analytics';
+
+// Bet tracking
+BetEvents.viewPick('NBA', 'spread', 85);
+BetEvents.addToBetSlip('NBA', 'moneyline', -110);
+BetEvents.placeBet('NBA', 'spread', -110, 100);
+
+// Parlay tracking
+ParlayEvents.addLeg('NBA', 'player_prop', -150);
+ParlayEvents.place(3, 50, 450);
+
+// Feature usage
+FeatureEvents.changeSport('NFL');
+FeatureEvents.clickSportsbook('DraftKings', 'NBA');
+```
+
+---
+
+## API Rate Limiting
+
+### Configuration
+Rate limiting configured in `rateLimit.js` and integrated with `api.js`.
+
+**Rate Limits:**
+| Category | Limit | Endpoints |
+|----------|-------|-----------|
+| default | 30 req/min | General endpoints |
+| live | 20 req/min | `/live/*` endpoints |
+| heavy | 5 req/min | `/live/parlay/calculate`, `/live/betslip/generate` |
+
+**Disable in Development:**
+```
+VITE_RATE_LIMIT=false
+```
+
+### Usage
+Rate limiting is automatic for all API calls. Requests that exceed limits are queued.
+
+```javascript
+import { getRateLimitStatus } from './rateLimit';
+
+// Check current status
+const status = getRateLimitStatus();
+// { default: { used: 5, limit: 30, remaining: 25 }, ... }
+```
+
+### Error Handling
+```javascript
+import { RateLimitError } from './api';
+
+try {
+  await api.getLiveGames('NBA');
+} catch (error) {
+  if (error instanceof RateLimitError) {
+    console.log(`Rate limited. Retry in ${error.retryAfter}s`);
+  }
+}
+```
+
+---
+
+## Staging Environment
+
+### Railway Setup
+
+1. **Create staging service:**
+   - Go to Railway dashboard
+   - Click "New" → "Empty Project"
+   - Name it `bookie-member-app-staging`
+
+2. **Connect GitHub:**
+   - Settings → Connect GitHub
+   - Select the repository
+   - Set deploy branch to `staging` or `develop`
+
+3. **Copy Environment Variables:**
+   ```
+   VITE_API_KEY=<staging-api-key>
+   VITE_SENTRY_DSN=<staging-sentry-dsn>
+   VITE_GA_MEASUREMENT_ID=<staging-ga-id>
+   ```
+
+4. **Set different API URL (optional):**
+   If you have a staging backend, add:
+   ```
+   VITE_API_URL=https://staging-api.example.com
+   ```
+
+### Workflow
+```
+feature-branch → PR → staging → test → main → production
+```
+
+### CI/CD for Staging
+Update `.github/workflows/ci.yml` to deploy to staging:
+```yaml
+deploy-staging:
+  if: github.ref == 'refs/heads/staging'
+  needs: build
+  steps:
+    - uses: railwayapp/deploy@v1
+      with:
+        service-id: ${{ secrets.RAILWAY_STAGING_SERVICE_ID }}
+```
+
+---
+
 ## Future Work Suggestions
 
 ### Performance (Priority: Medium)
@@ -632,13 +770,13 @@ Opens `stats.html` with interactive treemap visualization.
 ### Analytics (Priority: Low)
 | Task | Description | Effort |
 |------|-------------|--------|
-| Google Analytics | Track page views, user flows | Low |
-| Event tracking | Track bet placements, feature usage | Low |
+| Google Analytics | ✅ DONE - GA4 with page view tracking | - |
+| Event tracking | ✅ DONE - Comprehensive event system | - |
 | Error monitoring | ✅ DONE - Sentry integration | - |
 
 ### Infrastructure (Priority: Low)
 | Task | Description | Effort |
 |------|-------------|--------|
 | CI/CD pipeline | ✅ DONE - GitHub Actions for auto-deploy | - |
-| Staging environment | Separate Railway env for testing | Low |
-| API rate limiting | Frontend throttling for API calls | Low |
+| Staging environment | ✅ DONE - Documented setup | - |
+| API rate limiting | ✅ DONE - Token bucket with queuing | - |

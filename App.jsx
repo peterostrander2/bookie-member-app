@@ -251,7 +251,15 @@ const Navbar = () => {
 
 const AppContent = () => {
   const { theme } = useTheme();
+  const location = useLocation();
   const [showOnboarding, setShowOnboarding] = useState(!isOnboardingComplete());
+
+  // Track page views on route change
+  useEffect(() => {
+    import('./analytics').then(({ trackPageView }) => {
+      trackPageView(location.pathname, document.title);
+    });
+  }, [location.pathname]);
 
   return (
     <>
