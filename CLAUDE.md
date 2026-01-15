@@ -444,6 +444,34 @@ Mock handlers available in `src/mocks/handlers.js` for development:
 
 ---
 
+## CI/CD Pipeline
+
+### GitHub Actions (`.github/workflows/ci.yml`)
+Automated pipeline that runs on every push and PR:
+
+**Jobs:**
+1. **Test** - Runs 91 unit tests with Vitest
+2. **Build** - Compiles production bundle (only if tests pass)
+3. **Deploy** - Deploys to Railway (only on merge to main)
+
+**Required Secrets (set in GitHub repo settings):**
+```
+VITE_API_KEY      - API key for backend authentication
+RAILWAY_TOKEN     - Railway API token for deployments
+RAILWAY_SERVICE_ID - Railway service ID for this app
+```
+
+**To get Railway secrets:**
+1. Go to Railway dashboard > Account Settings > Tokens
+2. Create new token, copy to `RAILWAY_TOKEN`
+3. Get service ID from Railway project URL or CLI: `railway status`
+
+**Workflow triggers:**
+- Push to `main`/`master` → Full pipeline (test → build → deploy)
+- Pull request → Test + Build only (no deploy)
+
+---
+
 ## Future Work Suggestions
 
 ### Performance (Priority: Medium)
@@ -473,6 +501,6 @@ Mock handlers available in `src/mocks/handlers.js` for development:
 ### Infrastructure (Priority: Low)
 | Task | Description | Effort |
 |------|-------------|--------|
-| CI/CD pipeline | GitHub Actions for auto-deploy | Medium |
+| CI/CD pipeline | ✅ DONE - GitHub Actions for auto-deploy | - |
 | Staging environment | Separate Railway env for testing | Low |
 | API rate limiting | Frontend throttling for API calls | Low |
