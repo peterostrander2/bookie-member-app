@@ -406,20 +406,79 @@ All endpoints implemented:
 
 ---
 
-## Future Work Suggestions
+## Testing Infrastructure
 
-### Testing (Priority: High)
-| Task | Description | Effort |
-|------|-------------|--------|
-| Unit tests | Jest + React Testing Library for components | Medium |
-| E2E tests | Playwright for critical user flows | Medium |
-| API mocking | MSW for consistent test data | Low |
+### Unit Tests (Vitest)
+```bash
+npm run test        # Watch mode
+npm run test:run    # Single run
+npm run test:coverage  # With coverage
+```
+
+**Test files:** `test/*.test.js`, `test/*.test.jsx`
+- `api.test.js` - API client tests (32 tests)
+- `esoteric.test.js` - Chrome Resonance, Vortex Math tests (28 tests)
+- `BetSlip.test.jsx` - Bet slip component tests
+- `BetHistory.test.jsx` - Bet history component tests
+- `ParlayBuilder.test.jsx` - Parlay builder tests
+
+### E2E Tests (Playwright)
+```bash
+npm run test:e2e        # Run all E2E tests
+npm run test:e2e:ui     # Interactive UI mode
+npm run test:e2e:headed # Run in headed browser
+```
+
+**Test files:** `e2e/*.spec.js`
+- `navigation.spec.js` - Page navigation and routing
+- `smash-spots.spec.js` - Picks viewing, tab switching
+- `bet-slip.spec.js` - Bet slip interactions
+- `parlay-builder.spec.js` - Parlay building flow
+- `esoteric.spec.js` - Esoteric matchup analyzer
+
+### API Mocking (MSW)
+Mock handlers available in `src/mocks/handlers.js` for development:
+- All `/live/*` endpoints with realistic mock data
+- Configurable per-test overrides
+- Error simulation support
+
+---
+
+## CI/CD Pipeline
+
+### GitHub Actions (`.github/workflows/ci.yml`)
+Automated pipeline that runs on every push and PR:
+
+**Jobs:**
+1. **Test** - Runs 91 unit tests with Vitest
+2. **Build** - Compiles production bundle (only if tests pass)
+3. **Deploy** - Deploys to Railway (only on merge to main)
+
+**Required Secrets (set in GitHub repo settings):**
+```
+VITE_API_KEY      - API key for backend authentication
+RAILWAY_TOKEN     - Railway API token for deployments
+RAILWAY_SERVICE_ID - Railway service ID for this app
+```
+
+**To get Railway secrets:**
+1. Go to Railway dashboard > Account Settings > Tokens
+2. Create new token, copy to `RAILWAY_TOKEN`
+3. Get service ID from Railway project URL or CLI: `railway status`
+
+**Workflow triggers:**
+- Push to `main`/`master` → Full pipeline (test → build → deploy)
+- Pull request → Test + Build only (no deploy)
+
+---
+
+## Future Work Suggestions
 
 ### Performance (Priority: Medium)
 | Task | Description | Effort |
 |------|-------------|--------|
-| React.memo | Memoize expensive components (SmashSpots cards) | Low |
-| useMemo/useCallback | Optimize re-renders in lists | Low |
+| React.memo | ✅ DONE - Memoized SmashSpots cards | - |
+| useMemo/useCallback | ✅ DONE - Optimized lists | - |
 | Code splitting | Lazy load routes with React.lazy | Medium |
 | Bundle analysis | Identify large dependencies | Low |
 
@@ -442,6 +501,6 @@ All endpoints implemented:
 ### Infrastructure (Priority: Low)
 | Task | Description | Effort |
 |------|-------------|--------|
-| CI/CD pipeline | GitHub Actions for auto-deploy | Medium |
+| CI/CD pipeline | ✅ DONE - GitHub Actions for auto-deploy | - |
 | Staging environment | Separate Railway env for testing | Low |
 | API rate limiting | Frontend throttling for API calls | Low |

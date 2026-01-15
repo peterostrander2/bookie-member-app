@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom'
-import { vi } from 'vitest'
+import { vi, beforeEach } from 'vitest'
 
 // Mock localStorage
 const localStorageMock = {
@@ -10,11 +10,11 @@ const localStorageMock = {
 }
 global.localStorage = localStorageMock
 
-// Mock fetch
-global.fetch = vi.fn()
-
 // Mock environment variables
 vi.stubEnv('VITE_API_KEY', 'test-api-key')
+
+// Mock fetch for unit tests that use fetch.mockResolvedValueOnce
+global.fetch = vi.fn()
 
 // Reset mocks between tests
 beforeEach(() => {
