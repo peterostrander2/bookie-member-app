@@ -199,12 +199,24 @@ export const api = {
     const resp = await authFetch(`${API_BASE_URL}/live/best-bets/${sport.toUpperCase()}`);
     const data = await resp.json();
 
-    // Return in format expected by SmashSpots.jsx
+    // Normalize response - backend may return picks in different fields
+    const allPicks = data.picks || data.data || data.slate || [];
+
+    // Return with multiple field names for compatibility with different components
     return {
       sport: data.sport,
       source: data.source,
-      slate: data.data || data.slate || [],
-      count: data.count || 0,
+      // Original format
+      slate: allPicks,
+      // Dashboard expects 'picks'
+      picks: allPicks,
+      // Also include raw data for filtering
+      data: allPicks,
+      // Props/games may be nested
+      props: data.props || { picks: allPicks.filter(p => p.market?.includes('player_') || p.market?.includes('points') || p.market?.includes('rebounds') || p.market?.includes('assists')) },
+      game_picks: data.game_picks || { picks: allPicks.filter(p => p.market === 'spreads' || p.market === 'totals' || p.market === 'h2h') },
+      daily_energy: data.daily_energy,
+      count: data.count || allPicks.length,
       timestamp: data.timestamp
     };
   },
