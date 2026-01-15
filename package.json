@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:analyze": "ANALYZE=true vite build",
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
@@ -15,6 +16,7 @@
     "test:e2e:headed": "playwright test --headed"
   },
   "dependencies": {
+    "@sentry/react": "^10.34.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.20.0"
@@ -26,6 +28,7 @@
     "@vitejs/plugin-react": "^4.2.0",
     "jsdom": "^23.0.0",
     "msw": "^2.12.7",
+    "rollup-plugin-visualizer": "^6.0.5",
     "vite": "^5.0.0",
     "vitest": "^1.0.0"
   }

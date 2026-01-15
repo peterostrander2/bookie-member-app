@@ -3,9 +3,11 @@
  *
  * Catches JavaScript errors in child components and displays
  * a fallback UI instead of crashing the whole app.
+ * Errors are reported to Sentry in production.
  */
 
 import React from 'react';
+import { captureError } from './sentry';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -23,8 +25,11 @@ class ErrorBoundary extends React.Component {
     // Log error to console in development
     console.error('Error caught by boundary:', error, errorInfo);
 
-    // Could send to error tracking service here
-    // logErrorToService(error, errorInfo);
+    // Send to Sentry in production
+    captureError(error, {
+      componentStack: errorInfo?.componentStack,
+      boundaryName: this.props.name || 'Unknown',
+    });
   }
 
   handleRetry = () => {

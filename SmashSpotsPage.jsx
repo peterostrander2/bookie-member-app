@@ -1,10 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PropsSmashList from './PropsSmashList';
 import GameSmashList from './GameSmashList';
+import { usePreferences } from './usePreferences';
 
 const SmashSpotsPage = () => {
-  const [sport, setSport] = useState('NBA');
-  const [activeTab, setActiveTab] = useState('props');
+  const { preferences, updatePreference } = usePreferences();
+  const [sport, setSport] = useState(preferences.favoriteSport || 'NBA');
+  const [activeTab, setActiveTab] = useState(preferences.defaultTab || 'props');
+
+  // Persist sport selection
+  const handleSportChange = (newSport) => {
+    setSport(newSport);
+    updatePreference('favoriteSport', newSport);
+  };
+
+  // Persist tab selection
+  const handleTabChange = (newTab) => {
+    setActiveTab(newTab);
+    updatePreference('defaultTab', newTab);
+  };
 
   const sports = ['NBA', 'NFL', 'MLB', 'NHL', 'NCAAB'];
 
@@ -34,7 +48,7 @@ const SmashSpotsPage = () => {
           {sports.map(s => (
             <button
               key={s}
-              onClick={() => setSport(s)}
+              onClick={() => handleSportChange(s)}
               style={{
                 padding: '8px 20px', borderRadius: '20px', border: 'none', cursor: 'pointer',
                 fontWeight: 'bold', fontSize: '14px', transition: 'all 0.2s ease',
@@ -49,7 +63,7 @@ const SmashSpotsPage = () => {
           {tabs.map(tab => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => handleTabChange(tab.id)}
               style={{
                 flex: 1, padding: '14px 20px', borderRadius: '10px', border: 'none',
                 cursor: 'pointer', fontWeight: 'bold', fontSize: '15px', transition: 'all 0.2s ease',

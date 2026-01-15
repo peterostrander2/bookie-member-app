@@ -395,17 +395,22 @@ All endpoints implemented:
 13. Testing infrastructure (91 unit tests, E2E with Playwright)
 14. CI/CD pipeline (GitHub Actions → Railway)
 15. Code splitting (22 lazy-loaded routes)
+16. Error monitoring (Sentry integration)
+17. Bundle analysis (rollup-plugin-visualizer)
+18. User preferences persistence (localStorage + backend sync)
 
 ### Key Files to Review First
 1. `api.js` - All backend connections + auth helpers
-2. `App.jsx` - Routing and providers
-3. `SmashSpotsPage.jsx` - Main picks container with tabs
-4. `PropsSmashList.jsx` - Player props picks
-5. `GameSmashList.jsx` - Game picks (spreads/totals/ML)
-6. `BetslipModal.jsx` - Click-to-bet feature
-7. `BetHistory.jsx` - Bet tracking and grading
-8. `ParlayBuilder.jsx` - Parlay builder with calculator
-9. `Gamification.jsx` - XP/achievements system
+2. `App.jsx` - Routing, providers, code splitting
+3. `sentry.js` - Error monitoring configuration
+4. `usePreferences.js` - User preferences hook
+5. `SmashSpotsPage.jsx` - Main picks container with tabs
+6. `PropsSmashList.jsx` - Player props picks
+7. `GameSmashList.jsx` - Game picks (spreads/totals/ML)
+8. `BetslipModal.jsx` - Click-to-bet feature
+9. `BetHistory.jsx` - Bet tracking and grading
+10. `ParlayBuilder.jsx` - Parlay builder with calculator
+11. `Gamification.jsx` - XP/achievements system
 
 ---
 
@@ -518,6 +523,93 @@ These remain in the main bundle since they're needed immediately:
 
 ---
 
+## Error Monitoring (Sentry)
+
+### Setup
+Sentry is configured in `sentry.js` and initialized in `main.jsx`.
+
+**Required Environment Variable:**
+```
+VITE_SENTRY_DSN=https://your-key@sentry.io/project-id
+```
+
+Set this in Railway Variables for production.
+
+**Features:**
+- Automatic error capture in production
+- ErrorBoundary integration (captures component errors with stack traces)
+- 10% transaction sampling for performance monitoring
+- Common non-actionable errors filtered out
+
+**Helper Functions:**
+```javascript
+import { captureError, setUser, clearUser } from './sentry';
+
+// Capture error with context
+captureError(error, { userId: '123', action: 'placeParlay' });
+
+// Set user context after login
+setUser('user123', 'user@email.com');
+
+// Clear on logout
+clearUser();
+```
+
+---
+
+## User Preferences
+
+### Hook Usage
+```javascript
+import { usePreferences, useFavoriteSport } from './usePreferences';
+
+// Full preferences
+const { preferences, updatePreference, resetPreferences } = usePreferences();
+updatePreference('favoriteSport', 'NFL');
+
+// Quick access for favorite sport
+const { favoriteSport, setFavoriteSport } = useFavoriteSport();
+```
+
+### Available Preferences
+```javascript
+{
+  favoriteSport: 'NBA',           // Persisted sport selection
+  defaultTab: 'props',            // Smash Spots tab preference
+  showConfidenceScores: true,
+  showEsotericSignals: true,
+  betSlipPosition: 'right',
+  notifications: {
+    smashAlerts: true,
+    sharpMoney: true,
+    lineMovement: false,
+  },
+  display: {
+    compactMode: false,
+    showOddsAs: 'american',       // 'american', 'decimal', 'fractional'
+  },
+}
+```
+
+**Storage:** localStorage + optional backend sync via `/live/user/preferences/{userId}`
+
+---
+
+## Bundle Analysis
+
+Run bundle analysis to identify large dependencies:
+```bash
+npm run build:analyze
+```
+
+Opens `stats.html` with interactive treemap visualization.
+
+**Current bundle breakdown:**
+- Main bundle: 252 kB (80 kB gzipped)
+- Route chunks: 4-24 kB each (code-split)
+
+---
+
 ## Future Work Suggestions
 
 ### Performance (Priority: Medium)
@@ -526,7 +618,7 @@ These remain in the main bundle since they're needed immediately:
 | React.memo | ✅ DONE - Memoized SmashSpots cards | - |
 | useMemo/useCallback | ✅ DONE - Optimized lists | - |
 | Code splitting | ✅ DONE - 22 routes lazy loaded | - |
-| Bundle analysis | Identify large dependencies | Low |
+| Bundle analysis | ✅ DONE - Visualizer configured | - |
 
 ### Features (Priority: Low-Medium)
 | Task | Description | Effort |
@@ -534,7 +626,7 @@ These remain in the main bundle since they're needed immediately:
 | Push notifications | Firebase Cloud Messaging for SMASH alerts | High |
 | Social sharing | Share picks to Twitter/Discord | Medium |
 | Historical charts | Performance over time visualization | Medium |
-| User preferences | Persist filters, favorite sports | Low |
+| User preferences | ✅ DONE - localStorage + backend sync | - |
 | Offline mode | Cache picks for offline viewing | Medium |
 
 ### Analytics (Priority: Low)
@@ -542,7 +634,7 @@ These remain in the main bundle since they're needed immediately:
 |------|-------------|--------|
 | Google Analytics | Track page views, user flows | Low |
 | Event tracking | Track bet placements, feature usage | Low |
-| Error monitoring | Sentry for production errors | Low |
+| Error monitoring | ✅ DONE - Sentry integration | - |
 
 ### Infrastructure (Priority: Low)
 | Task | Description | Effort |
