@@ -224,32 +224,73 @@ const PickCard = memo(({ pick }) => {
 });
 PickCard.displayName = 'PickCard';
 
+// Demo game picks when API unavailable
+const getDemoGamePicks = (sport) => {
+  const demos = {
+    NBA: [
+      { team: 'Lakers', market: 'spreads', side: 'Lakers', point: -3.5, price: -110, confidence: 82, ai_score: 6.8, pillar_score: 6.4, total_score: 13.2, edge: 0.038, home_team: 'Lakers', away_team: 'Warriors', bookmaker: 'DraftKings', sport: 'NBA', isDemo: true },
+      { team: 'Celtics', market: 'totals', side: 'Over', point: 224.5, price: -108, confidence: 79, ai_score: 6.5, pillar_score: 6.2, total_score: 12.7, edge: 0.032, home_team: 'Celtics', away_team: 'Bucks', bookmaker: 'FanDuel', sport: 'NBA', isDemo: true },
+      { team: 'Nuggets', market: 'h2h', side: 'Nuggets', point: null, price: -145, confidence: 85, ai_score: 7.1, pillar_score: 6.7, total_score: 13.8, edge: 0.044, home_team: 'Nuggets', away_team: 'Clippers', bookmaker: 'BetMGM', sport: 'NBA', isDemo: true },
+      { team: 'Mavericks', market: 'spreads', side: 'Mavericks', point: 2.5, price: -105, confidence: 77, ai_score: 6.3, pillar_score: 6.0, total_score: 12.3, edge: 0.028, home_team: 'Suns', away_team: 'Mavericks', bookmaker: 'Caesars', sport: 'NBA', isDemo: true },
+    ],
+    NFL: [
+      { team: 'Chiefs', market: 'spreads', side: 'Chiefs', point: -4.5, price: -110, confidence: 84, ai_score: 7.0, pillar_score: 6.5, total_score: 13.5, edge: 0.041, home_team: 'Chiefs', away_team: 'Bills', bookmaker: 'DraftKings', sport: 'NFL', isDemo: true },
+      { team: 'Bills', market: 'totals', side: 'Over', point: 52.5, price: -112, confidence: 78, ai_score: 6.4, pillar_score: 6.1, total_score: 12.5, edge: 0.030, home_team: 'Chiefs', away_team: 'Bills', bookmaker: 'FanDuel', sport: 'NFL', isDemo: true },
+    ],
+    MLB: [
+      { team: 'Dodgers', market: 'h2h', side: 'Dodgers', point: null, price: -165, confidence: 81, ai_score: 6.7, pillar_score: 6.3, total_score: 13.0, edge: 0.036, home_team: 'Dodgers', away_team: 'Giants', bookmaker: 'DraftKings', sport: 'MLB', isDemo: true },
+    ],
+    NHL: [
+      { team: 'Oilers', market: 'spreads', side: 'Oilers', point: -1.5, price: +125, confidence: 76, ai_score: 6.2, pillar_score: 5.9, total_score: 12.1, edge: 0.025, home_team: 'Oilers', away_team: 'Flames', bookmaker: 'BetMGM', sport: 'NHL', isDemo: true },
+    ]
+  };
+  return demos[sport] || demos.NBA;
+};
+
+const getDemoEnergy = () => ({
+  flow: 'YANG',
+  theme: 'Expansion Day - Favorites & Overs favored',
+  isDemo: true
+});
+
 const GameSmashList = ({ sport = 'NBA' }) => {
   const toast = useToast();
   const [picks, setPicks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [dailyEnergy, setDailyEnergy] = useState(null);
+  const [isDemo, setIsDemo] = useState(false);
 
   useEffect(() => { fetchGamePicks(); }, [sport]);
 
   const fetchGamePicks = async () => {
     setLoading(true);
     setError(null);
+    setIsDemo(false);
     try {
       const data = await api.getBestBets(sport);
+      let gamePicks = [];
       if (data.game_picks) {
-        setPicks(data.game_picks.picks || []);
+        gamePicks = data.game_picks.picks || [];
         setDailyEnergy(data.daily_energy);
       } else if (data.data) {
-        setPicks(data.data.filter(p => p.market === 'spreads' || p.market === 'totals' || p.market === 'h2h'));
+        gamePicks = data.data.filter(p => p.market === 'spreads' || p.market === 'totals' || p.market === 'h2h');
+      }
+
+      if (gamePicks.length === 0) {
+        // Use demo data when no live picks available
+        setPicks(getDemoGamePicks(sport));
+        setDailyEnergy(getDemoEnergy());
+        setIsDemo(true);
       } else {
-        setPicks([]);
+        setPicks(gamePicks);
       }
     } catch (err) {
       console.error('Error fetching game picks:', err);
-      setError('Failed to load game picks');
-      toast.error('Failed to load game picks');
+      // Use demo data on error
+      setPicks(getDemoGamePicks(sport));
+      setDailyEnergy(getDemoEnergy());
+      setIsDemo(true);
     } finally {
       setLoading(false);
     }
@@ -292,8 +333,16 @@ const GameSmashList = ({ sport = 'NBA' }) => {
               backgroundColor: '#00D4FF', color: '#0a0a0f',
               padding: '2px 8px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold'
             }}>{picks.length}</span>
+            {isDemo && (
+              <span style={{
+                backgroundColor: '#FFD70030', color: '#FFD700', padding: '2px 8px',
+                borderRadius: '10px', fontSize: '10px', fontWeight: 'bold'
+              }}>SAMPLE DATA</span>
+            )}
           </h3>
-          <div style={{ color: '#6B7280', fontSize: '12px', marginTop: '4px' }}>Spreads, Totals & Moneylines</div>
+          <div style={{ color: '#6B7280', fontSize: '12px', marginTop: '4px' }}>
+            {isDemo ? 'Live picks refresh every 2 hours • Showing sample data' : 'Spreads, Totals & Moneylines'}
+          </div>
         </div>
         <button onClick={fetchGamePicks} style={{
           background: 'none', border: '1px solid #4B5563', color: '#9CA3AF',
