@@ -24,6 +24,15 @@ const Dashboard = () => {
     fetchTopPick();
   }, []);
 
+  // Demo picks to show when API is unavailable
+  const demoPicks = [
+    { player: 'LeBron James', side: 'Over', line: 25.5, stat_type: 'points', odds: -110, confidence: 87, sport: 'NBA' },
+    { player: 'Jayson Tatum', side: 'Over', line: 27.5, stat_type: 'points', odds: -115, confidence: 85, sport: 'NBA' },
+    { player: 'Luka Doncic', side: 'Over', line: 9.5, stat_type: 'assists', odds: -105, confidence: 82, sport: 'NBA' },
+    { team: 'Lakers', side: '-3.5', line: -3.5, bet_type: 'spread', odds: -110, confidence: 79, sport: 'NBA' },
+    { player: 'Nikola Jokic', side: 'Over', line: 11.5, stat_type: 'rebounds', odds: -120, confidence: 84, sport: 'NBA' }
+  ];
+
   const fetchTopPick = async () => {
     setTopPickLoading(true);
     try {
@@ -35,9 +44,14 @@ const Dashboard = () => {
           (b.confidence || b.score || 0) - (a.confidence || a.score || 0)
         );
         setTopPick(sortedPicks[0]);
+      } else {
+        // Use demo pick when no live data available
+        setTopPick({ ...demoPicks[0], isDemo: true });
       }
     } catch (err) {
       console.error('Error fetching top pick:', err);
+      // Use demo pick on error
+      setTopPick({ ...demoPicks[0], isDemo: true });
     }
     setTopPickLoading(false);
   };
@@ -206,9 +220,20 @@ const Dashboard = () => {
               <div>
                 <h2 style={{ color: '#00FF88', fontSize: '18px', margin: 0, fontWeight: 'bold' }}>
                   Today's Top Pick
+                  {topPick?.isDemo && (
+                    <span style={{
+                      marginLeft: '10px',
+                      backgroundColor: '#FFD70030',
+                      color: '#FFD700',
+                      padding: '2px 8px',
+                      borderRadius: '4px',
+                      fontSize: '10px',
+                      verticalAlign: 'middle'
+                    }}>SAMPLE</span>
+                  )}
                 </h2>
                 <div style={{ color: '#6b7280', fontSize: '12px' }}>
-                  Highest confidence AI signal
+                  {topPick?.isDemo ? 'Live picks refresh every 2 hours' : 'Highest confidence AI signal'}
                 </div>
               </div>
             </div>

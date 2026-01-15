@@ -182,33 +182,66 @@ const PropCard = memo(({ pick }) => {
 });
 PropCard.displayName = 'PropCard';
 
+// Demo picks when API unavailable
+const getDemoProps = (sport) => {
+  const demos = {
+    NBA: [
+      { player_name: 'LeBron James', market: 'player_points', side: 'Over', point: 25.5, price: -110, confidence: 87, ai_score: 7.2, pillar_score: 6.8, total_score: 14.0, edge: 0.045, home_team: 'Lakers', away_team: 'Warriors', bookmaker: 'DraftKings', sport: 'NBA', isDemo: true },
+      { player_name: 'Jayson Tatum', market: 'player_points', side: 'Over', point: 27.5, price: -115, confidence: 85, ai_score: 7.0, pillar_score: 6.5, total_score: 13.5, edge: 0.038, home_team: 'Celtics', away_team: 'Bucks', bookmaker: 'FanDuel', sport: 'NBA', isDemo: true },
+      { player_name: 'Luka Doncic', market: 'player_assists', side: 'Over', point: 9.5, price: -105, confidence: 82, ai_score: 6.8, pillar_score: 6.2, total_score: 13.0, edge: 0.032, home_team: 'Mavericks', away_team: 'Suns', bookmaker: 'BetMGM', sport: 'NBA', isDemo: true },
+      { player_name: 'Nikola Jokic', market: 'player_rebounds', side: 'Over', point: 11.5, price: -120, confidence: 84, ai_score: 6.9, pillar_score: 6.4, total_score: 13.3, edge: 0.041, home_team: 'Nuggets', away_team: 'Clippers', bookmaker: 'Caesars', sport: 'NBA', isDemo: true },
+    ],
+    NFL: [
+      { player_name: 'Patrick Mahomes', market: 'player_pass_yards', side: 'Over', point: 285.5, price: -115, confidence: 86, ai_score: 7.1, pillar_score: 6.6, total_score: 13.7, edge: 0.042, home_team: 'Chiefs', away_team: 'Bills', bookmaker: 'DraftKings', sport: 'NFL', isDemo: true },
+      { player_name: 'Josh Allen', market: 'player_pass_tds', side: 'Over', point: 2.5, price: +105, confidence: 78, ai_score: 6.4, pillar_score: 5.8, total_score: 12.2, edge: 0.028, home_team: 'Bills', away_team: 'Chiefs', bookmaker: 'FanDuel', sport: 'NFL', isDemo: true },
+    ],
+    MLB: [
+      { player_name: 'Shohei Ohtani', market: 'player_hits', side: 'Over', point: 1.5, price: -120, confidence: 81, ai_score: 6.7, pillar_score: 6.0, total_score: 12.7, edge: 0.035, home_team: 'Dodgers', away_team: 'Giants', bookmaker: 'DraftKings', sport: 'MLB', isDemo: true },
+    ],
+    NHL: [
+      { player_name: 'Connor McDavid', market: 'player_points', side: 'Over', point: 1.5, price: -110, confidence: 83, ai_score: 6.9, pillar_score: 6.3, total_score: 13.2, edge: 0.039, home_team: 'Oilers', away_team: 'Flames', bookmaker: 'BetMGM', sport: 'NHL', isDemo: true },
+    ]
+  };
+  return demos[sport] || demos.NBA;
+};
+
 const PropsSmashList = ({ sport = 'NBA' }) => {
   const toast = useToast();
   const [picks, setPicks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isDemo, setIsDemo] = useState(false);
 
   useEffect(() => { fetchPropsPicks(); }, [sport]);
 
   const fetchPropsPicks = async () => {
     setLoading(true);
     setError(null);
+    setIsDemo(false);
     try {
       const data = await api.getBestBets(sport);
+      let propPicks = [];
       if (data.props) {
-        setPicks(data.props.picks || []);
+        propPicks = data.props.picks || [];
       } else if (data.data) {
-        setPicks(data.data.filter(p =>
+        propPicks = data.data.filter(p =>
           p.market?.includes('player_') || p.market?.includes('points') ||
           p.market?.includes('rebounds') || p.market?.includes('assists')
-        ));
+        );
+      }
+
+      if (propPicks.length === 0) {
+        // Use demo data when no live picks available
+        setPicks(getDemoProps(sport));
+        setIsDemo(true);
       } else {
-        setPicks([]);
+        setPicks(propPicks);
       }
     } catch (err) {
       console.error('Error fetching props picks:', err);
-      setError('Failed to load props picks');
-      toast.error('Failed to load props picks');
+      // Use demo data on error
+      setPicks(getDemoProps(sport));
+      setIsDemo(true);
     } finally {
       setLoading(false);
     }
@@ -249,8 +282,16 @@ const PropsSmashList = ({ sport = 'NBA' }) => {
               backgroundColor: '#8B5CF6', color: '#fff', padding: '2px 8px',
               borderRadius: '10px', fontSize: '12px', fontWeight: 'bold'
             }}>{picks.length}</span>
+            {isDemo && (
+              <span style={{
+                backgroundColor: '#FFD70030', color: '#FFD700', padding: '2px 8px',
+                borderRadius: '10px', fontSize: '10px', fontWeight: 'bold'
+              }}>SAMPLE DATA</span>
+            )}
           </h3>
-          <div style={{ color: '#6B7280', fontSize: '12px', marginTop: '4px' }}>Points, Rebounds, Assists & More</div>
+          <div style={{ color: '#6B7280', fontSize: '12px', marginTop: '4px' }}>
+            {isDemo ? 'Live picks refresh every 2 hours • Showing sample data' : 'Points, Rebounds, Assists & More'}
+          </div>
         </div>
         <button onClick={fetchPropsPicks} style={{
           background: 'none', border: '1px solid #4B5563', color: '#9CA3AF',
