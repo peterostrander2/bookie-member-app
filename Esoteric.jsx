@@ -3,6 +3,7 @@ import {
   getDailyEsotericReading,
   getGematriaAnalysis,
   calculateEsotericScore,
+  compareChromeResonance,
   GEMATRIA_CIPHERS,
   POWER_NUMBERS,
   getEsotericTierInfo
@@ -37,10 +38,12 @@ const Esoteric = () => {
     const date = new Date(gameDate);
     const gematria = getGematriaAnalysis(homeTeam, awayTeam, date);
     const esoteric = calculateEsotericScore(gameData, date);
+    const chrome = compareChromeResonance(awayTeam, homeTeam);
 
     setAnalysis({
       gematria,
       esoteric,
+      chrome,
       tierInfo: getEsotericTierInfo(esoteric.esotericTier)
     });
   };
@@ -565,6 +568,122 @@ const Esoteric = () => {
               )}
             </div>
 
+            {/* Chrome Resonance Analysis */}
+            {analysis.chrome && (
+              <div style={{
+                backgroundColor: '#1a1a2e',
+                borderRadius: '16px',
+                padding: '25px',
+                border: '1px solid #333'
+              }}>
+                <h3 style={{ color: '#EC4899', fontSize: '18px', margin: '0 0 20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  📡 Chrome Resonance
+                  <span style={{ color: '#6b7280', fontSize: '12px', fontWeight: 'normal' }}>
+                    ASCII Hex-Code Analysis
+                  </span>
+                </h3>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                  {/* Away Team Chrome */}
+                  <div style={{
+                    backgroundColor: analysis.chrome.favored === 'team1' ? '#EC489920' : '#12121f',
+                    borderRadius: '12px',
+                    padding: '20px',
+                    border: analysis.chrome.favored === 'team1' ? '1px solid #EC4899' : '1px solid #333'
+                  }}>
+                    <div style={{ color: '#FF6B6B', fontSize: '14px', marginBottom: '12px', fontWeight: 'bold' }}>
+                      {awayTeam} (Away)
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ color: '#6b7280', fontSize: '12px' }}>Hex Average</span>
+                      <span style={{ color: '#fff', fontSize: '20px', fontWeight: 'bold' }}>
+                        {analysis.chrome.team1.hexAverage}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ color: '#6b7280', fontSize: '12px' }}>Score</span>
+                      <span style={{ color: '#EC4899', fontSize: '16px', fontWeight: 'bold' }}>
+                        {analysis.chrome.team1.score}
+                      </span>
+                    </div>
+                    <div style={{
+                      backgroundColor: '#0a0a0f',
+                      padding: '8px 12px',
+                      borderRadius: '6px',
+                      marginTop: '10px'
+                    }}>
+                      <div style={{ color: '#D8B4FE', fontSize: '11px' }}>
+                        {analysis.chrome.team1.resonance.replace('_', ' ')}
+                      </div>
+                      <div style={{ color: '#9ca3af', fontSize: '10px', marginTop: '2px' }}>
+                        {analysis.chrome.team1.insight}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Home Team Chrome */}
+                  <div style={{
+                    backgroundColor: analysis.chrome.favored === 'team2' ? '#EC489920' : '#12121f',
+                    borderRadius: '12px',
+                    padding: '20px',
+                    border: analysis.chrome.favored === 'team2' ? '1px solid #EC4899' : '1px solid #333'
+                  }}>
+                    <div style={{ color: '#4ECDC4', fontSize: '14px', marginBottom: '12px', fontWeight: 'bold' }}>
+                      {homeTeam} (Home)
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ color: '#6b7280', fontSize: '12px' }}>Hex Average</span>
+                      <span style={{ color: '#fff', fontSize: '20px', fontWeight: 'bold' }}>
+                        {analysis.chrome.team2.hexAverage}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ color: '#6b7280', fontSize: '12px' }}>Score</span>
+                      <span style={{ color: '#EC4899', fontSize: '16px', fontWeight: 'bold' }}>
+                        {analysis.chrome.team2.score}
+                      </span>
+                    </div>
+                    <div style={{
+                      backgroundColor: '#0a0a0f',
+                      padding: '8px 12px',
+                      borderRadius: '6px',
+                      marginTop: '10px'
+                    }}>
+                      <div style={{ color: '#D8B4FE', fontSize: '11px' }}>
+                        {analysis.chrome.team2.resonance.replace('_', ' ')}
+                      </div>
+                      <div style={{ color: '#9ca3af', fontSize: '10px', marginTop: '2px' }}>
+                        {analysis.chrome.team2.insight}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Chrome Favored */}
+                {analysis.chrome.favored && (
+                  <div style={{
+                    backgroundColor: '#EC489920',
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                    border: '1px solid #EC489940',
+                    textAlign: 'center'
+                  }}>
+                    <span style={{ color: '#EC4899', fontWeight: 'bold', fontSize: '13px' }}>
+                      📡 Chrome Favors: {analysis.chrome.favored === 'team1' ? awayTeam : homeTeam}
+                    </span>
+                    <div style={{ color: '#9ca3af', fontSize: '11px', marginTop: '4px' }}>
+                      {analysis.chrome.favorReason}
+                    </div>
+                  </div>
+                )}
+
+                {/* Optimal Reference */}
+                <div style={{ marginTop: '15px', textAlign: 'center', color: '#6b7280', fontSize: '11px' }}>
+                  Optimal resonance: 77 (M = middle letter) • Range: 65-90 (A-Z)
+                </div>
+              </div>
+            )}
+
             {/* Component Scores */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '15px' }}>
               {/* Gematria */}
@@ -697,7 +816,7 @@ const Esoteric = () => {
             <div><span style={{ color: '#00D4FF', fontWeight: 'bold' }}>Gematria (35%)</span> - 6 cipher methods: Ordinal, Reverse, Reduction, Jewish, Sumerian. Finds Tesla 3-6-9, Master Numbers, Fibonacci alignments.</div>
             <div><span style={{ color: '#FFD700', fontWeight: 'bold' }}>Moon Phase (20%)</span> - Full moons bring chaos. New moons favor underdogs. Waxing = momentum.</div>
             <div><span style={{ color: '#8B5CF6', fontWeight: 'bold' }}>Numerology (20%)</span> - Daily life path number. Master numbers (11, 22, 33) = powerful days.</div>
-            <div><span style={{ color: '#EC4899', fontWeight: 'bold' }}>Sacred Geometry (15%)</span> - Fibonacci lines, Tesla divisible spreads/totals.</div>
+            <div><span style={{ color: '#EC4899', fontWeight: 'bold' }}>Chrome Resonance</span> - ASCII hex-code analysis. Optimal at 77 (middle letter). Tesla bonus when mod 9 = 3/6/9.</div>
             <div><span style={{ color: '#F59E0B', fontWeight: 'bold' }}>Zodiac (10%)</span> - Planetary rulers influence daily energy. Mars = aggression, Saturn = discipline.</div>
           </div>
 
