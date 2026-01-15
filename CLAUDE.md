@@ -294,6 +294,9 @@ Claude branches follow pattern: `claude/{feature-name}-{sessionId}`
 | Gamification | `Gamification.jsx` | XP, levels, achievements system |
 | Leaderboard | `Leaderboard.jsx` | Community rankings with backend integration |
 | Charts | `Charts.jsx` | SVG performance charts (no external deps) |
+| HistoricalCharts | `HistoricalCharts.jsx` | Performance analytics over time |
+| OfflineIndicator | `OfflineIndicator.jsx` | Offline mode provider and UI |
+| PushNotifications | `PushNotifications.jsx` | Push notification system |
 
 ### Smash Spots Architecture
 ```
@@ -358,15 +361,21 @@ All endpoints implemented:
 ## Context Providers (App.jsx)
 ```jsx
 <ThemeProvider>
-  <GamificationProvider>
-    <ToastProvider>
-      <SignalNotificationProvider>
-        <BetSlipProvider>
-          <App />
-        </BetSlipProvider>
-      </SignalNotificationProvider>
-    </ToastProvider>
-  </GamificationProvider>
+  <OfflineProvider>
+    <PushProvider>
+      <GamificationProvider>
+        <ToastProvider>
+          <SignalNotificationProvider>
+            <BetSlipProvider>
+              <OfflineBanner />
+              <UpdateBanner />
+              <App />
+            </BetSlipProvider>
+          </SignalNotificationProvider>
+        </ToastProvider>
+      </GamificationProvider>
+    </PushProvider>
+  </OfflineProvider>
 </ThemeProvider>
 ```
 
@@ -395,17 +404,36 @@ All endpoints implemented:
 13. Testing infrastructure (91 unit tests, E2E with Playwright)
 14. CI/CD pipeline (GitHub Actions → Railway)
 15. Code splitting (22 lazy-loaded routes)
+16. Error monitoring (Sentry integration)
+17. Bundle analysis (rollup-plugin-visualizer)
+18. User preferences persistence (localStorage + backend sync)
+19. Google Analytics 4 with page view tracking
+20. Comprehensive event tracking system
+21. API rate limiting (token bucket with queuing)
+22. Staging environment documentation
+23. Social sharing (Twitter/Discord/Clipboard)
+24. Historical performance charts (cumulative P/L, rolling win rate, sport breakdown)
+25. Offline mode (service worker caching, offline banner, stale-while-revalidate)
+26. Push notifications (SMASH alerts, configurable preferences, bell icon)
 
 ### Key Files to Review First
-1. `api.js` - All backend connections + auth helpers
-2. `App.jsx` - Routing and providers
-3. `SmashSpotsPage.jsx` - Main picks container with tabs
-4. `PropsSmashList.jsx` - Player props picks
-5. `GameSmashList.jsx` - Game picks (spreads/totals/ML)
-6. `BetslipModal.jsx` - Click-to-bet feature
-7. `BetHistory.jsx` - Bet tracking and grading
-8. `ParlayBuilder.jsx` - Parlay builder with calculator
-9. `Gamification.jsx` - XP/achievements system
+1. `api.js` - All backend connections + auth helpers + rate limiting
+2. `App.jsx` - Routing, providers, code splitting, page view tracking
+3. `sentry.js` - Error monitoring configuration
+4. `analytics.js` - Google Analytics + event tracking
+5. `ShareButton.jsx` - Social sharing component
+6. `rateLimit.js` - API rate limiting with token bucket
+7. `usePreferences.js` - User preferences hook
+8. `HistoricalCharts.jsx` - Performance analytics over time
+9. `OfflineIndicator.jsx` - Offline mode provider and UI components
+10. `PushNotifications.jsx` - Push notification system
+11. `SmashSpotsPage.jsx` - Main picks container with tabs
+12. `PropsSmashList.jsx` - Player props picks
+13. `GameSmashList.jsx` - Game picks (spreads/totals/ML)
+14. `BetslipModal.jsx` - Click-to-bet feature
+15. `BetHistory.jsx` - Bet tracking and grading
+16. `ParlayBuilder.jsx` - Parlay builder with calculator
+17. `Gamification.jsx` - XP/achievements system
 
 ---
 
@@ -518,6 +546,392 @@ These remain in the main bundle since they're needed immediately:
 
 ---
 
+## Error Monitoring (Sentry)
+
+### Setup
+Sentry is configured in `sentry.js` and initialized in `main.jsx`.
+
+**Required Environment Variable:**
+```
+VITE_SENTRY_DSN=https://your-key@sentry.io/project-id
+```
+
+Set this in Railway Variables for production.
+
+**Features:**
+- Automatic error capture in production
+- ErrorBoundary integration (captures component errors with stack traces)
+- 10% transaction sampling for performance monitoring
+- Common non-actionable errors filtered out
+
+**Helper Functions:**
+```javascript
+import { captureError, setUser, clearUser } from './sentry';
+
+// Capture error with context
+captureError(error, { userId: '123', action: 'placeParlay' });
+
+// Set user context after login
+setUser('user123', 'user@email.com');
+
+// Clear on logout
+clearUser();
+```
+
+---
+
+## User Preferences
+
+### Hook Usage
+```javascript
+import { usePreferences, useFavoriteSport } from './usePreferences';
+
+// Full preferences
+const { preferences, updatePreference, resetPreferences } = usePreferences();
+updatePreference('favoriteSport', 'NFL');
+
+// Quick access for favorite sport
+const { favoriteSport, setFavoriteSport } = useFavoriteSport();
+```
+
+### Available Preferences
+```javascript
+{
+  favoriteSport: 'NBA',           // Persisted sport selection
+  defaultTab: 'props',            // Smash Spots tab preference
+  showConfidenceScores: true,
+  showEsotericSignals: true,
+  betSlipPosition: 'right',
+  notifications: {
+    smashAlerts: true,
+    sharpMoney: true,
+    lineMovement: false,
+  },
+  display: {
+    compactMode: false,
+    showOddsAs: 'american',       // 'american', 'decimal', 'fractional'
+  },
+}
+```
+
+**Storage:** localStorage + optional backend sync via `/live/user/preferences/{userId}`
+
+---
+
+## Bundle Analysis
+
+Run bundle analysis to identify large dependencies:
+```bash
+npm run build:analyze
+```
+
+Opens `stats.html` with interactive treemap visualization.
+
+**Current bundle breakdown:**
+- Main bundle: 252 kB (80 kB gzipped)
+- Route chunks: 4-24 kB each (code-split)
+
+---
+
+## Analytics (Google Analytics 4)
+
+### Setup
+Analytics configured in `analytics.js` and initialized in `main.jsx`.
+
+**Required Environment Variable:**
+```
+VITE_GA_MEASUREMENT_ID=G-XXXXXXXXXX
+```
+
+Set this in Railway Variables for production.
+
+### Page View Tracking
+Automatic page view tracking on route changes (in `AppContent`):
+```javascript
+useEffect(() => {
+  import('./analytics').then(({ trackPageView }) => {
+    trackPageView(location.pathname, document.title);
+  });
+}, [location.pathname]);
+```
+
+### Event Tracking
+Pre-built event functions for common actions:
+```javascript
+import { BetEvents, ParlayEvents, FeatureEvents } from './analytics';
+
+// Bet tracking
+BetEvents.viewPick('NBA', 'spread', 85);
+BetEvents.addToBetSlip('NBA', 'moneyline', -110);
+BetEvents.placeBet('NBA', 'spread', -110, 100);
+
+// Parlay tracking
+ParlayEvents.addLeg('NBA', 'player_prop', -150);
+ParlayEvents.place(3, 50, 450);
+
+// Feature usage
+FeatureEvents.changeSport('NFL');
+FeatureEvents.clickSportsbook('DraftKings', 'NBA');
+```
+
+---
+
+## API Rate Limiting
+
+### Configuration
+Rate limiting configured in `rateLimit.js` and integrated with `api.js`.
+
+**Rate Limits:**
+| Category | Limit | Endpoints |
+|----------|-------|-----------|
+| default | 30 req/min | General endpoints |
+| live | 20 req/min | `/live/*` endpoints |
+| heavy | 5 req/min | `/live/parlay/calculate`, `/live/betslip/generate` |
+
+**Disable in Development:**
+```
+VITE_RATE_LIMIT=false
+```
+
+### Usage
+Rate limiting is automatic for all API calls. Requests that exceed limits are queued.
+
+```javascript
+import { getRateLimitStatus } from './rateLimit';
+
+// Check current status
+const status = getRateLimitStatus();
+// { default: { used: 5, limit: 30, remaining: 25 }, ... }
+```
+
+### Error Handling
+```javascript
+import { RateLimitError } from './api';
+
+try {
+  await api.getLiveGames('NBA');
+} catch (error) {
+  if (error instanceof RateLimitError) {
+    console.log(`Rate limited. Retry in ${error.retryAfter}s`);
+  }
+}
+```
+
+---
+
+## Staging Environment
+
+### Railway Setup
+
+1. **Create staging service:**
+   - Go to Railway dashboard
+   - Click "New" → "Empty Project"
+   - Name it `bookie-member-app-staging`
+
+2. **Connect GitHub:**
+   - Settings → Connect GitHub
+   - Select the repository
+   - Set deploy branch to `staging` or `develop`
+
+3. **Copy Environment Variables:**
+   ```
+   VITE_API_KEY=<staging-api-key>
+   VITE_SENTRY_DSN=<staging-sentry-dsn>
+   VITE_GA_MEASUREMENT_ID=<staging-ga-id>
+   ```
+
+4. **Set different API URL (optional):**
+   If you have a staging backend, add:
+   ```
+   VITE_API_URL=https://staging-api.example.com
+   ```
+
+### Workflow
+```
+feature-branch → PR → staging → test → main → production
+```
+
+### CI/CD for Staging
+Update `.github/workflows/ci.yml` to deploy to staging:
+```yaml
+deploy-staging:
+  if: github.ref == 'refs/heads/staging'
+  needs: build
+  steps:
+    - uses: railwayapp/deploy@v1
+      with:
+        service-id: ${{ secrets.RAILWAY_STAGING_SERVICE_ID }}
+```
+
+---
+
+## Social Sharing
+
+### ShareButton Component (`ShareButton.jsx`)
+Share picks and parlays to Twitter/X, Discord, or clipboard.
+
+**Usage:**
+```jsx
+import { ShareButton } from './ShareButton';
+
+// Share a single pick
+<ShareButton
+  pick={{
+    player: 'LeBron James',
+    side: 'Over',
+    line: 25.5,
+    stat_type: 'points',
+    odds: -110,
+    confidence: 85,
+  }}
+  size="small"
+/>
+
+// Share a parlay
+<ShareButton
+  parlay={legs}
+  combinedOdds={+450}
+  stake={100}
+/>
+```
+
+**Features:**
+- Native share on mobile (Web Share API)
+- Post to X/Twitter with formatted text
+- Copy for Discord (with code block formatting)
+- Copy to clipboard
+
+**Integrated In:**
+- `PropsSmashList.jsx` - Share button on each prop card
+- `GameSmashList.jsx` - Share button on each game pick
+- `ParlayBuilder.jsx` - Share button when 2+ legs added
+
+---
+
+## Historical Performance Charts (`HistoricalCharts.jsx`)
+
+### Route
+`/analytics` - Performance Analytics page
+
+### Features
+- **Cumulative P/L Chart** - Track profit/loss over time with AreaChart
+- **Rolling Win Rate** - 10-bet window showing win rate trends
+- **Daily Volume** - Betting volume visualization
+- **Sport Breakdown** - Performance by sport with win rate bars
+- **Bet Type Breakdown** - Performance by bet type (props, spreads, etc.)
+- **30-Day Activity Calendar** - Heatmap showing winning/losing days
+- **Recent Results Strip** - Last 20 bet outcomes
+- **Streak Tracking** - Current streak and best/worst streaks
+
+### Time Filters
+- 7 Days / 30 Days / 90 Days / All Time
+
+### Chart Types
+Toggle between: P/L, Win Rate, Volume
+
+---
+
+## Offline Mode (`OfflineIndicator.jsx`, `public/sw.js`)
+
+### Service Worker v2 Features
+- **Stale-While-Revalidate** - Returns cached data immediately, fetches fresh in background
+- **API Caching** - Caches API responses with configurable TTL per endpoint
+- **Background Sync** - Syncs offline bets when connection restored
+- **Cache Management** - Automatic cleanup of old cache versions
+
+### API Cache TTL
+| Endpoint | TTL | Strategy |
+|----------|-----|----------|
+| `/live/best-bets/` | 2 min | Stale-while-revalidate |
+| `/live/props/` | 2 min | Stale-while-revalidate |
+| `/live/sharp/` | 5 min | Stale-while-revalidate |
+| `/live/sportsbooks` | 30 min | Stale-while-revalidate |
+| `/esoteric/today-energy` | 1 hour | Stale-while-revalidate |
+
+### React Components
+
+**OfflineProvider** - Context for offline state:
+```javascript
+import { useOffline } from './OfflineIndicator';
+
+const { isOnline, isServiceWorkerReady, updateServiceWorker, clearCache } = useOffline();
+```
+
+**OfflineBanner** - Shows "You're offline" banner when disconnected
+
+**UpdateBanner** - Shows "New version available" with update button
+
+**CacheStatusDisplay** - Shows cache status in Profile settings
+
+### useOfflineFirst Hook
+```javascript
+import { useOfflineFirst } from './OfflineIndicator';
+
+const { data, loading, error, isCached, isOnline } = useOfflineFirst(
+  () => api.getBestBets('NBA'),
+  'nba-picks',
+  [sport]
+);
+```
+
+---
+
+## Push Notifications (`PushNotifications.jsx`)
+
+### Setup Requirements
+**Environment Variable:**
+```
+VITE_VAPID_PUBLIC_KEY=<your-vapid-public-key>
+```
+
+### Backend Endpoints (Expected)
+```
+POST /live/push/subscribe    # Register push subscription
+POST /live/push/unsubscribe  # Remove subscription
+POST /live/push/preferences  # Update notification preferences
+```
+
+### React Components
+
+**PushProvider** - Context for push notification state:
+```javascript
+import { usePush } from './PushNotifications';
+
+const { isSupported, isSubscribed, subscribe, unsubscribe, preferences, updatePreferences } = usePush();
+```
+
+**SmashAlertBell** - Navbar button to toggle SMASH alerts
+
+**PushNotificationSettings** - Full settings panel (in Profile page)
+
+### Notification Preferences
+```javascript
+{
+  smashAlerts: true,        // High-conviction picks (85%+)
+  sharpMoney: true,         // Sharp money movement
+  dailySummary: false,      // Morning digest
+  resultNotifications: true // Bet results
+}
+```
+
+### Helper Functions
+```javascript
+import { showLocalNotification, triggerSmashNotification } from './PushNotifications';
+
+// Local notification
+showLocalNotification('Title', { body: 'Message' });
+
+// Trigger SMASH alert (checks preferences)
+triggerSmashNotification({
+  player: 'LeBron James',
+  side: 'Over',
+  line: 25.5,
+  confidence: 90
+});
+```
+
+---
+
 ## Future Work Suggestions
 
 ### Performance (Priority: Medium)
@@ -526,27 +940,27 @@ These remain in the main bundle since they're needed immediately:
 | React.memo | ✅ DONE - Memoized SmashSpots cards | - |
 | useMemo/useCallback | ✅ DONE - Optimized lists | - |
 | Code splitting | ✅ DONE - 22 routes lazy loaded | - |
-| Bundle analysis | Identify large dependencies | Low |
+| Bundle analysis | ✅ DONE - Visualizer configured | - |
 
 ### Features (Priority: Low-Medium)
 | Task | Description | Effort |
 |------|-------------|--------|
-| Push notifications | Firebase Cloud Messaging for SMASH alerts | High |
-| Social sharing | Share picks to Twitter/Discord | Medium |
-| Historical charts | Performance over time visualization | Medium |
-| User preferences | Persist filters, favorite sports | Low |
-| Offline mode | Cache picks for offline viewing | Medium |
+| Push notifications | ✅ DONE - SMASH alerts with configurable preferences | - |
+| Social sharing | ✅ DONE - Twitter/Discord/Clipboard sharing | - |
+| Historical charts | ✅ DONE - Cumulative P/L, rolling win rate, sport breakdown | - |
+| User preferences | ✅ DONE - localStorage + backend sync | - |
+| Offline mode | ✅ DONE - Service worker caching with stale-while-revalidate | - |
 
 ### Analytics (Priority: Low)
 | Task | Description | Effort |
 |------|-------------|--------|
-| Google Analytics | Track page views, user flows | Low |
-| Event tracking | Track bet placements, feature usage | Low |
-| Error monitoring | Sentry for production errors | Low |
+| Google Analytics | ✅ DONE - GA4 with page view tracking | - |
+| Event tracking | ✅ DONE - Comprehensive event system | - |
+| Error monitoring | ✅ DONE - Sentry integration | - |
 
 ### Infrastructure (Priority: Low)
 | Task | Description | Effort |
 |------|-------------|--------|
 | CI/CD pipeline | ✅ DONE - GitHub Actions for auto-deploy | - |
-| Staging environment | Separate Railway env for testing | Low |
-| API rate limiting | Frontend throttling for API calls | Low |
+| Staging environment | ✅ DONE - Documented setup | - |
+| API rate limiting | ✅ DONE - Token bucket with queuing | - |

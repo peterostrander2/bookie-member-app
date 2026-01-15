@@ -9,6 +9,7 @@ import React, { useState, useEffect } from 'react';
 import api from './api';
 import { useToast } from './Toast';
 import { useBetSlip } from './BetSlip';
+import { ShareButton } from './ShareButton';
 
 const USER_ID = 'default_user'; // TODO: Replace with actual user auth
 
@@ -575,24 +576,34 @@ const ParlayBuilder = () => {
                 </div>
               )}
 
-              {/* Place Button */}
-              <button
-                onClick={placeParlay}
-                disabled={legs.length < 2 || placing}
-                style={{
-                  width: '100%',
-                  padding: '14px',
-                  backgroundColor: legs.length < 2 ? '#333' : '#8B5CF6',
-                  color: legs.length < 2 ? '#6b7280' : '#fff',
-                  border: 'none',
-                  borderRadius: '10px',
-                  cursor: legs.length < 2 ? 'not-allowed' : 'pointer',
-                  fontWeight: 'bold',
-                  fontSize: '15px'
-                }}
-              >
-                {placing ? 'Placing...' : legs.length < 2 ? 'Add 2+ Legs' : 'Place & Track Parlay'}
-              </button>
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                {legs.length >= 2 && (
+                  <ShareButton
+                    parlay={legs}
+                    combinedOdds={calculatedOdds?.combined_odds}
+                    stake={stake}
+                    size="medium"
+                  />
+                )}
+                <button
+                  onClick={placeParlay}
+                  disabled={legs.length < 2 || placing}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    backgroundColor: legs.length < 2 ? '#333' : '#8B5CF6',
+                    color: legs.length < 2 ? '#6b7280' : '#fff',
+                    border: 'none',
+                    borderRadius: '10px',
+                    cursor: legs.length < 2 ? 'not-allowed' : 'pointer',
+                    fontWeight: 'bold',
+                    fontSize: '15px'
+                  }}
+                >
+                  {placing ? 'Placing...' : legs.length < 2 ? 'Add 2+ Legs' : 'Place & Track Parlay'}
+                </button>
+              </div>
 
               {legs.length < 2 && (
                 <p style={{

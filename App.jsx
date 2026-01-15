@@ -24,6 +24,7 @@ const Props = lazy(() => import('./Props'));
 const BetHistory = lazy(() => import('./BetHistory'));
 const ParlayBuilder = lazy(() => import('./ParlayBuilder'));
 const AchievementsPage = lazy(() => import('./Gamification'));
+const HistoricalCharts = lazy(() => import('./HistoricalCharts'));
 
 // Eagerly loaded components (providers, core UI)
 import ComplianceFooter from './ComplianceFooter';
@@ -34,6 +35,8 @@ import { GamificationProvider, LevelBadge } from './Gamification';
 import { SignalNotificationProvider, SignalBell } from './SignalNotifications';
 import { BetSlipProvider, FloatingBetSlip } from './BetSlip';
 import ErrorBoundary from './ErrorBoundary';
+import { OfflineProvider, OfflineBanner, UpdateBanner } from './OfflineIndicator';
+import { PushProvider, SmashAlertBell } from './PushNotifications';
 import api from './api';
 
 // Loading fallback for Suspense
@@ -85,6 +88,7 @@ const Navbar = () => {
     { path: '/smash-spots', label: 'Smash Spots', icon: '🔥' },
     { path: '/parlay', label: 'Parlay', icon: '🎰' },
     { path: '/history', label: 'My Bets', icon: '📊' },
+    { path: '/analytics', label: 'Analytics', icon: '📈' },
     { path: '/sharp', label: 'Sharp Money', icon: '💵' },
     { path: '/odds', label: 'Best Odds', icon: '🎯' },
     { path: '/injuries', label: 'Injuries', icon: '🏥' },
@@ -156,6 +160,7 @@ const Navbar = () => {
 
         {/* Right side actions */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <SmashAlertBell />
           <SignalBell />
           <LevelBadge />
           <ThemeToggle />
@@ -251,7 +256,15 @@ const Navbar = () => {
 
 const AppContent = () => {
   const { theme } = useTheme();
+  const location = useLocation();
   const [showOnboarding, setShowOnboarding] = useState(!isOnboardingComplete());
+
+  // Track page views on route change
+  useEffect(() => {
+    import('./analytics').then(({ trackPageView }) => {
+      trackPageView(location.pathname, document.title);
+    });
+  }, [location.pathname]);
 
   return (
     <>
@@ -268,6 +281,7 @@ const AppContent = () => {
                   <Route path="/smash-spots" element={<SmashSpotsPage />} />
                   <Route path="/parlay" element={<ParlayBuilder />} />
                   <Route path="/history" element={<BetHistory />} />
+                  <Route path="/analytics" element={<HistoricalCharts />} />
                   <Route path="/sharp" element={<SharpAlerts />} />
                   <Route path="/odds" element={<BestOdds />} />
                   <Route path="/injuries" element={<InjuryVacuum />} />
@@ -300,16 +314,22 @@ const App = () => {
   return (
     <BrowserRouter>
       <ThemeProvider>
-        <GamificationProvider>
-          <ToastProvider>
-            <SignalNotificationProvider>
-              <BetSlipProvider>
-                <AppContent />
-                <FloatingBetSlip />
-              </BetSlipProvider>
-            </SignalNotificationProvider>
-          </ToastProvider>
-        </GamificationProvider>
+        <OfflineProvider>
+          <PushProvider>
+            <GamificationProvider>
+              <ToastProvider>
+                <SignalNotificationProvider>
+                  <BetSlipProvider>
+                    <OfflineBanner />
+                    <UpdateBanner />
+                    <AppContent />
+                    <FloatingBetSlip />
+                  </BetSlipProvider>
+                </SignalNotificationProvider>
+              </ToastProvider>
+            </GamificationProvider>
+          </PushProvider>
+        </OfflineProvider>
       </ThemeProvider>
     </BrowserRouter>
   );
