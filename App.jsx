@@ -69,6 +69,78 @@ const PageLoader = () => (
   </div>
 );
 
+// Dropdown Menu Component
+const NavDropdown = ({ label, icon, items, location }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const isActive = items.some(item => location.pathname === item.path);
+
+  return (
+    <div
+      style={{ position: 'relative' }}
+      onMouseEnter={() => setIsOpen(true)}
+      onMouseLeave={() => setIsOpen(false)}
+    >
+      <button
+        style={{
+          padding: '8px 14px',
+          backgroundColor: isActive ? '#00D4FF20' : 'transparent',
+          color: isActive ? '#00D4FF' : '#9ca3af',
+          border: 'none',
+          borderRadius: '6px',
+          fontSize: '14px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          cursor: 'pointer',
+          transition: 'background-color 0.2s'
+        }}
+      >
+        <span>{icon}</span>
+        <span>{label}</span>
+        <span style={{ fontSize: '10px', marginLeft: '2px' }}>▼</span>
+      </button>
+
+      {isOpen && (
+        <div style={{
+          position: 'absolute',
+          top: '100%',
+          left: 0,
+          backgroundColor: '#1a1a2e',
+          border: '1px solid #333',
+          borderRadius: '8px',
+          padding: '8px 0',
+          minWidth: '180px',
+          zIndex: 1000,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
+        }}>
+          {items.map(item => (
+            <Link
+              key={item.path}
+              to={item.path}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '10px 16px',
+                color: location.pathname === item.path ? '#00D4FF' : '#9ca3af',
+                backgroundColor: location.pathname === item.path ? '#00D4FF15' : 'transparent',
+                textDecoration: 'none',
+                fontSize: '14px',
+                transition: 'background-color 0.2s'
+              }}
+              onMouseEnter={(e) => e.target.style.backgroundColor = '#00D4FF15'}
+              onMouseLeave={(e) => e.target.style.backgroundColor = location.pathname === item.path ? '#00D4FF15' : 'transparent'}
+            >
+              <span>{item.icon}</span>
+              <span>{item.label}</span>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const Navbar = () => {
   const location = useLocation();
   const [health, setHealth] = useState(null);
@@ -83,25 +155,57 @@ const Navbar = () => {
     setMobileMenuOpen(false);
   }, [location.pathname]);
 
-  const links = [
+  // Simplified navigation structure - 6 main items instead of 19
+  const navStructure = {
+    picks: {
+      label: 'Picks',
+      icon: '🔥',
+      items: [
+        { path: '/smash-spots', label: 'Smash Spots', icon: '🎯' },
+        { path: '/props', label: 'Player Props', icon: '🏀' },
+        { path: '/sharp', label: 'Sharp Money', icon: '💵' },
+        { path: '/signals', label: 'All Signals', icon: '⚡' }
+      ]
+    },
+    tools: {
+      label: 'Tools',
+      icon: '🛠️',
+      items: [
+        { path: '/odds', label: 'Best Odds', icon: '🎯' },
+        { path: '/injuries', label: 'Injuries', icon: '🏥' },
+        { path: '/clv', label: 'CLV Tracker', icon: '📉' },
+        { path: '/backtest', label: 'Backtest', icon: '🔬' }
+      ]
+    },
+    betting: {
+      label: 'My Betting',
+      icon: '📊',
+      items: [
+        { path: '/parlay', label: 'Parlay Builder', icon: '🎰' },
+        { path: '/history', label: 'Bet History', icon: '📋' },
+        { path: '/analytics', label: 'Analytics', icon: '📈' },
+        { path: '/bankroll', label: 'Bankroll', icon: '💰' },
+        { path: '/grading', label: 'Grading', icon: '📝' }
+      ]
+    },
+    community: {
+      label: 'Community',
+      icon: '👥',
+      items: [
+        { path: '/leaderboard', label: 'Leaderboard', icon: '🏆' },
+        { path: '/achievements', label: 'Achievements', icon: '🏅' }
+      ]
+    }
+  };
+
+  // Flat links for mobile menu
+  const allLinks = [
     { path: '/', label: 'Dashboard', icon: '🏠' },
-    { path: '/smash-spots', label: 'Smash Spots', icon: '🔥' },
-    { path: '/parlay', label: 'Parlay', icon: '🎰' },
-    { path: '/history', label: 'My Bets', icon: '📊' },
-    { path: '/analytics', label: 'Analytics', icon: '📈' },
-    { path: '/sharp', label: 'Sharp Money', icon: '💵' },
-    { path: '/odds', label: 'Best Odds', icon: '🎯' },
-    { path: '/injuries', label: 'Injuries', icon: '🏥' },
-    { path: '/performance', label: 'Performance', icon: '📈' },
-    { path: '/clv', label: 'CLV', icon: '📉' },
-    { path: '/backtest', label: 'Backtest', icon: '🔬' },
-    { path: '/bankroll', label: 'Bankroll', icon: '💰' },
+    ...navStructure.picks.items,
+    ...navStructure.tools.items,
+    ...navStructure.betting.items,
     { path: '/esoteric', label: 'Esoteric', icon: '🔮' },
-    { path: '/signals', label: 'Signals', icon: '⚡' },
-    { path: '/grading', label: 'Grading', icon: '📝' },
-    { path: '/leaderboard', label: 'Leaders', icon: '🏆' },
-    { path: '/props', label: 'Props', icon: '🎯' },
-    { path: '/achievements', label: 'Badges', icon: '🏅' },
+    ...navStructure.community.items,
     { path: '/profile', label: 'Profile', icon: '👤' }
   ];
 
@@ -133,45 +237,85 @@ const Navbar = () => {
           </span>
         </Link>
 
-        {/* Desktop Nav */}
-        <div className="desktop-nav" style={{ display: 'flex', gap: '5px' }}>
-          {links.map(link => (
-            <Link
-              key={link.path}
-              to={link.path}
-              style={{
-                padding: '8px 14px',
-                backgroundColor: location.pathname === link.path ? '#00D4FF20' : 'transparent',
-                color: location.pathname === link.path ? '#00D4FF' : '#9ca3af',
-                textDecoration: 'none',
-                borderRadius: '6px',
-                fontSize: '14px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                transition: 'background-color 0.2s'
-              }}
-            >
-              <span>{link.icon}</span>
-              <span>{link.label}</span>
-            </Link>
-          ))}
+        {/* Desktop Nav - Simplified with dropdowns */}
+        <div className="desktop-nav" style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+          {/* Dashboard - Direct link */}
+          <Link
+            to="/"
+            style={{
+              padding: '8px 14px',
+              backgroundColor: location.pathname === '/' ? '#00D4FF20' : 'transparent',
+              color: location.pathname === '/' ? '#00D4FF' : '#9ca3af',
+              textDecoration: 'none',
+              borderRadius: '6px',
+              fontSize: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            <span>🏠</span>
+            <span>Dashboard</span>
+          </Link>
+
+          {/* Dropdown menus */}
+          <NavDropdown label="Picks" icon="🔥" items={navStructure.picks.items} location={location} />
+          <NavDropdown label="Tools" icon="🛠️" items={navStructure.tools.items} location={location} />
+          <NavDropdown label="My Betting" icon="📊" items={navStructure.betting.items} location={location} />
+
+          {/* Esoteric - Direct link (unique feature) */}
+          <Link
+            to="/esoteric"
+            style={{
+              padding: '8px 14px',
+              backgroundColor: location.pathname === '/esoteric' ? '#00D4FF20' : 'transparent',
+              color: location.pathname === '/esoteric' ? '#00D4FF' : '#9ca3af',
+              textDecoration: 'none',
+              borderRadius: '6px',
+              fontSize: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            <span>🔮</span>
+            <span>Esoteric</span>
+          </Link>
+
+          <NavDropdown label="Community" icon="👥" items={navStructure.community.items} location={location} />
         </div>
 
         {/* Right side actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <SmashAlertBell />
           <SignalBell />
-          <LevelBadge />
+          <Link
+            to="/profile"
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '50%',
+              backgroundColor: location.pathname === '/profile' ? '#00D4FF20' : '#1a1a2e',
+              border: '1px solid #333',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textDecoration: 'none',
+              fontSize: '16px'
+            }}
+            title="Profile"
+          >
+            👤
+          </Link>
           <ThemeToggle />
           <div className="desktop-only" style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
+            gap: '6px',
             backgroundColor: health?.status === 'healthy' || health?.status === 'online' ? '#00FF8815' : '#FF444415',
-            padding: '6px 12px',
+            padding: '6px 10px',
             borderRadius: '20px',
-            fontSize: '12px',
+            fontSize: '11px',
             color: health?.status === 'healthy' || health?.status === 'online' ? '#00FF88' : '#FF4444'
           }}>
             <span style={{
@@ -180,7 +324,7 @@ const Navbar = () => {
               borderRadius: '50%',
               backgroundColor: health?.status === 'healthy' || health?.status === 'online' ? '#00FF88' : '#FF4444'
             }} />
-            {health?.status === 'healthy' || health?.status === 'online' ? 'Online' : 'Offline'}
+            {health?.status === 'healthy' || health?.status === 'online' ? 'Live' : 'Offline'}
           </div>
 
           {/* Mobile hamburger */}
@@ -202,7 +346,7 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile menu dropdown */}
+      {/* Mobile menu dropdown - grouped sections */}
       {mobileMenuOpen && (
         <div className="mobile-menu" style={{
           position: 'absolute',
@@ -218,26 +362,83 @@ const Navbar = () => {
           maxHeight: 'calc(100vh - 60px)',
           overflowY: 'auto'
         }}>
-          {links.map(link => (
-            <Link
-              key={link.path}
-              to={link.path}
-              style={{
-                padding: '12px 14px',
-                backgroundColor: location.pathname === link.path ? '#00D4FF20' : 'transparent',
-                color: location.pathname === link.path ? '#00D4FF' : '#9ca3af',
-                textDecoration: 'none',
-                borderRadius: '8px',
-                fontSize: '15px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px'
-              }}
-            >
-              <span>{link.icon}</span>
-              <span>{link.label}</span>
-            </Link>
+          {/* Dashboard */}
+          <Link to="/" style={{
+            padding: '12px 14px',
+            backgroundColor: location.pathname === '/' ? '#00D4FF20' : 'transparent',
+            color: location.pathname === '/' ? '#00D4FF' : '#fff',
+            textDecoration: 'none',
+            borderRadius: '8px',
+            fontSize: '15px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            fontWeight: 'bold'
+          }}>
+            🏠 Dashboard
+          </Link>
+
+          {/* Grouped sections */}
+          {Object.entries(navStructure).map(([key, section]) => (
+            <div key={key} style={{ marginTop: '8px' }}>
+              <div style={{ color: '#6b7280', fontSize: '11px', padding: '8px 14px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                {section.icon} {section.label}
+              </div>
+              {section.items.map(item => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  style={{
+                    padding: '10px 14px 10px 28px',
+                    backgroundColor: location.pathname === item.path ? '#00D4FF20' : 'transparent',
+                    color: location.pathname === item.path ? '#00D4FF' : '#9ca3af',
+                    textDecoration: 'none',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px'
+                  }}
+                >
+                  {item.icon} {item.label}
+                </Link>
+              ))}
+            </div>
           ))}
+
+          {/* Esoteric */}
+          <Link to="/esoteric" style={{
+            padding: '12px 14px',
+            marginTop: '8px',
+            backgroundColor: location.pathname === '/esoteric' ? '#00D4FF20' : 'transparent',
+            color: location.pathname === '/esoteric' ? '#00D4FF' : '#fff',
+            textDecoration: 'none',
+            borderRadius: '8px',
+            fontSize: '15px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            fontWeight: 'bold'
+          }}>
+            🔮 Esoteric Edge
+          </Link>
+
+          {/* Profile */}
+          <Link to="/profile" style={{
+            padding: '12px 14px',
+            marginTop: '8px',
+            backgroundColor: location.pathname === '/profile' ? '#00D4FF20' : 'transparent',
+            color: location.pathname === '/profile' ? '#00D4FF' : '#fff',
+            textDecoration: 'none',
+            borderRadius: '8px',
+            fontSize: '15px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            fontWeight: 'bold'
+          }}>
+            👤 Profile & Settings
+          </Link>
         </div>
       )}
 
