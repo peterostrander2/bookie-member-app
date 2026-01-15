@@ -4,6 +4,7 @@ import api from './api';
 import { getAllPicks, getStats } from './clvTracker';
 import { analyzeCorrelation } from './correlationDetector';
 import SharpMoneyWidget from './SharpMoneyWidget';
+import { Skeleton } from './Skeleton';
 
 const Dashboard = () => {
   const [health, setHealth] = useState(null);
@@ -13,11 +14,33 @@ const Dashboard = () => {
   const [correlationStatus, setCorrelationStatus] = useState(null);
   const [alerts, setAlerts] = useState([]);
   const [activeSport, setActiveSport] = useState('NBA');
+  const [topPick, setTopPick] = useState(null);
+  const [topPickLoading, setTopPickLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   useEffect(() => {
     fetchData();
     loadTrackedStats();
+    fetchTopPick();
   }, []);
+
+  const fetchTopPick = async () => {
+    setTopPickLoading(true);
+    try {
+      // Fetch best bets from NBA (most popular sport)
+      const data = await api.getBestBets('NBA');
+      if (data && data.picks && data.picks.length > 0) {
+        // Find highest confidence pick
+        const sortedPicks = [...data.picks].sort((a, b) =>
+          (b.confidence || b.score || 0) - (a.confidence || a.score || 0)
+        );
+        setTopPick(sortedPicks[0]);
+      }
+    } catch (err) {
+      console.error('Error fetching top pick:', err);
+    }
+    setTopPickLoading(false);
+  };
 
   const loadTrackedStats = () => {
     const picks = getAllPicks();
@@ -89,10 +112,30 @@ const Dashboard = () => {
       ]);
       setHealth(healthData);
       setTodayEnergy(energyData);
+      setLastUpdated(new Date());
     } catch (err) {
       console.error(err);
     }
     setLoading(false);
+  };
+
+  const formatTime = (date) => {
+    if (!date) return '';
+    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  };
+
+  const getConfidenceColor = (confidence) => {
+    if (confidence >= 85) return '#00FF88';
+    if (confidence >= 75) return '#FFD700';
+    if (confidence >= 65) return '#00D4FF';
+    return '#9ca3af';
+  };
+
+  const getConfidenceLabel = (confidence) => {
+    if (confidence >= 85) return 'SMASH';
+    if (confidence >= 75) return 'STRONG';
+    if (confidence >= 65) return 'LEAN';
+    return 'WATCH';
   };
 
   const quickLinks = [
@@ -134,6 +177,143 @@ const Dashboard = () => {
             }} />
             {loading ? 'Checking...' : health?.status === 'healthy' ? 'Systems Online' : 'Systems Offline'}
           </div>
+        </div>
+
+        {/* Today's Top Pick CTA */}
+        <div style={{
+          background: 'linear-gradient(135deg, #0a2a1a 0%, #1a3a2a 50%, #0a2a1a 100%)',
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '25px',
+          border: '2px solid #00FF8850',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          {/* Glow effect */}
+          <div style={{
+            position: 'absolute',
+            top: '-50%',
+            right: '-10%',
+            width: '200px',
+            height: '200px',
+            background: 'radial-gradient(circle, #00FF8820 0%, transparent 70%)',
+            borderRadius: '50%'
+          }} />
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '28px' }}>🎯</span>
+              <div>
+                <h2 style={{ color: '#00FF88', fontSize: '18px', margin: 0, fontWeight: 'bold' }}>
+                  Today's Top Pick
+                </h2>
+                <div style={{ color: '#6b7280', fontSize: '12px' }}>
+                  Highest confidence AI signal
+                </div>
+              </div>
+            </div>
+            {lastUpdated && (
+              <div style={{ color: '#6b7280', fontSize: '11px', textAlign: 'right' }}>
+                Updated {formatTime(lastUpdated)}
+              </div>
+            )}
+          </div>
+
+          {topPickLoading ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+              <Skeleton width={60} height={60} />
+              <div style={{ flex: 1 }}>
+                <Skeleton width="70%" height={24} style={{ marginBottom: '8px' }} />
+                <Skeleton width="50%" height={16} />
+              </div>
+              <Skeleton width={100} height={40} />
+            </div>
+          ) : topPick ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px', position: 'relative', zIndex: 1 }}>
+              {/* Confidence Circle */}
+              <div style={{
+                width: '70px',
+                height: '70px',
+                borderRadius: '50%',
+                background: `conic-gradient(${getConfidenceColor(topPick.confidence || topPick.score || 75)} ${(topPick.confidence || topPick.score || 75)}%, #1a1a2e ${(topPick.confidence || topPick.score || 75)}%)`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative'
+              }}>
+                <div style={{
+                  width: '58px',
+                  height: '58px',
+                  borderRadius: '50%',
+                  backgroundColor: '#0a2a1a',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <span style={{ color: getConfidenceColor(topPick.confidence || topPick.score || 75), fontSize: '18px', fontWeight: 'bold' }}>
+                    {topPick.confidence || topPick.score || 75}%
+                  </span>
+                </div>
+              </div>
+
+              {/* Pick Details */}
+              <div style={{ flex: 1 }}>
+                <div style={{
+                  display: 'inline-block',
+                  backgroundColor: getConfidenceColor(topPick.confidence || topPick.score || 75) + '25',
+                  color: getConfidenceColor(topPick.confidence || topPick.score || 75),
+                  padding: '2px 8px',
+                  borderRadius: '4px',
+                  fontSize: '11px',
+                  fontWeight: 'bold',
+                  marginBottom: '6px'
+                }}>
+                  {getConfidenceLabel(topPick.confidence || topPick.score || 75)}
+                </div>
+                <div style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold', marginBottom: '4px' }}>
+                  {topPick.player || topPick.team || topPick.matchup || 'Top Pick'}
+                  {topPick.side && <span style={{ color: '#00D4FF' }}> {topPick.side}</span>}
+                  {topPick.line && <span> {topPick.line}</span>}
+                </div>
+                <div style={{ color: '#9ca3af', fontSize: '13px' }}>
+                  {topPick.stat_type || topPick.market || topPick.bet_type || 'Player Prop'}
+                  {topPick.odds && <span style={{ color: '#00D4FF', marginLeft: '8px' }}>{topPick.odds > 0 ? '+' : ''}{topPick.odds}</span>}
+                </div>
+              </div>
+
+              {/* CTA Button */}
+              <Link to="/smash-spots" style={{
+                backgroundColor: '#00FF88',
+                color: '#000',
+                padding: '14px 24px',
+                borderRadius: '10px',
+                fontWeight: 'bold',
+                fontSize: '14px',
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'transform 0.2s, box-shadow 0.2s',
+                boxShadow: '0 4px 20px rgba(0, 255, 136, 0.3)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 6px 25px rgba(0, 255, 136, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 255, 136, 0.3)';
+              }}>
+                View All Picks
+                <span>→</span>
+              </Link>
+            </div>
+          ) : (
+            <div style={{ color: '#6b7280', textAlign: 'center', padding: '20px' }}>
+              No picks available. Check back soon!
+            </div>
+          )}
         </div>
 
         {/* Alerts Section */}
