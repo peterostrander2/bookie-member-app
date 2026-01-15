@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import api from './api';
 import { resetOnboarding } from './Onboarding';
 import { useToast } from './Toast';
+import { PushNotificationSettings } from './PushNotifications';
+import { CacheStatusDisplay } from './OfflineIndicator';
 
 const Profile = () => {
   const toast = useToast();
@@ -303,10 +305,11 @@ const Profile = () => {
           backgroundColor: '#1a1a2e',
           borderRadius: '12px',
           padding: '20px',
+          marginBottom: '20px',
           border: '1px solid #333'
         }}>
           <h3 style={{ color: '#fff', fontSize: '16px', margin: '0 0 20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            🔔 Notifications
+            🔔 Email Notifications
           </h3>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
@@ -355,6 +358,16 @@ const Profile = () => {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Push Notifications */}
+        <div style={{ marginBottom: '20px' }}>
+          <PushNotificationSettings />
+        </div>
+
+        {/* Offline Cache Status */}
+        <div style={{ marginBottom: '20px' }}>
+          <CacheStatusDisplay />
         </div>
 
         {/* App Settings */}

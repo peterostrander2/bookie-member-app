@@ -294,6 +294,9 @@ Claude branches follow pattern: `claude/{feature-name}-{sessionId}`
 | Gamification | `Gamification.jsx` | XP, levels, achievements system |
 | Leaderboard | `Leaderboard.jsx` | Community rankings with backend integration |
 | Charts | `Charts.jsx` | SVG performance charts (no external deps) |
+| HistoricalCharts | `HistoricalCharts.jsx` | Performance analytics over time |
+| OfflineIndicator | `OfflineIndicator.jsx` | Offline mode provider and UI |
+| PushNotifications | `PushNotifications.jsx` | Push notification system |
 
 ### Smash Spots Architecture
 ```
@@ -358,15 +361,21 @@ All endpoints implemented:
 ## Context Providers (App.jsx)
 ```jsx
 <ThemeProvider>
-  <GamificationProvider>
-    <ToastProvider>
-      <SignalNotificationProvider>
-        <BetSlipProvider>
-          <App />
-        </BetSlipProvider>
-      </SignalNotificationProvider>
-    </ToastProvider>
-  </GamificationProvider>
+  <OfflineProvider>
+    <PushProvider>
+      <GamificationProvider>
+        <ToastProvider>
+          <SignalNotificationProvider>
+            <BetSlipProvider>
+              <OfflineBanner />
+              <UpdateBanner />
+              <App />
+            </BetSlipProvider>
+          </SignalNotificationProvider>
+        </ToastProvider>
+      </GamificationProvider>
+    </PushProvider>
+  </OfflineProvider>
 </ThemeProvider>
 ```
 
@@ -403,6 +412,9 @@ All endpoints implemented:
 21. API rate limiting (token bucket with queuing)
 22. Staging environment documentation
 23. Social sharing (Twitter/Discord/Clipboard)
+24. Historical performance charts (cumulative P/L, rolling win rate, sport breakdown)
+25. Offline mode (service worker caching, offline banner, stale-while-revalidate)
+26. Push notifications (SMASH alerts, configurable preferences, bell icon)
 
 ### Key Files to Review First
 1. `api.js` - All backend connections + auth helpers + rate limiting
@@ -412,13 +424,16 @@ All endpoints implemented:
 5. `ShareButton.jsx` - Social sharing component
 6. `rateLimit.js` - API rate limiting with token bucket
 7. `usePreferences.js` - User preferences hook
-8. `SmashSpotsPage.jsx` - Main picks container with tabs
-9. `PropsSmashList.jsx` - Player props picks
-10. `GameSmashList.jsx` - Game picks (spreads/totals/ML)
-11. `BetslipModal.jsx` - Click-to-bet feature
-12. `BetHistory.jsx` - Bet tracking and grading
-13. `ParlayBuilder.jsx` - Parlay builder with calculator
-14. `Gamification.jsx` - XP/achievements system
+8. `HistoricalCharts.jsx` - Performance analytics over time
+9. `OfflineIndicator.jsx` - Offline mode provider and UI components
+10. `PushNotifications.jsx` - Push notification system
+11. `SmashSpotsPage.jsx` - Main picks container with tabs
+12. `PropsSmashList.jsx` - Player props picks
+13. `GameSmashList.jsx` - Game picks (spreads/totals/ML)
+14. `BetslipModal.jsx` - Click-to-bet feature
+15. `BetHistory.jsx` - Bet tracking and grading
+16. `ParlayBuilder.jsx` - Parlay builder with calculator
+17. `Gamification.jsx` - XP/achievements system
 
 ---
 
@@ -793,6 +808,130 @@ import { ShareButton } from './ShareButton';
 
 ---
 
+## Historical Performance Charts (`HistoricalCharts.jsx`)
+
+### Route
+`/analytics` - Performance Analytics page
+
+### Features
+- **Cumulative P/L Chart** - Track profit/loss over time with AreaChart
+- **Rolling Win Rate** - 10-bet window showing win rate trends
+- **Daily Volume** - Betting volume visualization
+- **Sport Breakdown** - Performance by sport with win rate bars
+- **Bet Type Breakdown** - Performance by bet type (props, spreads, etc.)
+- **30-Day Activity Calendar** - Heatmap showing winning/losing days
+- **Recent Results Strip** - Last 20 bet outcomes
+- **Streak Tracking** - Current streak and best/worst streaks
+
+### Time Filters
+- 7 Days / 30 Days / 90 Days / All Time
+
+### Chart Types
+Toggle between: P/L, Win Rate, Volume
+
+---
+
+## Offline Mode (`OfflineIndicator.jsx`, `public/sw.js`)
+
+### Service Worker v2 Features
+- **Stale-While-Revalidate** - Returns cached data immediately, fetches fresh in background
+- **API Caching** - Caches API responses with configurable TTL per endpoint
+- **Background Sync** - Syncs offline bets when connection restored
+- **Cache Management** - Automatic cleanup of old cache versions
+
+### API Cache TTL
+| Endpoint | TTL | Strategy |
+|----------|-----|----------|
+| `/live/best-bets/` | 2 min | Stale-while-revalidate |
+| `/live/props/` | 2 min | Stale-while-revalidate |
+| `/live/sharp/` | 5 min | Stale-while-revalidate |
+| `/live/sportsbooks` | 30 min | Stale-while-revalidate |
+| `/esoteric/today-energy` | 1 hour | Stale-while-revalidate |
+
+### React Components
+
+**OfflineProvider** - Context for offline state:
+```javascript
+import { useOffline } from './OfflineIndicator';
+
+const { isOnline, isServiceWorkerReady, updateServiceWorker, clearCache } = useOffline();
+```
+
+**OfflineBanner** - Shows "You're offline" banner when disconnected
+
+**UpdateBanner** - Shows "New version available" with update button
+
+**CacheStatusDisplay** - Shows cache status in Profile settings
+
+### useOfflineFirst Hook
+```javascript
+import { useOfflineFirst } from './OfflineIndicator';
+
+const { data, loading, error, isCached, isOnline } = useOfflineFirst(
+  () => api.getBestBets('NBA'),
+  'nba-picks',
+  [sport]
+);
+```
+
+---
+
+## Push Notifications (`PushNotifications.jsx`)
+
+### Setup Requirements
+**Environment Variable:**
+```
+VITE_VAPID_PUBLIC_KEY=<your-vapid-public-key>
+```
+
+### Backend Endpoints (Expected)
+```
+POST /live/push/subscribe    # Register push subscription
+POST /live/push/unsubscribe  # Remove subscription
+POST /live/push/preferences  # Update notification preferences
+```
+
+### React Components
+
+**PushProvider** - Context for push notification state:
+```javascript
+import { usePush } from './PushNotifications';
+
+const { isSupported, isSubscribed, subscribe, unsubscribe, preferences, updatePreferences } = usePush();
+```
+
+**SmashAlertBell** - Navbar button to toggle SMASH alerts
+
+**PushNotificationSettings** - Full settings panel (in Profile page)
+
+### Notification Preferences
+```javascript
+{
+  smashAlerts: true,        // High-conviction picks (85%+)
+  sharpMoney: true,         // Sharp money movement
+  dailySummary: false,      // Morning digest
+  resultNotifications: true // Bet results
+}
+```
+
+### Helper Functions
+```javascript
+import { showLocalNotification, triggerSmashNotification } from './PushNotifications';
+
+// Local notification
+showLocalNotification('Title', { body: 'Message' });
+
+// Trigger SMASH alert (checks preferences)
+triggerSmashNotification({
+  player: 'LeBron James',
+  side: 'Over',
+  line: 25.5,
+  confidence: 90
+});
+```
+
+---
+
 ## Future Work Suggestions
 
 ### Performance (Priority: Medium)
@@ -806,11 +945,11 @@ import { ShareButton } from './ShareButton';
 ### Features (Priority: Low-Medium)
 | Task | Description | Effort |
 |------|-------------|--------|
-| Push notifications | Firebase Cloud Messaging for SMASH alerts | High |
+| Push notifications | ✅ DONE - SMASH alerts with configurable preferences | - |
 | Social sharing | ✅ DONE - Twitter/Discord/Clipboard sharing | - |
-| Historical charts | Performance over time visualization | Medium |
+| Historical charts | ✅ DONE - Cumulative P/L, rolling win rate, sport breakdown | - |
 | User preferences | ✅ DONE - localStorage + backend sync | - |
-| Offline mode | Cache picks for offline viewing | Medium |
+| Offline mode | ✅ DONE - Service worker caching with stale-while-revalidate | - |
 
 ### Analytics (Priority: Low)
 | Task | Description | Effort |
