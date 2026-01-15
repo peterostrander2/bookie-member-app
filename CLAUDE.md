@@ -392,6 +392,9 @@ All endpoints implemented:
 10. Two-category Smash Spots (Props + Games tabs)
 11. Bet History page with WIN/LOSS/PUSH tracking
 12. Parlay Builder with odds calculator and history
+13. Testing infrastructure (91 unit tests, E2E with Playwright)
+14. CI/CD pipeline (GitHub Actions → Railway)
+15. Code splitting (22 lazy-loaded routes)
 
 ### Key Files to Review First
 1. `api.js` - All backend connections + auth helpers
@@ -472,6 +475,49 @@ RAILWAY_SERVICE_ID - Railway service ID for this app
 
 ---
 
+## Code Splitting (React.lazy)
+
+### Implementation
+All 22 route components are lazy loaded with `React.lazy()` and wrapped in `Suspense`:
+
+```jsx
+// App.jsx - Lazy imports
+const Dashboard = lazy(() => import('./Dashboard'));
+const SmashSpotsPage = lazy(() => import('./SmashSpotsPage'));
+// ... 20 more routes
+
+// Suspense wrapper with loading spinner
+<Suspense fallback={<PageLoader />}>
+  <Routes>
+    <Route path="/" element={<Dashboard />} />
+    ...
+  </Routes>
+</Suspense>
+```
+
+### Build Output
+Each route gets its own chunk file:
+```
+dist/assets/Dashboard-*.js       (16 kB)
+dist/assets/SmashSpotsPage-*.js  (20 kB)
+dist/assets/Esoteric-*.js        (24 kB)
+dist/assets/index-*.js           (241 kB) ← Core bundle
+```
+
+### Benefits
+- **Faster initial load** - Only core bundle (241 kB) loads initially
+- **On-demand loading** - Route chunks load when user navigates
+- **Better caching** - Unchanged routes stay cached
+
+### Eagerly Loaded (Core Bundle)
+These remain in the main bundle since they're needed immediately:
+- Context providers (Theme, Gamification, BetSlip, etc.)
+- Navbar, ComplianceFooter
+- ErrorBoundary
+- api.js
+
+---
+
 ## Future Work Suggestions
 
 ### Performance (Priority: Medium)
@@ -479,7 +525,7 @@ RAILWAY_SERVICE_ID - Railway service ID for this app
 |------|-------------|--------|
 | React.memo | ✅ DONE - Memoized SmashSpots cards | - |
 | useMemo/useCallback | ✅ DONE - Optimized lists | - |
-| Code splitting | Lazy load routes with React.lazy | Medium |
+| Code splitting | ✅ DONE - 22 routes lazy loaded | - |
 | Bundle analysis | Identify large dependencies | Low |
 
 ### Features (Priority: Low-Medium)

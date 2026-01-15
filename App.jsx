@@ -1,36 +1,70 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
-import Dashboard from './Dashboard';
-import SmashSpotsPage from './SmashSpotsPage';
-import Splits from './Splits';
-import Esoteric from './Esoteric';
-import Signals from './Signals';
-import Grading from './Grading';
-import AdminCockpit from './AdminCockpit';
-import Profile from './Profile';
-import CLVDashboard from './CLVDashboard';
-import BacktestDashboard from './BacktestDashboard';
-import BankrollManager from './BankrollManager';
-import SharpAlerts from './SharpAlerts';
-import BestOdds from './BestOdds';
-import InjuryVacuum from './InjuryVacuum';
-import PerformanceDashboard from './PerformanceDashboard';
-import ConsensusMeterPage from './ConsensusMeter';
-import DailySummary from './DailySummary';
-import Leaderboard from './Leaderboard';
-import Props from './Props';
-import BetHistory from './BetHistory';
-import ParlayBuilder from './ParlayBuilder';
+
+// Lazy load route components for code splitting
+const Dashboard = lazy(() => import('./Dashboard'));
+const SmashSpotsPage = lazy(() => import('./SmashSpotsPage'));
+const Splits = lazy(() => import('./Splits'));
+const Esoteric = lazy(() => import('./Esoteric'));
+const Signals = lazy(() => import('./Signals'));
+const Grading = lazy(() => import('./Grading'));
+const AdminCockpit = lazy(() => import('./AdminCockpit'));
+const Profile = lazy(() => import('./Profile'));
+const CLVDashboard = lazy(() => import('./CLVDashboard'));
+const BacktestDashboard = lazy(() => import('./BacktestDashboard'));
+const BankrollManager = lazy(() => import('./BankrollManager'));
+const SharpAlerts = lazy(() => import('./SharpAlerts'));
+const BestOdds = lazy(() => import('./BestOdds'));
+const InjuryVacuum = lazy(() => import('./InjuryVacuum'));
+const PerformanceDashboard = lazy(() => import('./PerformanceDashboard'));
+const ConsensusMeterPage = lazy(() => import('./ConsensusMeter'));
+const DailySummary = lazy(() => import('./DailySummary'));
+const Leaderboard = lazy(() => import('./Leaderboard'));
+const Props = lazy(() => import('./Props'));
+const BetHistory = lazy(() => import('./BetHistory'));
+const ParlayBuilder = lazy(() => import('./ParlayBuilder'));
+const AchievementsPage = lazy(() => import('./Gamification'));
+
+// Eagerly loaded components (providers, core UI)
 import ComplianceFooter from './ComplianceFooter';
 import { ToastProvider } from './Toast';
 import OnboardingWizard, { isOnboardingComplete } from './Onboarding';
 import { ThemeProvider, ThemeToggle, useTheme } from './ThemeContext';
 import { GamificationProvider, LevelBadge } from './Gamification';
-import AchievementsPage from './Gamification';
 import { SignalNotificationProvider, SignalBell } from './SignalNotifications';
 import { BetSlipProvider, FloatingBetSlip } from './BetSlip';
 import ErrorBoundary from './ErrorBoundary';
 import api from './api';
+
+// Loading fallback for Suspense
+const PageLoader = () => (
+  <div style={{
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '50vh',
+    color: '#00D4FF'
+  }}>
+    <div style={{ textAlign: 'center' }}>
+      <div style={{
+        width: '40px',
+        height: '40px',
+        border: '3px solid #333',
+        borderTop: '3px solid #00D4FF',
+        borderRadius: '50%',
+        animation: 'spin 1s linear infinite',
+        margin: '0 auto 16px'
+      }} />
+      <div style={{ fontSize: '14px', color: '#9ca3af' }}>Loading...</div>
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
+    </div>
+  </div>
+);
 
 const Navbar = () => {
   const location = useLocation();
@@ -228,30 +262,32 @@ const AppContent = () => {
           <Navbar />
           <div style={{ flex: 1 }}>
             <ErrorBoundary>
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/smash-spots" element={<SmashSpotsPage />} />
-                <Route path="/parlay" element={<ParlayBuilder />} />
-                <Route path="/history" element={<BetHistory />} />
-                <Route path="/sharp" element={<SharpAlerts />} />
-                <Route path="/odds" element={<BestOdds />} />
-                <Route path="/injuries" element={<InjuryVacuum />} />
-                <Route path="/performance" element={<PerformanceDashboard />} />
-                <Route path="/consensus" element={<ConsensusMeterPage />} />
-                <Route path="/summary" element={<DailySummary />} />
-                <Route path="/splits" element={<Splits />} />
-                <Route path="/clv" element={<CLVDashboard />} />
-                <Route path="/backtest" element={<BacktestDashboard />} />
-                <Route path="/bankroll" element={<BankrollManager />} />
-                <Route path="/esoteric" element={<Esoteric />} />
-                <Route path="/signals" element={<Signals />} />
-                <Route path="/grading" element={<Grading />} />
-                <Route path="/admin" element={<AdminCockpit />} />
-                <Route path="/leaderboard" element={<Leaderboard />} />
-                <Route path="/props" element={<Props />} />
-                <Route path="/achievements" element={<AchievementsPage />} />
-                <Route path="/profile" element={<Profile />} />
-              </Routes>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/smash-spots" element={<SmashSpotsPage />} />
+                  <Route path="/parlay" element={<ParlayBuilder />} />
+                  <Route path="/history" element={<BetHistory />} />
+                  <Route path="/sharp" element={<SharpAlerts />} />
+                  <Route path="/odds" element={<BestOdds />} />
+                  <Route path="/injuries" element={<InjuryVacuum />} />
+                  <Route path="/performance" element={<PerformanceDashboard />} />
+                  <Route path="/consensus" element={<ConsensusMeterPage />} />
+                  <Route path="/summary" element={<DailySummary />} />
+                  <Route path="/splits" element={<Splits />} />
+                  <Route path="/clv" element={<CLVDashboard />} />
+                  <Route path="/backtest" element={<BacktestDashboard />} />
+                  <Route path="/bankroll" element={<BankrollManager />} />
+                  <Route path="/esoteric" element={<Esoteric />} />
+                  <Route path="/signals" element={<Signals />} />
+                  <Route path="/grading" element={<Grading />} />
+                  <Route path="/admin" element={<AdminCockpit />} />
+                  <Route path="/leaderboard" element={<Leaderboard />} />
+                  <Route path="/props" element={<Props />} />
+                  <Route path="/achievements" element={<AchievementsPage />} />
+                  <Route path="/profile" element={<Profile />} />
+                </Routes>
+              </Suspense>
             </ErrorBoundary>
           </div>
           <ComplianceFooter />
