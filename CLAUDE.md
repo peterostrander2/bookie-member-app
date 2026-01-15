@@ -256,12 +256,103 @@ The backend should return signals that require external data or complex calculat
 ---
 
 ## Stack
-React/Vite, JavaScript, Tailwind CSS
+React 18, Vite 5, JavaScript (no TypeScript), inline styles (no Tailwind in components)
+
+## Quick Start
+```bash
+# Install dependencies
+npm install
+
+# Development server (port 5173)
+npm run dev
+
+# Run tests (91 tests)
+npm run test
+
+# Build for production
+npm run build
+
+# Analyze bundle
+npm run build:analyze
+```
+
+## Environment Variables
+Create `.env.local` for development:
+```bash
+# Required
+VITE_API_KEY=your-api-key              # Backend auth for /live/* endpoints
+
+# Optional - Production monitoring
+VITE_SENTRY_DSN=https://...@sentry.io  # Error monitoring
+VITE_GA_MEASUREMENT_ID=G-XXXXXXXXXX    # Google Analytics
+
+# Optional - Push notifications
+VITE_VAPID_PUBLIC_KEY=...              # Web Push VAPID key
+
+# Optional - Override API URL
+VITE_API_URL=https://custom-backend.com
+
+# Development flags
+VITE_RATE_LIMIT=false                  # Disable rate limiting in dev
+```
+
+## File Structure Overview
+```
+bookie-member-app/
+├── public/
+│   ├── sw.js              # Service worker (offline + push)
+│   ├── manifest.json      # PWA manifest
+│   └── icon-*.png         # App icons
+├── test/
+│   ├── setup.js           # Vitest config + mocks
+│   ├── api.test.js        # API client tests
+│   ├── esoteric.test.js   # Signal engine tests
+│   └── *.test.jsx         # Component tests
+├── e2e/
+│   └── *.spec.js          # Playwright E2E tests
+├── .github/workflows/
+│   └── ci.yml             # GitHub Actions CI/CD
+├── App.jsx                # Main app + routing + providers
+├── main.jsx               # Entry point
+├── api.js                 # All API calls + auth
+├── index.css              # Global styles
+├── CLAUDE.md              # This file
+└── [40+ component files]
+```
+
+## All Routes
+| Route | Component | Description |
+|-------|-----------|-------------|
+| `/` | Dashboard | Main dashboard |
+| `/smash-spots` | SmashSpotsPage | AI picks (Props + Games tabs) |
+| `/parlay` | ParlayBuilder | Multi-leg parlay builder |
+| `/history` | BetHistory | Bet tracking with grading |
+| `/analytics` | HistoricalCharts | Performance charts |
+| `/sharp` | SharpAlerts | Sharp money signals |
+| `/odds` | BestOdds | Line shopping |
+| `/injuries` | InjuryVacuum | Injury reports |
+| `/performance` | PerformanceDashboard | Performance metrics |
+| `/consensus` | ConsensusMeter | Betting consensus |
+| `/summary` | DailySummary | Daily summary |
+| `/splits` | Splits | Betting splits |
+| `/clv` | CLVDashboard | CLV tracking |
+| `/backtest` | BacktestDashboard | Backtesting |
+| `/bankroll` | BankrollManager | Bankroll management |
+| `/esoteric` | Esoteric | Esoteric signals |
+| `/signals` | Signals | Signal overview |
+| `/grading` | Grading | Pick grading |
+| `/leaderboard` | Leaderboard | Community rankings |
+| `/props` | Props | Player props |
+| `/achievements` | Gamification | XP/badges |
+| `/profile` | Profile | User settings |
+| `/admin` | AdminCockpit | Admin panel |
 
 ## Patterns
 - Use fetch for API calls (see api.js)
 - Handle loading/error states for all endpoints
 - Cache responses client-side when appropriate
+- Use inline styles (no CSS modules or Tailwind in JSX)
+- Lazy load route components with React.lazy
 
 ## GitHub Workflow
 **Repo:** https://github.com/peterostrander2/bookie-member-app
@@ -964,3 +1055,51 @@ triggerSmashNotification({
 | CI/CD pipeline | ✅ DONE - GitHub Actions for auto-deploy | - |
 | Staging environment | ✅ DONE - Documented setup | - |
 | API rate limiting | ✅ DONE - Token bucket with queuing | - |
+
+---
+
+## Session History
+
+### Session: January 2026 (claude/setup-live-api-endpoints-AFkgX)
+
+**Completed in this session:**
+1. Code splitting with React.lazy (22 routes)
+2. Sentry error monitoring integration
+3. Bundle analysis with rollup-plugin-visualizer
+4. User preferences hook with localStorage
+5. Google Analytics 4 integration
+6. Comprehensive event tracking system
+7. API rate limiting (token bucket algorithm)
+8. Social sharing (Twitter/Discord/Clipboard)
+9. Historical performance charts
+10. Offline mode with enhanced service worker
+11. Push notifications for SMASH alerts
+
+**New files created:**
+- `sentry.js` - Error monitoring
+- `analytics.js` - GA4 + event tracking
+- `rateLimit.js` - Token bucket rate limiting
+- `usePreferences.js` - User preferences hook
+- `ShareButton.jsx` - Social sharing component
+- `HistoricalCharts.jsx` - Performance analytics
+- `OfflineIndicator.jsx` - Offline mode provider
+- `PushNotifications.jsx` - Push notification system
+
+**Files modified:**
+- `App.jsx` - Added providers, lazy loading, analytics
+- `main.jsx` - Initialize Sentry and analytics
+- `api.js` - Integrated rate limiting
+- `Profile.jsx` - Added push/cache settings
+- `public/sw.js` - Enhanced with API caching
+- `vite.config.js` - Added visualizer plugin
+- `package.json` - Added build:analyze script
+- `test/setup.js` - Mocks for rate limiting
+- `ErrorBoundary.jsx` - Sentry integration
+- `SmashSpotsPage.jsx` - Preferences integration
+- `PropsSmashList.jsx` - ShareButton integration
+- `GameSmashList.jsx` - ShareButton integration
+- `ParlayBuilder.jsx` - ShareButton integration
+
+**Tests:** 91 tests passing
+
+**Build:** 266 kB main bundle + 22 route chunks
