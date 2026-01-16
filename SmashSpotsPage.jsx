@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import PropsSmashList from './PropsSmashList';
 import GameSmashList from './GameSmashList';
 import { usePreferences } from './usePreferences';
+import api from './api';
+import { AddToSlipButton } from './BetSlip';
 
 const AUTO_REFRESH_INTERVAL = 30 * 60 * 1000; // 30 minutes
 
@@ -11,6 +13,248 @@ const CONFIDENCE_FILTERS = [
   { id: 'strong', label: '75%+', minConfidence: 75, color: '#F59E0B' },
   { id: 'smash', label: '85%+', minConfidence: 85, color: '#10B981' }
 ];
+
+// Unit sizing based on confidence tier
+const getUnitSize = (confidence) => {
+  if (confidence >= 90) return { units: 2, label: '2 Units', emoji: '🔥🔥' };
+  if (confidence >= 85) return { units: 1.5, label: '1.5 Units', emoji: '🔥' };
+  if (confidence >= 75) return { units: 1, label: '1 Unit', emoji: '✓' };
+  if (confidence >= 65) return { units: 0.5, label: '0.5 Units', emoji: '⚡' };
+  return { units: 0, label: 'Pass', emoji: '⚠️' };
+};
+
+// Today's Best Bets Component - Shows top SMASH tier picks
+const TodaysBestBets = ({ sport, onPickClick }) => {
+  const [bestPicks, setBestPicks] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBestBets = async () => {
+      setLoading(true);
+      try {
+        const data = await api.getBestBets(sport);
+        let allPicks = [];
+
+        // Collect picks from all sources
+        if (data?.props?.picks) allPicks.push(...data.props.picks);
+        if (data?.games?.picks) allPicks.push(...data.games.picks);
+        if (data?.picks) allPicks.push(...data.picks);
+        if (data?.data) allPicks.push(...data.data);
+
+        // Filter to SMASH tier only (85%+) and sort by confidence
+        const smashPicks = allPicks
+          .filter(p => (p.confidence || p.score || 0) >= 85)
+          .sort((a, b) => (b.confidence || b.score || 0) - (a.confidence || a.score || 0))
+          .slice(0, 3);
+
+        setBestPicks(smashPicks);
+      } catch (err) {
+        console.error('Error fetching best bets:', err);
+        setBestPicks([]);
+      }
+      setLoading(false);
+    };
+
+    fetchBestBets();
+  }, [sport]);
+
+  if (loading) {
+    return (
+      <div style={{
+        background: 'linear-gradient(135deg, #0a2a1a 0%, #1a3a2a 100%)',
+        borderRadius: '16px',
+        padding: '20px',
+        marginBottom: '24px',
+        border: '2px solid #10B98140'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#10B981' }}>
+          <span style={{ animation: 'pulse 1.5s infinite' }}>🎯</span>
+          Loading Best Bets...
+        </div>
+      </div>
+    );
+  }
+
+  if (bestPicks.length === 0) {
+    return (
+      <div style={{
+        background: 'linear-gradient(135deg, #1a1a2e 0%, #2a2a4e 100%)',
+        borderRadius: '16px',
+        padding: '20px',
+        marginBottom: '24px',
+        border: '1px solid #4B556340',
+        textAlign: 'center'
+      }}>
+        <div style={{ fontSize: '32px', marginBottom: '8px' }}>🔍</div>
+        <div style={{ color: '#F59E0B', fontWeight: 'bold', marginBottom: '4px' }}>
+          No SMASH Picks Right Now
+        </div>
+        <div style={{ color: '#6B7280', fontSize: '13px' }}>
+          Check back soon — we only feature 85%+ confidence plays here.
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{
+      background: 'linear-gradient(135deg, #0a2a1a 0%, #1a3a2a 100%)',
+      borderRadius: '16px',
+      padding: '20px',
+      marginBottom: '24px',
+      border: '2px solid #10B98140',
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
+      {/* Glow effect */}
+      <div style={{
+        position: 'absolute',
+        top: '-30%',
+        right: '-5%',
+        width: '150px',
+        height: '150px',
+        background: 'radial-gradient(circle, #10B98120 0%, transparent 70%)',
+        borderRadius: '50%',
+        pointerEvents: 'none'
+      }} />
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+        <span style={{ fontSize: '24px' }}>🎯</span>
+        <div>
+          <h3 style={{ color: '#10B981', margin: 0, fontSize: '16px', fontWeight: 'bold' }}>
+            Today's Best Bets
+          </h3>
+          <div style={{ color: '#6B7280', fontSize: '11px' }}>
+            SMASH tier only (85%+ confidence) • Max conviction plays
+          </div>
+        </div>
+        <div style={{
+          marginLeft: 'auto',
+          backgroundColor: '#10B98120',
+          color: '#10B981',
+          padding: '4px 10px',
+          borderRadius: '12px',
+          fontSize: '11px',
+          fontWeight: 'bold',
+          border: '1px solid #10B98140'
+        }}>
+          {bestPicks.length} SMASH {bestPicks.length === 1 ? 'PICK' : 'PICKS'}
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative', zIndex: 1 }}>
+        {bestPicks.map((pick, idx) => {
+          const unitSize = getUnitSize(pick.confidence || pick.score || 85);
+          const isProp = pick.player_name || pick.market?.includes('player');
+          const pickDisplay = isProp
+            ? `${pick.player_name} ${pick.side} ${pick.point}`
+            : `${pick.team || pick.description} ${pick.point > 0 ? `+${pick.point}` : pick.point || ''}`;
+
+          return (
+            <div
+              key={idx}
+              style={{
+                backgroundColor: '#0a1a1510',
+                borderRadius: '12px',
+                padding: '14px 16px',
+                border: '1px solid #10B98130',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '14px',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+              onClick={() => onPickClick && onPickClick(isProp ? 'props' : 'games')}
+            >
+              {/* Rank badge */}
+              <div style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                backgroundColor: idx === 0 ? '#FFD700' : idx === 1 ? '#C0C0C0' : '#CD7F32',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 'bold',
+                fontSize: '14px',
+                color: '#000'
+              }}>
+                #{idx + 1}
+              </div>
+
+              {/* Pick details */}
+              <div style={{ flex: 1 }}>
+                <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '15px', marginBottom: '2px' }}>
+                  {pickDisplay}
+                </div>
+                <div style={{ color: '#9CA3AF', fontSize: '12px' }}>
+                  {pick.market?.replace('player_', '').replace(/_/g, ' ') || pick.bet_type || 'spread'}
+                  {pick.price && <span style={{ color: '#00D4FF', marginLeft: '8px' }}>
+                    {pick.price > 0 ? `+${pick.price}` : pick.price}
+                  </span>}
+                </div>
+              </div>
+
+              {/* Confidence + Unit size */}
+              <div style={{ textAlign: 'right' }}>
+                <div style={{
+                  color: '#10B981',
+                  fontWeight: 'bold',
+                  fontSize: '20px',
+                  lineHeight: '1'
+                }}>
+                  {pick.confidence || pick.score || 85}%
+                </div>
+                <div style={{
+                  backgroundColor: '#10B98120',
+                  color: '#10B981',
+                  padding: '2px 8px',
+                  borderRadius: '4px',
+                  fontSize: '10px',
+                  fontWeight: 'bold',
+                  marginTop: '4px'
+                }}>
+                  {unitSize.emoji} {unitSize.label}
+                </div>
+              </div>
+
+              {/* Quick add button */}
+              <AddToSlipButton
+                pick={{
+                  id: pick.id || `${pick.player_name || pick.team}-${pick.market || pick.bet_type}`,
+                  game_id: pick.game_id || `${pick.home_team}-${pick.away_team}`,
+                  player: pick.player_name,
+                  team: pick.team,
+                  sport: sport,
+                  home_team: pick.home_team,
+                  away_team: pick.away_team,
+                  bet_type: isProp ? 'prop' : (pick.market || 'spread'),
+                  stat: pick.market?.replace('player_', ''),
+                  side: pick.side,
+                  line: pick.point,
+                  odds: pick.price || -110,
+                  confidence: pick.confidence || pick.score || 85,
+                  tier: 'SMASH'
+                }}
+                size="small"
+              />
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Action hint */}
+      <div style={{
+        marginTop: '12px',
+        textAlign: 'center',
+        color: '#6B7280',
+        fontSize: '11px'
+      }}>
+        Click any pick to view full analysis • Add to betslip with ➕
+      </div>
+    </div>
+  );
+};
 
 const SmashSpotsPage = () => {
   const { preferences, updatePreference } = usePreferences();
@@ -209,6 +453,9 @@ const SmashSpotsPage = () => {
             </button>
           ))}
         </div>
+
+        {/* Today's Best Bets - Top SMASH picks with quick action */}
+        <TodaysBestBets sport={sport} onPickClick={handleTabChange} />
 
         {/* Confidence Filter Controls */}
         <div style={{
