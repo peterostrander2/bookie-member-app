@@ -41,7 +41,7 @@ const OnboardingWizard = ({ onComplete }) => {
     { id: 'NFL', name: 'NFL', icon: '🏈' },
     { id: 'MLB', name: 'MLB', icon: '⚾' },
     { id: 'NHL', name: 'NHL', icon: '🏒' },
-    { id: 'NCAAB', name: 'NCAAB', icon: '🎓' }
+    { id: 'NCAAB', name: 'NCAAB', icon: '🏀' }
   ];
 
   const toggleSport = (sportId) => {
@@ -126,15 +126,15 @@ const OnboardingWizard = ({ onComplete }) => {
                     alignItems: 'center',
                     gap: '8px',
                     padding: '10px 16px',
-                    backgroundColor: preferences.sports.includes(sport.id) ? '#00D4FF20' : '#1a1a2e',
-                    border: preferences.sports.includes(sport.id) ? '2px solid #00D4FF' : '2px solid #333',
-                    borderRadius: '8px',
+                    backgroundColor: preferences.sports.includes(sport.id) ? '#10B98120' : '#1a1a2e',
+                    border: preferences.sports.includes(sport.id) ? '2px solid #10B981' : '2px solid #333',
+                    borderRadius: '12px',
                     cursor: 'pointer',
                     transition: 'all 0.2s'
                   }}
                 >
                   <span style={{ fontSize: '20px' }}>{sport.icon}</span>
-                  <span style={{ color: preferences.sports.includes(sport.id) ? '#00D4FF' : '#9ca3af', fontWeight: '500', fontSize: '14px' }}>
+                  <span style={{ color: preferences.sports.includes(sport.id) ? '#10B981' : '#9ca3af', fontWeight: '500', fontSize: '14px' }}>
                     {sport.name}
                   </span>
                 </button>
@@ -301,13 +301,14 @@ const OnboardingWizard = ({ onComplete }) => {
               disabled={!canProceed()}
               style={{
                 padding: '10px 24px',
-                backgroundColor: canProceed() ? '#00D4FF' : '#333',
-                color: canProceed() ? '#000' : '#666',
+                backgroundColor: canProceed() ? '#10B981' : '#333',
+                color: canProceed() ? '#fff' : '#666',
                 border: 'none',
                 borderRadius: '8px',
                 cursor: canProceed() ? 'pointer' : 'not-allowed',
                 fontSize: '14px',
-                fontWeight: 'bold'
+                fontWeight: 'bold',
+                transition: 'all 0.2s ease'
               }}
             >
               Continue
@@ -317,13 +318,14 @@ const OnboardingWizard = ({ onComplete }) => {
               onClick={handleComplete}
               style={{
                 padding: '10px 24px',
-                backgroundColor: '#00FF88',
-                color: '#000',
+                backgroundColor: '#10B981',
+                color: '#fff',
                 border: 'none',
                 borderRadius: '8px',
                 cursor: 'pointer',
                 fontSize: '14px',
-                fontWeight: 'bold'
+                fontWeight: 'bold',
+                transition: 'all 0.2s ease'
               }}
             >
               Get Started

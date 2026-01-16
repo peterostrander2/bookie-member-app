@@ -68,11 +68,18 @@ const SmashSpotsPage = () => {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  const sports = ['NBA', 'NFL', 'MLB', 'NHL', 'NCAAB'];
+  // Sports with matching icons
+  const sports = [
+    { id: 'NBA', label: 'NBA', icon: '🏀' },
+    { id: 'NFL', label: 'NFL', icon: '🏈' },
+    { id: 'MLB', label: 'MLB', icon: '⚾' },
+    { id: 'NHL', label: 'NHL', icon: '🏒' },
+    { id: 'NCAAB', label: 'NCAAB', icon: '🏀' }
+  ];
 
   const tabs = [
-    { id: 'props', label: 'Player Props', icon: '🔥', color: '#8B5CF6' },
-    { id: 'games', label: 'Game Picks', icon: '🏀', color: '#00D4FF' }
+    { id: 'props', label: 'Player Props', icon: '👤', color: '#8B5CF6' },
+    { id: 'games', label: 'Game Picks', icon: '🎯', color: '#00D4FF' }
   ];
 
   return (
@@ -97,12 +104,13 @@ const SmashSpotsPage = () => {
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          gap: '16px',
+          gap: '12px',
           marginBottom: '16px',
-          padding: '10px 16px',
+          padding: '10px 12px',
           backgroundColor: '#12121f',
-          borderRadius: '10px',
-          border: '1px solid #2a2a4a'
+          borderRadius: '12px',
+          border: '1px solid #2a2a4a',
+          flexWrap: 'wrap'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ color: '#6B7280', fontSize: '12px' }}>Last updated:</span>
@@ -122,8 +130,8 @@ const SmashSpotsPage = () => {
             disabled={isRefreshing}
             style={{
               padding: '6px 12px',
-              backgroundColor: isRefreshing ? '#333' : '#00D4FF',
-              color: isRefreshing ? '#666' : '#0a0a0f',
+              backgroundColor: isRefreshing ? '#333' : '#10B981',
+              color: isRefreshing ? '#666' : '#fff',
               border: 'none',
               borderRadius: '6px',
               fontSize: '11px',
@@ -149,15 +157,28 @@ const SmashSpotsPage = () => {
         <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '20px', flexWrap: 'wrap' }}>
           {sports.map(s => (
             <button
-              key={s}
-              onClick={() => handleSportChange(s)}
+              key={s.id}
+              onClick={() => handleSportChange(s.id)}
               style={{
-                padding: '8px 20px', borderRadius: '20px', border: 'none', cursor: 'pointer',
-                fontWeight: 'bold', fontSize: '14px', transition: 'all 0.2s ease',
-                backgroundColor: sport === s ? '#00D4FF' : '#1a1a2e',
-                color: sport === s ? '#0a0a0f' : '#9CA3AF'
+                padding: '10px 16px',
+                borderRadius: '12px',
+                border: sport === s.id ? '2px solid #10B981' : '2px solid transparent',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                fontSize: '13px',
+                transition: 'all 0.2s ease',
+                backgroundColor: sport === s.id ? '#10B98120' : '#1a1a2e',
+                color: sport === s.id ? '#10B981' : '#9CA3AF',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                minWidth: '80px',
+                justifyContent: 'center'
               }}
-            >{s}</button>
+            >
+              <span style={{ fontSize: '16px' }}>{s.icon}</span>
+              {s.label}
+            </button>
           ))}
         </div>
 
