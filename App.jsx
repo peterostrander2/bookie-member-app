@@ -42,6 +42,61 @@ import { NotificationOnboardingModal, useNotificationOnboarding } from './Notifi
 import SearchBar from './SearchBar';
 import api from './api';
 
+// Navigation structure (moved outside component to prevent recreation on every render)
+const NAV_STRUCTURE = {
+  picks: {
+    label: 'Picks',
+    icon: '🔥',
+    items: [
+      { path: '/smash-spots', label: 'AI Picks', icon: '🎯' },
+      { path: '/props', label: 'Player Props', icon: '🏀' },
+      { path: '/sharp', label: 'Sharp Money', icon: '💵' },
+      { path: '/signals', label: 'All Signals', icon: '⚡' }
+    ]
+  },
+  tools: {
+    label: 'Tools',
+    icon: '🛠️',
+    items: [
+      { path: '/odds', label: 'Best Odds', icon: '🎯' },
+      { path: '/injuries', label: 'Injuries', icon: '🏥' },
+      { path: '/clv', label: 'CLV Tracker', icon: '📉' },
+      { path: '/backtest', label: 'Backtest', icon: '🔬' }
+    ]
+  },
+  betting: {
+    label: 'My Betting',
+    icon: '📊',
+    items: [
+      { path: '/parlay', label: 'Parlay Builder', icon: '🎰' },
+      { path: '/history', label: 'Bet History', icon: '📋' },
+      { path: '/analytics', label: 'Analytics', icon: '📈' },
+      { path: '/bankroll', label: 'Bankroll', icon: '💰' },
+      { path: '/grading', label: 'Grading', icon: '📝' }
+    ]
+  },
+  community: {
+    label: 'Community',
+    icon: '👥',
+    items: [
+      { path: '/leaderboard', label: 'Leaderboard', icon: '🏆' },
+      { path: '/achievements', label: 'Achievements', icon: '🏅' }
+    ]
+  }
+};
+
+// Flat links for mobile menu (moved outside component)
+const ALL_NAV_LINKS = [
+  { path: '/', label: 'Dashboard', icon: '🏠' },
+  ...NAV_STRUCTURE.picks.items,
+  ...NAV_STRUCTURE.tools.items,
+  ...NAV_STRUCTURE.betting.items,
+  { path: '/esoteric', label: 'Esoteric', icon: '🔮' },
+  { path: '/education', label: 'Education', icon: '📚' },
+  ...NAV_STRUCTURE.community.items,
+  { path: '/profile', label: 'Profile', icon: '👤' }
+];
+
 // Loading fallback for Suspense
 const PageLoader = () => (
   <div style={{
@@ -158,60 +213,6 @@ const Navbar = ({ onOpenNotificationModal }) => {
     setMobileMenuOpen(false);
   }, [location.pathname]);
 
-  // Simplified navigation structure - 6 main items instead of 19
-  const navStructure = {
-    picks: {
-      label: 'Picks',
-      icon: '🔥',
-      items: [
-        { path: '/smash-spots', label: 'AI Picks', icon: '🎯' },
-        { path: '/props', label: 'Player Props', icon: '🏀' },
-        { path: '/sharp', label: 'Sharp Money', icon: '💵' },
-        { path: '/signals', label: 'All Signals', icon: '⚡' }
-      ]
-    },
-    tools: {
-      label: 'Tools',
-      icon: '🛠️',
-      items: [
-        { path: '/odds', label: 'Best Odds', icon: '🎯' },
-        { path: '/injuries', label: 'Injuries', icon: '🏥' },
-        { path: '/clv', label: 'CLV Tracker', icon: '📉' },
-        { path: '/backtest', label: 'Backtest', icon: '🔬' }
-      ]
-    },
-    betting: {
-      label: 'My Betting',
-      icon: '📊',
-      items: [
-        { path: '/parlay', label: 'Parlay Builder', icon: '🎰' },
-        { path: '/history', label: 'Bet History', icon: '📋' },
-        { path: '/analytics', label: 'Analytics', icon: '📈' },
-        { path: '/bankroll', label: 'Bankroll', icon: '💰' },
-        { path: '/grading', label: 'Grading', icon: '📝' }
-      ]
-    },
-    community: {
-      label: 'Community',
-      icon: '👥',
-      items: [
-        { path: '/leaderboard', label: 'Leaderboard', icon: '🏆' },
-        { path: '/achievements', label: 'Achievements', icon: '🏅' }
-      ]
-    }
-  };
-
-  // Flat links for mobile menu
-  const allLinks = [
-    { path: '/', label: 'Dashboard', icon: '🏠' },
-    ...navStructure.picks.items,
-    ...navStructure.tools.items,
-    ...navStructure.betting.items,
-    { path: '/esoteric', label: 'Esoteric', icon: '🔮' },
-    { path: '/education', label: 'Education', icon: '📚' },
-    ...navStructure.community.items,
-    { path: '/profile', label: 'Profile', icon: '👤' }
-  ];
 
   return (
     <nav style={{
@@ -263,9 +264,9 @@ const Navbar = ({ onOpenNotificationModal }) => {
           </Link>
 
           {/* Dropdown menus */}
-          <NavDropdown label="Picks" icon="🔥" items={navStructure.picks.items} location={location} />
-          <NavDropdown label="Tools" icon="🛠️" items={navStructure.tools.items} location={location} />
-          <NavDropdown label="My Betting" icon="📊" items={navStructure.betting.items} location={location} />
+          <NavDropdown label="Picks" icon="🔥" items={NAV_STRUCTURE.picks.items} location={location} />
+          <NavDropdown label="Tools" icon="🛠️" items={NAV_STRUCTURE.tools.items} location={location} />
+          <NavDropdown label="My Betting" icon="📊" items={NAV_STRUCTURE.betting.items} location={location} />
 
           {/* Esoteric - Direct link (unique feature) */}
           <Link
@@ -286,7 +287,7 @@ const Navbar = ({ onOpenNotificationModal }) => {
             <span>Esoteric</span>
           </Link>
 
-          <NavDropdown label="Community" icon="👥" items={navStructure.community.items} location={location} />
+          <NavDropdown label="Community" icon="👥" items={NAV_STRUCTURE.community.items} location={location} />
 
           {/* Global Search - Desktop only */}
           <div className="desktop-only" style={{ marginLeft: '8px' }}>
@@ -388,7 +389,7 @@ const Navbar = ({ onOpenNotificationModal }) => {
           </Link>
 
           {/* Grouped sections */}
-          {Object.entries(navStructure).map(([key, section]) => (
+          {Object.entries(NAV_STRUCTURE).map(([key, section]) => (
             <div key={key} style={{ marginTop: '8px' }}>
               <div style={{ color: '#6b7280', fontSize: '11px', padding: '8px 14px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                 {section.icon} {section.label}

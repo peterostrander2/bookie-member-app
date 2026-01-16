@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import PropsSmashList from './PropsSmashList';
 import GameSmashList from './GameSmashList';
 import { usePreferences } from './usePreferences';
@@ -14,6 +14,29 @@ const CONFIDENCE_FILTERS = [
   { id: 'smash', label: '85%+', minConfidence: 85, color: '#10B981' }
 ];
 
+// Sports options (moved outside component to prevent recreation on every render)
+const SPORTS = [
+  { id: 'NBA', label: 'NBA', icon: '🏀' },
+  { id: 'NFL', label: 'NFL', icon: '🏈' },
+  { id: 'MLB', label: 'MLB', icon: '⚾' },
+  { id: 'NHL', label: 'NHL', icon: '🏒' },
+  { id: 'NCAAB', label: 'NCAAB', icon: '🏀' }
+];
+
+// Tab options (moved outside component to prevent recreation on every render)
+const TABS = [
+  { id: 'props', label: 'Player Props', icon: '👤', color: '#8B5CF6' },
+  { id: 'games', label: 'Game Picks', icon: '🎯', color: '#00D4FF' }
+];
+
+// Confidence tiers for display (moved outside component)
+const CONFIDENCE_TIERS = [
+  { label: 'SMASH', color: '#10B981', range: '85%+' },
+  { label: 'STRONG', color: '#F59E0B', range: '75-84%' },
+  { label: 'LEAN', color: '#3B82F6', range: '65-74%' },
+  { label: 'WATCH', color: '#6B7280', range: '<65%' }
+];
+
 // Unit sizing based on confidence tier
 const getUnitSize = (confidence) => {
   if (confidence >= 90) return { units: 2, label: '2 Units', emoji: '🔥🔥' };
@@ -23,8 +46,8 @@ const getUnitSize = (confidence) => {
   return { units: 0, label: 'Pass', emoji: '⚠️' };
 };
 
-// Today's Best Bets Component - Shows top SMASH tier picks
-const TodaysBestBets = ({ sport, onPickClick }) => {
+// Today's Best Bets Component - Shows top SMASH tier picks (memoized)
+const TodaysBestBets = memo(({ sport, onPickClick }) => {
   const [bestPicks, setBestPicks] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -143,16 +166,17 @@ const TodaysBestBets = ({ sport, onPickClick }) => {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative', zIndex: 1 }}>
-        {bestPicks.map((pick, idx) => {
+        {bestPicks.map((pick) => {
           const unitSize = getUnitSize(pick.confidence || pick.score || 85);
           const isProp = pick.player_name || pick.market?.includes('player');
           const pickDisplay = isProp
             ? `${pick.player_name} ${pick.side} ${pick.point}`
             : `${pick.team || pick.description} ${pick.point > 0 ? `+${pick.point}` : pick.point || ''}`;
+          const pickKey = pick.id || `${pick.player_name || pick.team}-${pick.market || pick.bet_type}`;
 
           return (
             <div
-              key={idx}
+              key={pickKey}
               style={{
                 backgroundColor: '#0a1a1510',
                 borderRadius: '12px',
@@ -254,7 +278,7 @@ const TodaysBestBets = ({ sport, onPickClick }) => {
       </div>
     </div>
   );
-};
+});
 
 const SmashSpotsPage = () => {
   const { preferences, updatePreference } = usePreferences();
@@ -321,19 +345,6 @@ const SmashSpotsPage = () => {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  // Sports with matching icons
-  const sports = [
-    { id: 'NBA', label: 'NBA', icon: '🏀' },
-    { id: 'NFL', label: 'NFL', icon: '🏈' },
-    { id: 'MLB', label: 'MLB', icon: '⚾' },
-    { id: 'NHL', label: 'NHL', icon: '🏒' },
-    { id: 'NCAAB', label: 'NCAAB', icon: '🏀' }
-  ];
-
-  const tabs = [
-    { id: 'props', label: 'Player Props', icon: '👤', color: '#8B5CF6' },
-    { id: 'games', label: 'Game Picks', icon: '🎯', color: '#00D4FF' }
-  ];
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#0a0a0f', padding: '20px' }}>
@@ -408,7 +419,7 @@ const SmashSpotsPage = () => {
         </div>
 
         <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '20px', flexWrap: 'wrap' }}>
-          {sports.map(s => (
+          {SPORTS.map(s => (
             <button
               key={s.id}
               onClick={() => handleSportChange(s.id)}
@@ -436,7 +447,7 @@ const SmashSpotsPage = () => {
         </div>
 
         <div style={{ display: 'flex', backgroundColor: '#12121f', borderRadius: '12px', padding: '4px', marginBottom: '16px' }}>
-          {tabs.map(tab => (
+          {TABS.map(tab => (
             <button
               key={tab.id}
               onClick={() => handleTabChange(tab.id)}
@@ -541,12 +552,7 @@ const SmashSpotsPage = () => {
             CONFIDENCE TIERS
           </div>
           <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
-            {[
-              { label: 'SMASH', color: '#10B981', range: '85%+' },
-              { label: 'STRONG', color: '#F59E0B', range: '75-84%' },
-              { label: 'LEAN', color: '#3B82F6', range: '65-74%' },
-              { label: 'WATCH', color: '#6B7280', range: '<65%' }
-            ].map(tier => (
+            {CONFIDENCE_TIERS.map(tier => (
               <div key={tier.label} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span style={{
                   padding: '2px 8px', borderRadius: '8px', fontSize: '10px', fontWeight: 'bold',

@@ -5,7 +5,7 @@
  * track parlays, and view history.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import api from './api';
 import { useToast } from './Toast';
 import { useBetSlip } from './BetSlip';
@@ -25,66 +25,8 @@ const ParlayBuilder = () => {
   const toast = useToast();
   const { selections, clearSlip } = useBetSlip();
 
-  useEffect(() => {
-    loadParlay();
-  }, []);
-
-  useEffect(() => {
-    if (activeTab === 'history') {
-      loadHistory();
-    }
-  }, [activeTab]);
-
-  // Recalculate odds when legs change
-  useEffect(() => {
-    if (legs.length >= 2) {
-      calculateOdds();
-    } else {
-      setCalculatedOdds(null);
-    }
-  }, [legs, stake]);
-
-  const loadParlay = async () => {
-    setLoading(true);
-    try {
-      const data = await api.getParlay(USER_ID);
-      setLegs(data.legs || []);
-      if (data.combined_odds) {
-        setCalculatedOdds({ combined_odds: data.combined_odds });
-      }
-    } catch (err) {
-      console.error('Failed to load parlay:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadHistory = async () => {
-    try {
-      const data = await api.getParlayHistory(USER_ID);
-      setHistory(data.parlays || []);
-      setHistoryStats(data.stats || {});
-    } catch (err) {
-      toast.error('Failed to load parlay history');
-    }
-  };
-
-  const calculateOdds = async () => {
-    if (legs.length < 2) return;
-    try {
-      const result = await api.calculateParlay(legs, stake);
-      if (result) {
-        setCalculatedOdds(result);
-      } else {
-        // Fallback to local calculation
-        setCalculatedOdds(calculateLocalOdds());
-      }
-    } catch {
-      setCalculatedOdds(calculateLocalOdds());
-    }
-  };
-
-  const calculateLocalOdds = () => {
+  // Memoized local odds calculation
+  const calculateLocalOdds = useCallback(() => {
     let multiplier = 1;
     legs.forEach(leg => {
       const odds = leg.odds || -110;
@@ -104,7 +46,69 @@ const ParlayBuilder = () => {
       potential_payout: payout.toFixed(2),
       potential_profit: (payout - stake).toFixed(2)
     };
-  };
+  }, [legs, stake]);
+
+  // Memoized load parlay function
+  const loadParlay = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await api.getParlay(USER_ID);
+      setLegs(data.legs || []);
+      if (data.combined_odds) {
+        setCalculatedOdds({ combined_odds: data.combined_odds });
+      }
+    } catch (err) {
+      console.error('Failed to load parlay:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Memoized load history function
+  const loadHistory = useCallback(async () => {
+    try {
+      const data = await api.getParlayHistory(USER_ID);
+      setHistory(data.parlays || []);
+      setHistoryStats(data.stats || {});
+    } catch (err) {
+      toast.error('Failed to load parlay history');
+    }
+  }, [toast]);
+
+  // Memoized calculate odds function
+  const calculateOdds = useCallback(async () => {
+    if (legs.length < 2) return;
+    try {
+      const result = await api.calculateParlay(legs, stake);
+      if (result) {
+        setCalculatedOdds(result);
+      } else {
+        // Fallback to local calculation
+        setCalculatedOdds(calculateLocalOdds());
+      }
+    } catch {
+      setCalculatedOdds(calculateLocalOdds());
+    }
+  }, [legs, stake, calculateLocalOdds]);
+
+  useEffect(() => {
+    loadParlay();
+  }, [loadParlay]);
+
+  useEffect(() => {
+    if (activeTab === 'history') {
+      loadHistory();
+    }
+  }, [activeTab, loadHistory]);
+
+  // Recalculate odds when legs change
+  useEffect(() => {
+    if (legs.length >= 2) {
+      calculateOdds();
+    } else {
+      setCalculatedOdds(null);
+    }
+  }, [legs.length, calculateOdds]);
 
   const addLeg = async (legData) => {
     const newLeg = {
@@ -640,8 +644,8 @@ const ParlayBuilder = () => {
   }
 };
 
-// Add Leg Form Component
-const AddLegForm = ({ onAdd }) => {
+// Add Leg Form Component - Memoized to prevent unnecessary re-renders
+const AddLegForm = React.memo(({ onAdd }) => {
   const [expanded, setExpanded] = useState(false);
   const [formData, setFormData] = useState({
     player: '',
@@ -854,10 +858,10 @@ const AddLegForm = ({ onAdd }) => {
       )}
     </div>
   );
-};
+});
 
-// Parlay History Component
-const ParlayHistory = ({ history, stats, getOutcomeColor }) => {
+// Parlay History Component - Memoized to prevent unnecessary re-renders
+const ParlayHistory = React.memo(({ history, stats, getOutcomeColor }) => {
   const formatDate = (dateStr) => {
     if (!dateStr) return '';
     const date = new Date(dateStr);
@@ -1061,6 +1065,6 @@ const ParlayHistory = ({ history, stats, getOutcomeColor }) => {
       )}
     </div>
   );
-};
+});
 
 export default ParlayBuilder;
