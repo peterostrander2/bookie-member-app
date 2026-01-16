@@ -332,6 +332,7 @@ export const FloatingBetSlip = () => {
             </div>
             <button
               onClick={() => setIsOpen(false)}
+              aria-label="Close bet slip"
               style={{
                 background: 'none',
                 border: 'none',
@@ -368,6 +369,7 @@ export const FloatingBetSlip = () => {
                       </span>
                       <button
                         onClick={() => removeSelection(pick.id)}
+                        aria-label={`Remove ${pick.player || pick.team || 'pick'} from bet slip`}
                         style={{
                           background: 'none',
                           border: 'none',
@@ -468,11 +470,14 @@ export const FloatingBetSlip = () => {
 
               {/* Stake input */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                <span style={{ color: '#6b7280', fontSize: '12px' }}>Stake $</span>
+                <label htmlFor="betslip-stake" style={{ color: '#6b7280', fontSize: '12px' }}>Stake $</label>
                 <input
+                  id="betslip-stake"
                   type="number"
                   value={totalStake}
                   onChange={(e) => setTotalStake(parseFloat(e.target.value) || 0)}
+                  aria-label="Enter stake amount in dollars"
+                  min="0"
                   style={{
                     flex: 1,
                     backgroundColor: '#0a0a0f',
