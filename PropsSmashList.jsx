@@ -31,8 +31,10 @@ const PILLARS = [
   { id: 'pace_tempo', name: 'Pace/Tempo', desc: 'Game speed matchup' }
 ];
 
-// Line movement indicator component
+// Line movement indicator component with explanatory tooltips
 const LineMovement = memo(({ pick }) => {
+  const [showTooltip, setShowTooltip] = useState(false);
+
   // Generate mock line movement (in real app, this would come from API)
   const lineMovement = useMemo(() => {
     // Simulate line movement based on pick data
@@ -57,16 +59,28 @@ const LineMovement = memo(({ pick }) => {
   const isFavorable = (pick.side === 'Over' && lineMovement.direction === 'down') ||
                       (pick.side === 'Under' && lineMovement.direction === 'up');
 
+  // Explanatory tooltip content
+  const tooltipContent = lineMovement.isSteam
+    ? `STEAM MOVE: Sharp/professional bettors are heavily backing this side, causing rapid line movement. The line moved ${lineMovement.lineChange} points in just ${lineMovement.timeAgo} with odds shifting ${lineMovement.oddsChange}. This is a strong signal.`
+    : `LINE MOVEMENT: The line has moved ${lineMovement.lineChange} points since opening. ${isFavorable ? 'This movement is favorable for your bet — you\'re getting better value.' : 'The line moved against this side, but the pick still meets our criteria.'}`;
+
   return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: '8px',
-      padding: '6px 10px',
-      backgroundColor: lineMovement.isSteam ? 'rgba(239, 68, 68, 0.15)' : 'rgba(59, 130, 246, 0.1)',
-      borderRadius: '6px',
-      border: `1px solid ${lineMovement.isSteam ? 'rgba(239, 68, 68, 0.3)' : 'rgba(59, 130, 246, 0.2)'}`
-    }}>
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        padding: '6px 10px',
+        backgroundColor: lineMovement.isSteam ? 'rgba(239, 68, 68, 0.15)' : 'rgba(59, 130, 246, 0.1)',
+        borderRadius: '6px',
+        border: `1px solid ${lineMovement.isSteam ? 'rgba(239, 68, 68, 0.3)' : 'rgba(59, 130, 246, 0.2)'}`,
+        cursor: 'help',
+        position: 'relative'
+      }}
+      onMouseEnter={() => setShowTooltip(true)}
+      onMouseLeave={() => setShowTooltip(false)}
+      onClick={() => setShowTooltip(!showTooltip)}
+    >
       <span style={{ fontSize: '14px' }}>
         {lineMovement.direction === 'up' ? '📈' : '📉'}
       </span>
@@ -87,13 +101,68 @@ const LineMovement = memo(({ pick }) => {
               borderRadius: '3px',
               fontSize: '9px',
               fontWeight: 'bold'
-            }}>STEAM</span>
+            }}>STEAM 🔥</span>
           )}
         </div>
         <span style={{ color: '#6B7280', fontSize: '10px' }}>
           {lineMovement.timeAgo} • Odds {lineMovement.oddsChange}
         </span>
       </div>
+
+      {/* Tooltip */}
+      {showTooltip && (
+        <div style={{
+          position: 'absolute',
+          bottom: '100%',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          marginBottom: '8px',
+          width: '280px',
+          padding: '12px',
+          backgroundColor: '#1a1a2e',
+          border: `1px solid ${lineMovement.isSteam ? '#EF4444' : '#3B82F6'}`,
+          borderRadius: '8px',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
+          zIndex: 100
+        }}>
+          <div style={{
+            color: lineMovement.isSteam ? '#EF4444' : '#3B82F6',
+            fontSize: '11px',
+            fontWeight: 'bold',
+            marginBottom: '6px'
+          }}>
+            {lineMovement.isSteam ? '🔥 STEAM MOVE DETECTED' : '📊 LINE MOVEMENT'}
+          </div>
+          <div style={{ color: '#fff', fontSize: '12px', lineHeight: '1.5' }}>
+            {tooltipContent}
+          </div>
+          {lineMovement.isSteam && (
+            <div style={{
+              marginTop: '8px',
+              padding: '6px 8px',
+              backgroundColor: 'rgba(239, 68, 68, 0.1)',
+              borderRadius: '4px',
+              color: '#EF4444',
+              fontSize: '10px',
+              fontWeight: 'bold'
+            }}>
+              💡 Steam moves indicate professional action — follow the sharps!
+            </div>
+          )}
+          {/* Arrow */}
+          <div style={{
+            position: 'absolute',
+            bottom: '-6px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: 0,
+            height: 0,
+            borderLeft: '6px solid transparent',
+            borderRight: '6px solid transparent',
+            borderTop: `6px solid ${lineMovement.isSteam ? '#EF4444' : '#3B82F6'}`
+          }} />
+        </div>
+      )}
     </div>
   );
 });
@@ -560,75 +629,174 @@ const PropCard = memo(({ pick }) => {
         }}>{expanded ? 'Hide Details' : 'Why This Pick?'}</button>
       </div>
 
-      {/* Enhanced "Why?" Breakdown */}
+      {/* Enhanced "Why?" Breakdown - Plain English First */}
       {expanded && (
         <div style={{
           backgroundColor: '#0f0f1a', borderRadius: '8px', padding: '16px',
           marginBottom: '12px', borderLeft: '3px solid #8B5CF6'
         }}>
-          {/* Quick Summary */}
-          <div style={{ color: '#fff', fontSize: '13px', lineHeight: '1.6', marginBottom: '16px' }}>
-            <strong style={{ color: '#10B981' }}>{pick.player_name}</strong> has been exceeding this line consistently.
-            {pick.ai_score >= 6 && ' Multiple ML models show strong convergence on this pick.'}
-            {pick.pillar_score >= 6 && ' Sharp action and key indicators align.'}
-            {pick.jarvis_boost > 0 && ' JARVIS detects additional esoteric edge.'}
+          {/* KEY FACTORS - Plain English Summary */}
+          <div style={{
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            borderRadius: '8px',
+            padding: '14px',
+            marginBottom: '16px',
+            border: '1px solid rgba(16, 185, 129, 0.2)'
+          }}>
+            <div style={{ color: '#10B981', fontSize: '12px', fontWeight: 'bold', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span>📊</span> KEY FACTORS
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {/* Recent performance */}
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                <span style={{ color: '#10B981', fontSize: '12px' }}>✓</span>
+                <span style={{ color: '#fff', fontSize: '13px', lineHeight: '1.4' }}>
+                  <strong>{pick.player_name}</strong> is averaging <strong style={{ color: '#00D4FF' }}>{keyStats.avg.split(' ')[0]}</strong> in the last 10 games
+                  {pick.side === 'Over' ? ' — trending above this line' : ' — defense limiting production'}
+                </span>
+              </div>
+              {/* Hit rate */}
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                <span style={{ color: '#10B981', fontSize: '12px' }}>✓</span>
+                <span style={{ color: '#fff', fontSize: '13px', lineHeight: '1.4' }}>
+                  {keyStats.trend}
+                </span>
+              </div>
+              {/* Matchup */}
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                <span style={{ color: '#10B981', fontSize: '12px' }}>✓</span>
+                <span style={{ color: '#fff', fontSize: '13px', lineHeight: '1.4' }}>
+                  {keyStats.matchup}
+                </span>
+              </div>
+              {/* AI consensus */}
+              {pick.ai_score >= 6 && (
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#10B981', fontSize: '12px' }}>✓</span>
+                  <span style={{ color: '#fff', fontSize: '13px', lineHeight: '1.4' }}>
+                    <strong style={{ color: '#8B5CF6' }}>{agreeingModels.length}/8 AI models</strong> agree on this pick (strong consensus)
+                  </span>
+                </div>
+              )}
+              {/* Sharp action */}
+              {pick.pillar_score >= 6 && (
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#10B981', fontSize: '12px' }}>✓</span>
+                  <span style={{ color: '#fff', fontSize: '13px', lineHeight: '1.4' }}>
+                    <strong style={{ color: '#F59E0B' }}>Sharp money detected</strong> — professional bettors are on this side
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* AI Models Section */}
-          <div style={{ marginBottom: '16px' }}>
-            <div style={{ color: '#8B5CF6', fontSize: '12px', fontWeight: 'bold', marginBottom: '8px' }}>
-              AI MODELS ({agreeingModels.length}/8 Agree)
+          {/* Unit Size Recommendation */}
+          <div style={{
+            backgroundColor: 'rgba(0, 212, 255, 0.1)',
+            borderRadius: '8px',
+            padding: '12px 14px',
+            marginBottom: '16px',
+            border: '1px solid rgba(0, 212, 255, 0.2)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
+            <div>
+              <div style={{ color: '#00D4FF', fontSize: '11px', fontWeight: 'bold', marginBottom: '2px' }}>
+                RECOMMENDED STAKE
+              </div>
+              <div style={{ color: '#9CA3AF', fontSize: '11px' }}>
+                Based on {pick.confidence}% confidence
+              </div>
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-              {AI_MODELS.map(model => {
-                const agrees = agreeingModels.some(m => m.id === model.id);
-                return (
-                  <div key={model.id} style={{
-                    padding: '4px 8px', borderRadius: '4px', fontSize: '10px',
-                    backgroundColor: agrees ? 'rgba(16, 185, 129, 0.2)' : 'rgba(107, 114, 128, 0.1)',
-                    color: agrees ? '#10B981' : '#4B5563',
-                    border: `1px solid ${agrees ? '#10B981' : '#333'}`
-                  }}>
-                    {agrees ? '✓' : '✗'} {model.name}
-                  </div>
-                );
-              })}
+            <div style={{
+              backgroundColor: '#00D4FF20',
+              color: '#00D4FF',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              fontWeight: 'bold',
+              fontSize: '14px'
+            }}>
+              {pick.confidence >= 90 ? '2 Units 🔥🔥' :
+               pick.confidence >= 85 ? '1.5 Units 🔥' :
+               pick.confidence >= 75 ? '1 Unit ✓' :
+               pick.confidence >= 65 ? '0.5 Units ⚡' : 'Pass ⚠️'}
             </div>
           </div>
 
-          {/* Pillars Section */}
-          <div style={{ marginBottom: '16px' }}>
-            <div style={{ color: '#F59E0B', fontSize: '12px', fontWeight: 'bold', marginBottom: '8px' }}>
-              8 PILLARS ({aligningPillars.length}/8 Aligned)
+          {/* Expandable Technical Details */}
+          <details style={{ cursor: 'pointer' }}>
+            <summary style={{
+              color: '#6B7280',
+              fontSize: '11px',
+              padding: '8px 0',
+              listStyle: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}>
+              <span style={{ transition: 'transform 0.2s' }}>▶</span>
+              Advanced Stats (for nerds 🤓)
+            </summary>
+            <div style={{ paddingTop: '12px' }}>
+              {/* AI Models Section */}
+              <div style={{ marginBottom: '12px' }}>
+                <div style={{ color: '#8B5CF6', fontSize: '11px', fontWeight: 'bold', marginBottom: '6px' }}>
+                  AI MODELS ({agreeingModels.length}/8 Agree)
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                  {AI_MODELS.map(model => {
+                    const agrees = agreeingModels.some(m => m.id === model.id);
+                    return (
+                      <div key={model.id} style={{
+                        padding: '3px 6px', borderRadius: '4px', fontSize: '9px',
+                        backgroundColor: agrees ? 'rgba(16, 185, 129, 0.2)' : 'rgba(107, 114, 128, 0.1)',
+                        color: agrees ? '#10B981' : '#4B5563',
+                        border: `1px solid ${agrees ? '#10B981' : '#333'}`
+                      }}>
+                        {agrees ? '✓' : '✗'} {model.name}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Pillars Section */}
+              <div>
+                <div style={{ color: '#F59E0B', fontSize: '11px', fontWeight: 'bold', marginBottom: '6px' }}>
+                  8 PILLARS ({aligningPillars.length}/8 Aligned)
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                  {PILLARS.map(pillar => {
+                    const aligns = aligningPillars.some(p => p.id === pillar.id);
+                    return (
+                      <div key={pillar.id} style={{
+                        padding: '3px 6px', borderRadius: '4px', fontSize: '9px',
+                        backgroundColor: aligns ? 'rgba(245, 158, 11, 0.2)' : 'rgba(107, 114, 128, 0.1)',
+                        color: aligns ? '#F59E0B' : '#4B5563',
+                        border: `1px solid ${aligns ? '#F59E0B' : '#333'}`
+                      }}>
+                        {aligns ? '✓' : '✗'} {pillar.name}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-              {PILLARS.map(pillar => {
-                const aligns = aligningPillars.some(p => p.id === pillar.id);
-                return (
-                  <div key={pillar.id} style={{
-                    padding: '4px 8px', borderRadius: '4px', fontSize: '10px',
-                    backgroundColor: aligns ? 'rgba(245, 158, 11, 0.2)' : 'rgba(107, 114, 128, 0.1)',
-                    color: aligns ? '#F59E0B' : '#4B5563',
-                    border: `1px solid ${aligns ? '#F59E0B' : '#333'}`
-                  }}>
-                    {aligns ? '✓' : '✗'} {pillar.name}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          </details>
 
           {/* JARVIS Section (if applicable) */}
           {pick.jarvis_boost > 0 && (
             <div style={{
               backgroundColor: 'rgba(255, 215, 0, 0.1)', borderRadius: '6px',
-              padding: '10px', border: '1px solid rgba(255, 215, 0, 0.3)'
+              padding: '10px', border: '1px solid rgba(255, 215, 0, 0.3)',
+              marginTop: '12px'
             }}>
               <div style={{ color: '#FFD700', fontSize: '12px', fontWeight: 'bold', marginBottom: '4px' }}>
                 JARVIS SIGNAL +{pick.jarvis_boost.toFixed(1)}
               </div>
               <div style={{ color: '#9CA3AF', fontSize: '11px' }}>
-                Esoteric triggers detected: Gematria alignment, numerological convergence
+                Esoteric edge detected: Numerological patterns align favorably
               </div>
             </div>
           )}

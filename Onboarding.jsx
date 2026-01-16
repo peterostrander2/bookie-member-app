@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 
 const ONBOARDING_KEY = 'bookie_onboarding_complete';
+const PREFERENCES_KEY = 'bookie_user_preferences'; // Must match usePreferences.js
 
 // Check if onboarding is complete
 export const isOnboardingComplete = () => {
@@ -29,11 +30,35 @@ export const resetOnboarding = () => {
   }
 };
 
+// Save to the main preferences system used by usePreferences hook
+const saveToPreferencesSystem = (sportsList, experienceLevel) => {
+  try {
+    // Get existing preferences or use defaults
+    const existingPrefs = JSON.parse(localStorage.getItem(PREFERENCES_KEY) || '{}');
+
+    // Update with onboarding selections - use first selected sport as favorite
+    const updatedPrefs = {
+      ...existingPrefs,
+      favoriteSport: sportsList[0] || 'NBA', // Primary sport
+      favoriteSports: sportsList, // All selected sports
+      experienceLevel: experienceLevel,
+      onboardingComplete: true,
+      defaultTab: 'props' // Default to props tab
+    };
+
+    localStorage.setItem(PREFERENCES_KEY, JSON.stringify(updatedPrefs));
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 const OnboardingWizard = ({ onComplete }) => {
   const [step, setStep] = useState(0);
   const [preferences, setPreferences] = useState({
     sports: ['NBA'], // Default to NBA
-    experienceLevel: 'intermediate'
+    experienceLevel: 'intermediate',
+    bettingStyle: 'balanced' // Add betting style preference
   });
 
   const sports = [
@@ -54,25 +79,17 @@ const OnboardingWizard = ({ onComplete }) => {
   };
 
   const handleComplete = () => {
-    // Save preferences
-    try {
-      localStorage.setItem('bookie_preferences', JSON.stringify(preferences));
-    } catch {
-      // Ignore
-    }
+    // Save preferences to the main preferences system
+    saveToPreferencesSystem(preferences.sports, preferences.experienceLevel);
     completeOnboarding();
-    onComplete?.();
+    onComplete?.(preferences); // Pass preferences to callback
   };
 
   const handleSkip = () => {
     // Save default preferences
-    try {
-      localStorage.setItem('bookie_preferences', JSON.stringify({ sports: ['NBA'], experienceLevel: 'intermediate' }));
-    } catch {
-      // Ignore
-    }
+    saveToPreferencesSystem(['NBA'], 'intermediate');
     completeOnboarding();
-    onComplete?.();
+    onComplete?.({ sports: ['NBA'], experienceLevel: 'intermediate' });
   };
 
   // 3-step flow with signal explanations
