@@ -1,5 +1,5 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 
 // Lazy load route components for code splitting
 const Dashboard = lazy(() => import('./Dashboard'));
@@ -501,6 +501,7 @@ const AppContent = () => {
                   <Route path="/props" element={<Props />} />
                   <Route path="/achievements" element={<AchievementsPage />} />
                   <Route path="/profile" element={<Profile />} />
+                  <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </Suspense>
             </ErrorBoundary>
