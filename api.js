@@ -200,23 +200,38 @@ export const api = {
     const data = await resp.json();
 
     // Normalize response - backend may return picks in different fields
-    const allPicks = data.picks || data.data || data.slate || [];
+    // Backend returns 'games', frontend expects 'picks'
+    const allPicks = data.picks || data.games || data.data || data.slate || [];
+
+    // Transform game format to pick format if needed
+    const normalizedPicks = allPicks.map(item => ({
+      ...item,
+      // Map backend fields to frontend expected fields
+      confidence: item.confidence || item.main_confidence || 0,
+      market: item.market || (item.spread !== undefined ? 'spreads' : 'totals'),
+      team: item.team || item.home_team,
+      point: item.point || item.spread || item.total,
+      price: item.price || -110,
+      home_team: item.home_team,
+      away_team: item.away_team,
+      sport: item.sport || sport.toUpperCase()
+    }));
 
     // Return with multiple field names for compatibility with different components
     return {
-      sport: data.sport,
+      sport: data.sport || sport.toUpperCase(),
       source: data.source,
       // Original format
-      slate: allPicks,
+      slate: normalizedPicks,
       // Dashboard expects 'picks'
-      picks: allPicks,
+      picks: normalizedPicks,
       // Also include raw data for filtering
-      data: allPicks,
+      data: normalizedPicks,
       // Props/games may be nested
-      props: data.props || { picks: allPicks.filter(p => p.market?.includes('player_') || p.market?.includes('points') || p.market?.includes('rebounds') || p.market?.includes('assists')) },
-      game_picks: data.game_picks || { picks: allPicks.filter(p => p.market === 'spreads' || p.market === 'totals' || p.market === 'h2h') },
+      props: data.props || { picks: normalizedPicks.filter(p => p.market?.includes('player_') || p.market?.includes('points') || p.market?.includes('rebounds') || p.market?.includes('assists')) },
+      game_picks: data.game_picks || { picks: normalizedPicks.filter(p => p.market === 'spreads' || p.market === 'totals' || p.market === 'h2h') },
       daily_energy: data.daily_energy,
-      count: data.count || allPicks.length,
+      count: data.count || normalizedPicks.length,
       timestamp: data.timestamp
     };
   },
