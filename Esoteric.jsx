@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import api from './api';
 import {
   getDailyEsotericReading,
   getGematriaAnalysis,
@@ -11,6 +12,8 @@ import {
 
 const Esoteric = () => {
   const [dailyReading, setDailyReading] = useState(null);
+  const [backendEnergy, setBackendEnergy] = useState(null);
+  const [loadingBackend, setLoadingBackend] = useState(true);
   const [awayTeam, setAwayTeam] = useState('');
   const [homeTeam, setHomeTeam] = useState('');
   const [gameDate, setGameDate] = useState(new Date().toISOString().split('T')[0]);
@@ -20,10 +23,26 @@ const Esoteric = () => {
   const [showCiphers, setShowCiphers] = useState(false);
 
   useEffect(() => {
-    // Load daily reading on mount (frontend calculation)
+    // Load daily reading on mount (frontend calculation as fallback)
     const reading = getDailyEsotericReading(new Date());
     setDailyReading(reading);
+
+    // Also fetch from backend for historical accuracy data
+    fetchBackendEnergy();
   }, []);
+
+  const fetchBackendEnergy = async () => {
+    setLoadingBackend(true);
+    try {
+      const data = await api.getTodayEnergy();
+      if (data) {
+        setBackendEnergy(data);
+      }
+    } catch (err) {
+      console.error('Error fetching backend energy:', err);
+    }
+    setLoadingBackend(false);
+  };
 
   const analyzeMatchup = () => {
     if (!awayTeam || !homeTeam) return;
@@ -110,6 +129,23 @@ const Esoteric = () => {
                 <div style={{ color: '#9ca3af', fontSize: '12px' }}>
                   Moon Phase
                 </div>
+                {/* Historical accuracy from backend */}
+                {backendEnergy?.moon_phase_accuracy && (
+                  <div style={{
+                    marginTop: '8px',
+                    padding: '4px 8px',
+                    backgroundColor: backendEnergy.moon_phase_accuracy.historical_edge > 0 ? '#00FF8820' : '#FF444420',
+                    borderRadius: '4px',
+                    fontSize: '10px',
+                    color: backendEnergy.moon_phase_accuracy.historical_edge > 0 ? '#00FF88' : '#FF4444'
+                  }}>
+                    {backendEnergy.moon_phase_accuracy.historical_edge > 0 ? '+' : ''}
+                    {backendEnergy.moon_phase_accuracy.historical_edge.toFixed(1)}% edge
+                    <div style={{ color: '#6b7280', fontSize: '9px' }}>
+                      ({backendEnergy.moon_phase_accuracy.sample_size} samples)
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Life Path */}
@@ -133,6 +169,23 @@ const Esoteric = () => {
                 <div style={{ color: '#9ca3af', fontSize: '12px' }}>
                   {[8, 11, 22, 33].includes(dailyReading.lifePath) ? 'Master Number!' : 'Numerology'}
                 </div>
+                {/* Historical accuracy from backend */}
+                {backendEnergy?.life_path_accuracy && (
+                  <div style={{
+                    marginTop: '8px',
+                    padding: '4px 8px',
+                    backgroundColor: backendEnergy.life_path_accuracy.historical_edge > 0 ? '#00FF8820' : '#FF444420',
+                    borderRadius: '4px',
+                    fontSize: '10px',
+                    color: backendEnergy.life_path_accuracy.historical_edge > 0 ? '#00FF88' : '#FF4444'
+                  }}>
+                    {backendEnergy.life_path_accuracy.historical_edge > 0 ? '+' : ''}
+                    {backendEnergy.life_path_accuracy.historical_edge.toFixed(1)}% edge
+                    <div style={{ color: '#6b7280', fontSize: '9px' }}>
+                      ({backendEnergy.life_path_accuracy.sample_size} samples)
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Planetary Ruler */}
@@ -199,6 +252,57 @@ const Esoteric = () => {
                 ))}
               </div>
             </div>
+
+            {/* Historical Accuracy Section - from backend */}
+            {backendEnergy?.signal_accuracy && (
+              <div style={{
+                backgroundColor: '#12121f',
+                borderRadius: '12px',
+                padding: '20px',
+                marginBottom: '15px',
+                border: '1px solid #00FF8840'
+              }}>
+                <h4 style={{ color: '#00FF88', fontSize: '14px', margin: '0 0 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  📈 Historical Accuracy
+                  <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: 'normal' }}>
+                    (Last 30 days)
+                  </span>
+                </h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+                  {Object.entries(backendEnergy.signal_accuracy).map(([signal, data]) => (
+                    <div key={signal} style={{
+                      backgroundColor: '#0a0a0f',
+                      padding: '12px',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}>
+                      <div>
+                        <div style={{ color: '#fff', fontSize: '13px', fontWeight: '500', textTransform: 'capitalize' }}>
+                          {signal.replace(/_/g, ' ')}
+                        </div>
+                        <div style={{ color: '#6b7280', fontSize: '11px' }}>
+                          {data.description || `When ${signal} is active`}
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{
+                          color: data.edge > 0 ? '#00FF88' : data.edge < 0 ? '#FF4444' : '#9ca3af',
+                          fontSize: '16px',
+                          fontWeight: 'bold'
+                        }}>
+                          {data.edge > 0 ? '+' : ''}{data.edge?.toFixed(1) || '0.0'}%
+                        </div>
+                        <div style={{ color: '#6b7280', fontSize: '10px' }}>
+                          {data.win_rate?.toFixed(0) || 50}% win ({data.sample_size || 0})
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Natural Bias & Recommendation */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
