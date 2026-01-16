@@ -3,7 +3,7 @@ import PropsSmashList from './PropsSmashList';
 import GameSmashList from './GameSmashList';
 import { usePreferences } from './usePreferences';
 
-const AUTO_REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
+const AUTO_REFRESH_INTERVAL = 30 * 60 * 1000; // 30 minutes
 
 const SmashSpotsPage = () => {
   const { preferences, updatePreference } = usePreferences();
