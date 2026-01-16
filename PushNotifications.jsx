@@ -207,8 +207,8 @@ async function syncPreferencesWithServer(subscription, preferences) {
   }
 }
 
-// Push Notification Settings Component
-export const PushNotificationSettings = () => {
+// Push Notification Settings Component (Enhanced)
+export const PushNotificationSettings = ({ onOpenModal }) => {
   const {
     isSupported,
     permission,
@@ -220,8 +220,21 @@ export const PushNotificationSettings = () => {
   } = usePush();
   const toast = useToast();
   const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState(() => {
+    try {
+      return localStorage.getItem('bookie_notification_email') || '';
+    } catch {
+      return '';
+    }
+  });
 
   const handleToggleSubscription = async () => {
+    if (!isSubscribed && onOpenModal) {
+      // Open the onboarding modal instead of directly subscribing
+      onOpenModal();
+      return;
+    }
+
     setLoading(true);
     try {
       if (isSubscribed) {
@@ -242,11 +255,19 @@ export const PushNotificationSettings = () => {
     if (!isSupported || permission !== 'granted') return;
 
     new Notification('Bookie-o-em Test', {
-      body: 'Push notifications are working!',
+      body: `Push notifications are working! Threshold: ${preferences.confidenceThreshold || 85}%+`,
       icon: '/icon-192.png',
       badge: '/icon-192.png',
       tag: 'test-notification'
     });
+  };
+
+  const handleEmailSave = () => {
+    if (email) {
+      localStorage.setItem('bookie_notification_email', email);
+      updatePreferences({ emailNotifications: true });
+      toast.success('Email saved for notifications');
+    }
   };
 
   if (!isSupported) {
@@ -296,7 +317,7 @@ export const PushNotificationSettings = () => {
             {permission === 'denied'
               ? 'Notifications blocked in browser settings'
               : isSubscribed
-                ? 'Currently receiving notifications'
+                ? `Receiving alerts for ${preferences.confidenceThreshold || 85}%+ picks`
                 : 'Get alerts for SMASH picks'}
           </div>
         </div>
@@ -306,9 +327,9 @@ export const PushNotificationSettings = () => {
           disabled={loading || permission === 'denied'}
           style={{
             padding: '8px 20px',
-            backgroundColor: isSubscribed ? '#FF444420' : '#00FF8820',
-            color: isSubscribed ? '#FF4444' : '#00FF88',
-            border: `1px solid ${isSubscribed ? '#FF444450' : '#00FF8850'}`,
+            backgroundColor: isSubscribed ? '#FF444420' : '#10B98120',
+            color: isSubscribed ? '#FF4444' : '#10B981',
+            border: `1px solid ${isSubscribed ? '#FF444450' : '#10B98150'}`,
             borderRadius: '8px',
             cursor: permission === 'denied' ? 'not-allowed' : 'pointer',
             fontWeight: 'bold',
@@ -320,16 +341,70 @@ export const PushNotificationSettings = () => {
         </button>
       </div>
 
-      {/* Notification Types */}
+      {/* Notification Types - Only shown when subscribed */}
       {isSubscribed && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {/* Confidence Threshold Slider */}
+          <div style={{
+            padding: '14px',
+            backgroundColor: '#10B98115',
+            borderRadius: '10px',
+            border: '1px solid #10B98130',
+            marginBottom: '4px'
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '10px'
+            }}>
+              <div>
+                <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>
+                  Confidence Threshold
+                </div>
+                <div style={{ color: '#6b7280', fontSize: '11px' }}>
+                  Only notify for picks above this confidence
+                </div>
+              </div>
+              <div style={{
+                backgroundColor: '#10B98130',
+                color: '#10B981',
+                padding: '4px 10px',
+                borderRadius: '6px',
+                fontWeight: 'bold',
+                fontSize: '13px'
+              }}>
+                {preferences.confidenceThreshold || 85}%+
+              </div>
+            </div>
+            <input
+              type="range"
+              min="65"
+              max="95"
+              step="5"
+              value={preferences.confidenceThreshold || 85}
+              onChange={(e) => updatePreferences({ confidenceThreshold: parseInt(e.target.value) })}
+              style={{ width: '100%', accentColor: '#10B981' }}
+            />
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              marginTop: '4px',
+              fontSize: '10px',
+              color: '#6b7280'
+            }}>
+              <span>65% (More)</span>
+              <span>95% (Fewer)</span>
+            </div>
+          </div>
+
           <h4 style={{ color: '#9ca3af', fontSize: '12px', textTransform: 'uppercase', marginBottom: '4px' }}>
             Notification Types
           </h4>
 
           <ToggleOption
             label="SMASH Alerts"
-            description="High-conviction picks (85%+ confidence)"
+            description={`High-conviction picks (${preferences.confidenceThreshold || 85}%+ confidence)`}
             checked={preferences.smashAlerts}
             onChange={(v) => updatePreferences({ smashAlerts: v })}
             highlight
@@ -355,6 +430,63 @@ export const PushNotificationSettings = () => {
             checked={preferences.resultNotifications}
             onChange={(v) => updatePreferences({ resultNotifications: v })}
           />
+
+          {/* Email Notifications */}
+          <div style={{
+            padding: '14px',
+            backgroundColor: '#0a0a0f',
+            borderRadius: '10px',
+            marginTop: '8px'
+          }}>
+            <ToggleOption
+              label="Email Notifications"
+              description="Also receive alerts via email"
+              checked={preferences.emailNotifications || false}
+              onChange={(v) => {
+                updatePreferences({ emailNotifications: v });
+                if (!v) {
+                  localStorage.removeItem('bookie_notification_email');
+                }
+              }}
+            />
+            {preferences.emailNotifications && (
+              <div style={{ marginTop: '12px' }}>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input
+                    type="email"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    style={{
+                      flex: 1,
+                      padding: '10px',
+                      backgroundColor: '#1a1a2e',
+                      border: '1px solid #333',
+                      borderRadius: '6px',
+                      color: '#fff',
+                      fontSize: '13px'
+                    }}
+                  />
+                  <button
+                    onClick={handleEmailSave}
+                    disabled={!email}
+                    style={{
+                      padding: '10px 14px',
+                      backgroundColor: email ? '#10B981' : '#333',
+                      color: email ? '#fff' : '#666',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: email ? 'pointer' : 'not-allowed',
+                      fontSize: '12px',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Test Button */}
           <button
@@ -444,30 +576,26 @@ const ToggleOption = ({ label, description, checked, onChange, highlight = false
   </div>
 );
 
-// SMASH Alert Bell (mini component for navbar)
-export const SmashAlertBell = () => {
-  const { isSupported, isSubscribed, subscribe } = usePush();
+// SMASH Alert Bell (mini component for navbar) - Now opens onboarding modal
+export const SmashAlertBell = ({ onOpenModal }) => {
+  const { isSupported, isSubscribed, preferences } = usePush();
   const toast = useToast();
   const [animate, setAnimate] = useState(false);
 
-  const handleClick = async () => {
+  const handleClick = () => {
     if (!isSupported) {
-      toast.info('Push notifications not supported');
+      toast.info('Push notifications not supported in this browser');
       return;
     }
 
     if (isSubscribed) {
-      toast.info('SMASH alerts enabled');
+      toast.info(`SMASH alerts enabled (${preferences.confidenceThreshold || 85}%+ threshold)`);
       setAnimate(true);
       setTimeout(() => setAnimate(false), 1000);
     } else {
-      try {
-        await subscribe();
-        toast.success('SMASH alerts enabled!');
-      } catch (error) {
-        if (error.message.includes('denied')) {
-          toast.error('Please enable notifications in browser settings');
-        }
+      // Open the onboarding modal instead of directly subscribing
+      if (onOpenModal) {
+        onOpenModal();
       }
     }
   };
@@ -475,24 +603,37 @@ export const SmashAlertBell = () => {
   return (
     <button
       onClick={handleClick}
-      title={isSubscribed ? 'SMASH alerts enabled' : 'Enable SMASH alerts'}
+      title={isSubscribed ? `SMASH alerts enabled (${preferences.confidenceThreshold || 85}%+)` : 'Enable SMASH alerts'}
       style={{
         width: '36px',
         height: '36px',
         borderRadius: '50%',
         border: '1px solid #333',
-        backgroundColor: isSubscribed ? '#00FF8815' : '#1a1a2e',
-        color: isSubscribed ? '#00FF88' : '#6b7280',
+        backgroundColor: isSubscribed ? '#10B98120' : '#1a1a2e',
+        color: isSubscribed ? '#10B981' : '#6b7280',
         cursor: 'pointer',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         fontSize: '16px',
         transition: 'all 0.2s',
-        animation: animate ? 'ring 0.5s ease-in-out' : 'none'
+        animation: animate ? 'ring 0.5s ease-in-out' : 'none',
+        position: 'relative'
       }}
     >
       {isSubscribed ? '🔔' : '🔕'}
+      {!isSubscribed && (
+        <span style={{
+          position: 'absolute',
+          top: '-2px',
+          right: '-2px',
+          width: '10px',
+          height: '10px',
+          backgroundColor: '#10B981',
+          borderRadius: '50%',
+          border: '2px solid #0a0a0f'
+        }} />
+      )}
       <style>{`
         @keyframes ring {
           0%, 100% { transform: rotate(0); }

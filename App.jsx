@@ -37,6 +37,7 @@ import { BetSlipProvider, FloatingBetSlip } from './BetSlip';
 import ErrorBoundary from './ErrorBoundary';
 import { OfflineProvider, OfflineBanner, UpdateBanner } from './OfflineIndicator';
 import { PushProvider, SmashAlertBell } from './PushNotifications';
+import { NotificationOnboardingModal, useNotificationOnboarding } from './NotificationOnboarding';
 import api from './api';
 
 // Loading fallback for Suspense
@@ -141,7 +142,7 @@ const NavDropdown = ({ label, icon, items, location }) => {
   );
 };
 
-const Navbar = () => {
+const Navbar = ({ onOpenNotificationModal }) => {
   const location = useLocation();
   const [health, setHealth] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -287,7 +288,7 @@ const Navbar = () => {
 
         {/* Right side actions */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <SmashAlertBell />
+          <SmashAlertBell onOpenModal={onOpenNotificationModal} />
           <SignalBell />
           <Link
             to="/profile"
@@ -459,6 +460,7 @@ const AppContent = () => {
   const { theme } = useTheme();
   const location = useLocation();
   const [showOnboarding, setShowOnboarding] = useState(!isOnboardingComplete());
+  const { showModal, openModal, closeModal, onEnabled } = useNotificationOnboarding();
 
   // Track page views on route change
   useEffect(() => {
@@ -472,8 +474,14 @@ const AppContent = () => {
       {showOnboarding && (
         <OnboardingWizard onComplete={() => setShowOnboarding(false)} />
       )}
+      {/* Notification Onboarding Modal */}
+      <NotificationOnboardingModal
+        isOpen={showModal}
+        onClose={closeModal}
+        onEnabled={onEnabled}
+      />
       <div style={{ backgroundColor: theme.bg, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-          <Navbar />
+          <Navbar onOpenNotificationModal={openModal} />
           <div style={{ flex: 1 }}>
             <ErrorBoundary>
               <Suspense fallback={<PageLoader />}>
