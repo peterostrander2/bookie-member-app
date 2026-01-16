@@ -131,6 +131,113 @@ export const BetSlipProvider = ({ children }) => {
   );
 };
 
+// Persistent bottom bar component
+export const PersistentBetSlipBar = () => {
+  const {
+    selections,
+    calculateParlayOdds,
+    calculatePayout,
+    isOpen,
+    setIsOpen
+  } = useBetSlip();
+
+  const parlayOdds = calculateParlayOdds();
+  const payout = calculatePayout(100);
+
+  // Don't show if no selections
+  if (selections.length === 0) return null;
+
+  const formatOdds = (odds) => {
+    if (!odds) return '';
+    return odds > 0 ? `+${odds}` : odds.toString();
+  };
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => setIsOpen(true)}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setIsOpen(true); }}
+      style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: '56px',
+        backgroundColor: '#1a1a2e',
+        borderTop: '1px solid #333',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 20px',
+        zIndex: 998,
+        cursor: 'pointer',
+        boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.3)'
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{
+          width: '40px',
+          height: '40px',
+          borderRadius: '10px',
+          backgroundColor: '#00D4FF20',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '20px',
+          position: 'relative'
+        }}>
+          🎫
+          <span style={{
+            position: 'absolute',
+            top: '-4px',
+            right: '-4px',
+            width: '18px',
+            height: '18px',
+            borderRadius: '50%',
+            backgroundColor: '#00D4FF',
+            color: '#000',
+            fontSize: '11px',
+            fontWeight: 'bold',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            {selections.length}
+          </span>
+        </div>
+        <div>
+          <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>
+            Bet Slip
+          </div>
+          <div style={{ color: '#9ca3af', fontSize: '12px' }}>
+            {selections.length} {selections.length === 1 ? 'pick' : 'picks'}
+            {parlayOdds && <span style={{ color: '#FFD700' }}> • Parlay {formatOdds(parlayOdds)}</span>}
+          </div>
+        </div>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ color: '#6b7280', fontSize: '10px' }}>POTENTIAL</div>
+          <div style={{ color: '#00FF88', fontWeight: 'bold', fontSize: '16px' }}>
+            ${payout.toFixed(0)}
+          </div>
+        </div>
+        <div style={{
+          backgroundColor: '#00D4FF',
+          color: '#000',
+          padding: '8px 16px',
+          borderRadius: '8px',
+          fontWeight: 'bold',
+          fontSize: '13px'
+        }}>
+          View
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Floating bet slip component
 export const FloatingBetSlip = () => {
   const {
@@ -146,6 +253,8 @@ export const FloatingBetSlip = () => {
   const toast = useToast();
   const [totalStake, setTotalStake] = useState(100);
 
+  // Show persistent bar when not open and has selections
+  // Show full panel when open
   if (selections.length === 0 && !isOpen) return null;
 
   const parlayOdds = calculateParlayOdds();
@@ -176,48 +285,9 @@ export const FloatingBetSlip = () => {
 
   return (
     <>
-      {/* Floating button when closed */}
+      {/* Persistent bottom bar when closed */}
       {!isOpen && selections.length > 0 && (
-        <button
-          onClick={() => setIsOpen(true)}
-          style={{
-            position: 'fixed',
-            bottom: '20px',
-            right: '20px',
-            width: '60px',
-            height: '60px',
-            borderRadius: '50%',
-            backgroundColor: '#00D4FF',
-            color: '#000',
-            border: 'none',
-            cursor: 'pointer',
-            boxShadow: '0 4px 20px rgba(0, 212, 255, 0.4)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '24px',
-            zIndex: 999
-          }}
-        >
-          🎫
-          <span style={{
-            position: 'absolute',
-            top: '-5px',
-            right: '-5px',
-            width: '24px',
-            height: '24px',
-            borderRadius: '50%',
-            backgroundColor: '#FF4444',
-            color: '#fff',
-            fontSize: '12px',
-            fontWeight: 'bold',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
-            {selections.length}
-          </span>
-        </button>
+        <PersistentBetSlipBar />
       )}
 
       {/* Expanded bet slip */}

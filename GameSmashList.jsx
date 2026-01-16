@@ -4,6 +4,7 @@ import { useToast } from './Toast';
 import { PlaceBetButton } from './BetslipModal';
 import { ShareButton } from './ShareButton';
 import { AddToSlipButton } from './BetSlip';
+import { HelpIcon, METRIC_TOOLTIPS } from './Tooltip';
 
 // AI Models and Pillars for enhanced "Why?" breakdown
 const AI_MODELS = [
@@ -53,7 +54,7 @@ const getTierConfig = (conf) => {
 };
 
 // Memoized score badge
-const ScoreBadge = memo(({ score, maxScore, label }) => {
+const ScoreBadge = memo(({ score, maxScore, label, tooltip }) => {
   const percentage = (score / maxScore) * 100;
   const getColor = () => {
     if (percentage >= 80) return '#10B981';
@@ -67,7 +68,10 @@ const ScoreBadge = memo(({ score, maxScore, label }) => {
       padding: '4px 8px', backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: '8px', minWidth: '50px'
     }}>
       <span style={{ color: getColor(), fontWeight: 'bold', fontSize: '16px' }}>{score.toFixed(1)}</span>
-      <span style={{ color: '#6B7280', fontSize: '10px', textTransform: 'uppercase' }}>{label}</span>
+      <span style={{ color: '#6B7280', fontSize: '10px', textTransform: 'uppercase', display: 'flex', alignItems: 'center' }}>
+        {label}
+        {tooltip && <HelpIcon tooltip={tooltip} size={12} />}
+      </span>
     </div>
   );
 });
@@ -241,7 +245,10 @@ const PickCard = memo(({ pick, injuries = [] }) => {
           <div style={{ color: tierConfig.color, fontWeight: 'bold', fontSize: tierConfig.size === 'large' ? '24px' : '20px' }}>
             {pick.confidence}%
           </div>
-          <div style={{ color: '#6B7280', fontSize: '11px' }}>confidence</div>
+          <div style={{ color: '#6B7280', fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+            confidence
+            <HelpIcon tooltip={METRIC_TOOLTIPS.confidence} size={12} />
+          </div>
         </div>
       </div>
 
@@ -268,9 +275,9 @@ const PickCard = memo(({ pick, injuries = [] }) => {
             <div style={{ color: '#00D4FF', fontSize: '14px', fontWeight: '500' }}>{formatOdds(pick.price)}</div>
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
-            {pick.ai_score !== undefined && <ScoreBadge score={pick.ai_score} maxScore={8} label="AI" />}
-            {pick.pillar_score !== undefined && <ScoreBadge score={pick.pillar_score} maxScore={8} label="Pillars" />}
-            {pick.total_score !== undefined && <ScoreBadge score={pick.total_score} maxScore={20} label="Total" />}
+            {pick.ai_score !== undefined && <ScoreBadge score={pick.ai_score} maxScore={8} label="AI" tooltip={METRIC_TOOLTIPS.aiScore} />}
+            {pick.pillar_score !== undefined && <ScoreBadge score={pick.pillar_score} maxScore={8} label="Pillars" tooltip={METRIC_TOOLTIPS.pillarsScore} />}
+            {pick.total_score !== undefined && <ScoreBadge score={pick.total_score} maxScore={20} label="Total" tooltip={METRIC_TOOLTIPS.totalScore} />}
           </div>
         </div>
       </div>
@@ -278,8 +285,12 @@ const PickCard = memo(({ pick, injuries = [] }) => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
         <div style={{ display: 'flex', gap: '16px' }}>
           {pick.edge && (
-            <div>
-              <span style={{ color: '#6B7280', fontSize: '11px' }}>Edge: </span>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <span style={{ color: '#6B7280', fontSize: '11px', display: 'flex', alignItems: 'center' }}>
+                Edge
+                <HelpIcon tooltip={METRIC_TOOLTIPS.edge} size={12} />
+                :&nbsp;
+              </span>
               <span style={{ color: pick.edge > 0 ? '#10B981' : '#EF4444', fontWeight: 'bold', fontSize: '13px' }}>
                 {pick.edge > 0 ? '+' : ''}{(pick.edge * 100).toFixed(1)}%
               </span>

@@ -75,7 +75,7 @@ const OnboardingWizard = ({ onComplete }) => {
     onComplete?.();
   };
 
-  // Streamlined 2-step flow
+  // 3-step flow with signal explanations
   const steps = [
     // Step 0: Welcome + Sport Selection
     {
@@ -144,7 +144,123 @@ const OnboardingWizard = ({ onComplete }) => {
         </div>
       )
     },
-    // Step 1: Quick Tips + Get Started
+    // Step 1: Understanding the Signals
+    {
+      title: 'Understanding Our Signals',
+      content: (
+        <div>
+          <p style={{ color: '#9ca3af', fontSize: '13px', textAlign: 'center', marginBottom: '16px' }}>
+            Every pick shows these key metrics
+          </p>
+
+          {/* Signal explanations */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {/* AI Score */}
+            <div style={{
+              padding: '12px',
+              backgroundColor: '#1a1a2e',
+              borderRadius: '8px',
+              border: '1px solid #333'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+                <div style={{
+                  backgroundColor: 'rgba(0, 212, 255, 0.2)',
+                  color: '#00D4FF',
+                  padding: '4px 8px',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  fontWeight: 'bold',
+                  minWidth: '40px',
+                  textAlign: 'center'
+                }}>6.5</div>
+                <span style={{ color: '#fff', fontWeight: '500', fontSize: '14px' }}>AI Score (0-8)</span>
+              </div>
+              <p style={{ color: '#6b7280', fontSize: '12px', margin: 0, lineHeight: 1.4 }}>
+                Combines 8 ML models: Ensemble, LSTM, Monte Carlo, XGBoost, Neural Net, Random Forest, Bayesian, and Regression.
+                <span style={{ color: '#10B981' }}> 6+</span> = strong agreement.
+              </p>
+            </div>
+
+            {/* Pillars Score */}
+            <div style={{
+              padding: '12px',
+              backgroundColor: '#1a1a2e',
+              borderRadius: '8px',
+              border: '1px solid #333'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+                <div style={{
+                  backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                  color: '#F59E0B',
+                  padding: '4px 8px',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  fontWeight: 'bold',
+                  minWidth: '40px',
+                  textAlign: 'center'
+                }}>5.2</div>
+                <span style={{ color: '#fff', fontWeight: '500', fontSize: '14px' }}>Pillars Score (0-8)</span>
+              </div>
+              <p style={{ color: '#6b7280', fontSize: '12px', margin: 0, lineHeight: 1.4 }}>
+                Evaluates sharp money, reverse line movement, matchup history, recent form, rest advantage, home/away, injuries, and pace.
+                <span style={{ color: '#10B981' }}> 5+</span> = many pillars align.
+              </p>
+            </div>
+
+            {/* Confidence Tiers */}
+            <div style={{
+              padding: '12px',
+              backgroundColor: '#1a1a2e',
+              borderRadius: '8px',
+              border: '1px solid #333'
+            }}>
+              <div style={{ color: '#fff', fontWeight: '500', fontSize: '14px', marginBottom: '8px' }}>
+                Confidence Tiers
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                <span style={{ backgroundColor: 'rgba(16, 185, 129, 0.2)', color: '#10B981', padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold' }}>
+                  SMASH 85%+
+                </span>
+                <span style={{ backgroundColor: 'rgba(245, 158, 11, 0.2)', color: '#F59E0B', padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold' }}>
+                  STRONG 75-84%
+                </span>
+                <span style={{ backgroundColor: 'rgba(59, 130, 246, 0.2)', color: '#3B82F6', padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold' }}>
+                  LEAN 65-74%
+                </span>
+                <span style={{ backgroundColor: 'rgba(107, 114, 128, 0.2)', color: '#6B7280', padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold' }}>
+                  WATCH &lt;65%
+                </span>
+              </div>
+            </div>
+
+            {/* Edge */}
+            <div style={{
+              padding: '12px',
+              backgroundColor: '#1a1a2e',
+              borderRadius: '8px',
+              border: '1px solid #333'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+                <div style={{
+                  backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                  color: '#10B981',
+                  padding: '4px 8px',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  fontWeight: 'bold'
+                }}>+4.2%</div>
+                <span style={{ color: '#fff', fontWeight: '500', fontSize: '14px' }}>Edge %</span>
+              </div>
+              <p style={{ color: '#6b7280', fontSize: '12px', margin: 0, lineHeight: 1.4 }}>
+                Expected value vs. the betting line.
+                <span style={{ color: '#10B981' }}> Positive edge = +EV bet.</span> Focus on 3%+ edge for best results.
+              </p>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    // Step 2: Quick Tips + Get Started
     {
       title: "You're Ready!",
       content: (
@@ -280,7 +396,7 @@ const OnboardingWizard = ({ onComplete }) => {
             </button>
           ) : (
             <button
-              onClick={() => setStep(0)}
+              onClick={() => setStep(s => s - 1)}
               style={{
                 padding: '10px 20px',
                 backgroundColor: 'transparent',
