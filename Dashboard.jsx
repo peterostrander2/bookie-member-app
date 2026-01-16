@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import api from './api';
 import { getAllPicks, getStats } from './clvTracker';
@@ -23,6 +23,28 @@ const MIN_FEATURED_CONFIDENCE = 65;
 const hasVisitedBefore = () => localStorage.getItem('dashboard_visited') === 'true';
 const markAsVisited = () => localStorage.setItem('dashboard_visited', 'true');
 
+// Demo picks (moved outside component to prevent recreation on every render)
+const DEMO_PICKS = [
+  { player: 'LeBron James', side: 'Over', line: 25.5, stat_type: 'points', odds: -110, confidence: 87, sport: 'NBA' },
+  { player: 'Jayson Tatum', side: 'Over', line: 27.5, stat_type: 'points', odds: -115, confidence: 85, sport: 'NBA' },
+  { player: 'Luka Doncic', side: 'Over', line: 9.5, stat_type: 'assists', odds: -105, confidence: 82, sport: 'NBA' },
+  { team: 'Lakers', side: '-3.5', line: -3.5, bet_type: 'spread', odds: -110, confidence: 79, sport: 'NBA' },
+  { player: 'Nikola Jokic', side: 'Over', line: 11.5, stat_type: 'rebounds', odds: -120, confidence: 84, sport: 'NBA' }
+];
+
+// Quick links config (moved outside component to prevent recreation on every render)
+const QUICK_LINKS = [
+  { path: '/smash-spots', icon: '🎯', title: 'AI Picks', desc: "Today's AI picks with full breakdown", color: '#10B981' },
+  { path: '/sharp', icon: '🦈', title: 'Sharp Money', desc: 'Track where pros are betting', color: '#10B981' },
+  { path: '/odds', icon: '📊', title: 'Best Odds Finder', desc: 'Compare lines across 8+ sportsbooks', color: '#00D4FF', badge: '8+ BOOKS', featured: true },
+  { path: '/injuries', icon: '🏥', title: 'Injuries', desc: 'Usage vacuum & beneficiaries', color: '#EF4444' },
+  { path: '/performance', icon: '📈', title: 'Performance', desc: 'Win rate, CLV, accuracy tracking', color: '#00D4FF' },
+  { path: '/bankroll', icon: '💵', title: 'Bankroll', desc: 'Kelly sizing & bet tracking', color: '#F59E0B' }
+];
+
+// Sports options (moved outside component)
+const SPORTS = ['NBA', 'NFL', 'MLB', 'NHL', 'NCAAB'];
+
 const Dashboard = () => {
   const [health, setHealth] = useState(null);
   const [todayEnergy, setTodayEnergy] = useState(null);
@@ -46,21 +68,8 @@ const Dashboard = () => {
     markAsVisited();
   }, []);
 
-  // Refetch top pick when favorite sport changes
-  useEffect(() => {
-    fetchTopPick();
-  }, [activeSport]);
-
-  // Demo picks to show when API is unavailable
-  const demoPicks = [
-    { player: 'LeBron James', side: 'Over', line: 25.5, stat_type: 'points', odds: -110, confidence: 87, sport: 'NBA' },
-    { player: 'Jayson Tatum', side: 'Over', line: 27.5, stat_type: 'points', odds: -115, confidence: 85, sport: 'NBA' },
-    { player: 'Luka Doncic', side: 'Over', line: 9.5, stat_type: 'assists', odds: -105, confidence: 82, sport: 'NBA' },
-    { team: 'Lakers', side: '-3.5', line: -3.5, bet_type: 'spread', odds: -110, confidence: 79, sport: 'NBA' },
-    { player: 'Nikola Jokic', side: 'Over', line: 11.5, stat_type: 'rebounds', odds: -120, confidence: 84, sport: 'NBA' }
-  ];
-
-  const fetchTopPick = async () => {
+  // Memoized fetch function to prevent recreation
+  const fetchTopPick = useCallback(async () => {
     setTopPickLoading(true);
     try {
       // Fetch best bets from user's favorite sport
@@ -100,17 +109,22 @@ const Dashboard = () => {
         }
       } else {
         // Use demo pick when no live data available
-        const sportDemo = demoPicks.find(p => p.sport === activeSport) || demoPicks[0];
+        const sportDemo = DEMO_PICKS.find(p => p.sport === activeSport) || DEMO_PICKS[0];
         setTopPick({ ...sportDemo, isDemo: true });
       }
     } catch (err) {
       console.error('Error fetching top pick:', err);
       // Use demo pick on error
-      const sportDemo = demoPicks.find(p => p.sport === activeSport) || demoPicks[0];
+      const sportDemo = DEMO_PICKS.find(p => p.sport === activeSport) || DEMO_PICKS[0];
       setTopPick({ ...sportDemo, isDemo: true });
     }
     setTopPickLoading(false);
-  };
+  }, [activeSport]);
+
+  // Refetch top pick when favorite sport changes
+  useEffect(() => {
+    fetchTopPick();
+  }, [fetchTopPick]);
 
   const loadTrackedStats = () => {
     const picks = getAllPicks();
@@ -208,14 +222,6 @@ const Dashboard = () => {
     return 'WATCH';
   };
 
-  const quickLinks = [
-    { path: '/smash-spots', icon: '🎯', title: 'AI Picks', desc: "Today's AI picks with full breakdown", color: '#10B981' },
-    { path: '/sharp', icon: '🦈', title: 'Sharp Money', desc: 'Track where pros are betting', color: '#10B981' },
-    { path: '/odds', icon: '📊', title: 'Best Odds Finder', desc: 'Compare lines across 8+ sportsbooks', color: '#00D4FF', badge: '8+ BOOKS', featured: true },
-    { path: '/injuries', icon: '🏥', title: 'Injuries', desc: 'Usage vacuum & beneficiaries', color: '#EF4444' },
-    { path: '/performance', icon: '📈', title: 'Performance', desc: 'Win rate, CLV, accuracy tracking', color: '#00D4FF' },
-    { path: '/bankroll', icon: '💵', title: 'Bankroll', desc: 'Kelly sizing & bet tracking', color: '#F59E0B' }
-  ];
 
   return (
     <div style={{ padding: '20px', backgroundColor: '#0a0a0f', minHeight: '100vh' }}>
@@ -480,8 +486,8 @@ const Dashboard = () => {
         {/* Alerts Section */}
         {alerts.length > 0 && (
           <div style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {alerts.map((alert, idx) => (
-              <div key={idx} style={{
+            {alerts.map((alert) => (
+              <div key={alert.type} style={{
                 backgroundColor: alert.color + '15',
                 border: `1px solid ${alert.color}40`,
                 borderRadius: '10px',
@@ -516,7 +522,7 @@ const Dashboard = () => {
         {/* Sport Selector + Sharp Money Widget */}
         <div style={{ marginBottom: '20px' }}>
           <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-            {['NBA', 'NFL', 'MLB', 'NHL', 'NCAAB'].map(sport => (
+            {SPORTS.map(sport => (
               <button
                 key={sport}
                 onClick={() => setActiveSport(sport)}
@@ -703,9 +709,9 @@ const Dashboard = () => {
 
         {/* Quick Links Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '15px' }}>
-          {quickLinks.map((link, i) => (
+          {QUICK_LINKS.map((link) => (
             <Link
-              key={i}
+              key={link.path}
               to={link.path}
               style={{
                 backgroundColor: link.featured ? '#0a1a2a' : '#1a1a2e',
