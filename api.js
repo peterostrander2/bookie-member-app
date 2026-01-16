@@ -199,39 +199,61 @@ export const api = {
     const resp = await authFetch(`${API_BASE_URL}/live/best-bets/${sport.toUpperCase()}`);
     const data = await resp.json();
 
-    // Normalize response - backend may return picks in different fields
-    // Backend returns 'games', frontend expects 'picks'
-    const allPicks = data.picks || data.games || data.data || data.slate || [];
+    // Convert confidence tier string to percentage number
+    const confidenceToPercent = (conf) => {
+      if (typeof conf === 'number') return conf;
+      const map = { 'SMASH': 90, 'HIGH': 80, 'MEDIUM': 70, 'LOW': 60 };
+      return map[conf?.toUpperCase()] || 65;
+    };
 
-    // Transform game format to pick format if needed
-    const normalizedPicks = allPicks.map(item => ({
+    // Normalize a single pick item from backend to frontend format
+    const normalizePick = (item) => ({
       ...item,
-      // Map backend fields to frontend expected fields
-      confidence: item.confidence || item.main_confidence || 0,
-      market: item.market || (item.spread !== undefined ? 'spreads' : 'totals'),
+      // Convert confidence string to percentage
+      confidence: confidenceToPercent(item.confidence) || item.total_score * 10 || 70,
+      // Map backend 'line' to frontend 'point'
+      point: item.point || item.line,
+      // Map backend 'odds' to frontend 'price'
+      price: item.price || item.odds || -110,
+      // Preserve other fields
+      market: item.market,
       team: item.team || item.home_team,
-      point: item.point || item.spread || item.total,
-      price: item.price || -110,
       home_team: item.home_team,
       away_team: item.away_team,
-      sport: item.sport || sport.toUpperCase()
-    }));
+      sport: item.sport || sport.toUpperCase(),
+      // Scores for display
+      ai_score: item.scoring_breakdown?.ai_models || item.ai_score,
+      pillar_score: item.scoring_breakdown?.pillars || item.pillar_score,
+      total_score: item.total_score,
+      // Props specific
+      player_name: item.player_name || item.player,
+      side: item.side,
+      stat_type: item.stat_type || item.market?.replace('player_', '')
+    });
 
-    // Return with multiple field names for compatibility with different components
+    // Backend returns props and game_picks nested
+    const propsArray = data.props?.picks || [];
+    const gamePicksArray = data.game_picks?.picks || [];
+
+    // Normalize all picks
+    const normalizedProps = propsArray.map(normalizePick);
+    const normalizedGamePicks = gamePicksArray.map(normalizePick);
+    const allPicks = [...normalizedProps, ...normalizedGamePicks];
+
     return {
       sport: data.sport || sport.toUpperCase(),
       source: data.source,
-      // Original format
-      slate: normalizedPicks,
-      // Dashboard expects 'picks'
-      picks: normalizedPicks,
-      // Also include raw data for filtering
-      data: normalizedPicks,
-      // Props/games may be nested
-      props: data.props || { picks: normalizedPicks.filter(p => p.market?.includes('player_') || p.market?.includes('points') || p.market?.includes('rebounds') || p.market?.includes('assists')) },
-      game_picks: data.game_picks || { picks: normalizedPicks.filter(p => p.market === 'spreads' || p.market === 'totals' || p.market === 'h2h') },
-      daily_energy: data.daily_energy,
-      count: data.count || normalizedPicks.length,
+      // All picks combined
+      picks: allPicks,
+      data: allPicks,
+      slate: allPicks,
+      // Nested format for components that expect it
+      props: { picks: normalizedProps, count: normalizedProps.length },
+      game_picks: { picks: normalizedGamePicks, count: normalizedGamePicks.length },
+      // Esoteric data
+      daily_energy: data.esoteric?.daily_energy || data.daily_energy,
+      esoteric: data.esoteric,
+      count: allPicks.length,
       timestamp: data.timestamp
     };
   },
