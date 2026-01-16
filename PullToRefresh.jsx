@@ -25,12 +25,18 @@ export const PullToRefresh = ({ onRefresh, children, disabled = false }) => {
     const scrollTop = containerRef.current?.scrollTop || window.scrollY;
     if (scrollTop > 0) return;
 
+    // Guard against edge case where touches array is empty
+    if (!e.touches || e.touches.length === 0) return;
+
     startYRef.current = e.touches[0].clientY;
     setIsPulling(true);
   }, [disabled, isRefreshing]);
 
   const handleTouchMove = useCallback((e) => {
     if (!isPulling || disabled || isRefreshing) return;
+
+    // Guard against edge case where touches array is empty
+    if (!e.touches || e.touches.length === 0) return;
 
     currentYRef.current = e.touches[0].clientY;
     const diff = currentYRef.current - startYRef.current;
