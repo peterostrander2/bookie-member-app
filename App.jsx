@@ -163,7 +163,7 @@ const Navbar = ({ onOpenNotificationModal }) => {
       label: 'Picks',
       icon: '🔥',
       items: [
-        { path: '/smash-spots', label: 'Smash Spots', icon: '🎯' },
+        { path: '/smash-spots', label: 'AI Picks', icon: '🎯' },
         { path: '/props', label: 'Player Props', icon: '🏀' },
         { path: '/sharp', label: 'Sharp Money', icon: '💵' },
         { path: '/signals', label: 'All Signals', icon: '⚡' }

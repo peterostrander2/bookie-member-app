@@ -101,10 +101,10 @@ const SmashSpotsPage = () => {
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px'
           }}>
             <span style={{ fontSize: '32px' }}>🎯</span>
-            Smash Spots
+            AI Picks
           </h1>
           <p style={{ color: '#6B7280', margin: '8px 0 0', fontSize: '14px' }}>
-            AI-Powered Best Bets • 8 Models + 8 Pillars
+            8 ML Models + 8 Pillars • Updated Every 2 Hours
           </p>
         </div>
 

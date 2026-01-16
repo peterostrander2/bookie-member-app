@@ -5,6 +5,7 @@ import { PlaceBetButton } from './BetslipModal';
 import { ShareButton } from './ShareButton';
 import { AddToSlipButton } from './BetSlip';
 import { HelpIcon, METRIC_TOOLTIPS } from './Tooltip';
+import { useSwipe, useMobileDetect } from './useSwipe';
 
 // AI Models that make up the ensemble
 const AI_MODELS = [
@@ -341,6 +342,14 @@ const PropCard = memo(({ pick }) => {
   const keyStats = useMemo(() => generateKeyStats(pick), [pick.market, pick.point, pick.side]);
   const agreeingModels = useMemo(() => getAgreeingModels(pick.ai_score), [pick.ai_score]);
   const aligningPillars = useMemo(() => getAligningPillars(pick.pillar_score), [pick.pillar_score]);
+  const { isMobile, isTouchDevice } = useMobileDetect();
+
+  // Swipe down to expand, swipe up to collapse
+  const swipeHandlers = useSwipe({
+    onSwipeDown: () => !expanded && setExpanded(true),
+    onSwipeUp: () => expanded && setExpanded(false),
+    threshold: 40
+  });
 
   const getMarketLabel = useCallback((market) => {
     if (market?.includes('points')) return 'POINTS';
@@ -356,106 +365,137 @@ const PropCard = memo(({ pick }) => {
   const cardStyle = {
     backgroundColor: '#1a1a2e',
     borderRadius: '12px',
-    padding: tierConfig.size === 'large' ? '20px' : '16px',
+    padding: isMobile ? '12px' : (tierConfig.size === 'large' ? '20px' : '16px'),
     marginBottom: '12px',
     border: `1px solid ${tierConfig.border}`,
     boxShadow: tierConfig.glow,
-    transition: 'all 0.2s ease'
+    transition: 'all 0.2s ease',
+    cursor: isTouchDevice ? 'default' : 'pointer'
   };
 
   return (
-    <div style={cardStyle}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-        <div style={{ flex: 1 }}>
+    <div style={cardStyle} {...(isTouchDevice ? swipeHandlers : {})}>
+      {/* TOP ROW: Tier badge + Prop type + Game */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+        <TierBadge confidence={pick.confidence} />
+        <span style={{
+          backgroundColor: '#8B5CF620', color: '#8B5CF6',
+          padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold',
+          border: '1px solid #8B5CF640'
+        }}>{getMarketLabel(pick.market)}</span>
+        <span style={{ color: '#6B7280', fontSize: '12px', marginLeft: 'auto' }}>
+          {pick.away_team} @ {pick.home_team}
+        </span>
+      </div>
+
+      {/* HERO SECTION: Player + Pick - LARGEST, MOST PROMINENT */}
+      <div style={{
+        backgroundColor: `${tierConfig.color}10`,
+        borderRadius: '12px',
+        padding: '16px 20px',
+        marginBottom: '12px',
+        border: `2px solid ${tierConfig.color}30`,
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      }}>
+        <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-            <span style={{ fontSize: '16px' }}>{getPropIcon(pick.market)}</span>
+            <span style={{ fontSize: '20px' }}>{getPropIcon(pick.market)}</span>
             <span style={{
-              backgroundColor: '#8B5CF6', color: '#fff', padding: '2px 8px',
-              borderRadius: '4px', fontSize: '10px', fontWeight: 'bold'
-            }}>{getMarketLabel(pick.market)}</span>
-            <TierBadge confidence={pick.confidence} />
+              color: '#fff',
+              fontWeight: 'bold',
+              fontSize: tierConfig.size === 'large' ? '22px' : '18px'
+            }}>
+              {pick.player_name || pick.description?.split(' ').slice(0, 2).join(' ') || 'Player'}
+            </span>
           </div>
-          <div style={{ color: '#fff', fontWeight: 'bold', fontSize: tierConfig.size === 'large' ? '18px' : '16px', marginTop: '4px' }}>
-            {pick.player_name || pick.description?.split(' ').slice(0, 2).join(' ') || 'Player'}
+          <div style={{
+            color: '#fff',
+            fontWeight: 'bold',
+            fontSize: tierConfig.size === 'large' ? '28px' : '24px',
+            letterSpacing: '-0.5px',
+            marginTop: '4px'
+          }}>
+            {pick.side} {pick.point}
           </div>
-          <div style={{ color: '#6B7280', fontSize: '12px' }}>{pick.away_team} @ {pick.home_team}</div>
+          <div style={{
+            color: '#8B5CF6',
+            fontSize: '18px',
+            fontWeight: '600',
+            marginTop: '4px'
+          }}>
+            {formatOdds(pick.price)}
+          </div>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <div style={{ color: tierConfig.color, fontWeight: 'bold', fontSize: tierConfig.size === 'large' ? '24px' : '20px' }}>
+          <div style={{
+            color: tierConfig.color,
+            fontWeight: 'bold',
+            fontSize: tierConfig.size === 'large' ? '32px' : '28px',
+            lineHeight: '1'
+          }}>
             {pick.confidence}%
           </div>
-          <div style={{ color: '#6B7280', fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+          <div style={{ color: '#6B7280', fontSize: '10px', marginTop: '2px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
             confidence
-            <HelpIcon tooltip={METRIC_TOOLTIPS.confidence} size={12} />
+            <HelpIcon tooltip={METRIC_TOOLTIPS.confidence} size={10} />
           </div>
         </div>
       </div>
 
-      {/* Key Stats Section - NEW */}
+      {/* SECONDARY ROW: Scores in compact bar */}
       <div style={{
-        display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap'
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        backgroundColor: '#0f0f1a',
+        borderRadius: '8px',
+        padding: '10px 12px',
+        marginBottom: '10px'
       }}>
-        <div style={{
-          backgroundColor: '#0f0f1a', padding: '6px 10px', borderRadius: '6px',
-          fontSize: '11px', color: '#9CA3AF'
-        }}>
-          <span style={{ color: '#10B981', fontWeight: 'bold' }}>{keyStats.avg}</span>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          {pick.ai_score !== undefined && <ScoreBadge score={pick.ai_score} maxScore={8} label="AI" tooltip={METRIC_TOOLTIPS.aiScore} />}
+          {pick.pillar_score !== undefined && <ScoreBadge score={pick.pillar_score} maxScore={8} label="Pillars" tooltip={METRIC_TOOLTIPS.pillarsScore} />}
+          {pick.total_score !== undefined && <ScoreBadge score={pick.total_score} maxScore={20} label="Total" tooltip={METRIC_TOOLTIPS.totalScore} />}
         </div>
-        <div style={{
-          backgroundColor: '#0f0f1a', padding: '6px 10px', borderRadius: '6px',
-          fontSize: '11px', color: '#9CA3AF'
-        }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {pick.edge && (
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <span style={{ color: '#6B7280', fontSize: '10px' }}>Edge</span>
+              <span style={{ color: pick.edge > 0 ? '#10B981' : '#EF4444', fontWeight: 'bold', fontSize: '13px', marginLeft: '4px' }}>
+                {pick.edge > 0 ? '+' : ''}{(pick.edge * 100).toFixed(1)}%
+              </span>
+            </div>
+          )}
+          <LineMovement pick={pick} />
+        </div>
+      </div>
+
+      {/* TERTIARY: Key stats - smallest, de-emphasized */}
+      <div style={{ display: 'flex', gap: '6px', marginBottom: '10px', flexWrap: 'wrap' }}>
+        <div style={{ backgroundColor: '#0f0f1a', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', color: '#6B7280' }}>
+          <span style={{ color: '#9CA3AF' }}>{keyStats.avg}</span>
+        </div>
+        <div style={{ backgroundColor: '#0f0f1a', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', color: '#6B7280' }}>
           {keyStats.trend}
         </div>
-        <div style={{
-          backgroundColor: '#0f0f1a', padding: '6px 10px', borderRadius: '6px',
-          fontSize: '11px', color: '#9CA3AF'
-        }}>
+        <div style={{ backgroundColor: '#0f0f1a', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', color: '#6B7280' }}>
           {keyStats.matchup}
         </div>
-      </div>
-
-      <div style={{ backgroundColor: '#0f0f1a', borderRadius: '8px', padding: '12px', marginBottom: '12px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '18px', marginBottom: '4px' }}>
-              {pick.side} {pick.point}
-            </div>
-            <div style={{ color: '#8B5CF6', fontSize: '14px', fontWeight: '500' }}>{formatOdds(pick.price)}</div>
-          </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            {pick.ai_score !== undefined && <ScoreBadge score={pick.ai_score} maxScore={8} label="AI" tooltip={METRIC_TOOLTIPS.aiScore} />}
-            {pick.pillar_score !== undefined && <ScoreBadge score={pick.pillar_score} maxScore={8} label="Pillars" tooltip={METRIC_TOOLTIPS.pillarsScore} />}
-            {pick.total_score !== undefined && <ScoreBadge score={pick.total_score} maxScore={20} label="Total" tooltip={METRIC_TOOLTIPS.totalScore} />}
-          </div>
-        </div>
-      </div>
-
-      {/* Edge & Line Movement Row */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '12px', alignItems: 'center' }}>
-        {pick.edge && (
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <span style={{ color: '#6B7280', fontSize: '11px' }}>Edge: </span>
-            <span style={{ color: pick.edge > 0 ? '#10B981' : '#EF4444', fontWeight: 'bold', fontSize: '13px' }}>
-              {pick.edge > 0 ? '+' : ''}{(pick.edge * 100).toFixed(1)}%
-            </span>
-            <HelpIcon tooltip={METRIC_TOOLTIPS.edge} size={12} />
-          </div>
-        )}
         {pick.bookmaker && (
-          <div>
-            <span style={{ color: '#6B7280', fontSize: '11px' }}>Book: </span>
-            <span style={{ color: '#9CA3AF', fontSize: '13px' }}>{pick.bookmaker}</span>
+          <div style={{ backgroundColor: '#0f0f1a', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', color: '#6B7280', marginLeft: 'auto' }}>
+            via {pick.bookmaker}
           </div>
         )}
-        <LineMovement pick={pick} />
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>
+      {/* Action Row */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
         <button onClick={() => setExpanded(!expanded)} style={{
           background: expanded ? '#8B5CF620' : 'none',
           border: '1px solid #8B5CF6', color: '#8B5CF6',
-          padding: '4px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold'
+          padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold'
         }}>{expanded ? 'Hide Details' : 'Why This Pick?'}</button>
       </div>
 

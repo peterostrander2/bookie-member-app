@@ -14,6 +14,8 @@ const SharpAlerts = () => {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [splits, setSplits] = useState([]);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const sports = ['NBA', 'NFL', 'MLB', 'NHL', 'NCAAB'];
 
@@ -70,11 +72,24 @@ const SharpAlerts = () => {
 
       setAlerts(sharpAlerts);
       setSplits(splitsRes?.games || splitsRes || []);
+      setLastUpdated(new Date());
     } catch (err) {
       console.error('Error fetching sharp data:', err);
       setAlerts(generateMockAlerts(sport));
+      setLastUpdated(new Date());
     }
     setLoading(false);
+    setRefreshing(false);
+  };
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    fetchSharpData();
+  };
+
+  const formatTime = (date) => {
+    if (!date) return '';
+    return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
   };
 
   const generateMockAlerts = (sport) => {
@@ -199,12 +214,56 @@ const SharpAlerts = () => {
 
         {/* Header */}
         <div style={{ marginBottom: '25px' }}>
-          <h1 style={{ color: '#fff', fontSize: '28px', margin: '0 0 5px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            🦈 Sharp Money Alerts
-          </h1>
-          <p style={{ color: '#6b7280', margin: 0, fontSize: '14px' }}>
-            Where the smart money is going • Ticket % vs Money % divergence
-          </p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
+            <div>
+              <h1 style={{ color: '#fff', fontSize: '28px', margin: '0 0 5px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                🦈 Sharp Money Alerts
+              </h1>
+              <p style={{ color: '#6b7280', margin: 0, fontSize: '14px' }}>
+                Where the smart money is going • Ticket % vs Money % divergence
+              </p>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              {lastUpdated && (
+                <div style={{
+                  backgroundColor: '#1a1a2e',
+                  padding: '6px 12px',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}>
+                  <span style={{ color: '#6b7280', fontSize: '12px' }}>Updated</span>
+                  <span style={{ color: '#00D4FF', fontWeight: 'bold', fontSize: '12px' }}>{formatTime(lastUpdated)}</span>
+                </div>
+              )}
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing || loading}
+                style={{
+                  backgroundColor: '#1a1a2e',
+                  border: '1px solid #333',
+                  borderRadius: '8px',
+                  padding: '8px 12px',
+                  color: '#9ca3af',
+                  cursor: refreshing || loading ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '12px',
+                  transition: 'all 0.2s'
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  animation: refreshing ? 'spin 1s linear infinite' : 'none'
+                }}>
+                  {refreshing ? '...' : '🔄'}
+                </span>
+                Refresh
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Legend */}
