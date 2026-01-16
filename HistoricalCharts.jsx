@@ -724,8 +724,8 @@ const HistoricalCharts = () => {
   );
 };
 
-// Stat Card Component
-const StatCard = ({ label, value, color }) => (
+// Stat Card Component (memoized to prevent re-renders)
+const StatCard = React.memo(({ label, value, color }) => (
   <div style={{
     backgroundColor: '#1a1a2e',
     borderRadius: '12px',
@@ -740,6 +740,6 @@ const StatCard = ({ label, value, color }) => (
       {value}
     </div>
   </div>
-);
+));
 
 export default HistoricalCharts;

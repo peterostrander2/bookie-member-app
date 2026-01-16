@@ -166,7 +166,7 @@ const TodaysBestBets = memo(({ sport, onPickClick }) => {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative', zIndex: 1 }}>
-        {bestPicks.map((pick) => {
+        {bestPicks.map((pick, idx) => {
           const unitSize = getUnitSize(pick.confidence || pick.score || 85);
           const isProp = pick.player_name || pick.market?.includes('player');
           const pickDisplay = isProp
