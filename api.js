@@ -199,24 +199,61 @@ export const api = {
     const resp = await authFetch(`${API_BASE_URL}/live/best-bets/${sport.toUpperCase()}`);
     const data = await resp.json();
 
-    // Normalize response - backend may return picks in different fields
-    const allPicks = data.picks || data.data || data.slate || [];
+    // Convert confidence tier string to percentage number
+    const confidenceToPercent = (conf) => {
+      if (typeof conf === 'number') return conf;
+      const map = { 'SMASH': 90, 'HIGH': 80, 'MEDIUM': 70, 'LOW': 60 };
+      return map[conf?.toUpperCase()] || 65;
+    };
 
-    // Return with multiple field names for compatibility with different components
+    // Normalize a single pick item from backend to frontend format
+    const normalizePick = (item) => ({
+      ...item,
+      // Convert confidence string to percentage
+      confidence: confidenceToPercent(item.confidence) || item.total_score * 10 || 70,
+      // Map backend 'line' to frontend 'point'
+      point: item.point || item.line,
+      // Map backend 'odds' to frontend 'price'
+      price: item.price || item.odds || -110,
+      // Preserve other fields
+      market: item.market,
+      team: item.team || item.home_team,
+      home_team: item.home_team,
+      away_team: item.away_team,
+      sport: item.sport || sport.toUpperCase(),
+      // Scores for display
+      ai_score: item.scoring_breakdown?.ai_models || item.ai_score,
+      pillar_score: item.scoring_breakdown?.pillars || item.pillar_score,
+      total_score: item.total_score,
+      // Props specific
+      player_name: item.player_name || item.player,
+      side: item.side,
+      stat_type: item.stat_type || item.market?.replace('player_', '')
+    });
+
+    // Backend returns props and game_picks nested
+    const propsArray = data.props?.picks || [];
+    const gamePicksArray = data.game_picks?.picks || [];
+
+    // Normalize all picks
+    const normalizedProps = propsArray.map(normalizePick);
+    const normalizedGamePicks = gamePicksArray.map(normalizePick);
+    const allPicks = [...normalizedProps, ...normalizedGamePicks];
+
     return {
-      sport: data.sport,
+      sport: data.sport || sport.toUpperCase(),
       source: data.source,
-      // Original format
-      slate: allPicks,
-      // Dashboard expects 'picks'
+      // All picks combined
       picks: allPicks,
-      // Also include raw data for filtering
       data: allPicks,
-      // Props/games may be nested
-      props: data.props || { picks: allPicks.filter(p => p.market?.includes('player_') || p.market?.includes('points') || p.market?.includes('rebounds') || p.market?.includes('assists')) },
-      game_picks: data.game_picks || { picks: allPicks.filter(p => p.market === 'spreads' || p.market === 'totals' || p.market === 'h2h') },
-      daily_energy: data.daily_energy,
-      count: data.count || allPicks.length,
+      slate: allPicks,
+      // Nested format for components that expect it
+      props: { picks: normalizedProps, count: normalizedProps.length },
+      game_picks: { picks: normalizedGamePicks, count: normalizedGamePicks.length },
+      // Esoteric data
+      daily_energy: data.esoteric?.daily_energy || data.daily_energy,
+      esoteric: data.esoteric,
+      count: allPicks.length,
       timestamp: data.timestamp
     };
   },
@@ -239,6 +276,33 @@ export const api = {
   // Get player props
   async getProps(sport = 'NBA') {
     return (await authFetch(`${API_BASE_URL}/live/props/${sport.toUpperCase()}`)).json();
+  },
+
+  // Alias for Props.jsx and Signals.jsx compatibility
+  async getLiveProps(sport = 'NBA') {
+    return this.getProps(sport);
+  },
+
+  // Get live odds for line shopping (BestOdds.jsx, Splits.jsx)
+  async getLiveOdds(sport = 'NBA') {
+    try {
+      const resp = await authFetch(`${API_BASE_URL}/live/odds/${sport.toUpperCase()}`);
+      if (!resp.ok) return { games: [], odds: [] };
+      return resp.json();
+    } catch {
+      return { games: [], odds: [] };
+    }
+  },
+
+  // Get injuries for a sport (InjuryVacuum.jsx)
+  async getInjuries(sport = 'NBA') {
+    try {
+      const resp = await authFetch(`${API_BASE_URL}/live/injuries/${sport.toUpperCase()}`);
+      if (!resp.ok) return { injuries: [] };
+      return resp.json();
+    } catch {
+      return { injuries: [] };
+    }
   },
 
   // Get esoteric edge analysis
@@ -406,6 +470,76 @@ export const api = {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify(preferences)
+      });
+      if (!res.ok) return null;
+      return res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  // ============================================================================
+  // COMMUNITY VOTING (CommunityVote.jsx)
+  // ============================================================================
+
+  async getVotes(gameVoteId) {
+    try {
+      const res = await authFetch(`${API_BASE_URL}/live/votes/${encodeURIComponent(gameVoteId)}`);
+      if (!res.ok) return null;
+      return res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  async submitVote(gameVoteId, side) {
+    try {
+      const res = await apiFetch(`${API_BASE_URL}/live/votes/${encodeURIComponent(gameVoteId)}`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ side })
+      });
+      if (!res.ok) return null;
+      return res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  // ============================================================================
+  // LEADERBOARD (Leaderboard.jsx)
+  // ============================================================================
+
+  async getVoteLeaderboard() {
+    try {
+      const res = await authFetch(`${API_BASE_URL}/live/leaderboard`);
+      if (!res.ok) return { leaders: null };
+      return res.json();
+    } catch {
+      return { leaders: null };
+    }
+  },
+
+  // ============================================================================
+  // GRADING (Grading.jsx)
+  // ============================================================================
+
+  async getGradedPicks() {
+    try {
+      const res = await authFetch(`${API_BASE_URL}/live/picks/graded`);
+      if (!res.ok) return { picks: [] };
+      return res.json();
+    } catch {
+      return { picks: [] };
+    }
+  },
+
+  async gradePick(data) {
+    try {
+      const res = await apiFetch(`${API_BASE_URL}/live/picks/grade`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data)
       });
       if (!res.ok) return null;
       return res.json();

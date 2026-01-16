@@ -46,22 +46,44 @@ describe('api', () => {
       )
     })
 
-    it('getSmashSpots returns formatted data', async () => {
+    it('getSmashSpots returns formatted data with normalized picks', async () => {
       fetch.mockResolvedValueOnce({
         json: () => Promise.resolve({
           sport: 'NBA',
-          data: [{ pick: 'Lakers -5' }],
-          count: 1
+          source: 'jarvis_v7',
+          props: {
+            picks: [{ player_name: 'LeBron', confidence: 'SMASH', line: 25.5, odds: -110 }],
+            count: 1
+          },
+          game_picks: {
+            picks: [{ team: 'Lakers', confidence: 'HIGH', line: -5.5, odds: -110 }],
+            count: 1
+          },
+          timestamp: '2024-01-15T12:00:00Z'
         })
       })
 
       const result = await api.getSmashSpots('NBA')
 
-      // Verify essential fields
+      // Verify structure
       expect(result.sport).toBe('NBA')
-      expect(result.slate).toEqual([{ pick: 'Lakers -5' }])
-      expect(result.picks).toEqual([{ pick: 'Lakers -5' }])
-      expect(result.count).toBe(1)
+      expect(result.source).toBe('jarvis_v7')
+      expect(result.timestamp).toBe('2024-01-15T12:00:00Z')
+
+      // Verify normalized props
+      expect(result.props.picks).toHaveLength(1)
+      expect(result.props.picks[0].confidence).toBe(90) // SMASH -> 90%
+      expect(result.props.picks[0].point).toBe(25.5)
+      expect(result.props.picks[0].price).toBe(-110)
+
+      // Verify normalized game_picks
+      expect(result.game_picks.picks).toHaveLength(1)
+      expect(result.game_picks.picks[0].confidence).toBe(80) // HIGH -> 80%
+
+      // Verify combined picks array
+      expect(result.picks).toHaveLength(2)
+      expect(result.slate).toHaveLength(2)
+      expect(result.count).toBe(2)
     })
 
     it('getBestBets is an alias for getSmashSpots', async () => {
