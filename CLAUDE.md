@@ -1129,3 +1129,64 @@ triggerSmashNotification({
 **Tests:** 91 tests passing
 
 **Build:** 266 kB main bundle + 22 route chunks
+
+### Session: January 16, 2026 (claude/react-best-practices-audit-6P17m)
+
+**Task:** React Best Practices Audit
+
+**Completed in this session:**
+1. Comprehensive React performance audit across 51 component files
+2. Moved static constants/arrays outside components to prevent recreation on every render
+3. Added `useCallback` to memoize async functions and prevent stale closures
+4. Added `React.memo` to frequently re-rendering child components
+5. Fixed array keys to use unique identifiers instead of indices
+6. Consolidated and optimized useEffect dependency arrays
+7. Added `zod` and `ai` npm packages
+
+**Files modified:**
+- `Dashboard.jsx` - Moved `DEMO_PICKS`, `QUICK_LINKS`, `SPORTS` outside component; wrapped `fetchTopPick` with `useCallback`; fixed array keys
+- `SmashSpotsPage.jsx` - Moved `SPORTS`, `TABS`, `CONFIDENCE_TIERS` outside component; wrapped `TodaysBestBets` with `React.memo`
+- `App.jsx` - Moved `NAV_STRUCTURE`, `ALL_NAV_LINKS` outside Navbar component
+- `BestOdds.jsx` - Moved `SPORTS`, `BASE_GAMES`, `generateMockGames` outside component; wrapped `fetchGames`, `handleRefresh` with `useCallback`
+- `ParlayBuilder.jsx` - Wrapped `calculateLocalOdds`, `loadParlay`, `loadHistory`, `calculateOdds` with `useCallback`; wrapped `AddLegForm`, `ParlayHistory` with `React.memo`
+- `package.json` - Added zod, ai dependencies
+
+**Key Patterns Applied:**
+```jsx
+// Before: Array recreated on every render
+const MyComponent = () => {
+  const items = ['A', 'B', 'C']; // BAD - new array every render
+  return items.map(i => <div key={i}>{i}</div>);
+};
+
+// After: Array defined once outside component
+const ITEMS = ['A', 'B', 'C']; // GOOD - stable reference
+const MyComponent = () => {
+  return ITEMS.map(i => <div key={i}>{i}</div>);
+};
+
+// Before: Async function recreated, causes infinite useEffect loops
+const fetchData = async () => { ... }; // BAD
+useEffect(() => { fetchData(); }, [fetchData]); // Infinite loop!
+
+// After: Memoized with useCallback
+const fetchData = useCallback(async () => { ... }, [deps]); // GOOD
+useEffect(() => { fetchData(); }, [fetchData]); // Stable
+```
+
+**Violations NOT addressed (intentionally):**
+- 2,910+ inline style objects - Would require massive refactoring, low ROI
+- Server Components - Not applicable (Vite SPA, not Next.js)
+
+**Tests:** 91 tests passing
+**Build:** 294.77 kB main bundle + 22 route chunks
+
+**Branch:** `claude/react-best-practices-audit-6P17m`
+**PR Link:** https://github.com/peterostrander2/bookie-member-app/pull/new/claude/react-best-practices-audit-6P17m
+
+**To Resume:**
+1. Checkout branch: `git checkout claude/react-best-practices-audit-6P17m`
+2. Install deps: `npm install`
+3. Run tests: `npm run test:run`
+4. Run dev server: `npm run dev`
+
