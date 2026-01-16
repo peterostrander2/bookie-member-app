@@ -3,6 +3,7 @@ import api from './api';
 import { useToast } from './Toast';
 import { PlaceBetButton } from './BetslipModal';
 import { ShareButton } from './ShareButton';
+import { AddToSlipButton } from './BetSlip';
 
 // AI Models and Pillars for enhanced "Why?" breakdown
 const AI_MODELS = [
@@ -375,6 +376,23 @@ const PickCard = memo(({ pick, injuries = [] }) => {
             spread: pick.point,
             odds: pick.price,
             confidence: pick.confidence,
+          }}
+          size="small"
+        />
+        <AddToSlipButton
+          pick={{
+            id: pick.id || `${pick.home_team}-${pick.away_team}-${pick.market}`,
+            game_id: pick.game_id || `${pick.home_team}-${pick.away_team}`,
+            team: pick.team,
+            sport: pick.sport || 'NBA',
+            home_team: pick.home_team,
+            away_team: pick.away_team,
+            bet_type: pick.market,
+            side: pick.side || pick.team,
+            line: pick.point,
+            odds: pick.price || -110,
+            confidence: pick.confidence,
+            tier: getTierConfig(pick.confidence).label
           }}
           size="small"
         />

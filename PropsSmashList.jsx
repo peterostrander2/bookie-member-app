@@ -3,6 +3,7 @@ import api from './api';
 import { useToast } from './Toast';
 import { PlaceBetButton } from './BetslipModal';
 import { ShareButton } from './ShareButton';
+import { AddToSlipButton } from './BetSlip';
 
 // AI Models that make up the ensemble
 const AI_MODELS = [
@@ -27,6 +28,74 @@ const PILLARS = [
   { id: 'injuries', name: 'Injury Impact', desc: 'Key player status' },
   { id: 'pace_tempo', name: 'Pace/Tempo', desc: 'Game speed matchup' }
 ];
+
+// Line movement indicator component
+const LineMovement = memo(({ pick }) => {
+  // Generate mock line movement (in real app, this would come from API)
+  const lineMovement = useMemo(() => {
+    // Simulate line movement based on pick data
+    const hasMovement = Math.random() > 0.3; // 70% chance of movement
+    if (!hasMovement) return null;
+
+    const direction = pick.side === 'Over' ? (Math.random() > 0.4 ? 'up' : 'down') : (Math.random() > 0.6 ? 'up' : 'down');
+    const amount = (0.5 + Math.random() * 1.5).toFixed(1);
+    const oddsChange = Math.floor(5 + Math.random() * 15);
+
+    return {
+      direction,
+      lineChange: direction === 'up' ? `+${amount}` : `-${amount}`,
+      oddsChange: direction === 'up' ? `-${oddsChange}` : `+${oddsChange}`,
+      isSteam: Math.random() > 0.7, // 30% chance of steam move
+      timeAgo: `${Math.floor(1 + Math.random() * 4)}h ago`
+    };
+  }, [pick.side]);
+
+  if (!lineMovement) return null;
+
+  const isFavorable = (pick.side === 'Over' && lineMovement.direction === 'down') ||
+                      (pick.side === 'Under' && lineMovement.direction === 'up');
+
+  return (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px',
+      padding: '6px 10px',
+      backgroundColor: lineMovement.isSteam ? 'rgba(239, 68, 68, 0.15)' : 'rgba(59, 130, 246, 0.1)',
+      borderRadius: '6px',
+      border: `1px solid ${lineMovement.isSteam ? 'rgba(239, 68, 68, 0.3)' : 'rgba(59, 130, 246, 0.2)'}`
+    }}>
+      <span style={{ fontSize: '14px' }}>
+        {lineMovement.direction === 'up' ? '📈' : '📉'}
+      </span>
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{
+            color: isFavorable ? '#10B981' : '#EF4444',
+            fontSize: '11px',
+            fontWeight: 'bold'
+          }}>
+            Line {lineMovement.lineChange}
+          </span>
+          {lineMovement.isSteam && (
+            <span style={{
+              backgroundColor: '#EF444430',
+              color: '#EF4444',
+              padding: '1px 5px',
+              borderRadius: '3px',
+              fontSize: '9px',
+              fontWeight: 'bold'
+            }}>STEAM</span>
+          )}
+        </div>
+        <span style={{ color: '#6B7280', fontSize: '10px' }}>
+          {lineMovement.timeAgo} • Odds {lineMovement.oddsChange}
+        </span>
+      </div>
+    </div>
+  );
+});
+LineMovement.displayName = 'LineMovement';
 
 // Confidence tier configuration with enhanced visuals
 const getTierConfig = (conf) => {
@@ -355,23 +424,26 @@ const PropCard = memo(({ pick }) => {
         </div>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-        <div style={{ display: 'flex', gap: '16px' }}>
-          {pick.edge && (
-            <div>
-              <span style={{ color: '#6B7280', fontSize: '11px' }}>Edge: </span>
-              <span style={{ color: pick.edge > 0 ? '#10B981' : '#EF4444', fontWeight: 'bold', fontSize: '13px' }}>
-                {pick.edge > 0 ? '+' : ''}{(pick.edge * 100).toFixed(1)}%
-              </span>
-            </div>
-          )}
-          {pick.bookmaker && (
-            <div>
-              <span style={{ color: '#6B7280', fontSize: '11px' }}>Book: </span>
-              <span style={{ color: '#9CA3AF', fontSize: '13px' }}>{pick.bookmaker}</span>
-            </div>
-          )}
-        </div>
+      {/* Edge & Line Movement Row */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '12px', alignItems: 'center' }}>
+        {pick.edge && (
+          <div>
+            <span style={{ color: '#6B7280', fontSize: '11px' }}>Edge: </span>
+            <span style={{ color: pick.edge > 0 ? '#10B981' : '#EF4444', fontWeight: 'bold', fontSize: '13px' }}>
+              {pick.edge > 0 ? '+' : ''}{(pick.edge * 100).toFixed(1)}%
+            </span>
+          </div>
+        )}
+        {pick.bookmaker && (
+          <div>
+            <span style={{ color: '#6B7280', fontSize: '11px' }}>Book: </span>
+            <span style={{ color: '#9CA3AF', fontSize: '13px' }}>{pick.bookmaker}</span>
+          </div>
+        )}
+        <LineMovement pick={pick} />
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>
         <button onClick={() => setExpanded(!expanded)} style={{
           background: expanded ? '#8B5CF620' : 'none',
           border: '1px solid #8B5CF6', color: '#8B5CF6',
@@ -466,13 +538,31 @@ const PropCard = memo(({ pick }) => {
           }}
           size="small"
         />
+        <AddToSlipButton
+          pick={{
+            id: pick.id || `${pick.player_name}-${pick.market}`,
+            game_id: pick.game_id || `${pick.home_team}-${pick.away_team}`,
+            player: pick.player_name,
+            sport: pick.sport || 'NBA',
+            home_team: pick.home_team,
+            away_team: pick.away_team,
+            bet_type: 'prop',
+            stat: pick.market?.replace('player_', ''),
+            side: pick.side,
+            line: pick.point,
+            odds: pick.price || -110,
+            confidence: pick.confidence,
+            tier: getTierConfig(pick.confidence).label
+          }}
+          size="small"
+        />
         <PlaceBetButton
           bet={{
             sport: pick.sport, home_team: pick.home_team, away_team: pick.away_team,
             bet_type: 'prop', player: pick.player_name, prop_type: pick.market,
             side: pick.side, line: pick.point, odds: pick.price, book: pick.bookmaker
           }}
-          label={pick.bookmaker ? `Bet at ${pick.bookmaker}` : 'Add to Bet Slip'}
+          label={pick.bookmaker ? `Bet at ${pick.bookmaker}` : 'Compare Odds'}
         />
       </div>
     </div>
