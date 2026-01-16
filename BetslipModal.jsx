@@ -315,7 +315,7 @@ export const BetslipModal = ({ isOpen, onClose, bet, sport }) => {
 };
 
 // Simple button to trigger the modal
-export const PlaceBetButton = ({ bet, sport, size = 'normal' }) => {
+export const PlaceBetButton = ({ bet, sport, size = 'normal', label }) => {
   const [modalOpen, setModalOpen] = useState(false);
 
   const buttonStyles = {
@@ -333,10 +333,14 @@ export const PlaceBetButton = ({ bet, sport, size = 'normal' }) => {
     }
   };
 
+  // Default label based on context
+  const buttonLabel = label || (bet?.book ? `Bet at ${bet.book}` : 'Place Bet');
+
   return (
     <>
       <button
         onClick={() => setModalOpen(true)}
+        title={bet?.book ? `Open bet at ${bet.book}` : 'Compare odds across sportsbooks'}
         style={{
           ...buttonStyles[size],
           backgroundColor: '#00FF8820',
@@ -360,7 +364,7 @@ export const PlaceBetButton = ({ bet, sport, size = 'normal' }) => {
         }}
       >
         <span>💰</span>
-        <span>Place Bet</span>
+        <span>{buttonLabel}</span>
       </button>
       <BetslipModal
         isOpen={modalOpen}
