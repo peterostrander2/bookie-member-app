@@ -76,7 +76,7 @@ describe('ParlayBuilder', () => {
     renderWithProviders(<ParlayBuilder />)
 
     await waitFor(() => {
-      expect(screen.getByText('Add legs from Smash Spots or use the form below')).toBeInTheDocument()
+      expect(screen.getByText('Add legs from AI Picks or use the form below')).toBeInTheDocument()
     })
   })
 

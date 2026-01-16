@@ -6,6 +6,8 @@ const Splits = () => {
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const sports = ['NBA', 'NFL', 'MLB', 'NHL', 'NCAAB'];
 
@@ -51,6 +53,18 @@ const Splits = () => {
       setGames(MOCK_SPLITS);
     }
     setLoading(false);
+    setRefreshing(false);
+    setLastUpdated(new Date());
+  };
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    fetchSplits();
+  };
+
+  const formatTime = (date) => {
+    if (!date) return '';
+    return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
   };
 
   const detectSharpMoney = (game) => {
@@ -89,7 +103,7 @@ const Splits = () => {
     <div style={{ padding: '20px', backgroundColor: '#0a0a0f', minHeight: '100vh' }}>
       <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
         
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
           <div>
             <h1 style={{ color: '#fff', fontSize: '28px', margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{ fontSize: '28px' }}>📊</span> Betting Splits
@@ -97,6 +111,46 @@ const Splits = () => {
             <p style={{ color: '#6b7280', margin: '5px 0 0', fontSize: '14px' }}>
               Live ticket % vs money % • Sharp money detection
             </p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {lastUpdated && (
+              <div style={{
+                backgroundColor: '#1a1a2e',
+                padding: '6px 12px',
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}>
+                <span style={{ color: '#6b7280', fontSize: '12px' }}>Updated</span>
+                <span style={{ color: '#00D4FF', fontWeight: 'bold', fontSize: '12px' }}>{formatTime(lastUpdated)}</span>
+              </div>
+            )}
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing || loading}
+              style={{
+                backgroundColor: '#1a1a2e',
+                border: '1px solid #333',
+                borderRadius: '8px',
+                padding: '8px 12px',
+                color: '#9ca3af',
+                cursor: refreshing || loading ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '12px',
+                transition: 'all 0.2s'
+              }}
+            >
+              <span style={{
+                display: 'inline-block',
+                animation: refreshing ? 'spin 1s linear infinite' : 'none'
+              }}>
+                {refreshing ? '...' : '🔄'}
+              </span>
+              Refresh
+            </button>
           </div>
         </div>
 

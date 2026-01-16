@@ -273,7 +273,7 @@ const OnboardingWizard = ({ onComplete }) => {
           {/* Quick tips grid */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginBottom: '20px' }}>
             {[
-              { icon: '🔥', title: 'Smash Spots', tip: '85%+ confidence = best edge' },
+              { icon: '🔥', title: 'AI Picks', tip: '85%+ confidence = best edge' },
               { icon: '💵', title: 'Sharp Money', tip: 'Follow where pros bet' },
               { icon: '🎯', title: 'Best Odds', tip: 'Compare 10+ books instantly' },
               { icon: '📊', title: 'Track Results', tip: 'Grade picks for CLV' }
@@ -306,7 +306,7 @@ const OnboardingWizard = ({ onComplete }) => {
               Pro Tip
             </div>
             <div style={{ color: '#9ca3af', fontSize: '12px' }}>
-              Start with Smash Spots to see today's top AI picks. Focus on 80%+ confidence.
+              Start with AI Picks to see today's top predictions. Focus on 80%+ confidence.
             </div>
           </div>
         </div>

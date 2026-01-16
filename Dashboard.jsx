@@ -191,7 +191,7 @@ const Dashboard = () => {
   };
 
   const quickLinks = [
-    { path: '/smash-spots', icon: '🎯', title: 'Smash Spots', desc: "Today's AI picks with full breakdown", color: '#10B981' },
+    { path: '/smash-spots', icon: '🎯', title: 'AI Picks', desc: "Today's AI picks with full breakdown", color: '#10B981' },
     { path: '/sharp', icon: '🦈', title: 'Sharp Money', desc: 'Track where pros are betting', color: '#10B981' },
     { path: '/odds', icon: '📊', title: 'Best Odds Finder', desc: 'Compare lines across 8+ sportsbooks', color: '#00D4FF', badge: '8+ BOOKS', featured: true },
     { path: '/injuries', icon: '🏥', title: 'Injuries', desc: 'Usage vacuum & beneficiaries', color: '#EF4444' },
@@ -213,23 +213,40 @@ const Dashboard = () => {
               </p>
             </div>
 
-            <div style={{
-              backgroundColor: health?.status === 'healthy' ? '#00FF8820' : '#FF444420',
-              color: health?.status === 'healthy' ? '#00FF88' : '#FF4444',
-              padding: '8px 16px',
-              borderRadius: '20px',
-              fontSize: '13px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
-              <span style={{
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                backgroundColor: health?.status === 'healthy' ? '#00FF88' : '#FF4444'
-              }} />
-              {loading ? 'Checking...' : health?.status === 'healthy' ? 'Systems Online' : 'Systems Offline'}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              {lastUpdated && (
+                <div style={{
+                  backgroundColor: '#1a1a2e',
+                  padding: '6px 12px',
+                  borderRadius: '8px',
+                  fontSize: '11px',
+                  color: '#6B7280',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}>
+                  <span>Data as of</span>
+                  <span style={{ color: '#00D4FF', fontWeight: 'bold' }}>{formatTime(lastUpdated)}</span>
+                </div>
+              )}
+              <div style={{
+                backgroundColor: health?.status === 'healthy' ? '#00FF8820' : '#FF444420',
+                color: health?.status === 'healthy' ? '#00FF88' : '#FF4444',
+                padding: '8px 16px',
+                borderRadius: '20px',
+                fontSize: '13px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <span style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  backgroundColor: health?.status === 'healthy' ? '#00FF88' : '#FF4444'
+                }} />
+                {loading ? 'Checking...' : health?.status === 'healthy' ? 'Systems Online' : 'Systems Offline'}
+              </div>
             </div>
           </div>
 
@@ -741,7 +758,7 @@ const Dashboard = () => {
               }}>
                 <span style={{ color: '#00FF88', fontWeight: 'bold', fontSize: '16px' }}>1</span>
                 <div>
-                  <div style={{ color: '#00FF88', fontWeight: 'bold', fontSize: '13px' }}>Smash Spots</div>
+                  <div style={{ color: '#00FF88', fontWeight: 'bold', fontSize: '13px' }}>AI Picks</div>
                   <div style={{ color: '#9ca3af', fontSize: '11px' }}>Today's AI picks</div>
                 </div>
               </Link>

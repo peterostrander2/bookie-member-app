@@ -182,7 +182,70 @@ input {
   animation: slideUp 0.3s ease-out;
 }
 
+/* Spin animation for refresh buttons */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Shimmer loading animation */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(90deg, #1a1a2e 25%, #2a2a4a 50%, #1a1a2e 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
 /* ===== MOBILE RESPONSIVENESS ===== */
+
+/* Touch-friendly improvements for all devices */
+@media (hover: none) and (pointer: coarse) {
+  /* Remove hover effects on touch devices - they look glitchy */
+  button:hover,
+  a:hover {
+    transform: none !important;
+  }
+
+  /* Active states for visual feedback on touch */
+  button:active {
+    transform: scale(0.98) !important;
+    opacity: 0.9;
+  }
+
+  /* Larger tap targets on touch devices */
+  button,
+  [role="button"],
+  .tap-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Improve scrolling on touch */
+  .scroll-container {
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+  }
+
+  .scroll-item {
+    scroll-snap-align: start;
+  }
+}
 
 /* Mobile-first base styles */
 @media (max-width: 768px) {
@@ -214,6 +277,50 @@ input {
   /* Hide non-essential content on mobile */
   .hide-mobile {
     display: none !important;
+  }
+
+  /* Mobile card optimizations */
+  .pick-card {
+    padding: 12px !important;
+  }
+
+  /* Horizontal scrolling for sport buttons */
+  .sport-selector {
+    display: flex;
+    overflow-x: auto;
+    gap: 8px;
+    padding-bottom: 8px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+  }
+
+  .sport-selector::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+  }
+
+  /* Sticky sport selector on scroll */
+  .sticky-nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10, 10, 15, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 10px 0;
+    margin: 0 -12px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  /* Full-width action buttons on mobile */
+  .action-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .action-row button {
+    width: 100%;
+    justify-content: center;
   }
 }
 
@@ -251,6 +358,41 @@ input {
   /* Full width buttons on small screens */
   .btn-full-mobile {
     width: 100%;
+  }
+
+  /* Compact pick cards on small screens */
+  .pick-hero {
+    padding: 12px 16px !important;
+  }
+
+  .pick-hero-text {
+    font-size: 20px !important;
+  }
+
+  .pick-confidence {
+    font-size: 24px !important;
+  }
+
+  /* Hide less important elements on small screens */
+  .hide-small-mobile {
+    display: none !important;
+  }
+
+  /* Simpler filter UI on small screens */
+  .filter-controls {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* Bottom padding for floating elements */
+  .page-content {
+    padding-bottom: 80px;
+  }
+
+  /* Ensure modals don't overflow */
+  .modal-content {
+    max-height: 85vh;
+    overflow-y: auto;
   }
 }
 

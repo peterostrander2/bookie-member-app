@@ -13,6 +13,7 @@ const Props = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all'); // all, points, rebounds, assists, etc.
   const [sortBy, setSortBy] = useState('confidence');
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   const sports = ['NBA', 'NFL', 'MLB', 'NHL'];
 
@@ -40,6 +41,12 @@ const Props = () => {
       toast.error('Failed to load props data');
     }
     setLoading(false);
+    setLastUpdated(new Date());
+  };
+
+  const formatTime = (date) => {
+    if (!date) return '';
+    return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
   };
 
   const getConfidenceColor = (conf) => {
@@ -91,7 +98,22 @@ const Props = () => {
               AI-analyzed player prop bets with edge detection
             </p>
           </div>
-          <RefreshButton onRefresh={fetchProps} isRefreshing={loading} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {lastUpdated && (
+              <div style={{
+                backgroundColor: '#1a1a2e',
+                padding: '6px 12px',
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}>
+                <span style={{ color: '#6b7280', fontSize: '12px' }}>Updated</span>
+                <span style={{ color: '#00D4FF', fontWeight: 'bold', fontSize: '12px' }}>{formatTime(lastUpdated)}</span>
+              </div>
+            )}
+            <RefreshButton onRefresh={fetchProps} isRefreshing={loading} />
+          </div>
         </div>
 
         {/* Sport Tabs */}
