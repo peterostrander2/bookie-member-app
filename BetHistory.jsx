@@ -218,22 +218,28 @@ const BetHistory = () => {
           ))}
         </select>
 
-        {/* Refresh */}
-        <button
-          onClick={loadBetHistory}
-          style={{
-            padding: '8px 16px',
-            backgroundColor: '#1a1a2e',
-            color: '#9ca3af',
-            border: '1px solid #333',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '13px',
-            marginLeft: 'auto'
-          }}
-        >
-          🔄 Refresh
-        </button>
+        {/* Action Buttons */}
+        <div style={{ display: 'flex', gap: '8px', marginLeft: 'auto' }}>
+          <button
+            onClick={loadBetHistory}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#1a1a2e',
+              color: '#9ca3af',
+              border: '1px solid #333',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '13px'
+            }}
+          >
+            🔄 Refresh
+          </button>
+
+          {/* Export Dropdown */}
+          <div style={{ position: 'relative' }}>
+            <ExportDropdown bets={filteredBets} stats={stats} />
+          </div>
+        </div>
       </div>
 
       {/* Bet List */}
@@ -289,6 +295,122 @@ const BetHistory = () => {
           50% { opacity: 0.5; }
         }
       `}</style>
+    </div>
+  );
+};
+
+// Export Dropdown Component
+const ExportDropdown = ({ bets, stats }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        style={{
+          padding: '8px 16px',
+          backgroundColor: '#10B98120',
+          color: '#10B981',
+          border: '1px solid #10B98150',
+          borderRadius: '8px',
+          cursor: 'pointer',
+          fontSize: '13px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px'
+        }}
+      >
+        📥 Export
+        <span style={{ fontSize: '10px' }}>{isOpen ? '▲' : '▼'}</span>
+      </button>
+
+      {isOpen && (
+        <div style={{
+          position: 'absolute',
+          top: '100%',
+          right: 0,
+          marginTop: '4px',
+          backgroundColor: '#1a1a2e',
+          border: '1px solid #333',
+          borderRadius: '8px',
+          overflow: 'hidden',
+          zIndex: 100,
+          minWidth: '200px',
+          boxShadow: '0 10px 25px rgba(0,0,0,0.5)'
+        }}>
+          <button
+            onClick={() => {
+              exportToCSV(bets, stats);
+              setIsOpen(false);
+            }}
+            style={{
+              width: '100%',
+              padding: '12px 16px',
+              backgroundColor: 'transparent',
+              color: '#fff',
+              border: 'none',
+              cursor: 'pointer',
+              textAlign: 'left',
+              fontSize: '13px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px'
+            }}
+            onMouseEnter={e => e.target.style.backgroundColor = '#12121f'}
+            onMouseLeave={e => e.target.style.backgroundColor = 'transparent'}
+          >
+            <span>📊</span>
+            <div>
+              <div>Export to CSV</div>
+              <div style={{ color: '#6b7280', fontSize: '11px' }}>Bet history with P/L</div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => {
+              exportForTax(bets);
+              setIsOpen(false);
+            }}
+            style={{
+              width: '100%',
+              padding: '12px 16px',
+              backgroundColor: 'transparent',
+              color: '#fff',
+              border: 'none',
+              borderTop: '1px solid #333',
+              cursor: 'pointer',
+              textAlign: 'left',
+              fontSize: '13px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px'
+            }}
+            onMouseEnter={e => e.target.style.backgroundColor = '#12121f'}
+            onMouseLeave={e => e.target.style.backgroundColor = 'transparent'}
+          >
+            <span>📋</span>
+            <div>
+              <div>Tax Report</div>
+              <div style={{ color: '#6b7280', fontSize: '11px' }}>Formatted for tax purposes</div>
+            </div>
+          </button>
+        </div>
+      )}
+
+      {/* Click outside to close */}
+      {isOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 99
+          }}
+          onClick={() => setIsOpen(false)}
+        />
+      )}
     </div>
   );
 };
@@ -501,4 +623,183 @@ const calculateToWin = (odds, stake = 100) => {
   }
 };
 
+// CSV Export functionality
+const exportToCSV = (bets, stats) => {
+  // CSV headers
+  const headers = [
+    'Date',
+    'Sport',
+    'Selection',
+    'Bet Type',
+    'Side',
+    'Line',
+    'Odds',
+    'Stake',
+    'To Win',
+    'Outcome',
+    'Profit/Loss'
+  ];
+
+  // Convert bets to CSV rows
+  const rows = bets.map(bet => {
+    const odds = bet.odds || -110;
+    const stake = bet.stake || 100;
+    const toWin = parseFloat(calculateToWin(odds, stake));
+    let profitLoss = '';
+
+    if (bet.outcome === 'WIN') {
+      profitLoss = `+${toWin.toFixed(2)}`;
+    } else if (bet.outcome === 'LOSS') {
+      profitLoss = `-${stake.toFixed(2)}`;
+    } else if (bet.outcome === 'PUSH') {
+      profitLoss = '0.00';
+    }
+
+    return [
+      bet.created_at ? new Date(bet.created_at).toLocaleDateString() : '',
+      bet.sport || '',
+      bet.player || bet.team || bet.selection || '',
+      bet.bet_type || '',
+      bet.side || '',
+      bet.line || '',
+      odds > 0 ? `+${odds}` : odds,
+      stake.toFixed(2),
+      toWin.toFixed(2),
+      bet.outcome || 'PENDING',
+      profitLoss
+    ];
+  });
+
+  // Add summary rows
+  rows.push([]);
+  rows.push(['--- SUMMARY ---']);
+  rows.push(['Total Bets', bets.length]);
+  rows.push(['Wins', stats.wins || bets.filter(b => b.outcome === 'WIN').length]);
+  rows.push(['Losses', stats.losses || bets.filter(b => b.outcome === 'LOSS').length]);
+  rows.push(['Pushes', bets.filter(b => b.outcome === 'PUSH').length]);
+  rows.push(['Win Rate', `${(stats.win_rate || calculateWinRate(bets)).toFixed(1)}%`]);
+
+  const totalProfit = bets.reduce((total, bet) => {
+    const odds = bet.odds || -110;
+    const stake = bet.stake || 100;
+    if (bet.outcome === 'WIN') {
+      if (odds > 0) {
+        return total + (stake * odds / 100);
+      } else {
+        return total + (stake * 100 / Math.abs(odds));
+      }
+    } else if (bet.outcome === 'LOSS') {
+      return total - stake;
+    }
+    return total;
+  }, 0);
+  rows.push(['Total Profit/Loss', `$${totalProfit.toFixed(2)}`]);
+
+  // Convert to CSV string
+  const csvContent = [
+    headers.join(','),
+    ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+  ].join('\n');
+
+  // Create blob and download
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.setAttribute('href', url);
+  link.setAttribute('download', `bet_history_${new Date().toISOString().split('T')[0]}.csv`);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+// Export for tax purposes (more detailed)
+const exportForTax = (bets) => {
+  const taxYear = new Date().getFullYear();
+
+  const headers = [
+    'Tax Year',
+    'Date',
+    'Sportsbook',
+    'Sport',
+    'Event',
+    'Bet Description',
+    'Wager Amount',
+    'Winnings',
+    'Net Profit/Loss',
+    'Outcome'
+  ];
+
+  const rows = bets
+    .filter(bet => bet.outcome && bet.outcome !== 'PENDING')
+    .map(bet => {
+      const odds = bet.odds || -110;
+      const stake = bet.stake || 100;
+      const toWin = parseFloat(calculateToWin(odds, stake));
+
+      let winnings = 0;
+      let netPL = 0;
+
+      if (bet.outcome === 'WIN') {
+        winnings = stake + toWin;
+        netPL = toWin;
+      } else if (bet.outcome === 'LOSS') {
+        winnings = 0;
+        netPL = -stake;
+      } else if (bet.outcome === 'PUSH') {
+        winnings = stake;
+        netPL = 0;
+      }
+
+      const betDate = bet.created_at ? new Date(bet.created_at) : new Date();
+      const betDescription = [
+        bet.player || bet.team || bet.selection || 'Bet',
+        bet.side,
+        bet.line
+      ].filter(Boolean).join(' ');
+
+      return [
+        betDate.getFullYear(),
+        betDate.toLocaleDateString(),
+        bet.sportsbook || 'N/A',
+        bet.sport || 'N/A',
+        `${bet.away_team || ''} vs ${bet.home_team || ''}`.trim() || 'N/A',
+        betDescription,
+        stake.toFixed(2),
+        winnings.toFixed(2),
+        netPL.toFixed(2),
+        bet.outcome
+      ];
+    });
+
+  // Summary for tax
+  const totalWagered = bets.reduce((sum, b) => sum + (b.stake || 100), 0);
+  const totalWinnings = rows.reduce((sum, row) => sum + parseFloat(row[7] || 0), 0);
+  const totalNetPL = rows.reduce((sum, row) => sum + parseFloat(row[8] || 0), 0);
+
+  rows.push([]);
+  rows.push(['--- TAX SUMMARY ---']);
+  rows.push(['Total Amount Wagered', '', '', '', '', '', totalWagered.toFixed(2)]);
+  rows.push(['Total Winnings Received', '', '', '', '', '', '', totalWinnings.toFixed(2)]);
+  rows.push(['Net Gambling Income', '', '', '', '', '', '', '', totalNetPL.toFixed(2)]);
+  rows.push([]);
+  rows.push(['Note: Consult a tax professional for proper reporting requirements']);
+
+  const csvContent = [
+    headers.join(','),
+    ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+  ].join('\n');
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.setAttribute('href', url);
+  link.setAttribute('download', `gambling_tax_report_${taxYear}.csv`);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+export { exportToCSV, exportForTax };
 export default BetHistory;
