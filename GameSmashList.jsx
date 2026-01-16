@@ -30,27 +30,32 @@ const PILLARS = [
   { id: 'pace_tempo', name: 'Pace/Tempo' }
 ];
 
-// Confidence tier configuration
+// Confidence tier configuration with historical win rates
 const getTierConfig = (conf) => {
   if (conf >= 85) return {
     label: 'SMASH', color: '#10B981',
     bg: 'rgba(16, 185, 129, 0.15)', border: 'rgba(16, 185, 129, 0.5)',
-    glow: '0 0 20px rgba(16, 185, 129, 0.3)', size: 'large'
+    glow: '0 0 20px rgba(16, 185, 129, 0.3)', size: 'large',
+    historicalWinRate: 87, isProfitable: true
   };
   if (conf >= 75) return {
     label: 'STRONG', color: '#F59E0B',
     bg: 'rgba(245, 158, 11, 0.15)', border: 'rgba(245, 158, 11, 0.5)',
-    glow: 'none', size: 'medium'
+    glow: 'none', size: 'medium',
+    historicalWinRate: 72, isProfitable: true
   };
   if (conf >= 65) return {
     label: 'LEAN', color: '#3B82F6',
     bg: 'rgba(59, 130, 246, 0.15)', border: 'rgba(59, 130, 246, 0.5)',
-    glow: 'none', size: 'small'
+    glow: 'none', size: 'small',
+    historicalWinRate: 58, isProfitable: true
   };
   return {
     label: 'WATCH', color: '#6B7280',
     bg: 'rgba(107, 114, 128, 0.15)', border: 'rgba(107, 114, 128, 0.5)',
-    glow: 'none', size: 'small'
+    glow: 'none', size: 'small',
+    historicalWinRate: 48, isProfitable: false,
+    warning: 'Below break-even at standard odds'
   };
 };
 
@@ -78,14 +83,34 @@ const ScoreBadge = memo(({ score, maxScore, label, tooltip }) => {
 });
 ScoreBadge.displayName = 'ScoreBadge';
 
-// Memoized tier badge
-const TierBadge = memo(({ confidence }) => {
+// Memoized tier badge with win rate warning for unprofitable tiers
+const TierBadge = memo(({ confidence, showWinRate = false }) => {
   const config = getTierConfig(confidence);
   return (
-    <span style={{
-      padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold',
-      color: config.color, backgroundColor: config.bg, border: `1px solid ${config.color}`, letterSpacing: '0.5px'
-    }}>{config.label}</span>
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+      <span style={{
+        padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold',
+        color: config.color, backgroundColor: config.bg, border: `1px solid ${config.color}`, letterSpacing: '0.5px'
+      }}>{config.label}</span>
+      {showWinRate && (
+        <span style={{
+          padding: '2px 6px', borderRadius: '4px', fontSize: '9px', fontWeight: 'bold',
+          backgroundColor: config.isProfitable ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+          color: config.isProfitable ? '#10B981' : '#EF4444',
+          border: `1px solid ${config.isProfitable ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
+        }}>
+          {config.historicalWinRate}% hist.
+        </span>
+      )}
+      {!config.isProfitable && (
+        <span title={config.warning} style={{
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          width: '16px', height: '16px', borderRadius: '50%',
+          backgroundColor: 'rgba(239, 68, 68, 0.15)', color: '#EF4444',
+          fontSize: '10px', fontWeight: 'bold', cursor: 'help'
+        }}>!</span>
+      )}
+    </div>
   );
 });
 TierBadge.displayName = 'TierBadge';
@@ -240,7 +265,7 @@ const PickCard = memo(({ pick, injuries = [] }) => {
     <div style={cardStyle} {...(isTouchDevice ? swipeHandlers : {})}>
       {/* TOP ROW: Tier badge + Market type + Matchup */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-        <TierBadge confidence={pick.confidence} />
+        <TierBadge confidence={pick.confidence} showWinRate={tierConfig.label === 'WATCH'} />
         <span style={{
           backgroundColor: '#00D4FF20', color: '#00D4FF',
           padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold',
@@ -250,6 +275,25 @@ const PickCard = memo(({ pick, injuries = [] }) => {
           {pick.away_team} @ {pick.home_team}
         </span>
       </div>
+
+      {/* Warning banner for unprofitable tiers */}
+      {!tierConfig.isProfitable && (
+        <div style={{
+          backgroundColor: 'rgba(239, 68, 68, 0.1)',
+          border: '1px solid rgba(239, 68, 68, 0.3)',
+          borderRadius: '6px',
+          padding: '8px 12px',
+          marginBottom: '12px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}>
+          <span style={{ color: '#EF4444', fontSize: '14px' }}>⚠️</span>
+          <span style={{ color: '#EF4444', fontSize: '11px' }}>
+            <strong>Low Conviction:</strong> This tier historically hits {tierConfig.historicalWinRate}% — below the ~52.4% needed to profit at -110 odds. Consider passing or reducing stake.
+          </span>
+        </div>
+      )}
 
       {/* HERO SECTION: Main pick display - LARGEST, MOST PROMINENT */}
       <div style={{
