@@ -4,9 +4,11 @@ import { resetOnboarding } from './Onboarding';
 import { useToast } from './Toast';
 import { PushNotificationSettings } from './PushNotifications';
 import { CacheStatusDisplay } from './OfflineIndicator';
+import { NotificationOnboardingModal, useNotificationOnboarding } from './NotificationOnboarding';
 
 const Profile = () => {
   const toast = useToast();
+  const { showModal, openModal, closeModal, onEnabled } = useNotificationOnboarding();
   const [user, setUser] = useState({
     name: 'Member',
     email: 'member@example.com',
@@ -60,8 +62,14 @@ const Profile = () => {
 
   return (
     <div style={{ padding: '20px', backgroundColor: '#0a0a0f', minHeight: '100vh' }}>
+      {/* Notification Onboarding Modal */}
+      <NotificationOnboardingModal
+        isOpen={showModal}
+        onClose={closeModal}
+        onEnabled={onEnabled}
+      />
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-        
+
         <div style={{ marginBottom: '30px' }}>
           <h1 style={{ color: '#fff', fontSize: '28px', margin: '0 0 5px', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span>👤</span> Profile & Settings
@@ -362,7 +370,7 @@ const Profile = () => {
 
         {/* Push Notifications */}
         <div style={{ marginBottom: '20px' }}>
-          <PushNotificationSettings />
+          <PushNotificationSettings onOpenModal={openModal} />
         </div>
 
         {/* Offline Cache Status */}
