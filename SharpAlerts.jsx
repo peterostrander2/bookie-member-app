@@ -80,22 +80,62 @@ const SharpAlerts = () => {
   const generateMockAlerts = (sport) => {
     const mockGames = {
       NBA: [
-        { home_team: 'Lakers', away_team: 'Celtics', ticket_pct: 72, money_pct: 45, spread: -3.5, time: '7:30 PM' },
-        { home_team: 'Warriors', away_team: 'Suns', ticket_pct: 65, money_pct: 38, spread: -5.5, time: '10:00 PM' },
-        { home_team: 'Bucks', away_team: 'Heat', ticket_pct: 58, money_pct: 78, spread: -7, time: '8:00 PM' }
+        {
+          home_team: 'Lakers', away_team: 'Celtics', ticket_pct: 72, money_pct: 45, spread: -3.5, time: '7:30 PM',
+          opening_spread: -4.5, line_movement: '+1', movement_direction: 'toward_sharp',
+          estimated_handle: '$2.4M', steam_move: true, alert_time: '2h ago',
+          historical_hit_rate: 68, total_bets: 12500, sharp_bets_count: 8
+        },
+        {
+          home_team: 'Warriors', away_team: 'Suns', ticket_pct: 65, money_pct: 38, spread: -5.5, time: '10:00 PM',
+          opening_spread: -6.5, line_movement: '+1', movement_direction: 'toward_sharp',
+          estimated_handle: '$1.8M', steam_move: false, alert_time: '45m ago',
+          historical_hit_rate: 62, total_bets: 8200, sharp_bets_count: 5
+        },
+        {
+          home_team: 'Bucks', away_team: 'Heat', ticket_pct: 58, money_pct: 78, spread: -7, time: '8:00 PM',
+          opening_spread: -5.5, line_movement: '-1.5', movement_direction: 'with_sharp',
+          estimated_handle: '$3.1M', steam_move: true, alert_time: '3h ago',
+          historical_hit_rate: 71, total_bets: 15800, sharp_bets_count: 12
+        }
       ],
       NFL: [
-        { home_team: 'Chiefs', away_team: 'Bills', ticket_pct: 68, money_pct: 42, spread: -3, time: '1:00 PM' },
-        { home_team: 'Eagles', away_team: 'Cowboys', ticket_pct: 55, money_pct: 75, spread: -2.5, time: '4:25 PM' }
+        {
+          home_team: 'Chiefs', away_team: 'Bills', ticket_pct: 68, money_pct: 42, spread: -3, time: '1:00 PM',
+          opening_spread: -4, line_movement: '+1', movement_direction: 'toward_sharp',
+          estimated_handle: '$8.5M', steam_move: true, alert_time: '1h ago',
+          historical_hit_rate: 65, total_bets: 45000, sharp_bets_count: 22
+        },
+        {
+          home_team: 'Eagles', away_team: 'Cowboys', ticket_pct: 55, money_pct: 75, spread: -2.5, time: '4:25 PM',
+          opening_spread: -1.5, line_movement: '-1', movement_direction: 'with_sharp',
+          estimated_handle: '$6.2M', steam_move: false, alert_time: '4h ago',
+          historical_hit_rate: 59, total_bets: 38000, sharp_bets_count: 15
+        }
       ],
       MLB: [
-        { home_team: 'Yankees', away_team: 'Red Sox', ticket_pct: 70, money_pct: 48, spread: -1.5, time: '7:05 PM' }
+        {
+          home_team: 'Yankees', away_team: 'Red Sox', ticket_pct: 70, money_pct: 48, spread: -1.5, time: '7:05 PM',
+          opening_spread: -1.5, line_movement: '0', movement_direction: 'no_move',
+          estimated_handle: '$1.2M', steam_move: false, alert_time: '30m ago',
+          historical_hit_rate: 58, total_bets: 6500, sharp_bets_count: 4
+        }
       ],
       NHL: [
-        { home_team: 'Bruins', away_team: 'Rangers', ticket_pct: 62, money_pct: 40, spread: -1.5, time: '7:00 PM' }
+        {
+          home_team: 'Bruins', away_team: 'Rangers', ticket_pct: 62, money_pct: 40, spread: -1.5, time: '7:00 PM',
+          opening_spread: -1.5, line_movement: '0', movement_direction: 'no_move',
+          estimated_handle: '$850K', steam_move: false, alert_time: '1h ago',
+          historical_hit_rate: 61, total_bets: 4200, sharp_bets_count: 3
+        }
       ],
       NCAAB: [
-        { home_team: 'Duke', away_team: 'UNC', ticket_pct: 75, money_pct: 52, spread: -4.5, time: '9:00 PM' }
+        {
+          home_team: 'Duke', away_team: 'UNC', ticket_pct: 75, money_pct: 52, spread: -4.5, time: '9:00 PM',
+          opening_spread: -6, line_movement: '+1.5', movement_direction: 'toward_sharp',
+          estimated_handle: '$2.8M', steam_move: true, alert_time: '2h ago',
+          historical_hit_rate: 64, total_bets: 22000, sharp_bets_count: 18
+        }
       ]
     };
 
@@ -265,11 +305,44 @@ const SharpAlerts = () => {
                     {getDivergenceBar(alert.ticket_pct, alert.money_pct)}
                   </div>
 
-                  {/* Analysis */}
+                  {/* Steam Move Badge & Alert Time */}
+                  {(alert.steam_move || alert.alert_time) && (
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
+                      {alert.steam_move && (
+                        <span style={{
+                          backgroundColor: '#FF444420',
+                          color: '#FF4444',
+                          padding: '4px 10px',
+                          borderRadius: '12px',
+                          fontSize: '11px',
+                          fontWeight: 'bold',
+                          border: '1px solid #FF444440',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}>
+                          🔥 STEAM MOVE
+                        </span>
+                      )}
+                      {alert.alert_time && (
+                        <span style={{
+                          backgroundColor: '#4B5563',
+                          color: '#9CA3AF',
+                          padding: '4px 10px',
+                          borderRadius: '12px',
+                          fontSize: '11px'
+                        }}>
+                          ⏰ Alert triggered {alert.alert_time}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Analysis - Enhanced */}
                   <div style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                    gap: '15px'
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                    gap: '12px'
                   }}>
                     <div style={{ padding: '12px', backgroundColor: '#0a0a0f', borderRadius: '8px' }}>
                       <div style={{ color: '#6b7280', fontSize: '11px', marginBottom: '4px' }}>DIVERGENCE</div>
@@ -283,13 +356,73 @@ const SharpAlerts = () => {
                         {isSharpOnUnderdog ? `${alert.away_team} (+${Math.abs(alert.spread)})` : `${alert.home_team} (${alert.spread})`}
                       </div>
                     </div>
-                    <div style={{ padding: '12px', backgroundColor: '#0a0a0f', borderRadius: '8px' }}>
-                      <div style={{ color: '#6b7280', fontSize: '11px', marginBottom: '4px' }}>SIGNAL</div>
-                      <div style={{ color: '#FFD700', fontSize: '14px' }}>
-                        {isSharpOnUnderdog ? '🦈 Sharps fading public favorite' : '🦈 Sharps doubling down'}
+                    {alert.estimated_handle && (
+                      <div style={{ padding: '12px', backgroundColor: '#0a0a0f', borderRadius: '8px' }}>
+                        <div style={{ color: '#6b7280', fontSize: '11px', marginBottom: '4px' }}>EST. HANDLE</div>
+                        <div style={{ color: '#00D4FF', fontSize: '20px', fontWeight: 'bold' }}>
+                          {alert.estimated_handle}
+                        </div>
+                        {alert.sharp_bets_count && (
+                          <div style={{ color: '#6b7280', fontSize: '10px', marginTop: '2px' }}>
+                            {alert.sharp_bets_count} sharp tickets
+                          </div>
+                        )}
                       </div>
-                    </div>
+                    )}
+                    {alert.line_movement && alert.line_movement !== '0' && (
+                      <div style={{ padding: '12px', backgroundColor: '#0a0a0f', borderRadius: '8px' }}>
+                        <div style={{ color: '#6b7280', fontSize: '11px', marginBottom: '4px' }}>LINE MOVEMENT</div>
+                        <div style={{
+                          color: alert.movement_direction === 'toward_sharp' || alert.movement_direction === 'with_sharp' ? '#00FF88' : '#FF6B6B',
+                          fontSize: '18px',
+                          fontWeight: 'bold'
+                        }}>
+                          {alert.opening_spread > 0 ? '+' : ''}{alert.opening_spread} → {alert.spread > 0 ? '+' : ''}{alert.spread}
+                        </div>
+                        <div style={{ color: '#6b7280', fontSize: '10px', marginTop: '2px' }}>
+                          {alert.movement_direction === 'toward_sharp' ? '📈 Books adjusting to sharps' :
+                           alert.movement_direction === 'with_sharp' ? '✓ Line confirmed sharp side' : '—'}
+                        </div>
+                      </div>
+                    )}
                   </div>
+
+                  {/* Historical Context Row */}
+                  {(alert.historical_hit_rate || alert.total_bets) && (
+                    <div style={{
+                      display: 'flex',
+                      gap: '16px',
+                      marginTop: '12px',
+                      padding: '10px 12px',
+                      backgroundColor: '#0a0a0f',
+                      borderRadius: '8px',
+                      flexWrap: 'wrap'
+                    }}>
+                      {alert.historical_hit_rate && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ color: '#6b7280', fontSize: '11px' }}>Historical Hit Rate:</span>
+                          <span style={{
+                            color: alert.historical_hit_rate >= 65 ? '#00FF88' : alert.historical_hit_rate >= 55 ? '#FFD700' : '#9CA3AF',
+                            fontWeight: 'bold',
+                            fontSize: '13px'
+                          }}>
+                            {alert.historical_hit_rate}%
+                          </span>
+                          <span style={{ color: '#4B5563', fontSize: '10px' }}>
+                            (similar divergence)
+                          </span>
+                        </div>
+                      )}
+                      {alert.total_bets && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ color: '#6b7280', fontSize: '11px' }}>Total Bets:</span>
+                          <span style={{ color: '#9CA3AF', fontWeight: 'bold', fontSize: '13px' }}>
+                            {alert.total_bets.toLocaleString()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Recommendation */}
                   <div style={{

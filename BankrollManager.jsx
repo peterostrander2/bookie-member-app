@@ -5,7 +5,7 @@
  * Track your bets, manage risk, and optimize bet sizing.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   getBankrollSettings,
   saveBankrollSettings,
@@ -14,7 +14,8 @@ import {
   gradeBet,
   calculateBetSize,
   calculateRiskOfRuin,
-  simulateBankroll
+  simulateBankroll,
+  importBets
 } from './kellyCalculator';
 import { useToast } from './Toast';
 
@@ -26,6 +27,9 @@ const BankrollManager = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [editingSettings, setEditingSettings] = useState(false);
   const [tempSettings, setTempSettings] = useState({});
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importPreview, setImportPreview] = useState(null);
+  const fileInputRef = useRef(null);
 
   // Export bet history to CSV
   const exportToCSV = () => {
@@ -62,6 +66,123 @@ const BankrollManager = () => {
     link.click();
 
     toast.success(`Exported ${betHistory.length} bets to CSV`);
+  };
+
+  // Import bet history from CSV
+  const handleFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const csvContent = event.target?.result;
+        const parsedData = parseCSV(csvContent);
+
+        if (parsedData.length === 0) {
+          toast.error('No valid bets found in CSV');
+          return;
+        }
+
+        setImportPreview(parsedData);
+        setShowImportModal(true);
+      } catch (err) {
+        toast.error('Error parsing CSV file');
+        console.error('CSV parse error:', err);
+      }
+    };
+    reader.readAsText(file);
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const parseCSV = (csvContent) => {
+    const lines = csvContent.split('\n').filter(line => line.trim());
+    if (lines.length < 2) return [];
+
+    const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim().toLowerCase());
+    const bets = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      const values = lines[i].match(/("([^"]*)"|[^,]+)/g)?.map(v => v.replace(/"/g, '').trim()) || [];
+      if (values.length < 3) continue;
+
+      const row = {};
+      headers.forEach((header, idx) => {
+        row[header] = values[idx] || '';
+      });
+
+      // Map common column names to our format
+      const bet = {
+        id: `import-${Date.now()}-${i}`,
+        timestamp: parseDate(row.date || row.timestamp || row.time) || new Date().toISOString(),
+        sport: row.sport?.toUpperCase() || 'NBA',
+        game: row.game || row.matchup || row.event || `${row.team || 'Bet'} ${i}`,
+        bet_type: row['bet type'] || row.type || row.market || 'spread',
+        side: row.side || row.pick || row.selection || '',
+        line: parseFloat(row.line || row.spread || 0) || null,
+        odds: parseInt(row.odds) || -110,
+        stake: parseFloat(row.stake || row.wager || row.amount || row.bet) || settings?.unitSize || 50,
+        result: normalizeResult(row.result || row.outcome || row.status),
+        pnl: parseFloat(row['p&l'] || row.pnl || row.profit || row.winnings) || null,
+        confidence: parseInt(row.confidence) || null,
+        tier: row.tier || null
+      };
+
+      // Calculate P&L if result exists but P&L doesn't
+      if (bet.result && !bet.pnl) {
+        if (bet.result === 'WIN') {
+          bet.pnl = bet.odds > 0 ? (bet.stake * bet.odds / 100) : (bet.stake * 100 / Math.abs(bet.odds));
+        } else if (bet.result === 'LOSS') {
+          bet.pnl = -bet.stake;
+        } else {
+          bet.pnl = 0;
+        }
+      }
+
+      bets.push(bet);
+    }
+
+    return bets;
+  };
+
+  const parseDate = (dateStr) => {
+    if (!dateStr) return null;
+    const date = new Date(dateStr);
+    return isNaN(date.getTime()) ? null : date.toISOString();
+  };
+
+  const normalizeResult = (result) => {
+    if (!result) return null;
+    const r = result.toUpperCase().trim();
+    if (r.includes('WIN') || r === 'W') return 'WIN';
+    if (r.includes('LOSS') || r.includes('LOSE') || r === 'L') return 'LOSS';
+    if (r.includes('PUSH') || r === 'P' || r === 'DRAW') return 'PUSH';
+    if (r.includes('PENDING') || r.includes('OPEN')) return null;
+    return null;
+  };
+
+  const confirmImport = () => {
+    if (!importPreview || importPreview.length === 0) return;
+
+    try {
+      const imported = importBets(importPreview);
+      toast.success(`Imported ${imported} bets successfully`);
+      setShowImportModal(false);
+      setImportPreview(null);
+      loadData();
+    } catch (err) {
+      toast.error('Error importing bets');
+      console.error('Import error:', err);
+    }
+  };
+
+  const cancelImport = () => {
+    setShowImportModal(false);
+    setImportPreview(null);
   };
 
   // Calculator state
@@ -484,27 +605,53 @@ const BankrollManager = () => {
             borderRadius: '12px',
             padding: '20px'
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', flexWrap: 'wrap', gap: '10px' }}>
               <h3 style={{ color: '#fff', margin: 0, fontSize: '16px' }}>
                 Bet History ({stats.pendingBets} pending)
               </h3>
-              <button
-                onClick={exportToCSV}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: '#00D4FF20',
-                  color: '#00D4FF',
-                  border: '1px solid #00D4FF40',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '13px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px'
-                }}
-              >
-                📥 Export CSV
-              </button>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept=".csv"
+                  onChange={handleFileSelect}
+                  style={{ display: 'none' }}
+                />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{
+                    padding: '8px 16px',
+                    backgroundColor: '#10B98120',
+                    color: '#10B981',
+                    border: '1px solid #10B98140',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  📤 Import CSV
+                </button>
+                <button
+                  onClick={exportToCSV}
+                  style={{
+                    padding: '8px 16px',
+                    backgroundColor: '#00D4FF20',
+                    color: '#00D4FF',
+                    border: '1px solid #00D4FF40',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  📥 Export CSV
+                </button>
+              </div>
             </div>
 
             {betHistory.length === 0 ? (
@@ -735,6 +882,176 @@ const BankrollManager = () => {
               <br />• 0.25 (Quarter Kelly) - Conservative, recommended for most
               <br />• 0.50 (Half Kelly) - Moderate, for confident bettors
               <br />• 1.00 (Full Kelly) - Aggressive, high variance
+            </div>
+          </div>
+        )}
+
+        {/* Import Preview Modal */}
+        {showImportModal && importPreview && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '20px'
+          }}>
+            <div style={{
+              backgroundColor: '#1a1a2e',
+              borderRadius: '12px',
+              padding: '24px',
+              maxWidth: '800px',
+              width: '100%',
+              maxHeight: '80vh',
+              overflowY: 'auto'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h3 style={{ color: '#fff', margin: 0, fontSize: '18px' }}>
+                  📤 Import Preview
+                </h3>
+                <button
+                  onClick={cancelImport}
+                  style={{
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    color: '#6b7280',
+                    fontSize: '20px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+
+              <div style={{
+                backgroundColor: '#10B98120',
+                border: '1px solid #10B98140',
+                borderRadius: '8px',
+                padding: '12px',
+                marginBottom: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px'
+              }}>
+                <span style={{ fontSize: '20px' }}>✅</span>
+                <div>
+                  <div style={{ color: '#10B981', fontWeight: 'bold' }}>
+                    {importPreview.length} bets ready to import
+                  </div>
+                  <div style={{ color: '#9ca3af', fontSize: '12px' }}>
+                    {importPreview.filter(b => b.result === 'WIN').length} wins,{' '}
+                    {importPreview.filter(b => b.result === 'LOSS').length} losses,{' '}
+                    {importPreview.filter(b => !b.result).length} pending
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '20px', maxHeight: '300px', overflowY: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid #333' }}>
+                      <th style={{ color: '#6b7280', fontSize: '11px', textAlign: 'left', padding: '8px', textTransform: 'uppercase' }}>Date</th>
+                      <th style={{ color: '#6b7280', fontSize: '11px', textAlign: 'left', padding: '8px', textTransform: 'uppercase' }}>Game</th>
+                      <th style={{ color: '#6b7280', fontSize: '11px', textAlign: 'right', padding: '8px', textTransform: 'uppercase' }}>Stake</th>
+                      <th style={{ color: '#6b7280', fontSize: '11px', textAlign: 'right', padding: '8px', textTransform: 'uppercase' }}>Odds</th>
+                      <th style={{ color: '#6b7280', fontSize: '11px', textAlign: 'center', padding: '8px', textTransform: 'uppercase' }}>Result</th>
+                      <th style={{ color: '#6b7280', fontSize: '11px', textAlign: 'right', padding: '8px', textTransform: 'uppercase' }}>P&L</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {importPreview.slice(0, 10).map((bet, idx) => (
+                      <tr key={idx} style={{ borderBottom: '1px solid #333' }}>
+                        <td style={{ color: '#9ca3af', fontSize: '12px', padding: '8px' }}>
+                          {new Date(bet.timestamp).toLocaleDateString()}
+                        </td>
+                        <td style={{ color: '#fff', fontSize: '12px', padding: '8px' }}>
+                          {bet.game?.substring(0, 30) || 'N/A'}
+                        </td>
+                        <td style={{ color: '#9ca3af', fontSize: '12px', padding: '8px', textAlign: 'right' }}>
+                          ${bet.stake}
+                        </td>
+                        <td style={{ color: '#9ca3af', fontSize: '12px', padding: '8px', textAlign: 'right' }}>
+                          {bet.odds > 0 ? `+${bet.odds}` : bet.odds}
+                        </td>
+                        <td style={{ textAlign: 'center', padding: '8px' }}>
+                          <span style={{
+                            color: bet.result === 'WIN' ? '#00FF88' : bet.result === 'LOSS' ? '#FF4444' : '#9ca3af',
+                            fontSize: '11px',
+                            fontWeight: 'bold'
+                          }}>
+                            {bet.result || 'PENDING'}
+                          </span>
+                        </td>
+                        <td style={{
+                          color: bet.pnl >= 0 ? '#00FF88' : '#FF4444',
+                          fontSize: '12px',
+                          padding: '8px',
+                          textAlign: 'right',
+                          fontWeight: 'bold'
+                        }}>
+                          {bet.pnl !== null ? `${bet.pnl >= 0 ? '+' : ''}$${bet.pnl?.toFixed(2)}` : '-'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {importPreview.length > 10 && (
+                  <div style={{ color: '#6b7280', fontSize: '12px', textAlign: 'center', padding: '10px' }}>
+                    ... and {importPreview.length - 10} more bets
+                  </div>
+                )}
+              </div>
+
+              <div style={{
+                backgroundColor: '#0a0a0f',
+                borderRadius: '8px',
+                padding: '12px',
+                marginBottom: '20px'
+              }}>
+                <div style={{ color: '#6b7280', fontSize: '11px', marginBottom: '8px' }}>
+                  EXPECTED CSV FORMAT
+                </div>
+                <div style={{ color: '#9ca3af', fontSize: '11px', fontFamily: 'monospace' }}>
+                  Date, Sport, Game, Bet Type, Side, Line, Odds, Stake, Result, P&L
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                <button
+                  onClick={cancelImport}
+                  style={{
+                    padding: '10px 20px',
+                    backgroundColor: 'transparent',
+                    color: '#9ca3af',
+                    border: '1px solid #333',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '14px'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmImport}
+                  style={{
+                    padding: '10px 20px',
+                    backgroundColor: '#10B981',
+                    color: '#000',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                    fontSize: '14px'
+                  }}
+                >
+                  Import {importPreview.length} Bets
+                </button>
+              </div>
             </div>
           </div>
         )}

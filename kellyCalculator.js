@@ -373,6 +373,81 @@ export const gradeBet = (betId, result) => {
 };
 
 /**
+ * Import bets from external source (CSV, etc.)
+ * Used by Bankroll Manager to import bet history
+ */
+export const importBets = (bets) => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.BET_HISTORY);
+    const history = stored ? JSON.parse(stored) : [];
+    const settings = getBankrollSettings();
+
+    let importedCount = 0;
+    let totalPnlAdjustment = 0;
+
+    bets.forEach(bet => {
+      // Generate unique ID if not provided
+      const normalizedBet = {
+        id: bet.id || `import_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        timestamp: bet.timestamp || Date.now(),
+        sport: bet.sport || 'N/A',
+        game: bet.game || bet.description || 'Imported Bet',
+        bet_type: bet.bet_type || bet.betType || 'unknown',
+        side: bet.side || '',
+        line: bet.line || null,
+        odds: bet.odds || -110,
+        betAmount: bet.stake || bet.betAmount || settings.unitSize,
+        confidence: bet.confidence || null,
+        tier: bet.tier || null,
+        result: bet.result || null,
+        pnl: bet.pnl || null,
+        imported: true,
+        importedAt: Date.now()
+      };
+
+      // Calculate P&L if result exists but P&L doesn't
+      if (normalizedBet.result && normalizedBet.pnl === null) {
+        const decimalOdds = americanToDecimal(normalizedBet.odds);
+        if (normalizedBet.result === 'WIN') {
+          normalizedBet.pnl = Math.round(normalizedBet.betAmount * (decimalOdds - 1) * 100) / 100;
+        } else if (normalizedBet.result === 'LOSS') {
+          normalizedBet.pnl = -normalizedBet.betAmount;
+        } else {
+          normalizedBet.pnl = 0;
+        }
+      }
+
+      // Track total P&L adjustment for bankroll update
+      if (normalizedBet.pnl !== null) {
+        totalPnlAdjustment += normalizedBet.pnl;
+      }
+
+      history.push(normalizedBet);
+      importedCount++;
+    });
+
+    // Sort by timestamp
+    history.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+    // Keep last 1000 bets (expanded for imports)
+    const trimmed = history.slice(-1000);
+    localStorage.setItem(STORAGE_KEYS.BET_HISTORY, JSON.stringify(trimmed));
+
+    // Optionally update bankroll based on imported P&L
+    // Only if there are graded bets with P&L
+    if (totalPnlAdjustment !== 0) {
+      settings.currentBankroll = Math.round((settings.currentBankroll + totalPnlAdjustment) * 100) / 100;
+      saveBankrollSettings(settings);
+    }
+
+    return importedCount;
+  } catch (error) {
+    console.error('Error importing bets:', error);
+    throw error;
+  }
+};
+
+/**
  * Get bet history
  */
 export const getBetHistory = (limit = 50) => {
@@ -529,6 +604,7 @@ export default {
   saveBankrollSettings,
   recordBet,
   gradeBet,
+  importBets,
   getBetHistory,
   getBankrollStats,
   calculateRiskOfRuin,
