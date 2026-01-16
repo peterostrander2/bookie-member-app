@@ -38,6 +38,7 @@ import ErrorBoundary from './ErrorBoundary';
 import { OfflineProvider, OfflineBanner, UpdateBanner } from './OfflineIndicator';
 import { PushProvider, SmashAlertBell } from './PushNotifications';
 import { NotificationOnboardingModal, useNotificationOnboarding } from './NotificationOnboarding';
+import SearchBar from './SearchBar';
 import api from './api';
 
 // Loading fallback for Suspense
@@ -284,6 +285,11 @@ const Navbar = ({ onOpenNotificationModal }) => {
           </Link>
 
           <NavDropdown label="Community" icon="👥" items={navStructure.community.items} location={location} />
+
+          {/* Global Search - Desktop only */}
+          <div className="desktop-only" style={{ marginLeft: '8px' }}>
+            <SearchBar compact placeholder="Search..." />
+          </div>
         </div>
 
         {/* Right side actions */}
