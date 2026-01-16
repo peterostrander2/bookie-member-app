@@ -9,14 +9,21 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from './api';
 
 const InjuryVacuum = () => {
+  const navigate = useNavigate();
   const [sport, setSport] = useState('NBA');
   const [injuries, setInjuries] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const sports = ['NBA', 'NFL', 'MLB', 'NHL'];
+
+  // Navigate to Smash Spots with search filter
+  const viewAffectedPicks = (searchTerm) => {
+    navigate(`/smash-spots?search=${encodeURIComponent(searchTerm)}`);
+  };
 
   useEffect(() => {
     fetchInjuries();
@@ -304,7 +311,9 @@ const InjuryVacuum = () => {
                   backgroundColor: '#12121f',
                   display: 'flex',
                   justifyContent: 'space-between',
-                  alignItems: 'center'
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: '10px'
                 }}>
                   <div>
                     <div style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>
@@ -314,15 +323,35 @@ const InjuryVacuum = () => {
                       vs {team.opponent} • {team.game_time}
                     </div>
                   </div>
-                  <div style={{
-                    backgroundColor: getImpactColor(team.vacuum?.team_impact) + '20',
-                    color: getImpactColor(team.vacuum?.team_impact),
-                    padding: '6px 12px',
-                    borderRadius: '20px',
-                    fontSize: '11px',
-                    fontWeight: 'bold'
-                  }}>
-                    {team.vacuum?.team_impact} IMPACT
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <button
+                      onClick={() => viewAffectedPicks(team.team)}
+                      style={{
+                        backgroundColor: '#00D4FF20',
+                        color: '#00D4FF',
+                        border: '1px solid #00D4FF50',
+                        padding: '6px 12px',
+                        borderRadius: '6px',
+                        fontSize: '11px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
+                    >
+                      🎯 View Affected Picks
+                    </button>
+                    <div style={{
+                      backgroundColor: getImpactColor(team.vacuum?.team_impact) + '20',
+                      color: getImpactColor(team.vacuum?.team_impact),
+                      padding: '6px 12px',
+                      borderRadius: '20px',
+                      fontSize: '11px',
+                      fontWeight: 'bold'
+                    }}>
+                      {team.vacuum?.team_impact} IMPACT
+                    </div>
                   </div>
                 </div>
 
@@ -401,7 +430,23 @@ const InjuryVacuum = () => {
                                 borderRadius: '6px',
                                 border: '1px solid #00FF8830'
                               }}>
-                                <span style={{ color: '#fff' }}>{ben.player}</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <span style={{ color: '#fff' }}>{ben.player}</span>
+                                  <button
+                                    onClick={() => viewAffectedPicks(ben.player)}
+                                    style={{
+                                      backgroundColor: 'transparent',
+                                      color: '#8B5CF6',
+                                      border: '1px solid #8B5CF650',
+                                      padding: '2px 6px',
+                                      borderRadius: '4px',
+                                      fontSize: '10px',
+                                      cursor: 'pointer'
+                                    }}
+                                  >
+                                    Props →
+                                  </button>
+                                </div>
                                 <div style={{ textAlign: 'right' }}>
                                   <span style={{ color: '#00FF88', fontWeight: 'bold' }}>
                                     {ben.usage_boost}

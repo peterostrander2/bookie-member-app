@@ -565,7 +565,7 @@ const getDemoInjuries = (sport) => {
   return demos[sport] || [];
 };
 
-const GameSmashList = ({ sport = 'NBA' }) => {
+const GameSmashList = ({ sport = 'NBA', minConfidence = 0, sortByConfidence = true }) => {
   const toast = useToast();
   const [picks, setPicks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -576,7 +576,7 @@ const GameSmashList = ({ sport = 'NBA' }) => {
 
   // Filter and sort state
   const [filters, setFilters] = useState({ tier: 'ALL', market: 'ALL' });
-  const [sortBy, setSortBy] = useState('confidence');
+  const [sortBy, setSortBy] = useState(sortByConfidence ? 'confidence' : 'edge');
 
   useEffect(() => { fetchGamePicks(); fetchInjuries(); }, [sport]);
 
@@ -629,7 +629,12 @@ const GameSmashList = ({ sport = 'NBA' }) => {
   const filteredPicks = useMemo(() => {
     let result = [...picks];
 
-    // Tier filter
+    // Apply parent-level minimum confidence filter first
+    if (minConfidence > 0) {
+      result = result.filter(pick => (pick.confidence || 0) >= minConfidence);
+    }
+
+    // Tier filter (internal)
     if (filters.tier !== 'ALL') {
       result = result.filter(pick => {
         const conf = pick.confidence || 0;
@@ -654,9 +659,10 @@ const GameSmashList = ({ sport = 'NBA' }) => {
       });
     }
 
-    // Sort
+    // Sort - sortByConfidence from parent takes precedence
+    const effectiveSortBy = sortByConfidence ? 'confidence' : sortBy;
     result.sort((a, b) => {
-      switch (sortBy) {
+      switch (effectiveSortBy) {
         case 'confidence': return (b.confidence || 0) - (a.confidence || 0);
         case 'edge': return (b.edge || 0) - (a.edge || 0);
         default: return 0;
@@ -664,7 +670,7 @@ const GameSmashList = ({ sport = 'NBA' }) => {
     });
 
     return result;
-  }, [picks, filters, sortBy]);
+  }, [picks, filters, sortBy, minConfidence, sortByConfidence]);
 
   if (loading) {
     return (

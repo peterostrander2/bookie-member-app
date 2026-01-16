@@ -5,6 +5,13 @@ import { usePreferences } from './usePreferences';
 
 const AUTO_REFRESH_INTERVAL = 30 * 60 * 1000; // 30 minutes
 
+// Confidence filter options
+const CONFIDENCE_FILTERS = [
+  { id: 'all', label: 'All Picks', minConfidence: 0, color: '#6B7280' },
+  { id: 'strong', label: '75%+', minConfidence: 75, color: '#F59E0B' },
+  { id: 'smash', label: '85%+', minConfidence: 85, color: '#10B981' }
+];
+
 const SmashSpotsPage = () => {
   const { preferences, updatePreference } = usePreferences();
   const [sport, setSport] = useState(preferences.favoriteSport || 'NBA');
@@ -13,6 +20,8 @@ const SmashSpotsPage = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [nextRefresh, setNextRefresh] = useState(AUTO_REFRESH_INTERVAL);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [confidenceFilter, setConfidenceFilter] = useState('all');
+  const [sortByConfidence, setSortByConfidence] = useState(true);
 
   // Manual refresh function
   const handleRefresh = useCallback(() => {
@@ -182,7 +191,7 @@ const SmashSpotsPage = () => {
           ))}
         </div>
 
-        <div style={{ display: 'flex', backgroundColor: '#12121f', borderRadius: '12px', padding: '4px', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', backgroundColor: '#12121f', borderRadius: '12px', padding: '4px', marginBottom: '16px' }}>
           {tabs.map(tab => (
             <button
               key={tab.id}
@@ -201,11 +210,79 @@ const SmashSpotsPage = () => {
           ))}
         </div>
 
+        {/* Confidence Filter Controls */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '20px',
+          padding: '12px 16px',
+          backgroundColor: '#12121f',
+          borderRadius: '10px',
+          border: '1px solid #2a2a4a',
+          flexWrap: 'wrap',
+          gap: '12px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ color: '#6B7280', fontSize: '12px', fontWeight: '500' }}>Filter:</span>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {CONFIDENCE_FILTERS.map(filter => (
+                <button
+                  key={filter.id}
+                  onClick={() => setConfidenceFilter(filter.id)}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    border: confidenceFilter === filter.id ? `1px solid ${filter.color}` : '1px solid #333',
+                    backgroundColor: confidenceFilter === filter.id ? `${filter.color}20` : 'transparent',
+                    color: confidenceFilter === filter.id ? filter.color : '#6B7280',
+                    fontSize: '12px',
+                    fontWeight: confidenceFilter === filter.id ? 'bold' : 'normal',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {filter.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <button
+            onClick={() => setSortByConfidence(!sortByConfidence)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 12px',
+              borderRadius: '6px',
+              border: '1px solid #333',
+              backgroundColor: sortByConfidence ? '#00D4FF20' : 'transparent',
+              color: sortByConfidence ? '#00D4FF' : '#6B7280',
+              fontSize: '12px',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+          >
+            <span>{sortByConfidence ? '↓' : '↕'}</span>
+            Sort by Confidence
+          </button>
+        </div>
+
         <div style={{ animation: 'fadeIn 0.3s ease' }}>
           <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }`}</style>
           {activeTab === 'props'
-            ? <PropsSmashList key={`props-${refreshKey}`} sport={sport} />
-            : <GameSmashList key={`games-${refreshKey}`} sport={sport} />
+            ? <PropsSmashList
+                key={`props-${refreshKey}`}
+                sport={sport}
+                minConfidence={CONFIDENCE_FILTERS.find(f => f.id === confidenceFilter)?.minConfidence || 0}
+                sortByConfidence={sortByConfidence}
+              />
+            : <GameSmashList
+                key={`games-${refreshKey}`}
+                sport={sport}
+                minConfidence={CONFIDENCE_FILTERS.find(f => f.id === confidenceFilter)?.minConfidence || 0}
+                sortByConfidence={sortByConfidence}
+              />
           }
         </div>
 
