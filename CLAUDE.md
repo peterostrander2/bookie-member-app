@@ -296,6 +296,32 @@ VITE_API_URL=https://custom-backend.com
 VITE_RATE_LIMIT=false                  # Disable rate limiting in dev
 ```
 
+## Production Environment (Railway)
+
+### Frontend Service (bookie-member-app)
+```bash
+VITE_API_KEY=bookie-prod-2026-xK9mP2nQ7vR4
+VITE_API_URL=https://web-production-7b2a.up.railway.app
+VITE_SENTRY_DSN=https://ccb0b500db139f1b7df6c4a269bc04e7@o4510720913833984.ingest.us.sentry.io/4510720944570368
+VITE_GA_MEASUREMENT_ID=<your-measurement-id>
+VITE_VAPID_PUBLIC_KEY=BLxvqRoFaLbldx0OCjMtctyCF1Ar1WvQsqMib7AmXMo7VVE8AYnb240PF1C08v9EzZ2p_yGKDletzbBfLzrkd60
+```
+
+### Backend Service (web)
+```bash
+API_AUTH_ENABLED=true
+API_AUTH_KEY=bookie-prod-2026-xK9mP2nQ7vR4
+VAPID_PUBLIC_KEY=BLxvqRoFaLbldx0OCjMtctyCF1Ar1WvQsqMib7AmXMo7VVE8AYnb240PF1C08v9EzZ2p_yGKDletzbBfLzrkd60
+VAPID_PRIVATE_KEY=motkVzVapKsL7kxEn9qZ82DnFbtK7wsXs9T_QFHMTTQ
+```
+
+### Services Overview
+| Service | Purpose | URL |
+|---------|---------|-----|
+| Sentry | Error monitoring | https://sentry.io (Project: bookie-member-app) |
+| Google Analytics | User analytics | https://analytics.google.com |
+| Railway | Hosting | https://railway.app |
+
 ## File Structure Overview
 ```
 bookie-member-app/
