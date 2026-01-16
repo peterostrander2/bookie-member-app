@@ -42,3 +42,253 @@ input {
 ::-webkit-scrollbar-thumb:hover {
   background: #444;
 }
+
+/* ===== DESIGN SYSTEM ===== */
+
+/* Standard card styles */
+.card {
+  background-color: #1a1a2e;
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid #2a2a4a;
+}
+
+.card-elevated {
+  background-color: #12121f;
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid #333;
+}
+
+/* Primary action button (green) */
+.btn-primary {
+  background-color: #10B981;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  background-color: #059669;
+  transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+  background-color: #333;
+  color: #666;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Secondary action button (cyan) */
+.btn-secondary {
+  background-color: #00D4FF20;
+  color: #00D4FF;
+  border: 1px solid #00D4FF50;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background-color: #00D4FF30;
+}
+
+/* Improved text contrast */
+.text-primary {
+  color: #fff;
+}
+
+.text-secondary {
+  color: #9CA3AF;
+}
+
+.text-muted {
+  color: #6B7280;
+}
+
+/* Higher contrast for important info */
+.text-emphasis {
+  color: #E5E7EB;
+}
+
+/* ===== ANIMATIONS ===== */
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Scale in animation */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.2s ease-out;
+}
+
+/* Pulse animation for notifications */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Slide up animation */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s ease-out;
+}
+
+/* ===== MOBILE RESPONSIVENESS ===== */
+
+/* Mobile-first base styles */
+@media (max-width: 768px) {
+  /* Larger touch targets on mobile */
+  button {
+    min-height: 44px;
+  }
+
+  /* Stack cards vertically */
+  .card-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* Reduce padding on mobile */
+  .container {
+    padding: 12px;
+  }
+
+  /* Ensure text doesn't overflow */
+  .truncate-mobile {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  /* Hide non-essential content on mobile */
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+  body {
+    font-size: 14px;
+  }
+
+  h1 {
+    font-size: 24px !important;
+  }
+
+  h2 {
+    font-size: 20px !important;
+  }
+
+  h3 {
+    font-size: 16px !important;
+  }
+
+  /* Extra reduced padding */
+  .container {
+    padding: 8px;
+  }
+
+  /* Wrap sport buttons on small screens */
+  .sport-buttons {
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Full width buttons on small screens */
+  .btn-full-mobile {
+    width: 100%;
+  }
+}
+
+/* Tablet styles */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+
+/* Desktop styles */
+@media (min-width: 1025px) {
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+}
+
+/* ===== ACCESSIBILITY ===== */
+
+/* Focus states for keyboard navigation */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 2px solid #10B981;
+  outline-offset: 2px;
+}
+
+/* Reduced motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

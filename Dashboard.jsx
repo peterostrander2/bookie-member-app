@@ -164,12 +164,12 @@ const Dashboard = () => {
   };
 
   const quickLinks = [
-    { path: '/smash-spots', icon: '🔥', title: 'Smash Spots', desc: "Today's best bets with full breakdown", color: '#00FF88' },
-    { path: '/sharp', icon: '💵', title: 'Sharp Money', desc: 'Track where pros are betting', color: '#00FF88' },
-    { path: '/odds', icon: '🔍', title: 'Best Odds Finder', desc: 'Compare lines across 8+ sportsbooks', color: '#00D4FF', badge: '8+ BOOKS', featured: true },
-    { path: '/injuries', icon: '🏥', title: 'Injuries', desc: 'Usage vacuum & beneficiaries', color: '#FF6B6B' },
-    { path: '/performance', icon: '📈', title: 'Performance', desc: 'Win rate, CLV, accuracy tracking', color: '#4ECDC4' },
-    { path: '/bankroll', icon: '💰', title: 'Bankroll', desc: 'Kelly sizing & bet tracking', color: '#FFD700' }
+    { path: '/smash-spots', icon: '🎯', title: 'Smash Spots', desc: "Today's AI picks with full breakdown", color: '#10B981' },
+    { path: '/sharp', icon: '🦈', title: 'Sharp Money', desc: 'Track where pros are betting', color: '#10B981' },
+    { path: '/odds', icon: '📊', title: 'Best Odds Finder', desc: 'Compare lines across 8+ sportsbooks', color: '#00D4FF', badge: '8+ BOOKS', featured: true },
+    { path: '/injuries', icon: '🏥', title: 'Injuries', desc: 'Usage vacuum & beneficiaries', color: '#EF4444' },
+    { path: '/performance', icon: '📈', title: 'Performance', desc: 'Win rate, CLV, accuracy tracking', color: '#00D4FF' },
+    { path: '/bankroll', icon: '💵', title: 'Bankroll', desc: 'Kelly sizing & bet tracking', color: '#F59E0B' }
   ];
 
   return (
