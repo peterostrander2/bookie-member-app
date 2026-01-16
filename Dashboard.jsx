@@ -10,11 +10,14 @@ import { useFavoriteSport } from './usePreferences';
 
 // Tier win rate stats (historical averages)
 const TIER_WIN_RATES = {
-  SMASH: { rate: 87, label: 'SMASH tier hits 87% historically' },
-  STRONG: { rate: 72, label: 'STRONG tier hits 72% historically' },
-  LEAN: { rate: 58, label: 'LEAN tier hits 58% historically' },
-  WATCH: { rate: 48, label: 'WATCH tier hits 48% historically' }
+  SMASH: { rate: 87, label: 'SMASH tier hits 87% historically', profitable: true },
+  STRONG: { rate: 72, label: 'STRONG tier hits 72% historically', profitable: true },
+  LEAN: { rate: 58, label: 'LEAN tier hits 58% historically', profitable: true },
+  WATCH: { rate: 48, label: 'WATCH tier hits 48% historically', profitable: false }
 };
+
+// Minimum confidence required to be featured as "Top Pick"
+const MIN_FEATURED_CONFIDENCE = 65;
 
 // Check if user has visited before (for progressive disclosure)
 const hasVisitedBefore = () => localStorage.getItem('dashboard_visited') === 'true';
@@ -74,12 +77,27 @@ const Dashboard = () => {
       }
 
       if (allPicks.length > 0) {
-        // Find highest confidence pick (prioritize SMASH tier 85%+)
-        const sortedPicks = [...allPicks].sort((a, b) =>
-          (b.confidence || b.score || 0) - (a.confidence || a.score || 0)
+        // Filter to only include picks above minimum confidence threshold
+        // We don't want to feature WATCH tier (48% historical win rate) as "Top Pick"
+        const qualifyingPicks = allPicks.filter(p =>
+          (p.confidence || p.score || 0) >= MIN_FEATURED_CONFIDENCE
         );
-        const bestPick = sortedPicks[0];
-        setTopPick({ ...bestPick, sport: activeSport });
+
+        if (qualifyingPicks.length > 0) {
+          // Find highest confidence pick from qualifying picks
+          const sortedPicks = [...qualifyingPicks].sort((a, b) =>
+            (b.confidence || b.score || 0) - (a.confidence || a.score || 0)
+          );
+          const bestPick = sortedPicks[0];
+          setTopPick({ ...bestPick, sport: activeSport });
+        } else {
+          // No picks meet minimum threshold - show message instead of low-quality pick
+          setTopPick({
+            noQualifyingPicks: true,
+            totalPicks: allPicks.length,
+            sport: activeSport
+          });
+        }
       } else {
         // Use demo pick when no live data available
         const sportDemo = demoPicks.find(p => p.sport === activeSport) || demoPicks[0];
@@ -313,6 +331,51 @@ const Dashboard = () => {
                 <Skeleton width="50%" height={16} />
               </div>
               <Skeleton width={100} height={40} />
+            </div>
+          ) : topPick?.noQualifyingPicks ? (
+            // No picks meet the 65%+ threshold - don't feature low-quality picks
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px', position: 'relative', zIndex: 1 }}>
+              <div style={{
+                width: '70px',
+                height: '70px',
+                borderRadius: '50%',
+                backgroundColor: '#1a1a2e',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '2px dashed #4B5563'
+              }}>
+                <span style={{ fontSize: '28px' }}>🔍</span>
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ color: '#F59E0B', fontSize: '14px', fontWeight: 'bold', marginBottom: '6px' }}>
+                  No High-Conviction Picks Right Now
+                </div>
+                <div style={{ color: '#9ca3af', fontSize: '13px', marginBottom: '4px' }}>
+                  {topPick.totalPicks} picks available but none meet our 65%+ threshold for featuring.
+                </div>
+                <div style={{ color: '#6b7280', fontSize: '12px' }}>
+                  We only highlight LEAN tier (65%+) or better to protect your bankroll.
+                </div>
+              </div>
+              <Link to="/smash-spots" style={{
+                backgroundColor: '#4B5563',
+                color: '#fff',
+                padding: '14px 24px',
+                borderRadius: '10px',
+                fontWeight: 'bold',
+                fontSize: '14px',
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'transform 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
+                Browse All Picks
+                <span>→</span>
+              </Link>
             </div>
           ) : topPick ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '20px', position: 'relative', zIndex: 1 }}>
