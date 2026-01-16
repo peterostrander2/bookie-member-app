@@ -25,6 +25,7 @@ const BetHistory = lazy(() => import('./BetHistory'));
 const ParlayBuilder = lazy(() => import('./ParlayBuilder'));
 const AchievementsPage = lazy(() => import('./Gamification'));
 const HistoricalCharts = lazy(() => import('./HistoricalCharts'));
+const Education = lazy(() => import('./Education'));
 
 // Eagerly loaded components (providers, core UI)
 import ComplianceFooter from './ComplianceFooter';
@@ -207,6 +208,7 @@ const Navbar = ({ onOpenNotificationModal }) => {
     ...navStructure.tools.items,
     ...navStructure.betting.items,
     { path: '/esoteric', label: 'Esoteric', icon: '🔮' },
+    { path: '/education', label: 'Education', icon: '📚' },
     ...navStructure.community.items,
     { path: '/profile', label: 'Profile', icon: '👤' }
   ];
@@ -515,6 +517,7 @@ const AppContent = () => {
                   <Route path="/props" element={<Props />} />
                   <Route path="/achievements" element={<AchievementsPage />} />
                   <Route path="/profile" element={<Profile />} />
+                  <Route path="/education" element={<Education />} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </Suspense>

@@ -32,7 +32,13 @@ const Profile = () => {
     dailyPicks: true,
     sharpAlerts: true,
     harmonicConvergence: true,
-    weeklyReport: true
+    weeklyReport: true,
+    // Granular alert settings
+    smashOnly: false, // Only 85%+ confidence
+    sharpDivergence: true, // Sharp money divergence 15%+
+    lineMovement: false, // Significant line movements
+    steamMoves: true, // Steam move alerts
+    resultNotifications: true // Bet results (win/loss)
   });
 
   const handleBankrollChange = (field, value) => {
@@ -319,7 +325,7 @@ const Profile = () => {
           <h3 style={{ color: '#fff', fontSize: '16px', margin: '0 0 20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             🔔 Email Notifications
           </h3>
-          
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
             {[
               { key: 'dailyPicks', label: 'Daily Picks Alert', desc: 'Get notified when new picks are posted (5pm ET)' },
@@ -347,6 +353,83 @@ const Profile = () => {
                     borderRadius: '14px',
                     border: 'none',
                     backgroundColor: notifications[notif.key] ? '#00FF88' : '#333',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    transition: 'background-color 0.2s'
+                  }}
+                >
+                  <div style={{
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    backgroundColor: '#fff',
+                    position: 'absolute',
+                    top: '2px',
+                    left: notifications[notif.key] ? '24px' : '2px',
+                    transition: 'left 0.2s'
+                  }} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Granular Alert Settings */}
+        <div style={{
+          backgroundColor: '#1a1a2e',
+          borderRadius: '12px',
+          padding: '20px',
+          marginBottom: '20px',
+          border: '1px solid #333'
+        }}>
+          <h3 style={{ color: '#fff', fontSize: '16px', margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            ⚡ Alert Filters
+          </h3>
+          <p style={{ color: '#6b7280', fontSize: '12px', margin: '0 0 20px' }}>
+            Fine-tune which alerts you receive
+          </p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            {[
+              { key: 'smashOnly', label: 'SMASH Picks Only', desc: 'Only receive alerts for 85%+ confidence picks', color: '#10B981' },
+              { key: 'sharpDivergence', label: 'Sharp Money Divergence', desc: 'Alert when ticket/money divergence exceeds 15%', color: '#00D4FF' },
+              { key: 'steamMoves', label: 'Steam Moves', desc: 'Instant alerts when steam moves are detected', color: '#EF4444' },
+              { key: 'lineMovement', label: 'Line Movement', desc: 'Alert on significant line movements (1+ points)', color: '#F59E0B' },
+              { key: 'resultNotifications', label: 'Bet Results', desc: 'Get notified when your tracked bets settle', color: '#8B5CF6' }
+            ].map(notif => (
+              <div key={notif.key} style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '12px',
+                backgroundColor: '#12121f',
+                borderRadius: '8px',
+                borderLeft: `3px solid ${notif.color}`
+              }}>
+                <div>
+                  <div style={{ color: '#fff', fontSize: '14px', marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {notif.label}
+                    {notif.key === 'smashOnly' && (
+                      <span style={{
+                        backgroundColor: '#10B98120',
+                        color: '#10B981',
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        fontSize: '10px',
+                        fontWeight: 'bold'
+                      }}>RECOMMENDED</span>
+                    )}
+                  </div>
+                  <div style={{ color: '#6b7280', fontSize: '12px' }}>{notif.desc}</div>
+                </div>
+                <button
+                  onClick={() => handleNotificationToggle(notif.key)}
+                  style={{
+                    width: '50px',
+                    height: '28px',
+                    borderRadius: '14px',
+                    border: 'none',
+                    backgroundColor: notifications[notif.key] ? notif.color : '#333',
                     cursor: 'pointer',
                     position: 'relative',
                     transition: 'background-color 0.2s'
