@@ -5,6 +5,11 @@ import { getAllPicks, getStats } from './clvTracker';
 import { analyzeCorrelation } from './correlationDetector';
 import SharpMoneyWidget from './SharpMoneyWidget';
 import { Skeleton } from './Skeleton';
+import SearchBar from './SearchBar';
+
+// Check if user has visited before (for progressive disclosure)
+const hasVisitedBefore = () => localStorage.getItem('dashboard_visited') === 'true';
+const markAsVisited = () => localStorage.setItem('dashboard_visited', 'true');
 
 const Dashboard = () => {
   const [health, setHealth] = useState(null);
@@ -18,10 +23,16 @@ const Dashboard = () => {
   const [topPickLoading, setTopPickLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(null);
 
+  // Progressive disclosure state
+  const [showGettingStarted, setShowGettingStarted] = useState(!hasVisitedBefore());
+  const [showEsoteric, setShowEsoteric] = useState(true);
+
   useEffect(() => {
     fetchData();
     loadTrackedStats();
     fetchTopPick();
+    // Mark as visited after first load
+    markAsVisited();
   }, []);
 
   // Demo picks to show when API is unavailable
@@ -165,32 +176,38 @@ const Dashboard = () => {
     <div style={{ padding: '20px', backgroundColor: '#0a0a0f', minHeight: '100vh' }}>
       <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
         
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-          <div>
-            <h1 style={{ color: '#fff', fontSize: '28px', margin: '0 0 5px' }}>Member Dashboard</h1>
-            <p style={{ color: '#6b7280', margin: 0, fontSize: '14px' }}>
-              AI picks using 17 signals: 8 ML models + 4 esoteric + 5 external data
-            </p>
+        {/* Header with search */}
+        <div style={{ marginBottom: '25px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <div>
+              <h1 style={{ color: '#fff', fontSize: '28px', margin: '0 0 5px' }}>Member Dashboard</h1>
+              <p style={{ color: '#6b7280', margin: 0, fontSize: '14px' }}>
+                AI picks using 17 signals: 8 ML models + 4 esoteric + 5 external data
+              </p>
+            </div>
+
+            <div style={{
+              backgroundColor: health?.status === 'healthy' ? '#00FF8820' : '#FF444420',
+              color: health?.status === 'healthy' ? '#00FF88' : '#FF4444',
+              padding: '8px 16px',
+              borderRadius: '20px',
+              fontSize: '13px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <span style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                backgroundColor: health?.status === 'healthy' ? '#00FF88' : '#FF4444'
+              }} />
+              {loading ? 'Checking...' : health?.status === 'healthy' ? 'Systems Online' : 'Systems Offline'}
+            </div>
           </div>
-          
-          <div style={{
-            backgroundColor: health?.status === 'healthy' ? '#00FF8820' : '#FF444420',
-            color: health?.status === 'healthy' ? '#00FF88' : '#FF4444',
-            padding: '8px 16px',
-            borderRadius: '20px',
-            fontSize: '13px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}>
-            <span style={{
-              width: '8px',
-              height: '8px',
-              borderRadius: '50%',
-              backgroundColor: health?.status === 'healthy' ? '#00FF88' : '#FF4444'
-            }} />
-            {loading ? 'Checking...' : health?.status === 'healthy' ? 'Systems Online' : 'Systems Offline'}
-          </div>
+
+          {/* Search Bar */}
+          <SearchBar placeholder="Search players, teams, games..." />
         </div>
 
         {/* Today's Top Pick CTA */}
@@ -441,35 +458,127 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Cosmic Energy */}
+        {/* Cosmic Energy / Esoteric Section - Collapsible */}
         {todayEnergy && (
           <div style={{
-            background: 'linear-gradient(135deg, #1a1a2e 0%, #2d1f4e 100%)',
+            backgroundColor: '#1a1a2e',
             borderRadius: '16px',
-            padding: '20px',
             marginBottom: '25px',
             border: '1px solid #8B5CF640',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '20px'
+            overflow: 'hidden'
           }}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '32px', marginBottom: '5px' }}>🌙</div>
-              <div style={{ color: '#fff', fontWeight: 'bold' }}>{todayEnergy.moon_phase || 'Full Moon'}</div>
-              <div style={{ color: '#9ca3af', fontSize: '12px' }}>{todayEnergy.moon_meaning || 'Normal energy'}</div>
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '32px', color: '#00D4FF', fontWeight: 'bold', marginBottom: '5px' }}>{todayEnergy.life_path || 7}</div>
-              <div style={{ color: '#fff', fontWeight: 'bold' }}>Life Path</div>
-              <div style={{ color: '#9ca3af', fontSize: '12px' }}>{todayEnergy.life_path_meaning || 'Underdogs favored'}</div>
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ backgroundColor: '#D4A574', color: '#000', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', display: 'inline-block', marginBottom: '5px' }}>
-                {todayEnergy.zodiac || 'Capricorn'}
+            {/* Collapsible Header */}
+            <button
+              onClick={() => setShowEsoteric(!showEsoteric)}
+              style={{
+                width: '100%',
+                padding: '16px 20px',
+                backgroundColor: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                borderBottom: showEsoteric ? '1px solid #8B5CF630' : 'none'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '20px' }}>✨</span>
+                <span style={{ color: '#8B5CF6', fontWeight: 'bold', fontSize: '14px' }}>
+                  Esoteric Signals
+                </span>
+                {/* Info tooltip */}
+                <div style={{ position: 'relative', display: 'inline-block' }}>
+                  <span
+                    title="Esoteric signals use numerology, moon phases, and cosmic alignments to add an extra edge. These are supplementary to AI analysis - use them to confirm or enhance picks, not as primary signals."
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      backgroundColor: '#8B5CF630',
+                      color: '#8B5CF6',
+                      fontSize: '11px',
+                      fontWeight: 'bold',
+                      cursor: 'help'
+                    }}
+                  >
+                    ?
+                  </span>
+                </div>
               </div>
-              <div style={{ color: '#fff', fontWeight: 'bold' }}>Earth Sign</div>
-              <div style={{ color: '#9ca3af', fontSize: '12px' }}>{todayEnergy.zodiac_meaning || 'Lean UNDERS'}</div>
-            </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                {/* Energy indicator badge */}
+                <div style={{
+                  backgroundColor: todayEnergy.betting_outlook === 'BULLISH' ? '#00FF8825' :
+                                   todayEnergy.betting_outlook === 'BEARISH' ? '#FF444425' : '#FFD70025',
+                  color: todayEnergy.betting_outlook === 'BULLISH' ? '#00FF88' :
+                         todayEnergy.betting_outlook === 'BEARISH' ? '#FF4444' : '#FFD700',
+                  padding: '4px 10px',
+                  borderRadius: '12px',
+                  fontSize: '11px',
+                  fontWeight: 'bold'
+                }}>
+                  {todayEnergy.betting_outlook || 'NEUTRAL'}
+                </div>
+                {/* Expand/Collapse arrow */}
+                <span style={{
+                  color: '#6b7280',
+                  fontSize: '12px',
+                  transform: showEsoteric ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.2s'
+                }}>
+                  ▼
+                </span>
+              </div>
+            </button>
+
+            {/* Collapsible Content */}
+            {showEsoteric && (
+              <div style={{
+                background: 'linear-gradient(135deg, #1a1a2e 0%, #2d1f4e 100%)',
+                padding: '20px',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '20px'
+              }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '32px', marginBottom: '5px' }}>{todayEnergy.moon_emoji || '🌙'}</div>
+                  <div style={{ color: '#fff', fontWeight: 'bold' }}>{todayEnergy.moon_phase || 'Full Moon'}</div>
+                  <div style={{ color: '#9ca3af', fontSize: '12px' }}>{todayEnergy.moon_meaning || 'Normal energy'}</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '32px', color: '#00D4FF', fontWeight: 'bold', marginBottom: '5px' }}>{todayEnergy.life_path || 7}</div>
+                  <div style={{ color: '#fff', fontWeight: 'bold' }}>Life Path</div>
+                  <div style={{ color: '#9ca3af', fontSize: '12px' }}>{todayEnergy.life_path_meaning || 'Underdogs favored'}</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ backgroundColor: '#D4A574', color: '#000', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', display: 'inline-block', marginBottom: '5px' }}>
+                    {todayEnergy.zodiac || 'Capricorn'}
+                  </div>
+                  <div style={{ color: '#fff', fontWeight: 'bold' }}>Earth Sign</div>
+                  <div style={{ color: '#9ca3af', fontSize: '12px' }}>{todayEnergy.zodiac_meaning || 'Lean UNDERS'}</div>
+                </div>
+
+                {/* Additional insight row */}
+                {todayEnergy.recommendation && (
+                  <div style={{
+                    gridColumn: '1 / -1',
+                    textAlign: 'center',
+                    padding: '12px',
+                    backgroundColor: '#8B5CF615',
+                    borderRadius: '8px',
+                    marginTop: '5px'
+                  }}>
+                    <span style={{ color: '#9ca3af', fontSize: '12px' }}>
+                      💡 {todayEnergy.recommendation}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
@@ -541,30 +650,125 @@ const Dashboard = () => {
           ))}
         </div>
 
-        {/* Today's Summary */}
-        <div style={{
-          backgroundColor: '#1a1a2e',
-          borderRadius: '12px',
-          padding: '20px',
-          marginTop: '25px',
-          border: '1px solid #333'
-        }}>
-          <h3 style={{ color: '#fff', fontSize: '16px', margin: '0 0 15px' }}>Getting Started</h3>
-          <div style={{ color: '#9ca3af', fontSize: '14px', lineHeight: '1.8' }}>
-            <p style={{ margin: '0 0 10px' }}>
-              <span style={{ color: '#00FF88' }}>1.</span> Check <Link to="/smash-spots" style={{ color: '#00D4FF' }}>Smash Spots</Link> for today's top picks with confidence scores
-            </p>
-            <p style={{ margin: '0 0 10px' }}>
-              <span style={{ color: '#00FF88' }}>2.</span> View <Link to="/splits" style={{ color: '#00D4FF' }}>Betting Splits</Link> to see where sharp money is going
-            </p>
-            <p style={{ margin: '0 0 10px' }}>
-              <span style={{ color: '#00FF88' }}>3.</span> Use <Link to="/esoteric" style={{ color: '#00D4FF' }}>Esoteric Edge</Link> to analyze any matchup with gematria/numerology
-            </p>
-            <p style={{ margin: 0 }}>
-              <span style={{ color: '#00FF88' }}>4.</span> Track your results in <Link to="/grading" style={{ color: '#00D4FF' }}>Grade Picks</Link> to measure performance
-            </p>
+        {/* Getting Started - Only shown for new users */}
+        {showGettingStarted && (
+          <div style={{
+            backgroundColor: '#1a1a2e',
+            borderRadius: '12px',
+            padding: '20px',
+            marginTop: '25px',
+            border: '1px solid #00D4FF40',
+            position: 'relative'
+          }}>
+            {/* Dismiss button */}
+            <button
+              onClick={() => setShowGettingStarted(false)}
+              style={{
+                position: 'absolute',
+                top: '12px',
+                right: '12px',
+                backgroundColor: 'transparent',
+                border: 'none',
+                color: '#6b7280',
+                cursor: 'pointer',
+                fontSize: '18px',
+                padding: '4px',
+                lineHeight: 1
+              }}
+              title="Dismiss"
+            >
+              ×
+            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
+              <span style={{ fontSize: '20px' }}>🚀</span>
+              <h3 style={{ color: '#fff', fontSize: '16px', margin: 0 }}>Quick Start Guide</h3>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '12px'
+            }}>
+              <Link to="/smash-spots" style={{
+                backgroundColor: '#00FF8815',
+                padding: '12px 14px',
+                borderRadius: '8px',
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                border: '1px solid #00FF8830'
+              }}>
+                <span style={{ color: '#00FF88', fontWeight: 'bold', fontSize: '16px' }}>1</span>
+                <div>
+                  <div style={{ color: '#00FF88', fontWeight: 'bold', fontSize: '13px' }}>Smash Spots</div>
+                  <div style={{ color: '#9ca3af', fontSize: '11px' }}>Today's AI picks</div>
+                </div>
+              </Link>
+
+              <Link to="/sharp" style={{
+                backgroundColor: '#00D4FF15',
+                padding: '12px 14px',
+                borderRadius: '8px',
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                border: '1px solid #00D4FF30'
+              }}>
+                <span style={{ color: '#00D4FF', fontWeight: 'bold', fontSize: '16px' }}>2</span>
+                <div>
+                  <div style={{ color: '#00D4FF', fontWeight: 'bold', fontSize: '13px' }}>Sharp Money</div>
+                  <div style={{ color: '#9ca3af', fontSize: '11px' }}>Where pros bet</div>
+                </div>
+              </Link>
+
+              <Link to="/odds" style={{
+                backgroundColor: '#FFD70015',
+                padding: '12px 14px',
+                borderRadius: '8px',
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                border: '1px solid #FFD70030'
+              }}>
+                <span style={{ color: '#FFD700', fontWeight: 'bold', fontSize: '16px' }}>3</span>
+                <div>
+                  <div style={{ color: '#FFD700', fontWeight: 'bold', fontSize: '13px' }}>Best Odds</div>
+                  <div style={{ color: '#9ca3af', fontSize: '11px' }}>Compare 8+ books</div>
+                </div>
+              </Link>
+
+              <Link to="/history" style={{
+                backgroundColor: '#8B5CF615',
+                padding: '12px 14px',
+                borderRadius: '8px',
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                border: '1px solid #8B5CF630'
+              }}>
+                <span style={{ color: '#8B5CF6', fontWeight: 'bold', fontSize: '16px' }}>4</span>
+                <div>
+                  <div style={{ color: '#8B5CF6', fontWeight: 'bold', fontSize: '13px' }}>Track Bets</div>
+                  <div style={{ color: '#9ca3af', fontSize: '11px' }}>Grade your picks</div>
+                </div>
+              </Link>
+            </div>
+
+            <div style={{
+              marginTop: '12px',
+              textAlign: 'center',
+              color: '#6b7280',
+              fontSize: '11px'
+            }}>
+              Click × to dismiss this guide
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

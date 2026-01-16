@@ -188,7 +188,7 @@ const formatOdds = (odds) => {
 };
 
 // Memoized pick card with enhanced display
-const PickCard = memo(({ pick }) => {
+const PickCard = memo(({ pick, injuries = [] }) => {
   const [expanded, setExpanded] = useState(false);
   const tierConfig = getTierConfig(pick.confidence);
   const keyStats = useMemo(() => generateGameStats(pick), [pick.market, pick.point, pick.team]);
@@ -256,6 +256,9 @@ const PickCard = memo(({ pick }) => {
           {keyStats.stat3}
         </div>
       </div>
+
+      {/* Injury Context */}
+      <InjuryIndicator homeTeam={pick.home_team} awayTeam={pick.away_team} injuries={injuries} />
 
       <div style={{ backgroundColor: '#0f0f1a', borderRadius: '8px', padding: '12px', marginBottom: '12px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -424,6 +427,115 @@ const getDemoEnergy = () => ({
   isDemo: true
 });
 
+// Injury indicator component
+const InjuryIndicator = memo(({ homeTeam, awayTeam, injuries }) => {
+  if (!injuries || injuries.length === 0) return null;
+
+  // Filter injuries for this matchup
+  const matchupInjuries = injuries.filter(inj =>
+    inj.team?.toLowerCase().includes(homeTeam?.toLowerCase()) ||
+    inj.team?.toLowerCase().includes(awayTeam?.toLowerCase()) ||
+    homeTeam?.toLowerCase().includes(inj.team?.toLowerCase()) ||
+    awayTeam?.toLowerCase().includes(inj.team?.toLowerCase())
+  ).slice(0, 4);
+
+  if (matchupInjuries.length === 0) return null;
+
+  const getStatusColor = (status) => {
+    const s = (status || '').toLowerCase();
+    if (s.includes('out') || s.includes('o')) return '#EF4444';
+    if (s.includes('doubtful') || s.includes('d')) return '#F97316';
+    if (s.includes('questionable') || s.includes('q')) return '#F59E0B';
+    if (s.includes('probable') || s.includes('p')) return '#10B981';
+    return '#6B7280';
+  };
+
+  const getStatusLabel = (status) => {
+    const s = (status || '').toLowerCase();
+    if (s.includes('out') || s === 'o') return 'OUT';
+    if (s.includes('doubtful') || s === 'd') return 'DBT';
+    if (s.includes('questionable') || s === 'q') return 'Q';
+    if (s.includes('probable') || s === 'p') return 'PRB';
+    return status?.substring(0, 3).toUpperCase() || '?';
+  };
+
+  // Count significant injuries (OUT/Doubtful)
+  const significantCount = matchupInjuries.filter(inj => {
+    const s = (inj.status || '').toLowerCase();
+    return s.includes('out') || s === 'o' || s.includes('doubtful') || s === 'd';
+  }).length;
+
+  return (
+    <div style={{
+      backgroundColor: significantCount > 0 ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+      borderRadius: '8px',
+      padding: '10px 12px',
+      marginBottom: '12px',
+      border: `1px solid ${significantCount > 0 ? 'rgba(239, 68, 68, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+        <span style={{ fontSize: '14px' }}>🏥</span>
+        <span style={{ color: significantCount > 0 ? '#EF4444' : '#F59E0B', fontSize: '11px', fontWeight: 'bold' }}>
+          INJURY IMPACT {significantCount > 0 ? `(${significantCount} KEY)` : ''}
+        </span>
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+        {matchupInjuries.map((inj, idx) => (
+          <div key={idx} style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            backgroundColor: 'rgba(0,0,0,0.3)',
+            padding: '4px 8px',
+            borderRadius: '4px'
+          }}>
+            <span style={{
+              backgroundColor: getStatusColor(inj.status) + '30',
+              color: getStatusColor(inj.status),
+              padding: '2px 5px',
+              borderRadius: '3px',
+              fontSize: '9px',
+              fontWeight: 'bold'
+            }}>
+              {getStatusLabel(inj.status)}
+            </span>
+            <span style={{ color: '#fff', fontSize: '11px', fontWeight: '500' }}>
+              {inj.player_name || inj.player}
+            </span>
+            <span style={{ color: '#6B7280', fontSize: '10px' }}>
+              {inj.team}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+});
+InjuryIndicator.displayName = 'InjuryIndicator';
+
+// Demo injuries
+const getDemoInjuries = (sport) => {
+  const demos = {
+    NBA: [
+      { player_name: 'Anthony Davis', team: 'Lakers', status: 'Questionable', injury: 'Knee' },
+      { player_name: 'Jaylen Brown', team: 'Celtics', status: 'Out', injury: 'Ankle' },
+      { player_name: 'Jamal Murray', team: 'Nuggets', status: 'Probable', injury: 'Hamstring' },
+      { player_name: 'Devin Booker', team: 'Suns', status: 'Doubtful', injury: 'Groin' }
+    ],
+    NFL: [
+      { player_name: 'Travis Kelce', team: 'Chiefs', status: 'Questionable', injury: 'Knee' },
+      { player_name: 'Stefon Diggs', team: 'Bills', status: 'Out', injury: 'ACL' }
+    ],
+    MLB: [
+      { player_name: 'Mookie Betts', team: 'Dodgers', status: 'Day-to-Day', injury: 'Hip' }
+    ],
+    NHL: [
+      { player_name: 'Connor McDavid', team: 'Oilers', status: 'Probable', injury: 'Lower Body' }
+    ]
+  };
+  return demos[sport] || [];
+};
+
 const GameSmashList = ({ sport = 'NBA' }) => {
   const toast = useToast();
   const [picks, setPicks] = useState([]);
@@ -431,12 +543,27 @@ const GameSmashList = ({ sport = 'NBA' }) => {
   const [error, setError] = useState(null);
   const [dailyEnergy, setDailyEnergy] = useState(null);
   const [isDemo, setIsDemo] = useState(false);
+  const [injuries, setInjuries] = useState([]);
 
   // Filter and sort state
   const [filters, setFilters] = useState({ tier: 'ALL', market: 'ALL' });
   const [sortBy, setSortBy] = useState('confidence');
 
-  useEffect(() => { fetchGamePicks(); }, [sport]);
+  useEffect(() => { fetchGamePicks(); fetchInjuries(); }, [sport]);
+
+  const fetchInjuries = async () => {
+    try {
+      const data = await api.getInjuries(sport);
+      if (data && data.injuries && data.injuries.length > 0) {
+        setInjuries(data.injuries);
+      } else {
+        setInjuries(getDemoInjuries(sport));
+      }
+    } catch (err) {
+      console.error('Error fetching injuries:', err);
+      setInjuries(getDemoInjuries(sport));
+    }
+  };
 
   const fetchGamePicks = async () => {
     setLoading(true);
@@ -624,7 +751,7 @@ const GameSmashList = ({ sport = 'NBA' }) => {
           )}
         </div>
       ) : (
-        <div>{filteredPicks.map((pick, idx) => <PickCard key={`${pick.home_team}-${pick.market}-${idx}`} pick={pick} />)}</div>
+        <div>{filteredPicks.map((pick, idx) => <PickCard key={`${pick.home_team}-${pick.market}-${idx}`} pick={pick} injuries={injuries} />)}</div>
       )}
     </div>
   );

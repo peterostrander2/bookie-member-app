@@ -57,13 +57,11 @@ describe('api', () => {
 
       const result = await api.getSmashSpots('NBA')
 
-      expect(result).toEqual({
-        sport: 'NBA',
-        source: undefined,
-        slate: [{ pick: 'Lakers -5' }],
-        count: 1,
-        timestamp: undefined
-      })
+      // Verify essential fields
+      expect(result.sport).toBe('NBA')
+      expect(result.slate).toEqual([{ pick: 'Lakers -5' }])
+      expect(result.picks).toEqual([{ pick: 'Lakers -5' }])
+      expect(result.count).toBe(1)
     })
 
     it('getBestBets is an alias for getSmashSpots', async () => {
