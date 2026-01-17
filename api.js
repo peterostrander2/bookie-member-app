@@ -283,14 +283,14 @@ export const api = {
     return this.getProps(sport);
   },
 
-  // Get live odds for line shopping (BestOdds.jsx, Splits.jsx)
+  // Get live lines for line shopping (BestOdds.jsx, Splits.jsx)
   async getLiveOdds(sport = 'NBA') {
     try {
-      const resp = await authFetch(`${API_BASE_URL}/live/odds/${sport.toUpperCase()}`);
-      if (!resp.ok) return { games: [], odds: [] };
+      const resp = await authFetch(`${API_BASE_URL}/live/lines/${sport.toUpperCase()}`);
+      if (!resp.ok) return { games: [], lines: [] };
       return resp.json();
     } catch {
-      return { games: [], odds: [] };
+      return { games: [], lines: [] };
     }
   },
 

@@ -260,15 +260,15 @@ async function testSportsbooks() {
   }
 }
 
-async function testOdds(sport) {
-  const { ok, data } = await apiFetch(`/live/odds/${sport}`);
-  recordTest(`GET /live/odds/${sport} responds`, ok);
+async function testLines(sport) {
+  const { ok, data } = await apiFetch(`/live/lines/${sport}`);
+  recordTest(`GET /live/lines/${sport} responds`, ok);
 
   if (!ok || !data) return;
 
   const hasGames = data.games && isArray(data.games);
-  const hasOdds = data.odds && isArray(data.odds);
-  recordTest(`${sport} odds has games/odds arrays`, hasGames || hasOdds, `games: ${data.games?.length || 0}, odds: ${data.odds?.length || 0}`);
+  const hasLines = data.lines && isArray(data.lines);
+  recordTest(`${sport} lines has games/lines arrays`, hasGames || hasLines, `games: ${data.games?.length || 0}, lines: ${data.lines?.length || 0}`);
 }
 
 async function testProps(sport) {
@@ -365,8 +365,8 @@ async function main() {
     await testInjuries(sport);
   }
 
-  log.section('Live Odds');
-  await testOdds('NBA'); // Just test one sport for odds
+  log.section('Live Lines');
+  await testLines('NBA'); // Just test one sport for lines
 
   log.section('Player Props');
   await testProps('NBA'); // Just test one sport for props
