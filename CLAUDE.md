@@ -260,7 +260,32 @@ The backend should return signals that require external data or complex calculat
 ---
 
 ## Stack
-React 18, Vite 5, JavaScript (no TypeScript), inline styles (no Tailwind in components)
+React 19, Vite 5, JavaScript (no TypeScript), inline styles (no Tailwind in components)
+
+### Key Dependencies
+| Package | Version | Purpose |
+|---------|---------|---------|
+| react | 19.2.3 | UI framework |
+| react-dom | 19.2.3 | React DOM renderer |
+| react-router-dom | 6.x | Client-side routing |
+| zod | 4.x | Schema validation |
+| ai | 6.x | Vercel AI SDK |
+| @json-render/core | 0.2.x | JSON rendering |
+| @json-render/react | 0.2.x | React JSON components |
+| @sentry/react | - | Error monitoring |
+
+## React Best Practices
+Follow the guidelines in `.claude/REACT_GUIDELINES.md` for Vite + React development.
+
+Additional rules available in `.claude/skills/react-best-practices/SKILL.md` (Vercel patterns).
+
+**Key principles:**
+- Keep components small and focused
+- Prefer local state; lift only when needed
+- Centralize API calls in `api.js`
+- Handle loading/error/empty states
+- Use `React.lazy()` for code splitting
+- Memoize only when it prevents real work
 
 ## Quick Start
 ```bash
@@ -329,6 +354,11 @@ VAPID_PRIVATE_KEY=motkVzVapKsL7kxEn9qZ82DnFbtK7wsXs9T_QFHMTTQ
 ## File Structure Overview
 ```
 bookie-member-app/
+├── .claude/
+│   ├── REACT_GUIDELINES.md           # Vite + React best practices
+│   └── skills/
+│       ├── react-best-practices/     # Vercel React patterns (45 rules)
+│       └── web-design-guidelines/    # Web design patterns
 ├── public/
 │   ├── sw.js              # Service worker (offline + push)
 │   ├── manifest.json      # PWA manifest
@@ -1133,3 +1163,29 @@ triggerSmashNotification({
 **Tests:** 91 tests passing
 
 **Build:** 266 kB main bundle + 22 route chunks
+
+---
+
+### Session: January 2026 (claude/review-claude-md-AbZ7i)
+
+**Completed in this session:**
+1. Upgraded React 18 → React 19 (19.2.3)
+2. Added Vercel AI SDK (`ai` package)
+3. Added Zod for schema validation
+4. Added @json-render/core and @json-render/react
+5. Installed Vercel React best practices agent skills
+6. Created Vite-specific React guidelines
+
+**New files created:**
+- `.claude/REACT_GUIDELINES.md` - Vite + React best practices handoff
+- `.claude/skills/react-best-practices/` - 45 Vercel React rules
+- `.claude/skills/web-design-guidelines/` - Web design patterns
+
+**Dependencies added:**
+- `react@19.2.3`, `react-dom@19.2.3`
+- `@testing-library/react@16.x` (React 19 support)
+- `ai@6.0.39` - Vercel AI SDK
+- `zod@4.3.5` - Schema validation
+- `@json-render/core@0.2.0`, `@json-render/react@0.2.0`
+
+**Tests:** 91 tests passing (React 19 compatible)
