@@ -5,10 +5,19 @@
  * calculate parlays, and track their selections.
  */
 
-import React, { useState, createContext, useContext, useEffect } from 'react';
+import React, { useState, createContext, useContext, useEffect, useCallback } from 'react';
 import { recordPick } from './clvTracker';
 import { useToast } from './Toast';
-import { calculateVortexSync, getParlayEsotericAnalysis } from './signalEngine';
+
+// Dynamic import for signalEngine (reduces initial bundle by ~30KB)
+// Functions are loaded only when user has 2+ parlay legs
+let signalEngineModule = null;
+const loadSignalEngine = async () => {
+  if (!signalEngineModule) {
+    signalEngineModule = await import('./signalEngine');
+  }
+  return signalEngineModule;
+};
 
 const STORAGE_KEY = 'bookie_bet_slip';
 
@@ -253,6 +262,35 @@ export const FloatingBetSlip = () => {
   const toast = useToast();
   const [totalStake, setTotalStake] = useState(100);
 
+  // State for dynamically loaded esoteric analysis
+  const [esotericData, setEsotericData] = useState(null);
+  const [esotericLoading, setEsotericLoading] = useState(false);
+
+  // Dynamically load and calculate esoteric data when 2+ selections
+  useEffect(() => {
+    if (selections.length < 2) {
+      setEsotericData(null);
+      return;
+    }
+
+    let cancelled = false;
+    setEsotericLoading(true);
+
+    loadSignalEngine().then(module => {
+      if (cancelled) return;
+      const vortex = module.calculateVortexSync(selections);
+      const esoteric = module.getParlayEsotericAnalysis(selections);
+      setEsotericData({ vortex, esoteric });
+      setEsotericLoading(false);
+    }).catch(() => {
+      if (cancelled) return;
+      setEsotericData(null);
+      setEsotericLoading(false);
+    });
+
+    return () => { cancelled = true; };
+  }, [selections]);
+
   // Show persistent bar when not open and has selections
   // Show full panel when open
   if (selections.length === 0 && !isOpen) return null;
@@ -407,66 +445,74 @@ export const FloatingBetSlip = () => {
               borderTop: '1px solid #333'
             }}>
               {/* Parlay odds if applicable */}
-              {selections.length > 1 && (() => {
-                const vortex = calculateVortexSync(selections);
-                const esoteric = getParlayEsotericAnalysis(selections);
-                return (
-                  <div style={{ marginBottom: '10px' }}>
-                    <div style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      padding: '8px 12px',
-                      backgroundColor: '#FFD70015',
-                      borderRadius: '8px 8px 0 0',
-                      border: '1px solid #FFD70030',
-                      borderBottom: vortex.hasSync ? 'none' : '1px solid #FFD70030'
-                    }}>
-                      <span style={{ color: '#FFD700', fontSize: '12px' }}>
-                        {selections.length}-Leg Parlay
-                      </span>
-                      <span style={{ color: '#FFD700', fontWeight: 'bold' }}>
-                        {parlayOdds > 0 ? '+' : ''}{parlayOdds}
-                      </span>
-                    </div>
-                    {/* Vortex Math Display */}
-                    {vortex.hasSync && (
-                      <div style={{
-                        padding: '8px 12px',
-                        backgroundColor: vortex.syncLevel === 'TRIPLE_VORTEX' ? '#8B5CF630' :
-                                        vortex.syncLevel === 'DOUBLE_VORTEX' ? '#8B5CF620' : '#8B5CF610',
-                        borderRadius: '0 0 8px 8px',
-                        border: '1px solid #8B5CF640',
-                        borderTop: 'none'
-                      }}>
-                        <div style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center'
-                        }}>
-                          <span style={{ color: '#D8B4FE', fontSize: '11px' }}>
-                            {vortex.insight}
-                          </span>
-                          <span style={{
-                            color: '#8B5CF6',
-                            fontSize: '10px',
-                            fontWeight: 'bold',
-                            backgroundColor: '#8B5CF620',
-                            padding: '2px 6px',
-                            borderRadius: '4px'
-                          }}>
-                            +{vortex.boost}% sync
-                          </span>
-                        </div>
-                        {esoteric.insights.length > 1 && (
-                          <div style={{ marginTop: '4px', color: '#9ca3af', fontSize: '10px' }}>
-                            {esoteric.insights.slice(1).join(' • ')}
-                          </div>
-                        )}
-                      </div>
-                    )}
+              {selections.length > 1 && (
+                <div style={{ marginBottom: '10px' }}>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    padding: '8px 12px',
+                    backgroundColor: '#FFD70015',
+                    borderRadius: esotericData?.vortex?.hasSync ? '8px 8px 0 0' : '8px',
+                    border: '1px solid #FFD70030',
+                    borderBottom: esotericData?.vortex?.hasSync ? 'none' : '1px solid #FFD70030'
+                  }}>
+                    <span style={{ color: '#FFD700', fontSize: '12px' }}>
+                      {selections.length}-Leg Parlay
+                    </span>
+                    <span style={{ color: '#FFD700', fontWeight: 'bold' }}>
+                      {parlayOdds > 0 ? '+' : ''}{parlayOdds}
+                    </span>
                   </div>
-                );
-              })()}
+                  {/* Vortex Math Display - loaded dynamically */}
+                  {esotericLoading && (
+                    <div style={{
+                      padding: '8px 12px',
+                      backgroundColor: '#8B5CF610',
+                      borderRadius: '0 0 8px 8px',
+                      border: '1px solid #8B5CF640',
+                      borderTop: 'none',
+                      textAlign: 'center'
+                    }}>
+                      <span style={{ color: '#9ca3af', fontSize: '11px' }}>Analyzing...</span>
+                    </div>
+                  )}
+                  {esotericData?.vortex?.hasSync && (
+                    <div style={{
+                      padding: '8px 12px',
+                      backgroundColor: esotericData.vortex.syncLevel === 'TRIPLE_VORTEX' ? '#8B5CF630' :
+                                      esotericData.vortex.syncLevel === 'DOUBLE_VORTEX' ? '#8B5CF620' : '#8B5CF610',
+                      borderRadius: '0 0 8px 8px',
+                      border: '1px solid #8B5CF640',
+                      borderTop: 'none'
+                    }}>
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                      }}>
+                        <span style={{ color: '#D8B4FE', fontSize: '11px' }}>
+                          {esotericData.vortex.insight}
+                        </span>
+                        <span style={{
+                          color: '#8B5CF6',
+                          fontSize: '10px',
+                          fontWeight: 'bold',
+                          backgroundColor: '#8B5CF620',
+                          padding: '2px 6px',
+                          borderRadius: '4px'
+                        }}>
+                          +{esotericData.vortex.boost}% sync
+                        </span>
+                      </div>
+                      {esotericData.esoteric?.insights?.length > 1 && (
+                        <div style={{ marginTop: '4px', color: '#9ca3af', fontSize: '10px' }}>
+                          {esotericData.esoteric.insights.slice(1).join(' • ')}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Stake input */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
