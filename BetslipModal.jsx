@@ -5,7 +5,7 @@
  * Shows odds comparison across books and links to place bets.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import api from './api';
 import { useToast } from './Toast';
 
@@ -27,11 +27,46 @@ export const BetslipModal = ({ isOpen, onClose, bet, sport }) => {
   const [sportsbooks, setSportsbooks] = useState([]);
   const [betslipData, setBetslipData] = useState(null);
 
+  // Accessibility: refs for focus management
+  const modalRef = useRef(null);
+  const closeButtonRef = useRef(null);
+  const previousFocusRef = useRef(null);
+
+  // Fetch betslip data when modal opens
   useEffect(() => {
     if (isOpen && bet) {
       fetchBetslipData();
     }
   }, [isOpen, bet]);
+
+  // Accessibility: Escape key handling and focus management
+  useEffect(() => {
+    if (!isOpen) return;
+
+    // Store the previously focused element to restore on close
+    previousFocusRef.current = document.activeElement;
+
+    // Focus the close button when modal opens
+    const timer = setTimeout(() => {
+      closeButtonRef.current?.focus();
+    }, 0);
+
+    // Handle Escape key
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('keydown', handleKeyDown);
+      // Restore focus to previously focused element
+      previousFocusRef.current?.focus();
+    };
+  }, [isOpen, onClose]);
 
   const fetchBetslipData = async () => {
     setLoading(true);
@@ -136,6 +171,10 @@ export const BetslipModal = ({ isOpen, onClose, bet, sport }) => {
       >
         {/* Modal */}
         <div
+          ref={modalRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="betslip-modal-title"
           onClick={(e) => e.stopPropagation()}
           style={{
             backgroundColor: '#1a1a2e',
@@ -156,7 +195,7 @@ export const BetslipModal = ({ isOpen, onClose, bet, sport }) => {
             alignItems: 'flex-start'
           }}>
             <div>
-              <h2 style={{ color: '#fff', fontSize: '18px', margin: '0 0 8px' }}>
+              <h2 id="betslip-modal-title" style={{ color: '#fff', fontSize: '18px', margin: '0 0 8px' }}>
                 Place Your Bet
               </h2>
               <div style={{ color: '#9ca3af', fontSize: '14px' }}>
@@ -169,7 +208,9 @@ export const BetslipModal = ({ isOpen, onClose, bet, sport }) => {
               )}
             </div>
             <button
+              ref={closeButtonRef}
               onClick={onClose}
+              aria-label="Close sportsbook selection"
               style={{
                 background: 'none',
                 border: 'none',

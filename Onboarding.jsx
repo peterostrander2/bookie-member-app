@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 const ONBOARDING_KEY = 'bookie_onboarding_complete';
 const PREFERENCES_KEY = 'bookie_user_preferences'; // Must match usePreferences.js
@@ -60,6 +60,34 @@ const OnboardingWizard = ({ onComplete }) => {
     experienceLevel: 'intermediate',
     bettingStyle: 'balanced' // Add betting style preference
   });
+
+  // Accessibility: refs for focus management
+  const titleRef = useRef(null);
+  const continueButtonRef = useRef(null);
+
+  // Accessibility: Focus title when step changes for screen reader announcement
+  useEffect(() => {
+    // Small delay to ensure DOM is updated
+    const timer = setTimeout(() => {
+      titleRef.current?.focus();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [step]);
+
+  // Accessibility: Handle Escape key to skip onboarding
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        // Skip onboarding on Escape
+        completeOnboarding();
+        saveToPreferencesSystem(preferences.sports, preferences.experienceLevel);
+        onComplete?.(preferences);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onComplete, preferences]);
 
   const sports = [
     { id: 'NBA', name: 'NBA', icon: '🏀' },
@@ -133,11 +161,12 @@ const OnboardingWizard = ({ onComplete }) => {
             <div style={{ color: '#9ca3af', fontSize: '13px', textAlign: 'center', marginBottom: '12px' }}>
               Select your sports (pick at least one)
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center' }}>
+            <div role="group" aria-label="Select sports" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center' }}>
               {sports.map(sport => (
                 <button
                   key={sport.id}
                   onClick={() => toggleSport(sport.id)}
+                  aria-pressed={preferences.sports.includes(sport.id)}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -347,18 +376,31 @@ const OnboardingWizard = ({ onComplete }) => {
       justifyContent: 'center',
       padding: '20px'
     }}>
-      <div style={{
-        backgroundColor: '#0a0a0f',
-        borderRadius: '16px',
-        border: '1px solid #333',
-        maxWidth: '440px',
-        width: '100%',
-        maxHeight: '90vh',
-        overflow: 'auto'
-      }}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="onboarding-title"
+        aria-describedby="onboarding-step-indicator"
+        style={{
+          backgroundColor: '#0a0a0f',
+          borderRadius: '16px',
+          border: '1px solid #333',
+          maxWidth: '440px',
+          width: '100%',
+          maxHeight: '90vh',
+          overflow: 'auto'
+        }}
+      >
         {/* Progress Bar - 2 steps */}
         <div style={{ padding: '16px 20px 0' }}>
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div
+            role="progressbar"
+            aria-valuenow={step + 1}
+            aria-valuemin={1}
+            aria-valuemax={steps.length}
+            aria-label={`Step ${step + 1} of ${steps.length}`}
+            style={{ display: 'flex', gap: '8px' }}
+          >
             {steps.map((_, i) => (
               <div
                 key={i}
@@ -372,19 +414,25 @@ const OnboardingWizard = ({ onComplete }) => {
               />
             ))}
           </div>
-          <div style={{ color: '#6b7280', fontSize: '11px', textAlign: 'center', marginTop: '8px' }}>
+          <div id="onboarding-step-indicator" style={{ color: '#6b7280', fontSize: '11px', textAlign: 'center', marginTop: '8px' }}>
             Step {step + 1} of {steps.length}
           </div>
         </div>
 
         {/* Content */}
         <div style={{ padding: '20px 24px' }}>
-          <h1 style={{
-            color: '#00D4FF',
-            fontSize: '18px',
-            textAlign: 'center',
-            marginBottom: '20px'
-          }}>
+          <h1
+            id="onboarding-title"
+            ref={titleRef}
+            tabIndex={-1}
+            style={{
+              color: '#00D4FF',
+              fontSize: '18px',
+              textAlign: 'center',
+              marginBottom: '20px',
+              outline: 'none'
+            }}
+          >
             {steps[step].title}
           </h1>
           {steps[step].content}
