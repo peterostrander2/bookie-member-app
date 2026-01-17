@@ -580,9 +580,9 @@ export const FloatingBetSlip = () => {
   );
 };
 
-// Add to slip button component
-export const AddToSlipButton = ({ pick, size = 'normal' }) => {
-  const { addSelection, isInSlip, removeSelection } = useBetSlip();
+// Add to slip button component - supports prominent mode for high-visibility CTAs
+export const AddToSlipButton = ({ pick, size = 'normal', prominent = false }) => {
+  const { addSelection, isInSlip, removeSelection, setIsOpen } = useBetSlip();
   const toast = useToast();
 
   const id = `${pick.game_id || pick.id}_${pick.bet_type}_${pick.side}`;
@@ -596,35 +596,61 @@ export const AddToSlipButton = ({ pick, size = 'normal' }) => {
     } else {
       if (addSelection(pick)) {
         toast.success('Added to bet slip!');
+        // Open bet slip on mobile to show the pick was added
+        if (window.innerWidth < 768) {
+          setIsOpen(true);
+        }
       }
     }
   };
 
-  const buttonStyle = size === 'small' ? {
-    padding: '4px 8px',
-    fontSize: '11px'
+  // Size styles
+  const sizeStyles = {
+    small: { padding: '4px 8px', fontSize: '11px', minWidth: '50px' },
+    normal: { padding: '6px 12px', fontSize: '12px', minWidth: '60px' },
+    medium: { padding: '8px 14px', fontSize: '13px', minWidth: '80px' },
+    large: { padding: '10px 18px', fontSize: '14px', minWidth: '100px' }
+  };
+
+  const buttonStyle = sizeStyles[size] || sizeStyles.normal;
+
+  // Prominent mode: solid background, more eye-catching
+  const prominentStyles = prominent ? {
+    backgroundColor: inSlip ? '#00FF88' : '#00D4FF',
+    color: inSlip ? '#000' : '#000',
+    border: 'none',
+    boxShadow: inSlip ? '0 4px 12px rgba(0, 255, 136, 0.4)' : '0 4px 12px rgba(0, 212, 255, 0.4)',
+    transform: 'scale(1)',
+    transition: 'all 0.2s ease'
   } : {
-    padding: '6px 12px',
-    fontSize: '12px'
+    backgroundColor: inSlip ? '#00FF8830' : '#00D4FF20',
+    color: inSlip ? '#00FF88' : '#00D4FF',
+    border: `1px solid ${inSlip ? '#00FF8850' : '#00D4FF50'}`
   };
 
   return (
     <button
       onClick={handleClick}
+      aria-label={inSlip ? 'Remove from bet slip' : 'Add to bet slip'}
       style={{
         ...buttonStyle,
-        backgroundColor: inSlip ? '#00FF8830' : '#00D4FF20',
-        color: inSlip ? '#00FF88' : '#00D4FF',
-        border: `1px solid ${inSlip ? '#00FF8850' : '#00D4FF50'}`,
-        borderRadius: '6px',
+        ...prominentStyles,
+        borderRadius: prominent ? '8px' : '6px',
         cursor: 'pointer',
         fontWeight: 'bold',
         display: 'flex',
         alignItems: 'center',
+        justifyContent: 'center',
         gap: '4px'
       }}
+      onMouseEnter={prominent ? (e) => {
+        e.currentTarget.style.transform = 'scale(1.05)';
+      } : undefined}
+      onMouseLeave={prominent ? (e) => {
+        e.currentTarget.style.transform = 'scale(1)';
+      } : undefined}
     >
-      {inSlip ? '✓' : '+'} {inSlip ? 'In Slip' : 'Add'}
+      {inSlip ? '✓' : '+'} {inSlip ? 'In Slip' : (prominent ? 'Add to Slip' : 'Add')}
     </button>
   );
 };

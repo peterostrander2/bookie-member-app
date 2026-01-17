@@ -7,11 +7,12 @@ import { AddToSlipButton } from './BetSlip';
 
 const AUTO_REFRESH_INTERVAL = 30 * 60 * 1000; // 30 minutes
 
-// Confidence filter options
+// Confidence filter options - DEFAULT to LEAN (65%+) to hide unprofitable picks
 const CONFIDENCE_FILTERS = [
-  { id: 'all', label: 'All Picks', minConfidence: 0, color: '#6B7280' },
+  { id: 'lean', label: '65%+ (Profitable)', minConfidence: 65, color: '#3B82F6', isDefault: true },
   { id: 'strong', label: '75%+', minConfidence: 75, color: '#F59E0B' },
-  { id: 'smash', label: '85%+', minConfidence: 85, color: '#10B981' }
+  { id: 'smash', label: '85%+', minConfidence: 85, color: '#10B981' },
+  { id: 'all', label: 'All Picks', minConfidence: 0, color: '#6B7280' }
 ];
 
 // Sports options (moved outside component to prevent recreation on every render)
@@ -102,9 +103,11 @@ const FILTER_CONTAINER = {
 
 // ============================================================================
 
-// Today's Best Bets Component - Shows top SMASH tier picks (memoized)
+// Today's Best Bets Component - Shows top picks with fallback to STRONG tier
 const TodaysBestBets = memo(({ sport, onPickClick }) => {
   const [bestPicks, setBestPicks] = useState([]);
+  const [displayTier, setDisplayTier] = useState('SMASH'); // Track which tier we're showing
+  const [totalActionable, setTotalActionable] = useState(0); // Total LEAN+ picks available
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -120,22 +123,48 @@ const TodaysBestBets = memo(({ sport, onPickClick }) => {
         if (data?.picks) allPicks.push(...data.picks);
         if (data?.data) allPicks.push(...data.data);
 
-        // Filter to SMASH tier only (85%+) and sort by confidence
+        // Count all actionable picks (LEAN tier and above = 65%+)
+        const actionablePicks = allPicks.filter(p => (p.confidence || p.score || 0) >= 65);
+        setTotalActionable(actionablePicks.length);
+
+        // Try SMASH tier first (85%+)
         const smashPicks = allPicks
           .filter(p => (p.confidence || p.score || 0) >= 85)
           .sort((a, b) => (b.confidence || b.score || 0) - (a.confidence || a.score || 0))
           .slice(0, 3);
 
-        setBestPicks(smashPicks);
+        if (smashPicks.length > 0) {
+          setBestPicks(smashPicks);
+          setDisplayTier('SMASH');
+        } else {
+          // Fallback to STRONG tier (75%+) if no SMASH picks
+          const strongPicks = allPicks
+            .filter(p => (p.confidence || p.score || 0) >= 75)
+            .sort((a, b) => (b.confidence || b.score || 0) - (a.confidence || a.score || 0))
+            .slice(0, 3);
+
+          if (strongPicks.length > 0) {
+            setBestPicks(strongPicks);
+            setDisplayTier('STRONG');
+          } else {
+            setBestPicks([]);
+            setDisplayTier('NONE');
+          }
+        }
       } catch (err) {
         console.error('Error fetching best bets:', err);
         setBestPicks([]);
+        setDisplayTier('NONE');
       }
       setLoading(false);
     };
 
     fetchBestBets();
   }, [sport]);
+
+  const tierConfig = displayTier === 'SMASH'
+    ? { color: '#10B981', label: 'SMASH', borderColor: '#10B98140', bgGradient: 'linear-gradient(135deg, #0a2a1a 0%, #1a3a2a 100%)' }
+    : { color: '#F59E0B', label: 'STRONG', borderColor: '#F59E0B40', bgGradient: 'linear-gradient(135deg, #2a1a0a 0%, #3a2a1a 100%)' };
 
   if (loading) {
     return (
@@ -154,7 +183,8 @@ const TodaysBestBets = memo(({ sport, onPickClick }) => {
     );
   }
 
-  if (bestPicks.length === 0) {
+  // No actionable picks at all
+  if (bestPicks.length === 0 && totalActionable === 0) {
     return (
       <div style={{
         background: 'linear-gradient(135deg, #1a1a2e 0%, #2a2a4e 100%)',
@@ -165,11 +195,58 @@ const TodaysBestBets = memo(({ sport, onPickClick }) => {
         textAlign: 'center'
       }}>
         <div style={{ fontSize: '32px', marginBottom: '8px' }}>🔍</div>
-        <div style={{ color: '#F59E0B', fontWeight: 'bold', marginBottom: '4px' }}>
-          No SMASH Picks Right Now
+        <div style={{ color: '#6B7280', fontWeight: 'bold', marginBottom: '4px' }}>
+          No Picks Available Right Now
         </div>
         <div style={{ color: '#6B7280', fontSize: '13px' }}>
-          Check back soon — we only feature 85%+ confidence plays here.
+          Check back soon — new AI picks are generated every 2 hours.
+        </div>
+      </div>
+    );
+  }
+
+  // No featured picks but actionable picks exist - show quick action
+  if (bestPicks.length === 0 && totalActionable > 0) {
+    return (
+      <div style={{
+        background: 'linear-gradient(135deg, #1a1a2e 0%, #2a2a4e 100%)',
+        borderRadius: '16px',
+        padding: '20px',
+        marginBottom: '24px',
+        border: '1px solid #3B82F640'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+              <span style={{ fontSize: '24px' }}>📊</span>
+              <span style={{ color: '#3B82F6', fontWeight: 'bold', fontSize: '16px' }}>
+                No SMASH/STRONG Picks Right Now
+              </span>
+            </div>
+            <div style={{ color: '#9CA3AF', fontSize: '13px' }}>
+              {totalActionable} actionable picks at LEAN tier (65%+) available below
+            </div>
+          </div>
+          <button
+            onClick={() => onPickClick && onPickClick('props')}
+            style={{
+              backgroundColor: '#3B82F6',
+              color: '#fff',
+              padding: '12px 20px',
+              borderRadius: '10px',
+              border: 'none',
+              fontWeight: 'bold',
+              fontSize: '14px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              transition: 'all 0.2s',
+              boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)'
+            }}
+          >
+            View {totalActionable} LEAN+ Picks →
+          </button>
         </div>
       </div>
     );
@@ -177,11 +254,11 @@ const TodaysBestBets = memo(({ sport, onPickClick }) => {
 
   return (
     <div style={{
-      background: 'linear-gradient(135deg, #0a2a1a 0%, #1a3a2a 100%)',
+      background: tierConfig.bgGradient,
       borderRadius: '16px',
       padding: '20px',
       marginBottom: '24px',
-      border: '2px solid #10B98140',
+      border: `2px solid ${tierConfig.borderColor}`,
       position: 'relative',
       overflow: 'hidden'
     }}>
@@ -192,32 +269,37 @@ const TodaysBestBets = memo(({ sport, onPickClick }) => {
         right: '-5%',
         width: '150px',
         height: '150px',
-        background: 'radial-gradient(circle, #10B98120 0%, transparent 70%)',
+        background: `radial-gradient(circle, ${tierConfig.color}20 0%, transparent 70%)`,
         borderRadius: '50%',
         pointerEvents: 'none'
       }} />
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-        <span style={{ fontSize: '24px' }}>🎯</span>
+        <span style={{ fontSize: '24px' }}>{displayTier === 'SMASH' ? '🎯' : '💪'}</span>
         <div>
-          <h3 style={{ color: '#10B981', margin: 0, fontSize: '16px', fontWeight: 'bold' }}>
+          <h3 style={{ color: tierConfig.color, margin: 0, fontSize: '16px', fontWeight: 'bold' }}>
             Today's Best Bets
+            {displayTier === 'STRONG' && (
+              <span style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 'normal', marginLeft: '8px' }}>
+                (No SMASH picks available)
+              </span>
+            )}
           </h3>
           <div style={{ color: '#6B7280', fontSize: '11px' }}>
-            SMASH tier only (85%+ confidence) • Max conviction plays
+            {displayTier === 'SMASH' ? 'SMASH tier (85%+)' : 'STRONG tier (75%+)'} • High conviction plays
           </div>
         </div>
         <div style={{
           marginLeft: 'auto',
-          backgroundColor: '#10B98120',
-          color: '#10B981',
+          backgroundColor: `${tierConfig.color}20`,
+          color: tierConfig.color,
           padding: '4px 10px',
           borderRadius: '12px',
           fontSize: '11px',
           fontWeight: 'bold',
-          border: '1px solid #10B98140'
+          border: `1px solid ${tierConfig.borderColor}`
         }}>
-          {bestPicks.length} SMASH {bestPicks.length === 1 ? 'PICK' : 'PICKS'}
+          {bestPicks.length} {tierConfig.label} {bestPicks.length === 1 ? 'PICK' : 'PICKS'}
         </div>
       </div>
 
@@ -234,10 +316,10 @@ const TodaysBestBets = memo(({ sport, onPickClick }) => {
             <div
               key={pickKey}
               style={{
-                backgroundColor: '#0a1a1510',
+                backgroundColor: 'rgba(10, 26, 21, 0.1)',
                 borderRadius: '12px',
                 padding: '14px 16px',
-                border: '1px solid #10B98130',
+                border: `1px solid ${tierConfig.color}30`,
                 display: 'flex',
                 alignItems: 'center',
                 gap: '14px',
@@ -278,7 +360,7 @@ const TodaysBestBets = memo(({ sport, onPickClick }) => {
               {/* Confidence + Unit size */}
               <div style={{ textAlign: 'right' }}>
                 <div style={{
-                  color: '#10B981',
+                  color: tierConfig.color,
                   fontWeight: 'bold',
                   fontSize: '20px',
                   lineHeight: '1'
@@ -286,8 +368,8 @@ const TodaysBestBets = memo(({ sport, onPickClick }) => {
                   {pick.confidence || pick.score || 85}%
                 </div>
                 <div style={{
-                  backgroundColor: '#10B98120',
-                  color: '#10B981',
+                  backgroundColor: `${tierConfig.color}20`,
+                  color: tierConfig.color,
                   padding: '2px 8px',
                   borderRadius: '4px',
                   fontSize: '10px',
@@ -298,7 +380,7 @@ const TodaysBestBets = memo(({ sport, onPickClick }) => {
                 </div>
               </div>
 
-              {/* Quick add button */}
+              {/* Quick add button - PROMINENT */}
               <AddToSlipButton
                 pick={{
                   id: pick.id || `${pick.player_name || pick.team}-${pick.market || pick.bet_type}`,
@@ -314,9 +396,10 @@ const TodaysBestBets = memo(({ sport, onPickClick }) => {
                   line: pick.point,
                   odds: pick.price || -110,
                   confidence: pick.confidence || pick.score || 85,
-                  tier: 'SMASH'
+                  tier: displayTier
                 }}
-                size="small"
+                size="medium"
+                prominent
               />
             </div>
           );
@@ -344,7 +427,7 @@ const SmashSpotsPage = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [nextRefresh, setNextRefresh] = useState(AUTO_REFRESH_INTERVAL);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [confidenceFilter, setConfidenceFilter] = useState('all');
+  const [confidenceFilter, setConfidenceFilter] = useState('lean'); // Default to 65%+ to hide unprofitable picks
   const [sortByConfidence, setSortByConfidence] = useState(true);
 
   // Manual refresh function

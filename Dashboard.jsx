@@ -278,6 +278,77 @@ const Dashboard = () => {
           <SearchBar placeholder="Search players, teams, games..." />
         </div>
 
+        {/* Value Proposition Banner - Today's Edge */}
+        {trackedStats && trackedStats.total > 0 && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            backgroundColor: '#10B98115',
+            borderRadius: '12px',
+            padding: '14px 20px',
+            marginBottom: '20px',
+            border: '1px solid #10B98130',
+            flexWrap: 'wrap',
+            gap: '12px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ fontSize: '22px' }}>📈</span>
+              <div>
+                <div style={{ color: '#10B981', fontWeight: 'bold', fontSize: '15px' }}>
+                  Your Edge This Month
+                </div>
+                <div style={{ color: '#9ca3af', fontSize: '12px' }}>
+                  {trackedStats.total} picks tracked • {trackedStats.today} today
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+              {trackedStats.winRate !== null && (
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{
+                    color: trackedStats.winRate >= 55 ? '#00FF88' : trackedStats.winRate >= 52.4 ? '#FFD700' : '#FF4444',
+                    fontWeight: 'bold',
+                    fontSize: '20px'
+                  }}>
+                    {trackedStats.winRate.toFixed(1)}%
+                  </div>
+                  <div style={{ color: '#6b7280', fontSize: '10px', textTransform: 'uppercase' }}>Win Rate</div>
+                </div>
+              )}
+              {trackedStats.clv !== null && (
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{
+                    color: trackedStats.clv > 0 ? '#00FF88' : trackedStats.clv < 0 ? '#FF4444' : '#9ca3af',
+                    fontWeight: 'bold',
+                    fontSize: '20px'
+                  }}>
+                    {trackedStats.clv > 0 ? '+' : ''}{trackedStats.clv.toFixed(1)}
+                  </div>
+                  <div style={{ color: '#6b7280', fontSize: '10px', textTransform: 'uppercase' }}>Avg CLV</div>
+                </div>
+              )}
+              <Link
+                to="/analytics"
+                style={{
+                  backgroundColor: '#10B981',
+                  color: '#000',
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  textDecoration: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+              >
+                View Stats →
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* Today's Top Pick CTA */}
         <div style={{
           background: 'linear-gradient(135deg, #0a2a1a 0%, #1a3a2a 50%, #0a2a1a 100%)',
