@@ -42,45 +42,28 @@ import { NotificationOnboardingModal, useNotificationOnboarding } from './Notifi
 import SearchBar from './SearchBar';
 import api from './api';
 
-// Navigation structure (moved outside component to prevent recreation on every render)
+// Simplified Navigation structure - fewer dropdowns, more direct links
+// "Picks" is now direct link to /smash-spots (which has tabs for Props/Games/Sharp)
+// "Research" replaces "Tools" - clearer purpose
+// "My Bets" replaces "My Betting" - simpler label
 const NAV_STRUCTURE = {
-  picks: {
-    label: 'Picks',
-    icon: '🔥',
+  research: {
+    label: 'Research',
+    icon: '🔍',
     items: [
-      { path: '/smash-spots', label: 'AI Picks', icon: '🎯' },
-      { path: '/props', label: 'Player Props', icon: '🏀' },
-      { path: '/sharp', label: 'Sharp Money', icon: '💵' },
-      { path: '/signals', label: 'All Signals', icon: '⚡' }
-    ]
-  },
-  tools: {
-    label: 'Tools',
-    icon: '🛠️',
-    items: [
-      { path: '/odds', label: 'Best Odds', icon: '🎯' },
+      { path: '/odds', label: 'Best Odds', icon: '📊' },
       { path: '/injuries', label: 'Injuries', icon: '🏥' },
-      { path: '/clv', label: 'CLV Tracker', icon: '📉' },
-      { path: '/backtest', label: 'Backtest', icon: '🔬' }
+      { path: '/clv', label: 'CLV Tracker', icon: '📉' }
     ]
   },
-  betting: {
-    label: 'My Betting',
-    icon: '📊',
+  myBets: {
+    label: 'My Bets',
+    icon: '💼',
     items: [
       { path: '/parlay', label: 'Parlay Builder', icon: '🎰' },
       { path: '/history', label: 'Bet History', icon: '📋' },
-      { path: '/analytics', label: 'Analytics', icon: '📈' },
-      { path: '/bankroll', label: 'Bankroll', icon: '💰' },
-      { path: '/grading', label: 'Grading', icon: '📝' }
-    ]
-  },
-  community: {
-    label: 'Community',
-    icon: '👥',
-    items: [
-      { path: '/leaderboard', label: 'Leaderboard', icon: '🏆' },
-      { path: '/achievements', label: 'Achievements', icon: '🏅' }
+      { path: '/analytics', label: 'Performance', icon: '📈' },
+      { path: '/bankroll', label: 'Bankroll', icon: '💰' }
     ]
   }
 };
@@ -88,12 +71,12 @@ const NAV_STRUCTURE = {
 // Flat links for mobile menu (moved outside component)
 const ALL_NAV_LINKS = [
   { path: '/', label: 'Dashboard', icon: '🏠' },
-  ...NAV_STRUCTURE.picks.items,
-  ...NAV_STRUCTURE.tools.items,
-  ...NAV_STRUCTURE.betting.items,
-  { path: '/esoteric', label: 'Esoteric', icon: '🔮' },
+  { path: '/smash-spots', label: 'Picks', icon: '🎯' },
+  ...NAV_STRUCTURE.research.items,
+  ...NAV_STRUCTURE.myBets.items,
+  { path: '/esoteric', label: 'Hidden Edge', icon: '✨' },
   { path: '/education', label: 'Education', icon: '📚' },
-  ...NAV_STRUCTURE.community.items,
+  { path: '/leaderboard', label: 'Leaderboard', icon: '🏆' },
   { path: '/profile', label: 'Profile', icon: '👤' }
 ];
 
@@ -263,18 +246,13 @@ const Navbar = ({ onOpenNotificationModal }) => {
             <span>Dashboard</span>
           </Link>
 
-          {/* Dropdown menus */}
-          <NavDropdown label="Picks" icon="🔥" items={NAV_STRUCTURE.picks.items} location={location} />
-          <NavDropdown label="Tools" icon="🛠️" items={NAV_STRUCTURE.tools.items} location={location} />
-          <NavDropdown label="My Betting" icon="📊" items={NAV_STRUCTURE.betting.items} location={location} />
-
-          {/* Esoteric - Direct link (unique feature) */}
+          {/* Picks - Direct link (main CTA, has internal tabs) */}
           <Link
-            to="/esoteric"
+            to="/smash-spots"
             style={{
               padding: '8px 14px',
-              backgroundColor: location.pathname === '/esoteric' ? '#00D4FF20' : 'transparent',
-              color: location.pathname === '/esoteric' ? '#00D4FF' : '#9ca3af',
+              backgroundColor: location.pathname === '/smash-spots' ? '#00D4FF20' : 'transparent',
+              color: location.pathname === '/smash-spots' ? '#00D4FF' : '#9ca3af',
               textDecoration: 'none',
               borderRadius: '6px',
               fontSize: '14px',
@@ -283,11 +261,51 @@ const Navbar = ({ onOpenNotificationModal }) => {
               gap: '6px'
             }}
           >
-            <span>🔮</span>
-            <span>Esoteric</span>
+            <span>🎯</span>
+            <span>Picks</span>
           </Link>
 
-          <NavDropdown label="Community" icon="👥" items={NAV_STRUCTURE.community.items} location={location} />
+          {/* Dropdown menus - simplified to just 2 */}
+          <NavDropdown label="Research" icon="🔍" items={NAV_STRUCTURE.research.items} location={location} />
+          <NavDropdown label="My Bets" icon="💼" items={NAV_STRUCTURE.myBets.items} location={location} />
+
+          {/* Hidden Edge - Direct link (unique feature) */}
+          <Link
+            to="/esoteric"
+            style={{
+              padding: '8px 14px',
+              backgroundColor: location.pathname === '/esoteric' ? '#8B5CF620' : 'transparent',
+              color: location.pathname === '/esoteric' ? '#8B5CF6' : '#9ca3af',
+              textDecoration: 'none',
+              borderRadius: '6px',
+              fontSize: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            <span>✨</span>
+            <span>Hidden Edge</span>
+          </Link>
+
+          {/* Leaderboard - Direct link */}
+          <Link
+            to="/leaderboard"
+            style={{
+              padding: '8px 14px',
+              backgroundColor: location.pathname === '/leaderboard' ? '#00D4FF20' : 'transparent',
+              color: location.pathname === '/leaderboard' ? '#00D4FF' : '#9ca3af',
+              textDecoration: 'none',
+              borderRadius: '6px',
+              fontSize: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            <span>🏆</span>
+            <span>Leaderboard</span>
+          </Link>
 
           {/* Global Search - Desktop only */}
           <div className="desktop-only" style={{ marginLeft: '8px' }}>
@@ -388,6 +406,22 @@ const Navbar = ({ onOpenNotificationModal }) => {
             🏠 Dashboard
           </Link>
 
+          {/* Picks - Main CTA */}
+          <Link to="/smash-spots" style={{
+            padding: '12px 14px',
+            backgroundColor: location.pathname === '/smash-spots' ? '#00D4FF20' : 'transparent',
+            color: location.pathname === '/smash-spots' ? '#00D4FF' : '#fff',
+            textDecoration: 'none',
+            borderRadius: '8px',
+            fontSize: '15px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            fontWeight: 'bold'
+          }}>
+            🎯 Picks
+          </Link>
+
           {/* Grouped sections */}
           {Object.entries(NAV_STRUCTURE).map(([key, section]) => (
             <div key={key} style={{ marginTop: '8px' }}>
@@ -416,12 +450,12 @@ const Navbar = ({ onOpenNotificationModal }) => {
             </div>
           ))}
 
-          {/* Esoteric */}
+          {/* Hidden Edge */}
           <Link to="/esoteric" style={{
             padding: '12px 14px',
             marginTop: '8px',
-            backgroundColor: location.pathname === '/esoteric' ? '#00D4FF20' : 'transparent',
-            color: location.pathname === '/esoteric' ? '#00D4FF' : '#fff',
+            backgroundColor: location.pathname === '/esoteric' ? '#8B5CF620' : 'transparent',
+            color: location.pathname === '/esoteric' ? '#8B5CF6' : '#fff',
             textDecoration: 'none',
             borderRadius: '8px',
             fontSize: '15px',
@@ -430,7 +464,23 @@ const Navbar = ({ onOpenNotificationModal }) => {
             gap: '10px',
             fontWeight: 'bold'
           }}>
-            🔮 Esoteric Edge
+            ✨ Hidden Edge
+          </Link>
+
+          {/* Leaderboard */}
+          <Link to="/leaderboard" style={{
+            padding: '12px 14px',
+            backgroundColor: location.pathname === '/leaderboard' ? '#00D4FF20' : 'transparent',
+            color: location.pathname === '/leaderboard' ? '#00D4FF' : '#fff',
+            textDecoration: 'none',
+            borderRadius: '8px',
+            fontSize: '15px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            fontWeight: 'bold'
+          }}>
+            🏆 Leaderboard
           </Link>
 
           {/* Profile */}
