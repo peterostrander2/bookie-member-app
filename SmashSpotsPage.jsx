@@ -199,7 +199,7 @@ const TodaysBestBets = memo(({ sport, onPickClick }) => {
           No Picks Available Right Now
         </div>
         <div style={{ color: '#6B7280', fontSize: '13px' }}>
-          Check back soon — new AI picks are generated every 2 hours.
+          Check back soon — new SMASH picks drop every 2 hours.
         </div>
       </div>
     );
@@ -494,11 +494,11 @@ const SmashSpotsPage = () => {
             color: '#fff', margin: 0, fontSize: '28px', fontWeight: 'bold',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px'
           }}>
-            <span style={{ fontSize: '32px' }}>🎯</span>
-            AI Picks
+            <span style={{ fontSize: '32px' }}>🔥</span>
+            SMASH Spots
           </h1>
           <p style={{ color: '#6B7280', margin: '8px 0 0', fontSize: '14px' }}>
-            8 ML Models + 8 Pillars • Updated Every 2 Hours
+            Highest conviction picks • 8 ML Models + 8 Pillars
           </p>
         </div>
 

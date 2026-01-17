@@ -463,7 +463,7 @@ const ConsensusMeterPage = () => {
           border: '1px solid #333'
         }}>
           <p style={{ color: '#9ca3af', fontSize: '13px', margin: 0, textAlign: 'center' }}>
-            💡 Consensus meter integrates automatically with AI Picks.
+            💡 Consensus meter integrates automatically with SMASH Spots.
             Each pick shows its alignment status in real-time.
           </p>
         </div>

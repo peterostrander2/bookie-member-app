@@ -362,13 +362,20 @@ const BankrollManager = () => {
               }}>
                 <div style={{ padding: '15px', backgroundColor: '#0a0a0f', borderRadius: '8px' }}>
                   <div style={{ color: '#6b7280', fontSize: '11px', marginBottom: '5px' }}>EDGE</div>
-                  <div style={{
-                    color: riskAnalysis.edge > 0 ? '#00FF88' : '#FF4444',
-                    fontSize: '24px',
-                    fontWeight: 'bold'
-                  }}>
-                    {riskAnalysis.edge > 0 ? '+' : ''}{riskAnalysis.edge}%
-                  </div>
+                  {stats && stats.totalBets > 0 ? (
+                    <div style={{
+                      color: riskAnalysis.edge > 0 ? '#00FF88' : '#FF4444',
+                      fontSize: '24px',
+                      fontWeight: 'bold'
+                    }}>
+                      {riskAnalysis.edge > 0 ? '+' : ''}{riskAnalysis.edge.toFixed(2)}%
+                    </div>
+                  ) : (
+                    <div style={{ color: '#6b7280', fontSize: '14px' }}>
+                      N/A
+                      <div style={{ fontSize: '11px', marginTop: '4px' }}>Place bets to calculate</div>
+                    </div>
+                  )}
                 </div>
                 <div style={{ padding: '15px', backgroundColor: '#0a0a0f', borderRadius: '8px' }}>
                   <div style={{ color: '#6b7280', fontSize: '11px', marginBottom: '5px' }}>RISK OF RUIN</div>

@@ -361,7 +361,7 @@ const ParlayBuilder = () => {
                 <div style={{ padding: '40px', textAlign: 'center' }}>
                   <span style={{ fontSize: '40px', display: 'block', marginBottom: '12px' }}>🎫</span>
                   <p style={{ color: '#6b7280', fontSize: '14px' }}>
-                    Add legs from AI Picks or use the form below
+                    Add legs from SMASH Spots or use the form below
                   </p>
                 </div>
               ) : (

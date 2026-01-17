@@ -34,7 +34,7 @@ const DEMO_PICKS = [
 
 // Quick links config (moved outside component to prevent recreation on every render)
 const QUICK_LINKS = [
-  { path: '/smash-spots', icon: '🎯', title: 'AI Picks', desc: "Today's AI picks with full breakdown", color: '#10B981' },
+  { path: '/smash-spots', icon: '🔥', title: 'SMASH Spots', desc: "Today's highest conviction picks", color: '#10B981' },
   { path: '/sharp', icon: '🦈', title: 'Sharp Money', desc: 'Track where pros are betting', color: '#10B981' },
   { path: '/odds', icon: '📊', title: 'Best Odds Finder', desc: 'Compare lines across 8+ sportsbooks', color: '#00D4FF', badge: '8+ BOOKS', featured: true },
   { path: '/injuries', icon: '🏥', title: 'Injuries', desc: 'Usage vacuum & beneficiaries', color: '#EF4444' },
@@ -58,6 +58,8 @@ const Dashboard = () => {
   const [lastUpdated, setLastUpdated] = useState(null);
   const [yesterdayPick, setYesterdayPick] = useState(null);
   const [sharpAlert, setSharpAlert] = useState(null);
+  const [significantInjuries, setSignificantInjuries] = useState([]);
+  const [recentWins, setRecentWins] = useState([]);
 
   // Progressive disclosure state
   const [showGettingStarted, setShowGettingStarted] = useState(!hasVisitedBefore());
@@ -257,13 +259,35 @@ const Dashboard = () => {
 
   const fetchData = async () => {
     try {
-      const [healthData, energyData] = await Promise.all([
+      const [healthData, energyData, injuryData] = await Promise.all([
         api.getHealth().catch(() => ({ status: 'offline' })),
-        api.getTodayEnergy().catch(() => null)
+        api.getTodayEnergy().catch(() => null),
+        api.getInjuries(activeSport).catch(() => null)
       ]);
       setHealth(healthData);
       setTodayEnergy(energyData);
       setLastUpdated(new Date());
+
+      // Process significant injuries (high impact only)
+      if (injuryData && Array.isArray(injuryData)) {
+        const significant = injuryData
+          .filter(inj => inj.impact === 'high' || inj.status === 'Out' || inj.status === 'Doubtful')
+          .slice(0, 3);
+        setSignificantInjuries(significant);
+      } else if (injuryData?.injuries) {
+        const significant = injuryData.injuries
+          .filter(inj => inj.impact === 'high' || inj.status === 'Out' || inj.status === 'Doubtful')
+          .slice(0, 3);
+        setSignificantInjuries(significant);
+      }
+
+      // Load recent wins from tracked picks
+      const picks = getAllPicks();
+      const todayStr = new Date().toDateString();
+      const recentWinPicks = picks
+        .filter(p => p.result === 'WIN' && new Date(p.timestamp).toDateString() === todayStr)
+        .slice(0, 5);
+      setRecentWins(recentWinPicks);
     } catch (err) {
       console.error(err);
     }
@@ -300,7 +324,7 @@ const Dashboard = () => {
             <div>
               <h1 style={{ color: '#fff', fontSize: '28px', margin: '0 0 5px' }}>Member Dashboard</h1>
               <p style={{ color: '#6b7280', margin: 0, fontSize: '14px' }}>
-                AI picks using 17 signals: 8 ML models + 4 esoteric + 5 external data
+                SMASH picks powered by 17 signals: 8 ML models + 4 esoteric + 5 external data
               </p>
             </div>
 
@@ -737,6 +761,94 @@ const Dashboard = () => {
           </div>
         )}
 
+        {/* Injury Alert Banner */}
+        {significantInjuries.length > 0 && (
+          <Link to="/injuries" style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            padding: '12px 16px',
+            backgroundColor: '#EF444415',
+            border: '1px solid #EF444440',
+            borderRadius: '10px',
+            marginBottom: '20px',
+            textDecoration: 'none'
+          }}>
+            <span style={{ fontSize: '20px' }}>🏥</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ color: '#EF4444', fontWeight: 'bold', fontSize: '13px' }}>
+                {significantInjuries.length} Significant Injur{significantInjuries.length === 1 ? 'y' : 'ies'} Today
+              </div>
+              <div style={{ color: '#9ca3af', fontSize: '12px' }}>
+                {significantInjuries.slice(0, 2).map(inj => inj.player || inj.name).join(', ')}
+                {significantInjuries.length > 2 && ` +${significantInjuries.length - 2} more`}
+              </div>
+            </div>
+            <span style={{ color: '#EF4444', fontSize: '12px' }}>View Affected Picks →</span>
+          </Link>
+        )}
+
+        {/* Quick Wins Ticker */}
+        {recentWins.length > 0 && (
+          <div style={{
+            backgroundColor: '#00FF8810',
+            border: '1px solid #00FF8830',
+            borderRadius: '10px',
+            padding: '10px 16px',
+            marginBottom: '20px',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '16px',
+              animation: 'ticker 20s linear infinite'
+            }}>
+              <span style={{ color: '#00FF88', fontWeight: 'bold', fontSize: '12px', whiteSpace: 'nowrap' }}>
+                🔥 TODAY'S WINS:
+              </span>
+              {recentWins.map((win, i) => (
+                <span key={i} style={{ color: '#fff', fontSize: '12px', whiteSpace: 'nowrap' }}>
+                  {win.player || win.team} {win.side} {win.line} ✅
+                  {i < recentWins.length - 1 && <span style={{ color: '#333', margin: '0 8px' }}>|</span>}
+                </span>
+              ))}
+            </div>
+            <style>{`
+              @keyframes ticker {
+                0% { transform: translateX(0); }
+                100% { transform: translateX(-50%); }
+              }
+            `}</style>
+          </div>
+        )}
+
+        {/* Sharp Money Alert - when significant divergence */}
+        {sharpAlert && sharpAlert.line_move && Math.abs(sharpAlert.line_move) >= 1 && (
+          <Link to="/sharp" style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            padding: '12px 16px',
+            backgroundColor: '#00D4FF15',
+            border: '1px solid #00D4FF40',
+            borderRadius: '10px',
+            marginBottom: '20px',
+            textDecoration: 'none'
+          }}>
+            <span style={{ fontSize: '20px' }}>🦈</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ color: '#00D4FF', fontWeight: 'bold', fontSize: '13px' }}>
+                Sharp Money Alert
+              </div>
+              <div style={{ color: '#9ca3af', fontSize: '12px' }}>
+                {sharpAlert.team || sharpAlert.matchup}: Line moved {sharpAlert.line_move > 0 ? '+' : ''}{sharpAlert.line_move} pts
+              </div>
+            </div>
+            <span style={{ color: '#00D4FF', fontSize: '12px' }}>See All Sharp Moves →</span>
+          </Link>
+        )}
+
         {/* Sport Selector + Sharp Money Widget */}
         <div style={{ marginBottom: '20px' }}>
           <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
@@ -838,7 +950,7 @@ const Dashboard = () => {
                 {/* Info tooltip */}
                 <div style={{ position: 'relative', display: 'inline-block' }}>
                   <span
-                    title="HOW TO USE: When AI picks align with favorable cosmic conditions (moon phase, numerology), confidence increases. Example: A STRONG pick during a Bullish moon phase becomes even more compelling. Use these to CONFIRM picks, not as standalone signals."
+                    title="HOW TO USE: When SMASH picks align with favorable cosmic conditions (moon phase, numerology), confidence increases. Example: A STRONG pick during a Bullish moon phase becomes even more compelling. Use these to CONFIRM picks, not as standalone signals."
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
@@ -926,7 +1038,7 @@ const Dashboard = () => {
                       </div>
                       {todayEnergy.betting_outlook === 'BULLISH' ? (
                         <div style={{ color: '#9ca3af', fontSize: '12px', lineHeight: '1.5' }}>
-                          <span style={{ color: '#00FF88' }}>Favorable conditions today.</span> AI picks with 75%+ confidence
+                          <span style={{ color: '#00FF88' }}>Favorable conditions today.</span> SMASH picks with 75%+ confidence
                           get extra confirmation. Look for underdogs and overs.
                         </div>
                       ) : todayEnergy.betting_outlook === 'BEARISH' ? (
@@ -936,7 +1048,7 @@ const Dashboard = () => {
                         </div>
                       ) : (
                         <div style={{ color: '#9ca3af', fontSize: '12px', lineHeight: '1.5' }}>
-                          <span style={{ color: '#FFD700' }}>Neutral conditions.</span> Stick to standard AI picks.
+                          <span style={{ color: '#FFD700' }}>Neutral conditions.</span> Stick to standard SMASH picks.
                           {todayEnergy.recommendation || ' No special adjustments needed.'}
                         </div>
                       )}
@@ -1083,8 +1195,8 @@ const Dashboard = () => {
               }}>
                 <span style={{ color: '#00FF88', fontWeight: 'bold', fontSize: '16px' }}>1</span>
                 <div>
-                  <div style={{ color: '#00FF88', fontWeight: 'bold', fontSize: '13px' }}>AI Picks</div>
-                  <div style={{ color: '#9ca3af', fontSize: '11px' }}>Today's AI picks</div>
+                  <div style={{ color: '#00FF88', fontWeight: 'bold', fontSize: '13px' }}>SMASH Spots</div>
+                  <div style={{ color: '#9ca3af', fontSize: '11px' }}>Today's hot picks</div>
                 </div>
               </Link>
 
