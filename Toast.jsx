@@ -37,6 +37,8 @@ const Toast = ({ id, message, type = 'info', onClose }) => {
 
   return (
     <div
+      role="alert"
+      aria-live="polite"
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -53,10 +55,12 @@ const Toast = ({ id, message, type = 'info', onClose }) => {
         maxWidth: '400px'
       }}
     >
-      <span style={{ fontSize: '18px' }}>{style.icon}</span>
+      <span style={{ fontSize: '18px' }} aria-hidden="true">{style.icon}</span>
       <span style={{ flex: 1, color: '#fff' }}>{message}</span>
       <button
         onClick={() => onClose(id)}
+        type="button"
+        aria-label="Dismiss notification"
         style={{
           background: 'none',
           border: 'none',

@@ -1,5 +1,13 @@
 import React from 'react';
 
+// Inject spin animation
+if (typeof document !== 'undefined' && !document.getElementById('button-spin-styles')) {
+  const style = document.createElement('style');
+  style.id = 'button-spin-styles';
+  style.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
+  document.head.appendChild(style);
+}
+
 const buttonStyles = {
   base: {
     padding: '12px 24px',
@@ -45,19 +53,41 @@ const Button = ({
   variant = 'primary',
   size = 'medium',
   disabled = false,
+  loading = false,
+  ariaLabel,
   onClick
 }) => {
+  const isDisabled = disabled || loading;
   const style = {
     ...buttonStyles.base,
     ...buttonStyles[variant],
     ...(size === 'small' ? buttonStyles.small : {}),
     ...(size === 'large' ? buttonStyles.large : {}),
-    ...(disabled ? buttonStyles.disabled : {}),
+    ...(isDisabled ? buttonStyles.disabled : {}),
   };
 
   return (
-    <button style={style} disabled={disabled} onClick={onClick}>
-      {children}
+    <button
+      style={style}
+      disabled={isDisabled}
+      onClick={onClick}
+      aria-label={ariaLabel}
+      aria-busy={loading}
+      type="button"
+    >
+      {loading ? (
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{
+            width: '14px',
+            height: '14px',
+            border: '2px solid currentColor',
+            borderTopColor: 'transparent',
+            borderRadius: '50%',
+            animation: 'spin 0.8s linear infinite'
+          }} />
+          Loading...
+        </span>
+      ) : children}
     </button>
   );
 };
@@ -80,6 +110,14 @@ export default {
     disabled: {
       control: 'boolean',
       description: 'Whether the button is disabled',
+    },
+    loading: {
+      control: 'boolean',
+      description: 'Whether the button shows loading state',
+    },
+    ariaLabel: {
+      control: 'text',
+      description: 'Accessible label for screen readers',
     },
     onClick: { action: 'clicked' },
   },
@@ -127,5 +165,21 @@ export const Disabled = {
     children: 'Unavailable',
     variant: 'primary',
     disabled: true,
+  },
+};
+
+export const Loading = {
+  args: {
+    children: 'Place Bet',
+    variant: 'primary',
+    loading: true,
+  },
+};
+
+export const WithAriaLabel = {
+  args: {
+    children: '♥',
+    variant: 'secondary',
+    ariaLabel: 'Add to favorites',
   },
 };
