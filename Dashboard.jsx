@@ -56,6 +56,8 @@ const Dashboard = () => {
   const [topPick, setTopPick] = useState(null);
   const [topPickLoading, setTopPickLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [yesterdayPick, setYesterdayPick] = useState(null);
+  const [sharpAlert, setSharpAlert] = useState(null);
 
   // Progressive disclosure state
   const [showGettingStarted, setShowGettingStarted] = useState(!hasVisitedBefore());
@@ -68,10 +70,75 @@ const Dashboard = () => {
     markAsVisited();
   }, []);
 
+  // Load yesterday's graded pick from tracked history
+  const loadYesterdayPick = useCallback(() => {
+    try {
+      const picks = getAllPicks();
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toDateString();
+
+      // Find yesterday's graded picks with results
+      const yesterdayPicks = picks.filter(p => {
+        const pickDate = new Date(p.timestamp).toDateString();
+        return pickDate === yesterdayStr && p.result;
+      });
+
+      if (yesterdayPicks.length > 0) {
+        // Get the highest confidence pick from yesterday
+        const sorted = [...yesterdayPicks].sort((a, b) =>
+          (b.confidence || b.tier_score || 0) - (a.confidence || a.tier_score || 0)
+        );
+        const best = sorted[0];
+
+        // Calculate recent track record (last 30 days)
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const recentPicks = picks.filter(p =>
+          new Date(p.timestamp) >= thirtyDaysAgo && p.result
+        );
+        const wins = recentPicks.filter(p => p.result === 'WIN').length;
+        const total = recentPicks.length;
+
+        setYesterdayPick({
+          ...best,
+          trackRecord: { wins, total }
+        });
+      }
+    } catch (err) {
+      console.error('Error loading yesterday pick:', err);
+    }
+  }, []);
+
+  // Fetch sharp money alert as fallback
+  const fetchSharpAlert = useCallback(async () => {
+    try {
+      const data = await api.getSharpMoney(activeSport);
+      if (data && data.movements && data.movements.length > 0) {
+        // Get the most significant sharp move
+        const sorted = [...data.movements].sort((a, b) =>
+          Math.abs(b.line_move || 0) - Math.abs(a.line_move || 0)
+        );
+        setSharpAlert(sorted[0]);
+      } else if (data && Array.isArray(data) && data.length > 0) {
+        const sorted = [...data].sort((a, b) =>
+          Math.abs(b.line_move || 0) - Math.abs(a.line_move || 0)
+        );
+        setSharpAlert(sorted[0]);
+      }
+    } catch (err) {
+      console.error('Error fetching sharp alert:', err);
+    }
+  }, [activeSport]);
+
   // Memoized fetch function to prevent recreation
   const fetchTopPick = useCallback(async () => {
     setTopPickLoading(true);
     try {
+      // Also load fallback data
+      loadYesterdayPick();
+      fetchSharpAlert();
+
       // Fetch best bets from user's favorite sport
       const data = await api.getBestBets(activeSport);
       let allPicks = [];
@@ -119,7 +186,7 @@ const Dashboard = () => {
       setTopPick({ ...sportDemo, isDemo: true });
     }
     setTopPickLoading(false);
-  }, [activeSport]);
+  }, [activeSport, loadYesterdayPick, fetchSharpAlert]);
 
   // Refetch top pick when favorite sport changes
   useEffect(() => {
@@ -410,34 +477,114 @@ const Dashboard = () => {
               <Skeleton width={100} height={40} />
             </div>
           ) : topPick?.noQualifyingPicks ? (
-            // No picks meet the 65%+ threshold - don't feature low-quality picks
+            // No high-conviction picks - show yesterday's result or sharp alert instead
             <div style={{ display: 'flex', alignItems: 'center', gap: '20px', position: 'relative', zIndex: 1 }}>
-              <div style={{
-                width: '70px',
-                height: '70px',
-                borderRadius: '50%',
-                backgroundColor: '#1a1a2e',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: '2px dashed #4B5563'
-              }}>
-                <span style={{ fontSize: '28px' }}>🔍</span>
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ color: '#F59E0B', fontSize: '14px', fontWeight: 'bold', marginBottom: '6px' }}>
-                  No High-Conviction Picks Right Now
-                </div>
-                <div style={{ color: '#9ca3af', fontSize: '13px', marginBottom: '4px' }}>
-                  {topPick.totalPicks} picks available but none meet our 65%+ threshold for featuring.
-                </div>
-                <div style={{ color: '#6b7280', fontSize: '12px' }}>
-                  We only highlight LEAN tier (65%+) or better to protect your bankroll.
-                </div>
-              </div>
-              <Link to="/smash-spots" style={{
-                backgroundColor: '#4B5563',
-                color: '#fff',
+              {yesterdayPick ? (
+                // Show yesterday's result
+                <>
+                  <div style={{
+                    width: '70px',
+                    height: '70px',
+                    borderRadius: '50%',
+                    backgroundColor: yesterdayPick.result === 'WIN' ? '#00FF8820' : yesterdayPick.result === 'LOSS' ? '#FF444420' : '#FFD70020',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: `2px solid ${yesterdayPick.result === 'WIN' ? '#00FF8850' : yesterdayPick.result === 'LOSS' ? '#FF444450' : '#FFD70050'}`
+                  }}>
+                    <span style={{ fontSize: '28px' }}>{yesterdayPick.result === 'WIN' ? '✅' : yesterdayPick.result === 'LOSS' ? '❌' : '➖'}</span>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ color: '#9ca3af', fontSize: '11px', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      Yesterday's Pick
+                    </div>
+                    <div style={{ color: '#fff', fontSize: '16px', fontWeight: 'bold', marginBottom: '4px' }}>
+                      {yesterdayPick.player || yesterdayPick.team || yesterdayPick.matchup}
+                      {yesterdayPick.side && <span style={{ color: '#00D4FF' }}> {yesterdayPick.side}</span>}
+                      {yesterdayPick.line && <span> {yesterdayPick.line}</span>}
+                      <span style={{
+                        marginLeft: '8px',
+                        color: yesterdayPick.result === 'WIN' ? '#00FF88' : yesterdayPick.result === 'LOSS' ? '#FF4444' : '#FFD700',
+                        fontWeight: 'bold'
+                      }}>
+                        {yesterdayPick.result === 'WIN' ? 'WON!' : yesterdayPick.result === 'LOSS' ? 'LOST' : 'PUSH'}
+                      </span>
+                    </div>
+                    {yesterdayPick.trackRecord && yesterdayPick.trackRecord.total > 0 && (
+                      <div style={{ color: '#6b7280', fontSize: '12px' }}>
+                        <span style={{ color: '#00FF88' }}>{yesterdayPick.trackRecord.wins}-{yesterdayPick.trackRecord.total - yesterdayPick.trackRecord.wins}</span>
+                        {' '}last 30 days ({((yesterdayPick.trackRecord.wins / yesterdayPick.trackRecord.total) * 100).toFixed(0)}% win rate)
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : sharpAlert ? (
+                // Show sharp money alert as fallback
+                <>
+                  <div style={{
+                    width: '70px',
+                    height: '70px',
+                    borderRadius: '50%',
+                    backgroundColor: '#00D4FF20',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: '2px solid #00D4FF50'
+                  }}>
+                    <span style={{ fontSize: '28px' }}>🦈</span>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                      <span style={{
+                        backgroundColor: '#00D4FF25',
+                        color: '#00D4FF',
+                        padding: '2px 8px',
+                        borderRadius: '4px',
+                        fontSize: '10px',
+                        fontWeight: 'bold'
+                      }}>SHARP ALERT</span>
+                    </div>
+                    <div style={{ color: '#fff', fontSize: '16px', fontWeight: 'bold', marginBottom: '4px' }}>
+                      {sharpAlert.team || sharpAlert.matchup || 'Sharp Move Detected'}
+                      {sharpAlert.side && <span style={{ color: '#00D4FF' }}> {sharpAlert.side}</span>}
+                    </div>
+                    <div style={{ color: '#9ca3af', fontSize: '12px' }}>
+                      Line moved {sharpAlert.line_move > 0 ? '+' : ''}{sharpAlert.line_move} pts
+                      {sharpAlert.sharp_percentage && <span> • {sharpAlert.sharp_percentage}% sharp money</span>}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                // Default fallback
+                <>
+                  <div style={{
+                    width: '70px',
+                    height: '70px',
+                    borderRadius: '50%',
+                    backgroundColor: '#1a1a2e',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: '2px dashed #4B5563'
+                  }}>
+                    <span style={{ fontSize: '28px' }}>🔍</span>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ color: '#F59E0B', fontSize: '14px', fontWeight: 'bold', marginBottom: '6px' }}>
+                      Scanning for High-Conviction Plays
+                    </div>
+                    <div style={{ color: '#9ca3af', fontSize: '13px', marginBottom: '4px' }}>
+                      {topPick.totalPicks} picks being analyzed. Check back when games get closer.
+                    </div>
+                    <div style={{ color: '#6b7280', fontSize: '12px' }}>
+                      We only feature 65%+ confidence picks to protect your bankroll.
+                    </div>
+                  </div>
+                </>
+              )}
+              <Link to={yesterdayPick ? "/analytics" : sharpAlert ? "/sharp" : "/smash-spots"} style={{
+                backgroundColor: yesterdayPick ? '#00FF88' : sharpAlert ? '#00D4FF' : '#4B5563',
+                color: '#000',
                 padding: '14px 24px',
                 borderRadius: '10px',
                 fontWeight: 'bold',
@@ -450,7 +597,7 @@ const Dashboard = () => {
               }}
               onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
               onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
-                Browse All Picks
+                {yesterdayPick ? 'View Stats' : sharpAlert ? 'Sharp Alerts' : 'Browse Picks'}
                 <span>→</span>
               </Link>
             </div>
@@ -680,13 +827,18 @@ const Dashboard = () => {
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <span style={{ fontSize: '20px' }}>✨</span>
-                <span style={{ color: '#8B5CF6', fontWeight: 'bold', fontSize: '14px' }}>
-                  Esoteric Signals
-                </span>
+                <div>
+                  <span style={{ color: '#8B5CF6', fontWeight: 'bold', fontSize: '14px' }}>
+                    Hidden Edge
+                  </span>
+                  <span style={{ color: '#6b7280', fontSize: '11px', marginLeft: '8px' }}>
+                    Cosmic confirmation signals
+                  </span>
+                </div>
                 {/* Info tooltip */}
                 <div style={{ position: 'relative', display: 'inline-block' }}>
                   <span
-                    title="Esoteric signals use numerology, moon phases, and cosmic alignments to add an extra edge. These are supplementary to AI analysis - use them to confirm or enhance picks, not as primary signals."
+                    title="HOW TO USE: When AI picks align with favorable cosmic conditions (moon phase, numerology), confidence increases. Example: A STRONG pick during a Bullish moon phase becomes even more compelling. Use these to CONFIRM picks, not as standalone signals."
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
@@ -758,21 +910,54 @@ const Dashboard = () => {
                   <div style={{ color: '#9ca3af', fontSize: '12px' }}>{todayEnergy.zodiac_meaning || 'Lean UNDERS'}</div>
                 </div>
 
-                {/* Additional insight row */}
-                {todayEnergy.recommendation && (
-                  <div style={{
-                    gridColumn: '1 / -1',
-                    textAlign: 'center',
-                    padding: '12px',
-                    backgroundColor: '#8B5CF615',
-                    borderRadius: '8px',
-                    marginTop: '5px'
-                  }}>
-                    <span style={{ color: '#9ca3af', fontSize: '12px' }}>
-                      💡 {todayEnergy.recommendation}
-                    </span>
+                {/* How to use section */}
+                <div style={{
+                  gridColumn: '1 / -1',
+                  backgroundColor: '#8B5CF610',
+                  borderRadius: '8px',
+                  padding: '14px',
+                  marginTop: '8px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                    <span style={{ fontSize: '16px' }}>💡</span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ color: '#8B5CF6', fontWeight: 'bold', fontSize: '12px', marginBottom: '6px' }}>
+                        HOW TO USE THIS
+                      </div>
+                      {todayEnergy.betting_outlook === 'BULLISH' ? (
+                        <div style={{ color: '#9ca3af', fontSize: '12px', lineHeight: '1.5' }}>
+                          <span style={{ color: '#00FF88' }}>Favorable conditions today.</span> AI picks with 75%+ confidence
+                          get extra confirmation. Look for underdogs and overs.
+                        </div>
+                      ) : todayEnergy.betting_outlook === 'BEARISH' ? (
+                        <div style={{ color: '#9ca3af', fontSize: '12px', lineHeight: '1.5' }}>
+                          <span style={{ color: '#FF4444' }}>Challenging energy today.</span> Only play SMASH tier (85%+) picks.
+                          Favor favorites and unders. Consider smaller unit sizes.
+                        </div>
+                      ) : (
+                        <div style={{ color: '#9ca3af', fontSize: '12px', lineHeight: '1.5' }}>
+                          <span style={{ color: '#FFD700' }}>Neutral conditions.</span> Stick to standard AI picks.
+                          {todayEnergy.recommendation || ' No special adjustments needed.'}
+                        </div>
+                      )}
+                    </div>
+                    <Link
+                      to="/esoteric"
+                      style={{
+                        backgroundColor: '#8B5CF620',
+                        color: '#8B5CF6',
+                        padding: '6px 12px',
+                        borderRadius: '6px',
+                        fontSize: '11px',
+                        fontWeight: 'bold',
+                        textDecoration: 'none',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      Learn More →
+                    </Link>
                   </div>
-                )}
+                </div>
               </div>
             )}
           </div>
