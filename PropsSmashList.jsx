@@ -45,6 +45,56 @@ const PILLARS = [
   { id: 'pace_tempo', name: 'Pace/Tempo', desc: 'Game speed matchup' }
 ];
 
+// ============================================================================
+// STYLE CONSTANTS - Moved outside components to avoid recreation on each render
+// These are static styles used repeatedly in list items (high performance impact)
+// ============================================================================
+
+// Badge style for key stats (used 4+ times per card in map)
+const STAT_BADGE_STYLE = {
+  backgroundColor: '#0f0f1a',
+  padding: '4px 8px',
+  borderRadius: '4px',
+  fontSize: '10px',
+  color: '#6B7280'
+};
+
+// Badge style with auto margin for bookmaker badge
+const STAT_BADGE_STYLE_RIGHT = {
+  ...STAT_BADGE_STYLE,
+  marginLeft: 'auto'
+};
+
+// Container for expanded breakdown section
+const BREAKDOWN_CONTAINER_STYLE = {
+  backgroundColor: '#0f0f1a',
+  borderRadius: '8px',
+  padding: '16px',
+  marginBottom: '12px',
+  borderLeft: '3px solid #8B5CF6'
+};
+
+// Key stats row container
+const KEY_STATS_ROW_STYLE = {
+  display: 'flex',
+  gap: '6px',
+  marginBottom: '10px',
+  flexWrap: 'wrap'
+};
+
+// Filter button base style
+const FILTER_BUTTON_STYLE = {
+  backgroundColor: '#1a1a2e',
+  color: '#fff',
+  border: '1px solid #4B5563',
+  borderRadius: '6px',
+  padding: '4px 8px',
+  fontSize: '12px',
+  cursor: 'pointer'
+};
+
+// ============================================================================
+
 // Line movement indicator component with explanatory tooltips
 // Uses REAL data from API - pick.line_movement object
 const LineMovement = memo(({ pick }) => {
@@ -605,24 +655,24 @@ const PropCard = memo(({ pick }) => {
 
       {/* TERTIARY: Key stats - only show if backend provides real data */}
       {hasKeyStats && (
-        <div style={{ display: 'flex', gap: '6px', marginBottom: '10px', flexWrap: 'wrap' }}>
+        <div style={KEY_STATS_ROW_STYLE}>
           {keyStats.avg && (
-            <div style={{ backgroundColor: '#0f0f1a', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', color: '#6B7280' }}>
+            <div style={STAT_BADGE_STYLE}>
               <span style={{ color: '#9CA3AF' }}>{keyStats.avg}</span>
             </div>
           )}
           {keyStats.trend && (
-            <div style={{ backgroundColor: '#0f0f1a', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', color: '#6B7280' }}>
+            <div style={STAT_BADGE_STYLE}>
               {keyStats.trend}
             </div>
           )}
           {keyStats.matchup && (
-            <div style={{ backgroundColor: '#0f0f1a', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', color: '#6B7280' }}>
+            <div style={STAT_BADGE_STYLE}>
               {keyStats.matchup}
             </div>
           )}
           {pick.bookmaker && (
-            <div style={{ backgroundColor: '#0f0f1a', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', color: '#6B7280', marginLeft: 'auto' }}>
+            <div style={STAT_BADGE_STYLE_RIGHT}>
               via {pick.bookmaker}
             </div>
           )}
@@ -642,10 +692,7 @@ const PropCard = memo(({ pick }) => {
 
       {/* Enhanced "Why?" Breakdown - Only shows REAL data from backend */}
       {expanded && (hasKeyStats || hasModelData || pick.jarvis_boost > 0) && (
-        <div style={{
-          backgroundColor: '#0f0f1a', borderRadius: '8px', padding: '16px',
-          marginBottom: '12px', borderLeft: '3px solid #8B5CF6'
-        }}>
+        <div style={BREAKDOWN_CONTAINER_STYLE}>
           {/* KEY FACTORS - Only show if backend provides key_stats */}
           {hasKeyStats && (
             <div style={{
