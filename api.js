@@ -231,9 +231,42 @@ export const api = {
       stat_type: item.stat_type || item.market?.replace('player_', '')
     });
 
-    // Backend returns props and game_picks nested
-    const propsArray = data.props?.picks || [];
-    const gamePicksArray = data.game_picks?.picks || [];
+    // Helper to extract array from various response formats
+    const extractArray = (source) => {
+      if (!source) return [];
+      if (Array.isArray(source)) return source;
+      if (source.picks && Array.isArray(source.picks)) return source.picks;
+      if (source.data && Array.isArray(source.data)) return source.data;
+      return [];
+    };
+
+    // Handle multiple backend response formats:
+    // 1. { props: { picks: [...] }, game_picks: { picks: [...] } } - nested
+    // 2. { props: [...], game_picks: [...] } - direct arrays
+    // 3. { picks: [...] } - flat array
+    // 4. [...] - direct array response
+    let propsArray = [];
+    let gamePicksArray = [];
+
+    if (Array.isArray(data)) {
+      // Direct array response - split by market type
+      propsArray = data.filter(p => p.player_name || p.player || p.market?.includes('player'));
+      gamePicksArray = data.filter(p => !p.player_name && !p.player && !p.market?.includes('player'));
+    } else if (data.props || data.game_picks) {
+      // Has props/game_picks keys
+      propsArray = extractArray(data.props);
+      gamePicksArray = extractArray(data.game_picks);
+    } else if (data.picks) {
+      // Flat picks array - split by type
+      const allPicks = extractArray(data.picks);
+      propsArray = allPicks.filter(p => p.player_name || p.player || p.market?.includes('player'));
+      gamePicksArray = allPicks.filter(p => !p.player_name && !p.player && !p.market?.includes('player'));
+    } else if (data.data) {
+      // Legacy data format
+      const allPicks = extractArray(data.data);
+      propsArray = allPicks.filter(p => p.player_name || p.player || p.market?.includes('player'));
+      gamePicksArray = allPicks.filter(p => !p.player_name && !p.player && !p.market?.includes('player'));
+    }
 
     // Normalize all picks
     const normalizedProps = propsArray.map(normalizePick);
@@ -283,14 +316,14 @@ export const api = {
     return this.getProps(sport);
   },
 
-  // Get live odds for line shopping (BestOdds.jsx, Splits.jsx)
+  // Get live lines for line shopping (BestOdds.jsx, Splits.jsx)
   async getLiveOdds(sport = 'NBA') {
     try {
-      const resp = await authFetch(`${API_BASE_URL}/live/odds/${sport.toUpperCase()}`);
-      if (!resp.ok) return { games: [], odds: [] };
+      const resp = await authFetch(`${API_BASE_URL}/live/lines/${sport.toUpperCase()}`);
+      if (!resp.ok) return { games: [], lines: [] };
       return resp.json();
     } catch {
-      return { games: [], odds: [] };
+      return { games: [], lines: [] };
     }
   },
 
