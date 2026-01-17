@@ -30,6 +30,62 @@ const PILLARS = [
   { id: 'pace_tempo', name: 'Pace/Tempo' }
 ];
 
+// ============================================================================
+// STYLE CONSTANTS - Moved outside components to avoid recreation on each render
+// These are static styles used repeatedly in list items (high performance impact)
+// ============================================================================
+
+// Badge style for key stats (used 4+ times per card in map)
+const STAT_BADGE_STYLE = {
+  backgroundColor: '#0f0f1a',
+  padding: '4px 8px',
+  borderRadius: '4px',
+  fontSize: '10px',
+  color: '#6B7280'
+};
+
+// Badge style with auto margin for bookmaker badge
+const STAT_BADGE_STYLE_RIGHT = {
+  ...STAT_BADGE_STYLE,
+  marginLeft: 'auto'
+};
+
+// Container for expanded breakdown section
+const BREAKDOWN_CONTAINER_STYLE = {
+  backgroundColor: '#0f0f1a',
+  borderRadius: '8px',
+  padding: '16px',
+  marginBottom: '12px',
+  borderLeft: '3px solid #8B5CF6'
+};
+
+// Key stats row container
+const KEY_STATS_ROW_STYLE = {
+  display: 'flex',
+  gap: '6px',
+  marginBottom: '10px',
+  flexWrap: 'wrap'
+};
+
+// AI Model/Pillar badge base style (used in maps)
+const MODEL_BADGE_ACTIVE = {
+  padding: '4px 8px',
+  borderRadius: '4px',
+  fontSize: '10px',
+  backgroundColor: 'rgba(16, 185, 129, 0.2)',
+  color: '#10B981'
+};
+
+const MODEL_BADGE_INACTIVE = {
+  padding: '4px 8px',
+  borderRadius: '4px',
+  fontSize: '10px',
+  backgroundColor: '#1a1a2e',
+  color: '#6B7280'
+};
+
+// ============================================================================
+
 // Confidence tier configuration with historical win rates
 const getTierConfig = (conf) => {
   if (conf >= 85) return {
@@ -370,18 +426,18 @@ const PickCard = memo(({ pick, injuries = [] }) => {
       </div>
 
       {/* TERTIARY: Key stats - smallest, de-emphasized */}
-      <div style={{ display: 'flex', gap: '6px', marginBottom: '10px', flexWrap: 'wrap' }}>
-        <div style={{ backgroundColor: '#0f0f1a', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', color: '#6B7280' }}>
+      <div style={KEY_STATS_ROW_STYLE}>
+        <div style={STAT_BADGE_STYLE}>
           <span style={{ color: '#9CA3AF' }}>{keyStats.stat1}</span>
         </div>
-        <div style={{ backgroundColor: '#0f0f1a', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', color: '#6B7280' }}>
+        <div style={STAT_BADGE_STYLE}>
           {keyStats.stat2}
         </div>
-        <div style={{ backgroundColor: '#0f0f1a', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', color: '#6B7280' }}>
+        <div style={STAT_BADGE_STYLE}>
           {keyStats.stat3}
         </div>
         {pick.bookmaker && (
-          <div style={{ backgroundColor: '#0f0f1a', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', color: '#6B7280', marginLeft: 'auto' }}>
+          <div style={STAT_BADGE_STYLE_RIGHT}>
             via {pick.bookmaker}
           </div>
         )}

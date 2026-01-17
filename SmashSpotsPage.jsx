@@ -46,6 +46,62 @@ const getUnitSize = (confidence) => {
   return { units: 0, label: 'Pass', emoji: '⚠️' };
 };
 
+// ============================================================================
+// STYLE CONSTANTS - Moved outside components to avoid recreation on each render
+// ============================================================================
+
+// Base style for sport buttons (shared properties)
+const SPORT_BUTTON_BASE = {
+  padding: '10px 16px',
+  borderRadius: '12px',
+  cursor: 'pointer',
+  fontWeight: 'bold',
+  fontSize: '13px',
+  transition: 'all 0.2s ease',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '6px',
+  minWidth: '80px',
+  justifyContent: 'center'
+};
+
+// Get sport button style based on active state
+const getSportButtonStyle = (isActive) => ({
+  ...SPORT_BUTTON_BASE,
+  border: isActive ? '2px solid #10B981' : '2px solid transparent',
+  backgroundColor: isActive ? '#10B98120' : '#1a1a2e',
+  color: isActive ? '#10B981' : '#9CA3AF'
+});
+
+// Container styles
+const SPORT_BUTTONS_CONTAINER = {
+  display: 'flex',
+  gap: '8px',
+  justifyContent: 'center',
+  marginBottom: '20px',
+  flexWrap: 'wrap'
+};
+
+const TAB_CONTAINER = {
+  display: 'flex',
+  backgroundColor: '#12121f',
+  borderRadius: '12px',
+  padding: '4px',
+  marginBottom: '16px'
+};
+
+const FILTER_CONTAINER = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  marginBottom: '20px',
+  padding: '12px 16px',
+  backgroundColor: '#12121f',
+  borderRadius: '10px'
+};
+
+// ============================================================================
+
 // Today's Best Bets Component - Shows top SMASH tier picks (memoized)
 const TodaysBestBets = memo(({ sport, onPickClick }) => {
   const [bestPicks, setBestPicks] = useState([]);
@@ -418,27 +474,12 @@ const SmashSpotsPage = () => {
           `}</style>
         </div>
 
-        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '20px', flexWrap: 'wrap' }}>
+        <div style={SPORT_BUTTONS_CONTAINER}>
           {SPORTS.map(s => (
             <button
               key={s.id}
               onClick={() => handleSportChange(s.id)}
-              style={{
-                padding: '10px 16px',
-                borderRadius: '12px',
-                border: sport === s.id ? '2px solid #10B981' : '2px solid transparent',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-                fontSize: '13px',
-                transition: 'all 0.2s ease',
-                backgroundColor: sport === s.id ? '#10B98120' : '#1a1a2e',
-                color: sport === s.id ? '#10B981' : '#9CA3AF',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                minWidth: '80px',
-                justifyContent: 'center'
-              }}
+              style={getSportButtonStyle(sport === s.id)}
             >
               <span style={{ fontSize: '16px' }}>{s.icon}</span>
               {s.label}
@@ -446,7 +487,7 @@ const SmashSpotsPage = () => {
           ))}
         </div>
 
-        <div style={{ display: 'flex', backgroundColor: '#12121f', borderRadius: '12px', padding: '4px', marginBottom: '16px' }}>
+        <div style={TAB_CONTAINER}>
           {TABS.map(tab => (
             <button
               key={tab.id}
