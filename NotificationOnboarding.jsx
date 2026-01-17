@@ -5,7 +5,7 @@
  * Shows examples of what users will receive.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { usePush } from './PushNotifications';
 import { useSignalNotifications } from './SignalNotifications';
 import { useToast } from './Toast';
@@ -26,6 +26,40 @@ export const NotificationOnboardingModal = ({ isOpen, onClose, onEnabled }) => {
     emailNotifications: false,
     email: ''
   });
+
+  // Accessibility: refs for focus management
+  const headingRef = useRef(null);
+  const closeButtonRef = useRef(null);
+  const previousFocusRef = useRef(null);
+
+  // Accessibility: Focus management and Escape key handling
+  useEffect(() => {
+    if (!isOpen) return;
+
+    // Store the previously focused element
+    previousFocusRef.current = document.activeElement;
+
+    // Focus heading when modal opens or step changes
+    const timer = setTimeout(() => {
+      headingRef.current?.focus();
+    }, 100);
+
+    // Handle Escape key
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('keydown', handleKeyDown);
+      // Restore focus to previously focused element
+      previousFocusRef.current?.focus();
+    };
+  }, [isOpen, step, onClose]);
 
   if (!isOpen) return null;
 
@@ -123,16 +157,21 @@ export const NotificationOnboardingModal = ({ isOpen, onClose, onEnabled }) => {
       justifyContent: 'center',
       padding: '20px'
     }}>
-      <div style={{
-        backgroundColor: '#0a0a0f',
-        borderRadius: '20px',
-        border: '1px solid #333',
-        maxWidth: '520px',
-        width: '100%',
-        maxHeight: '90vh',
-        overflow: 'auto',
-        animation: 'scaleIn 0.2s ease-out'
-      }}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="notification-modal-title"
+        style={{
+          backgroundColor: '#0a0a0f',
+          borderRadius: '20px',
+          border: '1px solid #333',
+          maxWidth: '520px',
+          width: '100%',
+          maxHeight: '90vh',
+          overflow: 'auto',
+          animation: 'scaleIn 0.2s ease-out'
+        }}
+      >
         <style>{`
           @keyframes scaleIn {
             from { opacity: 0; transform: scale(0.95); }
@@ -149,12 +188,18 @@ export const NotificationOnboardingModal = ({ isOpen, onClose, onEnabled }) => {
               textAlign: 'center'
             }}>
               <div style={{ fontSize: '48px', marginBottom: '12px' }}>🔔</div>
-              <h2 style={{
-                color: '#fff',
-                fontSize: '22px',
-                margin: '0 0 8px',
-                fontWeight: 'bold'
-              }}>
+              <h2
+                id="notification-modal-title"
+                ref={headingRef}
+                tabIndex={-1}
+                style={{
+                  color: '#fff',
+                  fontSize: '22px',
+                  margin: '0 0 8px',
+                  fontWeight: 'bold',
+                  outline: 'none'
+                }}
+              >
                 Enable SMASH Alerts
               </h2>
               <p style={{
@@ -371,6 +416,8 @@ export const NotificationOnboardingModal = ({ isOpen, onClose, onEnabled }) => {
                   step="5"
                   value={selectedPrefs.confidenceThreshold}
                   onChange={(e) => setSelectedPrefs(p => ({ ...p, confidenceThreshold: parseInt(e.target.value) }))}
+                  aria-label="Confidence threshold"
+                  aria-valuetext={`${selectedPrefs.confidenceThreshold}% confidence`}
                   style={{
                     width: '100%',
                     accentColor: '#10B981'
@@ -526,7 +573,7 @@ const NotificationToggle = ({ icon, label, description, checked, onChange, highl
     border: highlight && checked ? '1px solid #10B98130' : '1px solid transparent'
   }}>
     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-      <span style={{ fontSize: '20px' }}>{icon}</span>
+      <span style={{ fontSize: '20px' }} aria-hidden="true">{icon}</span>
       <div>
         <div style={{ color: '#fff', fontSize: '14px', fontWeight: '500' }}>{label}</div>
         <div style={{ color: '#6b7280', fontSize: '11px' }}>{description}</div>
@@ -542,7 +589,19 @@ const NotificationToggle = ({ icon, label, description, checked, onChange, highl
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        style={{ display: 'none' }}
+        aria-label={label}
+        style={{
+          // Visually hidden but accessible to screen readers
+          position: 'absolute',
+          width: '1px',
+          height: '1px',
+          padding: 0,
+          margin: '-1px',
+          overflow: 'hidden',
+          clip: 'rect(0, 0, 0, 0)',
+          whiteSpace: 'nowrap',
+          border: 0
+        }}
       />
       <span style={{
         position: 'absolute',
