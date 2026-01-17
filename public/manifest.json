@@ -27,7 +27,7 @@
     {
       "name": "Smash Spots",
       "short_name": "Picks",
-      "description": "View today's AI picks",
+      "description": "View today's SMASH picks",
       "url": "/smash-spots",
       "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     },

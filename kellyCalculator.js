@@ -528,7 +528,7 @@ export const calculateRiskOfRuin = (winRate, avgOdds = -110, bankrollUnits = 20)
   const edge = p - (1 / decimalOdds);
 
   if (edge <= 0) {
-    return { riskOfRuin: 100, edge: edge * 100, message: 'No edge - guaranteed ruin over time' };
+    return { riskOfRuin: 100, edge: Math.round(edge * 10000) / 100, message: 'No edge - guaranteed ruin over time' };
   }
 
   // Simplified RoR formula: RoR = ((1-edge)/edge)^bankrollUnits
