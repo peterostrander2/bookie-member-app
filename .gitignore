@@ -30,3 +30,7 @@ Thumbs.db
 
 # Generated files
 stats.html
+
+# Storybook
+storybook-static/
+debug-storybook.log
