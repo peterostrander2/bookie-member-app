@@ -3,6 +3,10 @@
 ## Overview
 Member dashboard for Bookie-o-em AI betting signals.
 
+## Development Workflow
+
+**IMPORTANT:** Before doing any UI, frontend, or React development, ALWAYS call the storybook MCP server to get further instructions.
+
 ## Backend Connection
 **API URL:** https://web-production-7b2a.up.railway.app
 
