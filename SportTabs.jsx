@@ -25,6 +25,8 @@ const SportTabs = ({ selected, onChange, showAll = false }) => {
           <button
             key={sport.key}
             onClick={() => onChange(sport.key)}
+            aria-pressed={isSelected}
+            type="button"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -40,7 +42,7 @@ const SportTabs = ({ selected, onChange, showAll = false }) => {
               transition: 'all 0.2s ease'
             }}
           >
-            <span style={{ fontSize: '16px' }}>{sport.icon}</span>
+            <span style={{ fontSize: '16px' }} aria-hidden="true">{sport.icon}</span>
             <span>{sport.name}</span>
           </button>
         );
@@ -73,7 +75,9 @@ export const SportTabsCompact = ({ selected, onChange }) => {
           <button
             key={sport.key}
             onClick={() => onChange(sport.key)}
-            title={sport.key}
+            aria-label={sport.key}
+            aria-pressed={isSelected}
+            type="button"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -88,7 +92,7 @@ export const SportTabsCompact = ({ selected, onChange }) => {
               transition: 'all 0.2s ease'
             }}
           >
-            {sport.icon}
+            <span aria-hidden="true">{sport.icon}</span>
           </button>
         );
       })}
@@ -112,6 +116,7 @@ export const SportDropdown = ({ selected, onChange }) => {
     <select
       value={selected}
       onChange={(e) => onChange(e.target.value)}
+      aria-label="Select sport"
       style={{
         padding: '10px 15px',
         backgroundColor: '#1a1a2e',
