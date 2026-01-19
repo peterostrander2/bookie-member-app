@@ -236,40 +236,103 @@ const LineMovement = memo(({ pick }) => {
 });
 LineMovement.displayName = 'LineMovement';
 
-// Confidence tier configuration with enhanced visuals
-const getTierConfig = (conf) => {
-  if (conf >= 85) return {
-    label: 'SMASH',
+// v10.4 Tier configuration based on API tier field
+const TIER_CONFIGS = {
+  GOLD_STAR: {
+    label: 'GOLD STAR',
+    color: '#FFD700',
+    bg: 'rgba(255, 215, 0, 0.15)',
+    border: 'rgba(255, 215, 0, 0.5)',
+    glow: '0 0 20px rgba(255, 215, 0, 0.3)',
+    size: 'large',
+    historicalWinRate: 87,
+    isProfitable: true,
+    action: 'SMASH'
+  },
+  EDGE_LEAN: {
+    label: 'EDGE LEAN',
     color: '#10B981',
     bg: 'rgba(16, 185, 129, 0.15)',
     border: 'rgba(16, 185, 129, 0.5)',
-    glow: '0 0 20px rgba(16, 185, 129, 0.3)',
+    glow: 'none',
+    size: 'medium',
+    historicalWinRate: 72,
+    isProfitable: true,
+    action: 'PLAY'
+  },
+  MONITOR: {
+    label: 'MONITOR',
+    color: '#F59E0B',
+    bg: 'rgba(245, 158, 11, 0.15)',
+    border: 'rgba(245, 158, 11, 0.5)',
+    glow: 'none',
+    size: 'small',
+    historicalWinRate: 58,
+    isProfitable: true,
+    action: 'WATCH'
+  },
+  PASS: {
+    label: 'PASS',
+    color: '#6B7280',
+    bg: 'rgba(107, 114, 128, 0.15)',
+    border: 'rgba(107, 114, 128, 0.5)',
+    glow: 'none',
+    size: 'small',
+    historicalWinRate: 48,
+    isProfitable: false,
+    warning: 'Below break-even at standard odds',
+    action: 'SKIP'
+  }
+};
+
+// Get tier config from pick object (v10.4 schema)
+const getTierConfigFromPick = (pick) => {
+  // Use tier from API if available
+  if (pick.tier && TIER_CONFIGS[pick.tier]) {
+    return TIER_CONFIGS[pick.tier];
+  }
+  // Fallback: derive from final_score
+  const score = pick.final_score || (pick.confidence / 10) || 0;
+  if (score >= 7.5) return TIER_CONFIGS.GOLD_STAR;
+  if (score >= 6.5) return TIER_CONFIGS.EDGE_LEAN;
+  if (score >= 5.5) return TIER_CONFIGS.MONITOR;
+  return TIER_CONFIGS.PASS;
+};
+
+// Legacy: Confidence tier configuration with enhanced visuals
+const getTierConfig = (conf) => {
+  if (conf >= 85) return {
+    label: 'GOLD STAR',
+    color: '#FFD700',
+    bg: 'rgba(255, 215, 0, 0.15)',
+    border: 'rgba(255, 215, 0, 0.5)',
+    glow: '0 0 20px rgba(255, 215, 0, 0.3)',
     size: 'large',
     historicalWinRate: 87,
     isProfitable: true
   };
   if (conf >= 75) return {
-    label: 'STRONG',
-    color: '#F59E0B',
-    bg: 'rgba(245, 158, 11, 0.15)',
-    border: 'rgba(245, 158, 11, 0.5)',
+    label: 'EDGE LEAN',
+    color: '#10B981',
+    bg: 'rgba(16, 185, 129, 0.15)',
+    border: 'rgba(16, 185, 129, 0.5)',
     glow: 'none',
     size: 'medium',
     historicalWinRate: 72,
     isProfitable: true
   };
   if (conf >= 65) return {
-    label: 'LEAN',
-    color: '#3B82F6',
-    bg: 'rgba(59, 130, 246, 0.15)',
-    border: 'rgba(59, 130, 246, 0.5)',
+    label: 'MONITOR',
+    color: '#F59E0B',
+    bg: 'rgba(245, 158, 11, 0.15)',
+    border: 'rgba(245, 158, 11, 0.5)',
     glow: 'none',
     size: 'small',
     historicalWinRate: 58,
     isProfitable: true
   };
   return {
-    label: 'WATCH',
+    label: 'PASS',
     color: '#6B7280',
     bg: 'rgba(107, 114, 128, 0.15)',
     border: 'rgba(107, 114, 128, 0.5)',
@@ -424,24 +487,24 @@ const FilterControls = memo(({ filters, setFilters, sortBy, setSortBy }) => {
 });
 FilterControls.displayName = 'FilterControls';
 
-// Confidence Tier Legend
+// v10.4 Tier Legend
 const TierLegend = memo(() => (
   <div style={{
     display: 'flex', gap: '12px', marginBottom: '12px', flexWrap: 'wrap',
     padding: '8px 12px', backgroundColor: '#0f0f1a', borderRadius: '8px'
   }}>
-    <span style={{ color: '#6B7280', fontSize: '11px', marginRight: '4px' }}>CONFIDENCE:</span>
+    <span style={{ color: '#6B7280', fontSize: '11px', marginRight: '4px' }}>TIER:</span>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+      <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#FFD700' }} />
+      <span style={{ color: '#FFD700', fontSize: '11px', fontWeight: 'bold' }}>GOLD STAR ≥7.5</span>
+    </div>
     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
       <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10B981' }} />
-      <span style={{ color: '#10B981', fontSize: '11px', fontWeight: 'bold' }}>SMASH 85%+</span>
+      <span style={{ color: '#10B981', fontSize: '11px', fontWeight: 'bold' }}>EDGE LEAN ≥6.5</span>
     </div>
     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
       <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#F59E0B' }} />
-      <span style={{ color: '#F59E0B', fontSize: '11px', fontWeight: 'bold' }}>STRONG 75-84%</span>
-    </div>
-    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-      <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#3B82F6' }} />
-      <span style={{ color: '#3B82F6', fontSize: '11px', fontWeight: 'bold' }}>LEAN 65-74%</span>
+      <span style={{ color: '#F59E0B', fontSize: '11px', fontWeight: 'bold' }}>MONITOR ≥5.5</span>
     </div>
   </div>
 ));
@@ -492,15 +555,60 @@ const getAligningPillars = (pick) => {
   return [];
 };
 
+// v10.4 Badge display component
+const BadgeDisplay = memo(({ badges }) => {
+  if (!badges || badges.length === 0) return null;
+
+  const BADGE_STYLES = {
+    SMASH_SPOT: { bg: 'rgba(255, 100, 0, 0.2)', color: '#FF6400', icon: '🔥', label: 'SMASH SPOT' },
+    SHARP_MONEY: { bg: 'rgba(16, 185, 129, 0.2)', color: '#10B981', icon: '💰', label: 'SHARP' },
+    JARVIS_TRIGGER: { bg: 'rgba(255, 215, 0, 0.2)', color: '#FFD700', icon: '⚡', label: 'JARVIS' },
+    REVERSE_LINE: { bg: 'rgba(139, 92, 246, 0.2)', color: '#8B5CF6', icon: '↩️', label: 'REVERSE' },
+    PRIME_TIME: { bg: 'rgba(236, 72, 153, 0.2)', color: '#EC4899', icon: '📺', label: 'PRIME' }
+  };
+
+  return (
+    <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+      {badges.map((badge, idx) => {
+        const style = BADGE_STYLES[badge] || { bg: 'rgba(107, 114, 128, 0.2)', color: '#6B7280', icon: '•', label: badge };
+        return (
+          <span key={idx} style={{
+            backgroundColor: style.bg,
+            color: style.color,
+            padding: '2px 6px',
+            borderRadius: '4px',
+            fontSize: '9px',
+            fontWeight: 'bold',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '3px'
+          }}>
+            {style.icon} {style.label}
+          </span>
+        );
+      })}
+    </div>
+  );
+});
+BadgeDisplay.displayName = 'BadgeDisplay';
+
 // Memoized prop card - only re-renders when pick data changes
 const PropCard = memo(({ pick }) => {
   const [expanded, setExpanded] = useState(false);
-  const tierConfig = getTierConfig(pick.confidence);
+  // v10.4: Use new tier config from pick object
+  const tierConfig = getTierConfigFromPick(pick);
   // Use REAL data from API - returns null if not available
   const keyStats = useMemo(() => getKeyStats(pick), [pick.key_stats]);
   const agreeingModels = useMemo(() => getAgreeingModels(pick), [pick.agreeing_models]);
   const aligningPillars = useMemo(() => getAligningPillars(pick), [pick.aligning_pillars]);
   const { isMobile, isTouchDevice } = useMobileDetect();
+
+  // v10.4: Get final_score (0-10 scale) or derive from confidence
+  const finalScore = pick.final_score || (pick.confidence / 10) || 0;
+  const isSmashSpot = pick.smash_spot === true;
+
+  // Check if we have v10.4 reasons array
+  const hasReasons = pick.reasons && Array.isArray(pick.reasons) && pick.reasons.length > 0;
 
   // Check if we have enough real data to show the "Why This Pick" section
   const hasKeyStats = keyStats && (keyStats.avg || keyStats.trend || keyStats.matchup);
@@ -523,30 +631,59 @@ const PropCard = memo(({ pick }) => {
     return market?.toUpperCase()?.replace('player_', '') || 'PROP';
   }, []);
 
-  // Card style varies by confidence tier
+  // Card style varies by tier - SmashSpot gets special treatment
   const cardStyle = {
-    backgroundColor: '#1a1a2e',
+    backgroundColor: isSmashSpot ? '#1a1510' : '#1a1a2e',
     borderRadius: '12px',
     padding: isMobile ? '12px' : (tierConfig.size === 'large' ? '20px' : '16px'),
     marginBottom: '12px',
-    border: `1px solid ${tierConfig.border}`,
-    boxShadow: tierConfig.glow,
+    border: isSmashSpot ? '2px solid #FF6400' : `1px solid ${tierConfig.border}`,
+    boxShadow: isSmashSpot ? '0 0 30px rgba(255, 100, 0, 0.3)' : tierConfig.glow,
     transition: 'all 0.2s ease',
-    cursor: isTouchDevice ? 'default' : 'pointer'
+    cursor: isTouchDevice ? 'default' : 'pointer',
+    position: 'relative'
   };
 
   return (
     <div style={cardStyle} {...(isTouchDevice ? swipeHandlers : {})}>
-      {/* TOP ROW: Tier badge + Prop type + Game */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-        <TierBadge confidence={pick.confidence} showWinRate={tierConfig.label === 'WATCH'} />
+      {/* TRUE SMASH SPOT BANNER */}
+      {isSmashSpot && (
+        <div style={{
+          position: 'absolute',
+          top: '-1px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          backgroundColor: '#FF6400',
+          color: '#000',
+          padding: '4px 16px',
+          borderRadius: '0 0 8px 8px',
+          fontSize: '10px',
+          fontWeight: 'bold',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px',
+          letterSpacing: '1px'
+        }}>
+          🔥 TRUE SMASH SPOT 🔥
+        </div>
+      )}
+
+      {/* TOP ROW: Tier badge + Badges + Prop type + Game */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', marginTop: isSmashSpot ? '16px' : 0 }}>
+        {/* v10.4: Show tier from API or derived */}
+        <span style={{
+          padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold',
+          color: tierConfig.color, backgroundColor: tierConfig.bg, border: `1px solid ${tierConfig.color}`, letterSpacing: '0.5px'
+        }}>{tierConfig.label}</span>
+        {/* v10.4: Show badges if available */}
+        {pick.badges && <BadgeDisplay badges={pick.badges} />}
         <span style={{
           backgroundColor: '#8B5CF620', color: '#8B5CF6',
           padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold',
           border: '1px solid #8B5CF640'
         }}>{getMarketLabel(pick.market)}</span>
         <span style={{ color: '#6B7280', fontSize: '12px', marginLeft: 'auto' }}>
-          {pick.away_team} @ {pick.home_team}
+          {pick.game || `${pick.away_team} @ ${pick.home_team}`}
         </span>
       </div>
 
@@ -571,24 +708,24 @@ const PropCard = memo(({ pick }) => {
 
       {/* HERO SECTION: Player + Pick - LARGEST, MOST PROMINENT */}
       <div style={{
-        backgroundColor: `${tierConfig.color}10`,
+        backgroundColor: isSmashSpot ? 'rgba(255, 100, 0, 0.1)' : `${tierConfig.color}10`,
         borderRadius: '12px',
         padding: '16px 20px',
         marginBottom: '12px',
-        border: `2px solid ${tierConfig.color}30`,
+        border: isSmashSpot ? '2px solid rgba(255, 100, 0, 0.4)' : `2px solid ${tierConfig.color}30`,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center'
       }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-            <span style={{ fontSize: '20px' }}>{getPropIcon(pick.market)}</span>
+            <span style={{ fontSize: '20px' }}>{isSmashSpot ? '🔥' : getPropIcon(pick.market)}</span>
             <span style={{
               color: '#fff',
               fontWeight: 'bold',
               fontSize: tierConfig.size === 'large' ? '22px' : '18px'
             }}>
-              {pick.player_name || pick.description?.split(' ').slice(0, 2).join(' ') || 'Player'}
+              {pick.player || pick.player_name || pick.description?.split(' ').slice(0, 2).join(' ') || 'Player'}
             </span>
           </div>
           <div style={{
@@ -598,7 +735,7 @@ const PropCard = memo(({ pick }) => {
             letterSpacing: '-0.5px',
             marginTop: '4px'
           }}>
-            {pick.side} {pick.point}
+            {pick.selection || `${pick.side} ${pick.point || pick.line}`}
           </div>
           <div style={{
             color: '#8B5CF6',
@@ -606,26 +743,50 @@ const PropCard = memo(({ pick }) => {
             fontWeight: '600',
             marginTop: '4px'
           }}>
-            {formatOdds(pick.price)}
+            {formatOdds(pick.odds || pick.price)}
           </div>
         </div>
         <div style={{ textAlign: 'right' }}>
+          {/* v10.4: Show final_score (0-10) prominently */}
           <div style={{
-            color: tierConfig.color,
+            color: isSmashSpot ? '#FF6400' : tierConfig.color,
             fontWeight: 'bold',
-            fontSize: tierConfig.size === 'large' ? '32px' : '28px',
+            fontSize: tierConfig.size === 'large' ? '36px' : '32px',
             lineHeight: '1'
           }}>
-            {pick.confidence}%
+            {finalScore.toFixed(1)}
           </div>
-          <div style={{ color: '#6B7280', fontSize: '10px', marginTop: '2px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-            confidence
-            <HelpIcon tooltip={METRIC_TOOLTIPS.confidence} size={10} />
+          <div style={{ color: '#6B7280', fontSize: '10px', marginTop: '2px' }}>
+            score / 10
           </div>
+          {/* Confluence level if available */}
+          {pick.confluence_level && (
+            <div style={{
+              marginTop: '8px',
+              backgroundColor: pick.confluence_level.includes('JARVIS') ? 'rgba(255, 215, 0, 0.15)' : 'rgba(139, 92, 246, 0.15)',
+              padding: '4px 8px',
+              borderRadius: '4px',
+              fontSize: '9px',
+              color: pick.confluence_level.includes('JARVIS') ? '#FFD700' : '#8B5CF6',
+              fontWeight: 'bold'
+            }}>
+              {pick.confluence_level.replace('_', ' ')}
+            </div>
+          )}
+          {/* Alignment percentage if available */}
+          {pick.alignment_pct && (
+            <div style={{
+              marginTop: '4px',
+              fontSize: '10px',
+              color: pick.alignment_pct >= 80 ? '#10B981' : '#6B7280'
+            }}>
+              {pick.alignment_pct.toFixed(0)}% aligned
+            </div>
+          )}
         </div>
       </div>
 
-      {/* SECONDARY ROW: Scores in compact bar */}
+      {/* SECONDARY ROW: v10.4 Scoring breakdown */}
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
@@ -636,9 +797,17 @@ const PropCard = memo(({ pick }) => {
         marginBottom: '10px'
       }}>
         <div style={{ display: 'flex', gap: '12px' }}>
-          {pick.ai_score !== undefined && <ScoreBadge score={pick.ai_score} maxScore={8} label="AI" tooltip={METRIC_TOOLTIPS.aiScore} />}
-          {pick.pillar_score !== undefined && <ScoreBadge score={pick.pillar_score} maxScore={8} label="Pillars" tooltip={METRIC_TOOLTIPS.pillarsScore} />}
-          {pick.total_score !== undefined && <ScoreBadge score={pick.total_score} maxScore={20} label="Total" tooltip={METRIC_TOOLTIPS.totalScore} />}
+          {/* v10.4: Show Research and Esoteric scores from scoring_breakdown */}
+          {pick.scoring_breakdown?.research_score !== undefined && (
+            <ScoreBadge score={pick.scoring_breakdown.research_score} maxScore={10} label="Research" tooltip="Score from statistical analysis and sharp signals" />
+          )}
+          {pick.scoring_breakdown?.esoteric_score !== undefined && (
+            <ScoreBadge score={pick.scoring_breakdown.esoteric_score} maxScore={10} label="Esoteric" tooltip="Score from JARVIS triggers and numerological patterns" />
+          )}
+          {/* Fallback to legacy scores if v10.4 breakdown not available */}
+          {!pick.scoring_breakdown && pick.ai_score !== undefined && <ScoreBadge score={pick.ai_score} maxScore={8} label="AI" tooltip={METRIC_TOOLTIPS.aiScore} />}
+          {!pick.scoring_breakdown && pick.pillar_score !== undefined && <ScoreBadge score={pick.pillar_score} maxScore={8} label="Pillars" tooltip={METRIC_TOOLTIPS.pillarsScore} />}
+          {!pick.scoring_breakdown && pick.total_score !== undefined && <ScoreBadge score={pick.total_score} maxScore={20} label="Total" tooltip={METRIC_TOOLTIPS.totalScore} />}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           {pick.edge && (
@@ -647,6 +816,22 @@ const PropCard = memo(({ pick }) => {
               <span style={{ color: pick.edge > 0 ? '#10B981' : '#EF4444', fontWeight: 'bold', fontSize: '13px', marginLeft: '4px' }}>
                 {pick.edge > 0 ? '+' : ''}{(pick.edge * 100).toFixed(1)}%
               </span>
+            </div>
+          )}
+          {/* v10.4: Show jarvis_active status */}
+          {pick.jarvis_active && (
+            <div style={{
+              backgroundColor: 'rgba(255, 215, 0, 0.15)',
+              padding: '4px 8px',
+              borderRadius: '4px',
+              fontSize: '10px',
+              color: '#FFD700',
+              fontWeight: 'bold',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}>
+              ⚡ JARVIS
             </div>
           )}
           <LineMovement pick={pick} />
@@ -680,7 +865,7 @@ const PropCard = memo(({ pick }) => {
       )}
 
       {/* Action Row - only show "Why This Pick" if we have real data to show */}
-      {(hasKeyStats || hasModelData || pick.jarvis_boost > 0) && (
+      {(hasReasons || hasKeyStats || hasModelData || pick.jarvis_boost > 0) && (
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
           <button onClick={() => setExpanded(!expanded)} style={{
             background: expanded ? '#8B5CF620' : 'none',
@@ -691,8 +876,42 @@ const PropCard = memo(({ pick }) => {
       )}
 
       {/* Enhanced "Why?" Breakdown - Only shows REAL data from backend */}
-      {expanded && (hasKeyStats || hasModelData || pick.jarvis_boost > 0) && (
+      {expanded && (hasReasons || hasKeyStats || hasModelData || pick.jarvis_boost > 0) && (
         <div style={BREAKDOWN_CONTAINER_STYLE}>
+          {/* v10.4: Show reasons[] array from API - primary explanation */}
+          {hasReasons && (
+            <div style={{
+              backgroundColor: 'rgba(139, 92, 246, 0.1)',
+              borderRadius: '8px',
+              padding: '14px',
+              marginBottom: '16px',
+              border: '1px solid rgba(139, 92, 246, 0.2)'
+            }}>
+              <div style={{ color: '#8B5CF6', fontSize: '12px', fontWeight: 'bold', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span>🎯</span> WHY THIS PICK
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {pick.reasons.map((reason, idx) => {
+                  // Parse reason category and content (format: "CATEGORY: Content +score")
+                  const isResearch = reason.includes('RESEARCH:');
+                  const isEsoteric = reason.includes('ESOTERIC:');
+                  const isConfluence = reason.includes('CONFLUENCE:');
+                  const color = isEsoteric ? '#FFD700' : isConfluence ? '#10B981' : '#3B82F6';
+                  const icon = isEsoteric ? '⚡' : isConfluence ? '🎯' : '📊';
+
+                  return (
+                    <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                      <span style={{ color, fontSize: '12px' }}>{icon}</span>
+                      <span style={{ color: '#fff', fontSize: '12px', lineHeight: '1.4' }}>
+                        {reason}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* KEY FACTORS - Only show if backend provides key_stats */}
           {hasKeyStats && (
             <div style={{
@@ -756,37 +975,39 @@ const PropCard = memo(({ pick }) => {
             </div>
           )}
 
-          {/* Unit Size Recommendation */}
+          {/* Unit Size Recommendation - v10.4 uses final_score (0-10) */}
           <div style={{
-            backgroundColor: 'rgba(0, 212, 255, 0.1)',
+            backgroundColor: isSmashSpot ? 'rgba(255, 100, 0, 0.1)' : 'rgba(0, 212, 255, 0.1)',
             borderRadius: '8px',
             padding: '12px 14px',
             marginBottom: '16px',
-            border: '1px solid rgba(0, 212, 255, 0.2)',
+            border: `1px solid ${isSmashSpot ? 'rgba(255, 100, 0, 0.3)' : 'rgba(0, 212, 255, 0.2)'}`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between'
           }}>
             <div>
-              <div style={{ color: '#00D4FF', fontSize: '11px', fontWeight: 'bold', marginBottom: '2px' }}>
+              <div style={{ color: isSmashSpot ? '#FF6400' : '#00D4FF', fontSize: '11px', fontWeight: 'bold', marginBottom: '2px' }}>
                 RECOMMENDED STAKE
               </div>
               <div style={{ color: '#9CA3AF', fontSize: '11px' }}>
-                Based on {pick.confidence}% confidence
+                Based on {finalScore.toFixed(1)}/10 score {isSmashSpot && '(TRUE SMASH)'}
               </div>
             </div>
             <div style={{
-              backgroundColor: '#00D4FF20',
-              color: '#00D4FF',
+              backgroundColor: isSmashSpot ? '#FF640020' : '#00D4FF20',
+              color: isSmashSpot ? '#FF6400' : '#00D4FF',
               padding: '8px 16px',
               borderRadius: '8px',
               fontWeight: 'bold',
               fontSize: '14px'
             }}>
-              {pick.confidence >= 90 ? '2 Units 🔥🔥' :
-               pick.confidence >= 85 ? '1.5 Units 🔥' :
-               pick.confidence >= 75 ? '1 Unit ✓' :
-               pick.confidence >= 65 ? '0.5 Units ⚡' : 'Pass ⚠️'}
+              {/* v10.4: Unit sizing based on score and smash_spot */}
+              {isSmashSpot ? '2+ Units 🔥🔥' :
+               finalScore >= 8.5 ? '2 Units 🔥' :
+               finalScore >= 7.5 ? '1.5 Units ✓' :
+               finalScore >= 6.5 ? '1 Unit ⚡' :
+               finalScore >= 5.5 ? '0.5 Units' : 'Pass ⚠️'}
             </div>
           </div>
 
@@ -878,38 +1099,41 @@ const PropCard = memo(({ pick }) => {
       <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', alignItems: 'center' }}>
         <ShareButton
           pick={{
-            player: pick.player_name,
+            player: pick.player || pick.player_name,
             side: pick.side,
-            line: pick.point,
+            line: pick.line || pick.point,
             stat_type: pick.market?.replace('player_', ''),
-            odds: pick.price,
-            confidence: pick.confidence,
+            odds: pick.odds || pick.price,
+            confidence: Math.round(finalScore * 10), // Convert 0-10 to 0-100 for share
+            smash_spot: isSmashSpot,
+            tier: tierConfig.label,
           }}
           size="small"
         />
         <AddToSlipButton
           pick={{
-            id: pick.id || `${pick.player_name}-${pick.market}`,
+            id: pick.id || `${pick.player || pick.player_name}-${pick.market}`,
             game_id: pick.game_id || `${pick.home_team}-${pick.away_team}`,
-            player: pick.player_name,
+            player: pick.player || pick.player_name,
             sport: pick.sport || 'NBA',
             home_team: pick.home_team,
             away_team: pick.away_team,
             bet_type: 'prop',
             stat: pick.market?.replace('player_', ''),
             side: pick.side,
-            line: pick.point,
-            odds: pick.price || -110,
-            confidence: pick.confidence,
-            tier: getTierConfig(pick.confidence).label
+            line: pick.line || pick.point,
+            odds: pick.odds || pick.price || -110,
+            confidence: Math.round(finalScore * 10),
+            tier: tierConfig.label,
+            smash_spot: isSmashSpot,
           }}
           size="small"
         />
         <PlaceBetButton
           bet={{
             sport: pick.sport, home_team: pick.home_team, away_team: pick.away_team,
-            bet_type: 'prop', player: pick.player_name, prop_type: pick.market,
-            side: pick.side, line: pick.point, odds: pick.price, book: pick.bookmaker
+            bet_type: 'prop', player: pick.player || pick.player_name, prop_type: pick.market,
+            side: pick.side, line: pick.line || pick.point, odds: pick.odds || pick.price, book: pick.bookmaker
           }}
           label={pick.bookmaker ? `Bet at ${pick.bookmaker}` : 'Compare Odds'}
         />
@@ -917,38 +1141,109 @@ const PropCard = memo(({ pick }) => {
     </div>
   );
 }, (prevProps, nextProps) => {
-  // Custom comparison - only re-render if pick data changed
-  return prevProps.pick.player_name === nextProps.pick.player_name &&
+  // Custom comparison - only re-render if pick data changed (v10.4 fields)
+  return prevProps.pick.player === nextProps.pick.player &&
+         prevProps.pick.player_name === nextProps.pick.player_name &&
+         prevProps.pick.final_score === nextProps.pick.final_score &&
          prevProps.pick.confidence === nextProps.pick.confidence &&
+         prevProps.pick.odds === nextProps.pick.odds &&
          prevProps.pick.price === nextProps.pick.price &&
-         prevProps.pick.point === nextProps.pick.point;
+         prevProps.pick.line === nextProps.pick.line &&
+         prevProps.pick.point === nextProps.pick.point &&
+         prevProps.pick.smash_spot === nextProps.pick.smash_spot;
 });
 PropCard.displayName = 'PropCard';
 
-// Demo picks when API unavailable
+// Demo picks when API unavailable - v10.4 schema
 const getDemoProps = (sport) => {
   const demos = {
     NBA: [
-      { player_name: 'LeBron James', market: 'player_points', side: 'Over', point: 25.5, price: -110, confidence: 87, ai_score: 7.2, pillar_score: 6.8, total_score: 14.0, edge: 0.045, home_team: 'Lakers', away_team: 'Warriors', bookmaker: 'DraftKings', sport: 'NBA', isDemo: true },
-      { player_name: 'Jayson Tatum', market: 'player_points', side: 'Over', point: 27.5, price: -115, confidence: 85, ai_score: 7.0, pillar_score: 6.5, total_score: 13.5, edge: 0.038, home_team: 'Celtics', away_team: 'Bucks', bookmaker: 'FanDuel', sport: 'NBA', isDemo: true },
-      { player_name: 'Luka Doncic', market: 'player_assists', side: 'Over', point: 9.5, price: -105, confidence: 82, ai_score: 6.8, pillar_score: 6.2, total_score: 13.0, edge: 0.032, home_team: 'Mavericks', away_team: 'Suns', bookmaker: 'BetMGM', sport: 'NBA', isDemo: true },
-      { player_name: 'Nikola Jokic', market: 'player_rebounds', side: 'Over', point: 11.5, price: -120, confidence: 84, ai_score: 6.9, pillar_score: 6.4, total_score: 13.3, edge: 0.041, home_team: 'Nuggets', away_team: 'Clippers', bookmaker: 'Caesars', sport: 'NBA', isDemo: true },
+      // TRUE SMASH SPOT - highest conviction
+      {
+        player: 'LeBron James', player_name: 'LeBron James', market: 'player_points',
+        selection: 'LeBron James Over 25.5', side: 'Over', line: 25.5, point: 25.5, odds: -110, price: -110,
+        tier: 'GOLD_STAR', final_score: 8.2, smash_spot: true, jarvis_active: true,
+        confluence_level: 'JARVIS_PERFECT', alignment_pct: 88.5,
+        scoring_breakdown: { research_score: 8.5, esoteric_score: 7.8, base_score: 6.2, pillar_boost: 1.5, confluence_boost: 0.5 },
+        badges: ['SMASH_SPOT', 'SHARP_MONEY', 'JARVIS_TRIGGER'],
+        reasons: ['RESEARCH: Sharp Split +1.2', 'RESEARCH: Prime Time Boost +0.3', 'ESOTERIC: Jarvis Trigger 201 +0.5', 'CONFLUENCE: JARVIS PERFECT +0.5'],
+        game: 'Lakers @ Warriors', home_team: 'Warriors', away_team: 'Lakers', bookmaker: 'DraftKings', sport: 'NBA', isDemo: true
+      },
+      // GOLD_STAR but not SmashSpot
+      {
+        player: 'Jayson Tatum', player_name: 'Jayson Tatum', market: 'player_points',
+        selection: 'Jayson Tatum Over 27.5', side: 'Over', line: 27.5, point: 27.5, odds: -115, price: -115,
+        tier: 'GOLD_STAR', final_score: 7.8, smash_spot: false, jarvis_active: false,
+        confluence_level: 'PERFECT', alignment_pct: 82.0,
+        scoring_breakdown: { research_score: 8.1, esoteric_score: 7.2, base_score: 5.8 },
+        badges: ['SHARP_MONEY', 'REVERSE_LINE'],
+        reasons: ['RESEARCH: Sharp Split +1.0', 'RESEARCH: Rest Advantage +0.4', 'CONFLUENCE: PERFECT +0.3'],
+        game: 'Celtics @ Bucks', home_team: 'Bucks', away_team: 'Celtics', bookmaker: 'FanDuel', sport: 'NBA', isDemo: true
+      },
+      // EDGE_LEAN tier
+      {
+        player: 'Luka Doncic', player_name: 'Luka Doncic', market: 'player_assists',
+        selection: 'Luka Doncic Over 9.5 assists', side: 'Over', line: 9.5, point: 9.5, odds: -105, price: -105,
+        tier: 'EDGE_LEAN', final_score: 6.8, smash_spot: false, jarvis_active: true,
+        confluence_level: 'MODERATE', alignment_pct: 68.0,
+        scoring_breakdown: { research_score: 7.2, esoteric_score: 6.1, base_score: 5.5 },
+        badges: ['JARVIS_TRIGGER'],
+        reasons: ['RESEARCH: Matchup History +0.6', 'ESOTERIC: Jarvis Trigger 33 +0.3'],
+        game: 'Mavericks @ Suns', home_team: 'Suns', away_team: 'Mavericks', bookmaker: 'BetMGM', sport: 'NBA', isDemo: true
+      },
+      // MONITOR tier
+      {
+        player: 'Nikola Jokic', player_name: 'Nikola Jokic', market: 'player_rebounds',
+        selection: 'Nikola Jokic Over 11.5 rebounds', side: 'Over', line: 11.5, point: 11.5, odds: -120, price: -120,
+        tier: 'MONITOR', final_score: 5.9, smash_spot: false, jarvis_active: false,
+        confluence_level: 'DIVERGENT', alignment_pct: 52.0,
+        scoring_breakdown: { research_score: 6.5, esoteric_score: 5.0, base_score: 5.2 },
+        badges: [],
+        reasons: ['RESEARCH: Recent Form +0.4', 'ESOTERIC: Divergent signals -0.2'],
+        game: 'Nuggets @ Clippers', home_team: 'Clippers', away_team: 'Nuggets', bookmaker: 'Caesars', sport: 'NBA', isDemo: true
+      },
     ],
     NFL: [
-      { player_name: 'Patrick Mahomes', market: 'player_pass_yards', side: 'Over', point: 285.5, price: -115, confidence: 86, ai_score: 7.1, pillar_score: 6.6, total_score: 13.7, edge: 0.042, home_team: 'Chiefs', away_team: 'Bills', bookmaker: 'DraftKings', sport: 'NFL', isDemo: true },
-      { player_name: 'Josh Allen', market: 'player_pass_tds', side: 'Over', point: 2.5, price: +105, confidence: 78, ai_score: 6.4, pillar_score: 5.8, total_score: 12.2, edge: 0.028, home_team: 'Bills', away_team: 'Chiefs', bookmaker: 'FanDuel', sport: 'NFL', isDemo: true },
+      {
+        player: 'Patrick Mahomes', player_name: 'Patrick Mahomes', market: 'player_pass_yards',
+        selection: 'Patrick Mahomes Over 285.5 yards', side: 'Over', line: 285.5, point: 285.5, odds: -115, price: -115,
+        tier: 'GOLD_STAR', final_score: 7.6, smash_spot: false, jarvis_active: true,
+        confluence_level: 'JARVIS_PERFECT', alignment_pct: 85.0,
+        scoring_breakdown: { research_score: 7.8, esoteric_score: 7.2 },
+        badges: ['SHARP_MONEY', 'PRIME_TIME', 'JARVIS_TRIGGER'],
+        reasons: ['RESEARCH: Prime Time +0.5', 'ESOTERIC: Jarvis Trigger 93 +0.4'],
+        game: 'Chiefs @ Bills', home_team: 'Bills', away_team: 'Chiefs', bookmaker: 'DraftKings', sport: 'NFL', isDemo: true
+      },
     ],
     MLB: [
-      { player_name: 'Shohei Ohtani', market: 'player_hits', side: 'Over', point: 1.5, price: -120, confidence: 81, ai_score: 6.7, pillar_score: 6.0, total_score: 12.7, edge: 0.035, home_team: 'Dodgers', away_team: 'Giants', bookmaker: 'DraftKings', sport: 'MLB', isDemo: true },
+      {
+        player: 'Shohei Ohtani', player_name: 'Shohei Ohtani', market: 'player_hits',
+        selection: 'Shohei Ohtani Over 1.5 hits', side: 'Over', line: 1.5, point: 1.5, odds: -120, price: -120,
+        tier: 'EDGE_LEAN', final_score: 6.7, smash_spot: false,
+        confluence_level: 'MODERATE', alignment_pct: 65.0,
+        scoring_breakdown: { research_score: 7.0, esoteric_score: 6.2 },
+        badges: [],
+        reasons: ['RESEARCH: Hot Streak +0.6'],
+        game: 'Dodgers @ Giants', home_team: 'Giants', away_team: 'Dodgers', bookmaker: 'DraftKings', sport: 'MLB', isDemo: true
+      },
     ],
     NHL: [
-      { player_name: 'Connor McDavid', market: 'player_points', side: 'Over', point: 1.5, price: -110, confidence: 83, ai_score: 6.9, pillar_score: 6.3, total_score: 13.2, edge: 0.039, home_team: 'Oilers', away_team: 'Flames', bookmaker: 'BetMGM', sport: 'NHL', isDemo: true },
+      {
+        player: 'Connor McDavid', player_name: 'Connor McDavid', market: 'player_points',
+        selection: 'Connor McDavid Over 1.5 points', side: 'Over', line: 1.5, point: 1.5, odds: -110, price: -110,
+        tier: 'GOLD_STAR', final_score: 7.9, smash_spot: true, jarvis_active: true,
+        confluence_level: 'IMMORTAL', alignment_pct: 92.0,
+        scoring_breakdown: { research_score: 8.2, esoteric_score: 7.5 },
+        badges: ['SMASH_SPOT', 'JARVIS_TRIGGER'],
+        reasons: ['RESEARCH: Elite Form +0.8', 'ESOTERIC: Jarvis 2178 Immortal +1.0', 'CONFLUENCE: IMMORTAL +0.8'],
+        game: 'Oilers @ Flames', home_team: 'Flames', away_team: 'Oilers', bookmaker: 'BetMGM', sport: 'NHL', isDemo: true
+      },
     ]
   };
   return demos[sport] || demos.NBA;
 };
 
-const PropsSmashList = ({ sport = 'NBA', minConfidence = 0, sortByConfidence = true }) => {
+const PropsSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortByConfidence = true }) => {
   const toast = useToast();
   const [picks, setPicks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -957,7 +1252,7 @@ const PropsSmashList = ({ sport = 'NBA', minConfidence = 0, sortByConfidence = t
 
   // Filter and sort state
   const [filters, setFilters] = useState({ tier: 'ALL', propType: 'ALL' });
-  const [sortBy, setSortBy] = useState(sortByConfidence ? 'confidence' : 'edge');
+  const [sortBy, setSortBy] = useState(sortByConfidence ? 'score' : 'edge');
 
   useEffect(() => { fetchPropsPicks(); }, [sport]);
 
@@ -968,8 +1263,15 @@ const PropsSmashList = ({ sport = 'NBA', minConfidence = 0, sortByConfidence = t
     try {
       const data = await api.getBestBets(sport);
       let propPicks = [];
-      if (data.props) {
-        propPicks = data.props.picks || [];
+
+      // v10.4: Use response.picks (merged array) and filter for props (player not null)
+      if (data.picks && Array.isArray(data.picks)) {
+        propPicks = data.picks.filter(p =>
+          p.player || p.player_name || p.market?.includes('player_')
+        );
+      } else if (data.props?.picks) {
+        // Fallback to old schema
+        propPicks = data.props.picks;
       } else if (data.data) {
         propPicks = data.data.filter(p =>
           p.market?.includes('player_') || p.market?.includes('points') ||
@@ -996,19 +1298,25 @@ const PropsSmashList = ({ sport = 'NBA', minConfidence = 0, sortByConfidence = t
   const filteredPicks = useMemo(() => {
     let result = [...picks];
 
-    // Apply parent-level minimum confidence filter first
-    if (minConfidence > 0) {
+    // Apply parent-level minimum score filter (v10.4)
+    if (minScore > 0) {
+      result = result.filter(pick => (pick.final_score || (pick.confidence / 10) || 0) >= minScore);
+    }
+
+    // Apply parent-level minimum confidence filter (legacy)
+    if (minConfidence > 0 && minScore === 0) {
       result = result.filter(pick => (pick.confidence || 0) >= minConfidence);
     }
 
-    // Apply tier filter (internal)
+    // Apply tier filter (v10.4 tiers)
     if (filters.tier !== 'ALL') {
       result = result.filter(pick => {
-        const conf = pick.confidence || 0;
+        const tier = pick.tier || '';
+        const score = pick.final_score || (pick.confidence / 10) || 0;
         switch (filters.tier) {
-          case 'SMASH': return conf >= 85;
-          case 'STRONG': return conf >= 75 && conf < 85;
-          case 'LEAN': return conf >= 65 && conf < 75;
+          case 'GOLD_STAR': return tier === 'GOLD_STAR' || score >= 7.5;
+          case 'EDGE_LEAN': return tier === 'EDGE_LEAN' || (score >= 6.5 && score < 7.5);
+          case 'MONITOR': return tier === 'MONITOR' || (score >= 5.5 && score < 6.5);
           default: return true;
         }
       });
@@ -1030,19 +1338,20 @@ const PropsSmashList = ({ sport = 'NBA', minConfidence = 0, sortByConfidence = t
       });
     }
 
-    // Apply sorting - sortByConfidence from parent takes precedence
-    const effectiveSortBy = sortByConfidence ? 'confidence' : sortBy;
+    // Apply sorting - sortByConfidence from parent means sort by score (v10.4)
+    const effectiveSortBy = sortByConfidence ? 'score' : sortBy;
     result.sort((a, b) => {
       switch (effectiveSortBy) {
+        case 'score': return (b.final_score || (b.confidence / 10) || 0) - (a.final_score || (a.confidence / 10) || 0);
         case 'confidence': return (b.confidence || 0) - (a.confidence || 0);
         case 'edge': return (b.edge || 0) - (a.edge || 0);
-        case 'odds': return (a.price || 0) - (b.price || 0); // Lower/negative odds first (better value)
+        case 'odds': return (a.price || a.odds || 0) - (b.price || b.odds || 0);
         default: return 0;
       }
     });
 
     return result;
-  }, [picks, filters, sortBy, minConfidence, sortByConfidence]);
+  }, [picks, filters, sortBy, minConfidence, minScore, sortByConfidence]);
 
   if (loading) {
     return (
