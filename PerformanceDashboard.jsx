@@ -21,6 +21,8 @@ import {
 import { getBankrollStats } from './kellyCalculator';
 import { analyzeCorrelation } from './correlationDetector';
 import { ROIChart, WinRateChart, LineChart, Sparkline } from './Charts';
+import { DBSyncCard, DBSyncIndicator } from './DBSyncIndicator';
+import api from './api';
 
 const PerformanceDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -31,10 +33,21 @@ const PerformanceDashboard = () => {
   const [signalCorrelation, setSignalCorrelation] = useState(null);
   const [recentPicks, setRecentPicks] = useState([]);
   const [timeframe, setTimeframe] = useState('all');
+  // v10.34: System health state
+  const [apiHealth, setApiHealth] = useState(null);
+  const [dashboardData, setDashboardData] = useState(null);
+  const [systemLoading, setSystemLoading] = useState(false);
 
   useEffect(() => {
     loadData();
   }, [timeframe]);
+
+  // Load system health data when system tab is active
+  useEffect(() => {
+    if (activeTab === 'system') {
+      loadSystemData();
+    }
+  }, [activeTab]);
 
   const loadData = () => {
     setClvStats(getCLVStats());
@@ -43,6 +56,21 @@ const PerformanceDashboard = () => {
     setWeeklySummary(getWeeklySummary());
     setSignalCorrelation(analyzeSignalCorrelation());
     setRecentPicks(getCLVPicks().slice(-50));
+  };
+
+  const loadSystemData = async () => {
+    setSystemLoading(true);
+    try {
+      const [health, dashboard] = await Promise.all([
+        api.getAPIHealth(),
+        api.getSportDashboard('NBA')
+      ]);
+      setApiHealth(health);
+      setDashboardData(dashboard);
+    } catch (err) {
+      console.error('Failed to load system data:', err);
+    }
+    setSystemLoading(false);
   };
 
   // Calculate aggregate metrics
@@ -109,14 +137,14 @@ const PerformanceDashboard = () => {
         </div>
 
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '25px' }}>
-          {['overview', 'signals', 'tiers', 'sports', 'trends'].map(tab => (
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '25px', flexWrap: 'wrap' }}>
+          {['overview', 'signals', 'tiers', 'sports', 'trends', 'system'].map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               style={{
                 padding: '10px 20px',
-                backgroundColor: activeTab === tab ? '#00D4FF' : '#1a1a2e',
+                backgroundColor: activeTab === tab ? (tab === 'system' ? '#8B5CF6' : '#00D4FF') : '#1a1a2e',
                 color: activeTab === tab ? '#000' : '#9ca3af',
                 border: activeTab === tab ? 'none' : '1px solid #333',
                 borderRadius: '8px',
@@ -126,7 +154,7 @@ const PerformanceDashboard = () => {
                 textTransform: 'capitalize'
               }}
             >
-              {tab}
+              {tab === 'system' ? '🔧 System' : tab}
             </button>
           ))}
         </div>
@@ -579,7 +607,222 @@ const PerformanceDashboard = () => {
             </div>
           </div>
         )}
+
+        {/* System Tab - v10.34 API Health & Grader Metrics */}
+        {activeTab === 'system' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+            {systemLoading ? (
+              <div style={{ textAlign: 'center', padding: '60px', color: '#9ca3af' }}>
+                <div style={{
+                  width: '40px',
+                  height: '40px',
+                  border: '3px solid #333',
+                  borderTop: '3px solid #8B5CF6',
+                  borderRadius: '50%',
+                  animation: 'spin 1s linear infinite',
+                  margin: '0 auto 16px'
+                }} />
+                Loading system data...
+              </div>
+            ) : (
+              <>
+                {/* API Health Status */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gap: '15px'
+                }}>
+                  <div style={{
+                    backgroundColor: '#1a1a2e',
+                    borderRadius: '12px',
+                    padding: '20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '15px'
+                  }}>
+                    <div style={{
+                      width: '50px',
+                      height: '50px',
+                      borderRadius: '12px',
+                      backgroundColor: apiHealth?.status === 'healthy' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '24px'
+                    }}>
+                      {apiHealth?.status === 'healthy' ? '✓' : '!'}
+                    </div>
+                    <div>
+                      <div style={{ color: '#6b7280', fontSize: '11px', textTransform: 'uppercase' }}>API Status</div>
+                      <div style={{
+                        color: apiHealth?.status === 'healthy' ? '#10B981' : '#EF4444',
+                        fontSize: '20px',
+                        fontWeight: 'bold',
+                        textTransform: 'capitalize'
+                      }}>
+                        {apiHealth?.status || 'Unknown'}
+                      </div>
+                      {apiHealth?.version && (
+                        <div style={{ color: '#6b7280', fontSize: '11px' }}>v{apiHealth.version}</div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Database Sync Card */}
+                  <DBSyncCard data={dashboardData} />
+                </div>
+
+                {/* Grader Weights */}
+                {apiHealth?.grader && (
+                  <div style={{
+                    backgroundColor: '#1a1a2e',
+                    borderRadius: '12px',
+                    padding: '20px'
+                  }}>
+                    <h3 style={{ color: '#fff', marginTop: 0, marginBottom: '15px', fontSize: '16px' }}>
+                      🎯 Grader Configuration
+                    </h3>
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                      gap: '12px'
+                    }}>
+                      {Object.entries(apiHealth.grader).map(([key, value]) => (
+                        <div key={key} style={{
+                          backgroundColor: '#0a0a0f',
+                          borderRadius: '8px',
+                          padding: '12px'
+                        }}>
+                          <div style={{ color: '#6b7280', fontSize: '10px', textTransform: 'uppercase', marginBottom: '4px' }}>
+                            {key.replace(/_/g, ' ')}
+                          </div>
+                          <div style={{ color: '#00D4FF', fontSize: '18px', fontWeight: 'bold' }}>
+                            {typeof value === 'number' ? value.toFixed(2) : String(value)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Scheduler Status */}
+                {apiHealth?.scheduler && (
+                  <div style={{
+                    backgroundColor: '#1a1a2e',
+                    borderRadius: '12px',
+                    padding: '20px'
+                  }}>
+                    <h3 style={{ color: '#fff', marginTop: 0, marginBottom: '15px', fontSize: '16px' }}>
+                      ⏰ Scheduler Status
+                    </h3>
+                    <div style={{
+                      backgroundColor: '#0a0a0f',
+                      borderRadius: '8px',
+                      padding: '16px',
+                      fontFamily: 'monospace',
+                      fontSize: '12px',
+                      color: '#F59E0B',
+                      maxHeight: '200px',
+                      overflow: 'auto'
+                    }}>
+                      <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
+                        {JSON.stringify(apiHealth.scheduler, null, 2)}
+                      </pre>
+                    </div>
+                  </div>
+                )}
+
+                {/* Dashboard Response Details */}
+                {dashboardData && (
+                  <div style={{
+                    backgroundColor: '#1a1a2e',
+                    borderRadius: '12px',
+                    padding: '20px'
+                  }}>
+                    <h3 style={{ color: '#fff', marginTop: 0, marginBottom: '15px', fontSize: '16px' }}>
+                      📊 Latest Dashboard Response
+                    </h3>
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+                      gap: '12px',
+                      marginBottom: '16px'
+                    }}>
+                      <div style={{ backgroundColor: '#0a0a0f', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                        <div style={{ color: '#6b7280', fontSize: '10px', marginBottom: '4px' }}>SPORT</div>
+                        <div style={{ color: '#fff', fontSize: '16px', fontWeight: 'bold' }}>{dashboardData.sport}</div>
+                      </div>
+                      <div style={{ backgroundColor: '#0a0a0f', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                        <div style={{ color: '#6b7280', fontSize: '10px', marginBottom: '4px' }}>TOTAL PICKS</div>
+                        <div style={{ color: '#00D4FF', fontSize: '16px', fontWeight: 'bold' }}>{dashboardData.count || dashboardData.picks?.length || 0}</div>
+                      </div>
+                      <div style={{ backgroundColor: '#0a0a0f', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                        <div style={{ color: '#6b7280', fontSize: '10px', marginBottom: '4px' }}>PROPS</div>
+                        <div style={{ color: '#10B981', fontSize: '16px', fontWeight: 'bold' }}>{dashboardData.props?.count || 0}</div>
+                      </div>
+                      <div style={{ backgroundColor: '#0a0a0f', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                        <div style={{ color: '#6b7280', fontSize: '10px', marginBottom: '4px' }}>GAMES</div>
+                        <div style={{ color: '#F59E0B', fontSize: '16px', fontWeight: 'bold' }}>{dashboardData.game_picks?.count || 0}</div>
+                      </div>
+                      <div style={{ backgroundColor: '#0a0a0f', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                        <div style={{ color: '#6b7280', fontSize: '10px', marginBottom: '4px' }}>DB AVAILABLE</div>
+                        <div style={{ color: dashboardData.database_available ? '#10B981' : '#EF4444', fontSize: '16px', fontWeight: 'bold' }}>
+                          {dashboardData.database_available ? 'Yes' : 'No'}
+                        </div>
+                      </div>
+                      <div style={{ backgroundColor: '#0a0a0f', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                        <div style={{ color: '#6b7280', fontSize: '10px', marginBottom: '4px' }}>PICKS SAVED</div>
+                        <div style={{ color: '#8B5CF6', fontSize: '16px', fontWeight: 'bold' }}>{dashboardData.picks_saved || 0}</div>
+                      </div>
+                    </div>
+
+                    {dashboardData._fallback && (
+                      <div style={{
+                        padding: '10px 14px',
+                        backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                        borderRadius: '6px',
+                        borderLeft: '3px solid #F59E0B',
+                        color: '#F59E0B',
+                        fontSize: '12px'
+                      }}>
+                        Using fallback mode - consolidated endpoint not available
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Refresh Button */}
+                <button
+                  onClick={loadSystemData}
+                  style={{
+                    padding: '12px 24px',
+                    backgroundColor: '#8B5CF620',
+                    border: '1px solid #8B5CF6',
+                    borderRadius: '8px',
+                    color: '#8B5CF6',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    margin: '0 auto'
+                  }}
+                >
+                  🔄 Refresh System Data
+                </button>
+              </>
+            )}
+          </div>
+        )}
       </div>
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };
