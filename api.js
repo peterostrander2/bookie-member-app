@@ -287,7 +287,11 @@ export const api = {
       daily_energy: data.esoteric?.daily_energy || data.daily_energy,
       esoteric: data.esoteric,
       count: allPicks.length,
-      timestamp: data.timestamp
+      timestamp: data.timestamp,
+      // v10.34: Database health fields
+      database_available: data.database_available ?? false,
+      picks_saved: data.picks_saved ?? 0,
+      signals_saved: data.signals_saved ?? 0
     };
   },
 
@@ -578,6 +582,182 @@ export const api = {
       return res.json();
     } catch {
       return null;
+    }
+  },
+
+  // ============================================================================
+  // CONSOLIDATED ENDPOINTS (v10.34)
+  // Reduces API calls by combining related data
+  // ============================================================================
+
+  /**
+   * Get consolidated sport dashboard data
+   * Combines: best-bets, sharp, splits, today-energy in one call
+   */
+  async getSportDashboard(sport = 'NBA') {
+    try {
+      const res = await authFetch(`${API_BASE_URL}/live/sport-dashboard/${sport.toUpperCase()}`);
+      if (!res.ok) {
+        // Fallback to individual calls if consolidated endpoint not available
+        const [bestBets, sharp, energy] = await Promise.all([
+          this.getSmashSpots(sport),
+          this.getSharpMoney(sport),
+          this.getTodayEnergy()
+        ]);
+        return {
+          sport: sport.toUpperCase(),
+          picks: bestBets.picks || [],
+          props: bestBets.props,
+          game_picks: bestBets.game_picks,
+          sharp_signals: sharp.signals || [],
+          daily_energy: energy,
+          database_available: bestBets.database_available ?? false,
+          picks_saved: bestBets.picks_saved ?? 0,
+          signals_saved: bestBets.signals_saved ?? 0,
+          _fallback: true
+        };
+      }
+      const data = await res.json();
+      return {
+        ...data,
+        database_available: data.database_available ?? false,
+        picks_saved: data.picks_saved ?? 0,
+        signals_saved: data.signals_saved ?? 0
+      };
+    } catch (err) {
+      console.error('getSportDashboard error:', err);
+      return {
+        sport: sport.toUpperCase(),
+        picks: [],
+        props: { picks: [], count: 0 },
+        game_picks: { picks: [], count: 0 },
+        sharp_signals: [],
+        daily_energy: { betting_outlook: 'NEUTRAL', overall_energy: 5.0 },
+        database_available: false,
+        picks_saved: 0,
+        signals_saved: 0,
+        _error: true
+      };
+    }
+  },
+
+  /**
+   * Get detailed game information
+   * Combines: game data, odds across books, props, sharp signals
+   */
+  async getGameDetails(gameId, sport = 'NBA') {
+    try {
+      const res = await authFetch(`${API_BASE_URL}/live/game-details/${encodeURIComponent(gameId)}?sport=${sport.toUpperCase()}`);
+      if (!res.ok) {
+        return { game_id: gameId, error: 'Game not found', available: false };
+      }
+      const data = await res.json();
+      return {
+        ...data,
+        available: true,
+        database_available: data.database_available ?? false
+      };
+    } catch (err) {
+      console.error('getGameDetails error:', err);
+      return { game_id: gameId, error: err.message, available: false };
+    }
+  },
+
+  /**
+   * Initialize parlay builder with user's current parlay and available picks
+   * Combines: current parlay, best available legs, correlation warnings
+   */
+  async getParlayBuilderInit(userId, sport = 'NBA') {
+    try {
+      const params = new URLSearchParams({ sport: sport.toUpperCase() });
+      if (userId) params.append('user_id', userId);
+
+      const res = await authFetch(`${API_BASE_URL}/live/parlay-builder-init?${params}`);
+      if (!res.ok) {
+        // Fallback to individual calls
+        const [parlay, picks] = await Promise.all([
+          userId ? this.getParlay(userId) : Promise.resolve({ legs: [] }),
+          this.getSmashSpots(sport)
+        ]);
+        return {
+          current_parlay: parlay,
+          suggested_legs: picks.picks?.slice(0, 10) || [],
+          correlation_warnings: [],
+          database_available: picks.database_available ?? false,
+          _fallback: true
+        };
+      }
+      const data = await res.json();
+      return {
+        ...data,
+        database_available: data.database_available ?? false
+      };
+    } catch (err) {
+      console.error('getParlayBuilderInit error:', err);
+      return {
+        current_parlay: { legs: [] },
+        suggested_legs: [],
+        correlation_warnings: [],
+        database_available: false,
+        _error: true
+      };
+    }
+  },
+
+  // ============================================================================
+  // DEBUG / DEV TOOLS
+  // ============================================================================
+
+  /**
+   * Get raw API response for debugging
+   */
+  async getRawResponse(endpoint, sport = 'NBA') {
+    try {
+      const url = endpoint.includes('/')
+        ? `${API_BASE_URL}${endpoint}`
+        : `${API_BASE_URL}/live/${endpoint}/${sport.toUpperCase()}`;
+      const res = await authFetch(url);
+      const data = await res.json();
+      return {
+        status: res.status,
+        ok: res.ok,
+        url: url,
+        timestamp: new Date().toISOString(),
+        data
+      };
+    } catch (err) {
+      return {
+        status: 0,
+        ok: false,
+        error: err.message,
+        timestamp: new Date().toISOString()
+      };
+    }
+  },
+
+  /**
+   * Get API health and grader metrics
+   */
+  async getAPIHealth() {
+    try {
+      const [health, grader, scheduler] = await Promise.all([
+        this.getHealth(),
+        this.getGraderWeights().catch(() => null),
+        this.getSchedulerStatus().catch(() => null)
+      ]);
+      return {
+        status: health?.status || 'unknown',
+        version: health?.version,
+        grader: grader,
+        scheduler: scheduler,
+        timestamp: new Date().toISOString()
+      };
+    } catch (err) {
+      return {
+        status: 'error',
+        error: err.message,
+        timestamp: new Date().toISOString()
+      };
     }
   }
 };
