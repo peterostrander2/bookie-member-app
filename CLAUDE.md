@@ -56,13 +56,21 @@ Display these scoring components to users:
 - **JARVIS Triggers** (max 4 pts) - Gematria signals
 - **Esoteric Edge** - Numerology, moon phase, daily energy
 
-### Confidence Levels
-| Score | Label | Display |
-|-------|-------|---------|
-| 10.0+ | SMASH | Maximum conviction |
-| 8.0-9.9 | HIGH | Strong play |
-| 6.0-7.9 | MEDIUM | Standard play |
-| <6.0 | LOW | Weak signal |
+### Tier System (v10.87)
+Backend `tiering.py` is the single source of truth. Frontend matches these thresholds:
+
+| Score | Tier | Units | Action | Color |
+|-------|------|-------|--------|-------|
+| ≥9.0 | TITANIUM_SMASH | 2.5 | SMASH | #00FFFF (Cyan) |
+| ≥7.5 | GOLD_STAR | 2.0 | SMASH | #FFD700 (Gold) |
+| ≥6.5 | EDGE_LEAN | 1.0 | PLAY | #10B981 (Green) |
+| ≥5.5 | MONITOR | 0.0 | WATCH | #F59E0B (Amber) |
+| <5.5 | PASS | 0.0 | SKIP | #6B7280 (Gray) |
+
+**Frontend behavior:**
+- Uses backend `pick.tier` and `pick.units` fields when available
+- Falls back to score-based tier derivation for compatibility
+- Tier filters include TITANIUM_SMASH option
 
 ---
 
@@ -457,11 +465,12 @@ Claude branches follow pattern: `claude/{feature-name}-{sessionId}`
 ```
 Both tabs pull from `/live/best-bets/{sport}` endpoint.
 
-**Confidence Tiers:**
-- SMASH (85%+) - Green
-- STRONG (75-84%) - Yellow
-- LEAN (65-74%) - Blue
-- WATCH (<65%) - Gray
+**Display Tiers (v10.87):**
+- TITANIUM SMASH (≥9.0) - Cyan with glow
+- GOLD STAR (≥7.5) - Gold
+- EDGE LEAN (≥6.5) - Green
+- MONITOR (≥5.5) - Amber
+- PASS (<5.5) - Gray (filtered out by default)
 
 ### UI/UX Components (Completed)
 | Component | File | Description |
@@ -1189,3 +1198,27 @@ triggerSmashNotification({
 - `@json-render/core@0.2.0`, `@json-render/react@0.2.0`
 
 **Tests:** 91 tests passing (React 19 compatible)
+
+---
+
+### Session: January 2026 (v10.87 Backend Compatibility)
+
+**Completed in this session:**
+1. Added TITANIUM_SMASH tier (≥9.0 score, 2.5 units, cyan #00FFFF)
+2. Fixed GOLD_STAR units (1.5 → 2.0 to match backend tiering.py)
+3. Updated tier filters to include TITANIUM_SMASH option
+4. Frontend now uses backend `pick.units` field when available
+5. Updated TierLegend components with TITANIUM tier display
+
+**Files modified:**
+- `SmashSpotsPage.jsx` - Added TITANIUM_SMASH to TIER_CONFIG, updated getUnitSizeFromTier() to use backend units
+- `PropsSmashList.jsx` - Added TITANIUM_SMASH to TIER_CONFIGS, updated TierLegend and FilterControls
+- `GameSmashList.jsx` - Added TITANIUM_SMASH to TIER_CONFIGS, updated TierLegend and GameFilterControls
+- `CLAUDE.md` - Updated tier documentation to match backend v10.87
+
+**Backend compatibility:**
+- Matches backend `tiering.py` thresholds: TITANIUM≥9.0, GOLD≥7.5, EDGE≥6.5, MONITOR≥5.5
+- Uses new v10.86-87 fields: `units`, `confidence_label`, `confidence_pct`
+- Falls back to score-based derivation for backward compatibility
+
+**Tests:** 91 tests passing

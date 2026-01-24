@@ -7,9 +7,10 @@ import { AddToSlipButton } from './BetSlip';
 
 const AUTO_REFRESH_INTERVAL = 30 * 60 * 1000; // 30 minutes
 
-// v10.4 Tier-based filter options (matches backend tier system)
+// v10.87 Tier-based filter options (matches backend tiering.py)
 const TIER_FILTERS = [
-  { id: 'gold_star', label: 'GOLD STAR', tier: 'GOLD_STAR', minScore: 7.5, color: '#FFD700', isDefault: true },
+  { id: 'titanium_smash', label: 'TITANIUM', tier: 'TITANIUM_SMASH', minScore: 9.0, color: '#00FFFF' },
+  { id: 'gold_star', label: 'GOLD STAR+', tier: 'GOLD_STAR', minScore: 7.5, color: '#FFD700', isDefault: true },
   { id: 'edge_lean', label: 'EDGE LEAN+', tier: 'EDGE_LEAN', minScore: 6.5, color: '#10B981' },
   { id: 'monitor', label: 'MONITOR+', tier: 'MONITOR', minScore: 5.5, color: '#F59E0B' },
   { id: 'all', label: 'All Picks', tier: null, minScore: 0, color: '#6B7280' }
@@ -38,45 +39,61 @@ const TABS = [
   { id: 'games', label: 'Game Picks', icon: '🎯', color: '#00D4FF' }
 ];
 
-// v10.4 Tier display configuration (matches backend)
+// v10.87 Tier display configuration (matches backend tiering.py)
 const TIER_CONFIG = {
-  GOLD_STAR: { label: 'GOLD STAR', color: '#FFD700', emoji: '🌟', minScore: 7.5, action: 'SMASH' },
-  EDGE_LEAN: { label: 'EDGE LEAN', color: '#10B981', emoji: '💚', minScore: 6.5, action: 'PLAY' },
-  MONITOR: { label: 'MONITOR', color: '#F59E0B', emoji: '🟡', minScore: 5.5, action: 'WATCH' },
-  PASS: { label: 'PASS', color: '#6B7280', emoji: '⚪', minScore: 0, action: 'SKIP' }
+  TITANIUM_SMASH: { label: 'TITANIUM SMASH', color: '#00FFFF', emoji: '💎', minScore: 9.0, action: 'SMASH', units: 2.5 },
+  GOLD_STAR: { label: 'GOLD STAR', color: '#FFD700', emoji: '🌟', minScore: 7.5, action: 'SMASH', units: 2.0 },
+  EDGE_LEAN: { label: 'EDGE LEAN', color: '#10B981', emoji: '💚', minScore: 6.5, action: 'PLAY', units: 1.0 },
+  MONITOR: { label: 'MONITOR', color: '#F59E0B', emoji: '🟡', minScore: 5.5, action: 'WATCH', units: 0.0 },
+  PASS: { label: 'PASS', color: '#6B7280', emoji: '⚪', minScore: 0, action: 'SKIP', units: 0.0 }
 };
 
-// Legacy confidence tiers for display (moved outside component)
+// v10.87 Tier display for legend (includes TITANIUM_SMASH)
 const CONFIDENCE_TIERS = [
-  { label: 'GOLD STAR', color: '#FFD700', range: '≥7.5', tier: 'GOLD_STAR' },
+  { label: 'TITANIUM', color: '#00FFFF', range: '≥9.0', tier: 'TITANIUM_SMASH' },
+  { label: 'GOLD STAR', color: '#FFD700', range: '7.5-8.9', tier: 'GOLD_STAR' },
   { label: 'EDGE LEAN', color: '#10B981', range: '6.5-7.4', tier: 'EDGE_LEAN' },
   { label: 'MONITOR', color: '#F59E0B', range: '5.5-6.4', tier: 'MONITOR' },
   { label: 'PASS', color: '#6B7280', range: '<5.5', tier: 'PASS' }
 ];
 
-// Get tier config from pick (v10.4 schema)
+// Get tier config from pick (v10.87 schema)
 const getTierFromPick = (pick) => {
-  // Use tier from API if available (v10.4)
+  // Use tier from API if available (v10.87)
   if (pick.tier && TIER_CONFIG[pick.tier]) {
     return TIER_CONFIG[pick.tier];
   }
   // Fallback: derive from final_score
   const score = pick.final_score || (pick.confidence / 10) || 0;
+  if (score >= 9.0) return TIER_CONFIG.TITANIUM_SMASH;
   if (score >= 7.5) return TIER_CONFIG.GOLD_STAR;
   if (score >= 6.5) return TIER_CONFIG.EDGE_LEAN;
   if (score >= 5.5) return TIER_CONFIG.MONITOR;
   return TIER_CONFIG.PASS;
 };
 
-// Unit sizing based on tier (v10.4)
+// Unit sizing based on tier (v10.87 - uses backend units field when available)
 const getUnitSizeFromTier = (pick) => {
+  // v10.87: Use units from backend if available
+  if (pick.units !== undefined && pick.units !== null) {
+    const units = pick.units;
+    if (units >= 2.5) return { units, label: `${units} Units`, emoji: '💎🔥' };
+    if (units >= 2.0) return { units, label: `${units} Units`, emoji: '🔥🔥' };
+    if (units >= 1.5) return { units, label: `${units} Units`, emoji: '🔥' };
+    if (units >= 1.0) return { units, label: `${units} Unit${units > 1 ? 's' : ''}`, emoji: '✓' };
+    if (units > 0) return { units, label: `${units} Units`, emoji: '⚡' };
+    return { units: 0, label: 'Pass', emoji: '⚠️' };
+  }
+
+  // Fallback: derive from tier
   const tier = pick.tier || 'PASS';
   const isSmashSpot = pick.smash_spot === true;
 
+  if (tier === 'TITANIUM_SMASH') return { units: 2.5, label: '2.5 Units', emoji: '💎🔥' };
   if (isSmashSpot) return { units: 2, label: '2 Units', emoji: '🔥🔥' };
-  if (tier === 'GOLD_STAR') return { units: 1.5, label: '1.5 Units', emoji: '🔥' };
+  if (tier === 'GOLD_STAR') return { units: 2, label: '2 Units', emoji: '🔥🔥' };
   if (tier === 'EDGE_LEAN') return { units: 1, label: '1 Unit', emoji: '✓' };
-  if (tier === 'MONITOR') return { units: 0.5, label: '0.5 Units', emoji: '⚡' };
+  if (tier === 'MONITOR') return { units: 0, label: 'Watch', emoji: '⚡' };
   return { units: 0, label: 'Pass', emoji: '⚠️' };
 };
 

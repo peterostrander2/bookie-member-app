@@ -236,8 +236,20 @@ const LineMovement = memo(({ pick }) => {
 });
 LineMovement.displayName = 'LineMovement';
 
-// v10.4 Tier configuration based on API tier field
+// v10.87 Tier configuration based on API tier field (matches backend tiering.py)
 const TIER_CONFIGS = {
+  TITANIUM_SMASH: {
+    label: 'TITANIUM SMASH',
+    color: '#00FFFF',
+    bg: 'rgba(0, 255, 255, 0.15)',
+    border: 'rgba(0, 255, 255, 0.5)',
+    glow: '0 0 30px rgba(0, 255, 255, 0.4)',
+    size: 'large',
+    historicalWinRate: 92,
+    isProfitable: true,
+    action: 'SMASH',
+    units: 2.5
+  },
   GOLD_STAR: {
     label: 'GOLD STAR',
     color: '#FFD700',
@@ -247,7 +259,8 @@ const TIER_CONFIGS = {
     size: 'large',
     historicalWinRate: 87,
     isProfitable: true,
-    action: 'SMASH'
+    action: 'SMASH',
+    units: 2.0
   },
   EDGE_LEAN: {
     label: 'EDGE LEAN',
@@ -258,7 +271,8 @@ const TIER_CONFIGS = {
     size: 'medium',
     historicalWinRate: 72,
     isProfitable: true,
-    action: 'PLAY'
+    action: 'PLAY',
+    units: 1.0
   },
   MONITOR: {
     label: 'MONITOR',
@@ -269,7 +283,8 @@ const TIER_CONFIGS = {
     size: 'small',
     historicalWinRate: 58,
     isProfitable: true,
-    action: 'WATCH'
+    action: 'WATCH',
+    units: 0.0
   },
   PASS: {
     label: 'PASS',
@@ -281,18 +296,20 @@ const TIER_CONFIGS = {
     historicalWinRate: 48,
     isProfitable: false,
     warning: 'Below break-even at standard odds',
-    action: 'SKIP'
+    action: 'SKIP',
+    units: 0.0
   }
 };
 
-// Get tier config from pick object (v10.4 schema)
+// Get tier config from pick object (v10.87 schema)
 const getTierConfigFromPick = (pick) => {
-  // Use tier from API if available
+  // Use tier from API if available (v10.87)
   if (pick.tier && TIER_CONFIGS[pick.tier]) {
     return TIER_CONFIGS[pick.tier];
   }
   // Fallback: derive from final_score
   const score = pick.final_score || (pick.confidence / 10) || 0;
+  if (score >= 9.0) return TIER_CONFIGS.TITANIUM_SMASH;
   if (score >= 7.5) return TIER_CONFIGS.GOLD_STAR;
   if (score >= 6.5) return TIER_CONFIGS.EDGE_LEAN;
   if (score >= 5.5) return TIER_CONFIGS.MONITOR;
@@ -413,12 +430,13 @@ const TierBadge = memo(({ confidence, showWinRate = false }) => {
 });
 TierBadge.displayName = 'TierBadge';
 
-// Filter/Sort controls component
+// Filter/Sort controls component (v10.87 tier names)
 const FilterControls = memo(({ filters, setFilters, sortBy, setSortBy }) => {
-  const tierOptions = ['ALL', 'SMASH', 'STRONG', 'LEAN'];
+  const tierOptions = ['ALL', 'TITANIUM_SMASH', 'GOLD_STAR', 'EDGE_LEAN', 'MONITOR'];
+  const tierLabels = { ALL: 'ALL', TITANIUM_SMASH: 'TITANIUM', GOLD_STAR: 'GOLD', EDGE_LEAN: 'EDGE', MONITOR: 'MONITOR' };
   const propTypes = ['ALL', 'POINTS', 'REBOUNDS', 'ASSISTS', '3PT', 'OTHER'];
   const sortOptions = [
-    { value: 'confidence', label: 'Confidence (High→Low)' },
+    { value: 'score', label: 'Score (High→Low)' },
     { value: 'edge', label: 'Edge (High→Low)' },
     { value: 'odds', label: 'Best Odds' }
   ];
@@ -440,10 +458,10 @@ const FilterControls = memo(({ filters, setFilters, sortBy, setSortBy }) => {
                 style={{
                   padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold',
                   cursor: 'pointer', border: 'none',
-                  backgroundColor: filters.tier === tier ? '#8B5CF6' : '#1a1a2e',
-                  color: filters.tier === tier ? '#fff' : '#9CA3AF'
+                  backgroundColor: filters.tier === tier ? (tier === 'TITANIUM_SMASH' ? '#00FFFF' : '#8B5CF6') : '#1a1a2e',
+                  color: filters.tier === tier ? (tier === 'TITANIUM_SMASH' ? '#000' : '#fff') : '#9CA3AF'
                 }}
-              >{tier}</button>
+              >{tierLabels[tier]}</button>
             ))}
           </div>
         </div>
@@ -487,13 +505,17 @@ const FilterControls = memo(({ filters, setFilters, sortBy, setSortBy }) => {
 });
 FilterControls.displayName = 'FilterControls';
 
-// v10.4 Tier Legend
+// v10.87 Tier Legend (includes TITANIUM_SMASH)
 const TierLegend = memo(() => (
   <div style={{
     display: 'flex', gap: '12px', marginBottom: '12px', flexWrap: 'wrap',
     padding: '8px 12px', backgroundColor: '#0f0f1a', borderRadius: '8px'
   }}>
     <span style={{ color: '#6B7280', fontSize: '11px', marginRight: '4px' }}>TIER:</span>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+      <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#00FFFF' }} />
+      <span style={{ color: '#00FFFF', fontSize: '11px', fontWeight: 'bold' }}>TITANIUM ≥9.0</span>
+    </div>
     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
       <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#FFD700' }} />
       <span style={{ color: '#FFD700', fontSize: '11px', fontWeight: 'bold' }}>GOLD STAR ≥7.5</span>
@@ -975,39 +997,46 @@ const PropCard = memo(({ pick }) => {
             </div>
           )}
 
-          {/* Unit Size Recommendation - v10.4 uses final_score (0-10) */}
+          {/* Unit Size Recommendation - v10.87 uses backend units field */}
           <div style={{
-            backgroundColor: isSmashSpot ? 'rgba(255, 100, 0, 0.1)' : 'rgba(0, 212, 255, 0.1)',
+            backgroundColor: isSmashSpot ? 'rgba(255, 100, 0, 0.1)' : tierConfig.label === 'TITANIUM SMASH' ? 'rgba(0, 255, 255, 0.1)' : 'rgba(0, 212, 255, 0.1)',
             borderRadius: '8px',
             padding: '12px 14px',
             marginBottom: '16px',
-            border: `1px solid ${isSmashSpot ? 'rgba(255, 100, 0, 0.3)' : 'rgba(0, 212, 255, 0.2)'}`,
+            border: `1px solid ${isSmashSpot ? 'rgba(255, 100, 0, 0.3)' : tierConfig.label === 'TITANIUM SMASH' ? 'rgba(0, 255, 255, 0.3)' : 'rgba(0, 212, 255, 0.2)'}`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between'
           }}>
             <div>
-              <div style={{ color: isSmashSpot ? '#FF6400' : '#00D4FF', fontSize: '11px', fontWeight: 'bold', marginBottom: '2px' }}>
+              <div style={{ color: isSmashSpot ? '#FF6400' : tierConfig.label === 'TITANIUM SMASH' ? '#00FFFF' : '#00D4FF', fontSize: '11px', fontWeight: 'bold', marginBottom: '2px' }}>
                 RECOMMENDED STAKE
               </div>
               <div style={{ color: '#9CA3AF', fontSize: '11px' }}>
-                Based on {finalScore.toFixed(1)}/10 score {isSmashSpot && '(TRUE SMASH)'}
+                Based on {finalScore.toFixed(1)}/10 score {isSmashSpot && '(TRUE SMASH)'} {tierConfig.label === 'TITANIUM SMASH' && '(TITANIUM)'}
               </div>
             </div>
             <div style={{
-              backgroundColor: isSmashSpot ? '#FF640020' : '#00D4FF20',
-              color: isSmashSpot ? '#FF6400' : '#00D4FF',
+              backgroundColor: isSmashSpot ? '#FF640020' : tierConfig.label === 'TITANIUM SMASH' ? '#00FFFF20' : '#00D4FF20',
+              color: isSmashSpot ? '#FF6400' : tierConfig.label === 'TITANIUM SMASH' ? '#00FFFF' : '#00D4FF',
               padding: '8px 16px',
               borderRadius: '8px',
               fontWeight: 'bold',
               fontSize: '14px'
             }}>
-              {/* v10.4: Unit sizing based on score and smash_spot */}
-              {isSmashSpot ? '2+ Units 🔥🔥' :
-               finalScore >= 8.5 ? '2 Units 🔥' :
-               finalScore >= 7.5 ? '1.5 Units ✓' :
-               finalScore >= 6.5 ? '1 Unit ⚡' :
-               finalScore >= 5.5 ? '0.5 Units' : 'Pass ⚠️'}
+              {/* v10.87: Use backend units field when available, else derive from tier */}
+              {pick.units !== undefined ? (
+                pick.units >= 2.5 ? `${pick.units} Units 💎🔥` :
+                pick.units >= 2.0 ? `${pick.units} Units 🔥🔥` :
+                pick.units >= 1.0 ? `${pick.units} Unit${pick.units > 1 ? 's' : ''} ✓` :
+                pick.units > 0 ? `${pick.units} Units ⚡` : 'Pass ⚠️'
+              ) : (
+                tierConfig.label === 'TITANIUM SMASH' ? '2.5 Units 💎🔥' :
+                isSmashSpot ? '2 Units 🔥🔥' :
+                finalScore >= 7.5 ? '2 Units 🔥🔥' :
+                finalScore >= 6.5 ? '1 Unit ✓' :
+                finalScore >= 5.5 ? 'Watch ⚡' : 'Pass ⚠️'
+              )}
             </div>
           </div>
 
@@ -1308,13 +1337,14 @@ const PropsSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortBy
       result = result.filter(pick => (pick.confidence || 0) >= minConfidence);
     }
 
-    // Apply tier filter (v10.4 tiers)
+    // Apply tier filter (v10.87 tiers - includes TITANIUM_SMASH)
     if (filters.tier !== 'ALL') {
       result = result.filter(pick => {
         const tier = pick.tier || '';
         const score = pick.final_score || (pick.confidence / 10) || 0;
         switch (filters.tier) {
-          case 'GOLD_STAR': return tier === 'GOLD_STAR' || score >= 7.5;
+          case 'TITANIUM_SMASH': return tier === 'TITANIUM_SMASH' || score >= 9.0;
+          case 'GOLD_STAR': return tier === 'GOLD_STAR' || tier === 'TITANIUM_SMASH' || score >= 7.5;
           case 'EDGE_LEAN': return tier === 'EDGE_LEAN' || (score >= 6.5 && score < 7.5);
           case 'MONITOR': return tier === 'MONITOR' || (score >= 5.5 && score < 6.5);
           default: return true;
