@@ -56,20 +56,26 @@ Display these scoring components to users:
 - **JARVIS Triggers** (max 4 pts) - Gematria signals
 - **Esoteric Edge** - Numerology, moon phase, daily energy
 
-### Tier System (v10.87)
-Backend `tiering.py` is the single source of truth. Frontend matches these thresholds:
+### Tier System (v12.0)
+Backend `tiering.py` is the single source of truth. Frontend uses backend fields.
 
-| Score | Tier | Units | Action | Color |
-|-------|------|-------|--------|-------|
-| ≥9.0 | TITANIUM_SMASH | 2.5 | SMASH | #00FFFF (Cyan) |
+| Condition | Tier | Units | Action | Color |
+|-----------|------|-------|--------|-------|
+| final≥8.0 + 3/4 engines≥6.5 | TITANIUM_SMASH | 2.5 | SMASH | #00FFFF (Cyan) |
 | ≥7.5 | GOLD_STAR | 2.0 | SMASH | #FFD700 (Gold) |
 | ≥6.5 | EDGE_LEAN | 1.0 | PLAY | #10B981 (Green) |
 | ≥5.5 | MONITOR | 0.0 | WATCH | #F59E0B (Amber) |
 | <5.5 | PASS | 0.0 | SKIP | #6B7280 (Gray) |
 
+**v12.0 Changes:**
+- TITANIUM requires both final_score ≥ 8.0 AND 3/4 engines ≥ 6.5 (meaningful contribution)
+- Community filter: Only picks ≥ 6.5 shown to community
+- Engine scores: ai_score, research_score, esoteric_score, jarvis_score (all 0-10)
+
 **Frontend behavior:**
-- Uses backend `pick.tier` and `pick.units` fields when available
-- Falls back to score-based tier derivation for compatibility
+- Uses backend `pick.tier` and `pick.units` fields (source of truth)
+- Uses `pick.titanium_triggered` for TITANIUM detection
+- Falls back to score-based tier derivation only for legacy compatibility
 - Tier filters include TITANIUM_SMASH option
 
 ---

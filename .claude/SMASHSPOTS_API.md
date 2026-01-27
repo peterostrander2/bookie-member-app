@@ -86,14 +86,17 @@ switch (pick.tier) {
 
 ---
 
-## Tier Thresholds
+## Tier Thresholds (v12.0)
 
-| Tier | Score | Action | UI Suggestion |
-|------|-------|--------|---------------|
+| Tier | Condition | Action | UI Suggestion |
+|------|-----------|--------|---------------|
+| TITANIUM_SMASH | final≥8.0 + 3/4 engines≥6.5 | SMASH | Cyan, ultra-prominent |
 | GOLD_STAR | >= 7.5 | SMASH | Gold, prominent |
 | EDGE_LEAN | >= 6.5 | PLAY | Green |
 | MONITOR | >= 5.5 | WATCH | Yellow |
 | PASS | < 5.5 | SKIP | Gray/hidden |
+
+**Note:** TITANIUM requires `pick.titanium_triggered === true` from backend.
 
 ---
 

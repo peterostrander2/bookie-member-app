@@ -303,13 +303,15 @@ const TIER_CONFIGS = {
 
 // Get tier config from pick object (v10.87 schema)
 const getTierConfigFromPick = (pick) => {
-  // Use tier from API if available (v10.87)
+  // Use tier from API if available (v10.87+) - backend is source of truth
   if (pick.tier && TIER_CONFIGS[pick.tier]) {
     return TIER_CONFIGS[pick.tier];
   }
-  // Fallback: derive from final_score
+  // Fallback: derive from final_score (v12.0 thresholds)
   const score = pick.final_score || (pick.confidence / 10) || 0;
-  if (score >= 9.0) return TIER_CONFIGS.TITANIUM_SMASH;
+  // TITANIUM requires backend's titanium_triggered (score >= 8.0 + 3/4 engines >= 6.5)
+  // Frontend cannot verify engine rule, so only use titanium_triggered field
+  if (pick.titanium_triggered) return TIER_CONFIGS.TITANIUM_SMASH;
   if (score >= 7.5) return TIER_CONFIGS.GOLD_STAR;
   if (score >= 6.5) return TIER_CONFIGS.EDGE_LEAN;
   if (score >= 5.5) return TIER_CONFIGS.MONITOR;
@@ -1337,13 +1339,14 @@ const PropsSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortBy
       result = result.filter(pick => (pick.confidence || 0) >= minConfidence);
     }
 
-    // Apply tier filter (v10.87 tiers - includes TITANIUM_SMASH)
+    // Apply tier filter (v12.0 thresholds)
     if (filters.tier !== 'ALL') {
       result = result.filter(pick => {
         const tier = pick.tier || '';
         const score = pick.final_score || (pick.confidence / 10) || 0;
         switch (filters.tier) {
-          case 'TITANIUM_SMASH': return tier === 'TITANIUM_SMASH' || score >= 9.0;
+          // v12.0: TITANIUM requires backend titanium_triggered field
+          case 'TITANIUM_SMASH': return tier === 'TITANIUM_SMASH' || pick.titanium_triggered;
           case 'GOLD_STAR': return tier === 'GOLD_STAR' || tier === 'TITANIUM_SMASH' || score >= 7.5;
           case 'EDGE_LEAN': return tier === 'EDGE_LEAN' || (score >= 6.5 && score < 7.5);
           case 'MONITOR': return tier === 'MONITOR' || (score >= 5.5 && score < 6.5);

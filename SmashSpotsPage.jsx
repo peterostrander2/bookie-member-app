@@ -57,15 +57,17 @@ const CONFIDENCE_TIERS = [
   { label: 'PASS', color: '#6B7280', range: '<5.5', tier: 'PASS' }
 ];
 
-// Get tier config from pick (v10.87 schema)
+// Get tier config from pick (v12.0 thresholds)
 const getTierFromPick = (pick) => {
-  // Use tier from API if available (v10.87)
+  // Use tier from API if available (v10.87+) - backend is source of truth
   if (pick.tier && TIER_CONFIG[pick.tier]) {
     return TIER_CONFIG[pick.tier];
   }
-  // Fallback: derive from final_score
+  // Fallback: derive from final_score (v12.0 thresholds)
   const score = pick.final_score || (pick.confidence / 10) || 0;
-  if (score >= 9.0) return TIER_CONFIG.TITANIUM_SMASH;
+  // TITANIUM requires backend's titanium_triggered (score >= 8.0 + 3/4 engines >= 6.5)
+  // Frontend cannot verify engine rule, so only use titanium_triggered field
+  if (pick.titanium_triggered) return TIER_CONFIG.TITANIUM_SMASH;
   if (score >= 7.5) return TIER_CONFIG.GOLD_STAR;
   if (score >= 6.5) return TIER_CONFIG.EDGE_LEAN;
   if (score >= 5.5) return TIER_CONFIG.MONITOR;
