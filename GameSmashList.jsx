@@ -233,16 +233,22 @@ const TierBadge = memo(({ confidence, showWinRate = false }) => {
 });
 TierBadge.displayName = 'TierBadge';
 
-// v10.87 Tier Legend (includes TITANIUM_SMASH)
+// v12.0 Community Threshold - only show picks >= 6.5
+const COMMUNITY_THRESHOLD = 6.5;
+
+// v12.0 Tier Legend (TITANIUM requires score≥8.0 + 3/4 engines≥6.5)
 const TierLegend = memo(() => (
   <div style={{
     display: 'flex', gap: '12px', marginBottom: '12px', flexWrap: 'wrap',
     padding: '8px 12px', backgroundColor: '#0f0f1a', borderRadius: '8px'
   }}>
-    <span style={{ color: '#6B7280', fontSize: '11px', marginRight: '4px' }}>TIER:</span>
-    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-      <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#00FFFF' }} />
-      <span style={{ color: '#00FFFF', fontSize: '11px', fontWeight: 'bold' }}>TITANIUM ≥9.0</span>
+    <span style={{ color: '#6B7280', fontSize: '11px', marginRight: '4px' }}>v12.0 TIERS:</span>
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: '4px',
+      padding: '2px 6px', backgroundColor: '#00FFFF10', borderRadius: '4px', border: '1px solid #00FFFF30'
+    }}>
+      <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#00FFFF', boxShadow: '0 0 6px #00FFFF' }} />
+      <span style={{ color: '#00FFFF', fontSize: '11px', fontWeight: 'bold' }}>TITANIUM ≥8.0+3/4</span>
     </div>
     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
       <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#FFD700' }} />
@@ -251,10 +257,6 @@ const TierLegend = memo(() => (
     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
       <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10B981' }} />
       <span style={{ color: '#10B981', fontSize: '11px', fontWeight: 'bold' }}>EDGE LEAN ≥6.5</span>
-    </div>
-    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-      <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#F59E0B' }} />
-      <span style={{ color: '#F59E0B', fontSize: '11px', fontWeight: 'bold' }}>MONITOR ≥5.5</span>
     </div>
   </div>
 ));
@@ -1040,8 +1042,20 @@ const GameSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortByC
         gamePicks = data.data.filter(p => p.market === 'spreads' || p.market === 'totals' || p.market === 'h2h');
       }
 
+      // v12.0: Enforce community threshold (>= 6.5)
+      gamePicks = gamePicks.filter(p => {
+        const score = p.final_score || (p.confidence / 10) || 0;
+        return score >= COMMUNITY_THRESHOLD ||
+               p.tier === 'GOLD_STAR' ||
+               p.tier === 'EDGE_LEAN' ||
+               p.tier === 'TITANIUM_SMASH' ||
+               p.titanium_triggered;
+      });
+
       if (gamePicks.length === 0) {
-        setPicks(getDemoGamePicks(sport));
+        // Demo data also respects community threshold
+        const demoPicks = getDemoGamePicks(sport).filter(p => (p.final_score || 0) >= COMMUNITY_THRESHOLD);
+        setPicks(demoPicks);
         setDailyEnergy(getDemoEnergy());
         setIsDemo(true);
       } else {
@@ -1049,7 +1063,8 @@ const GameSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortByC
       }
     } catch (err) {
       console.error('Error fetching game picks:', err);
-      setPicks(getDemoGamePicks(sport));
+      const demoPicks = getDemoGamePicks(sport).filter(p => (p.final_score || 0) >= COMMUNITY_THRESHOLD);
+      setPicks(demoPicks);
       setDailyEnergy(getDemoEnergy());
       setIsDemo(true);
     } finally {

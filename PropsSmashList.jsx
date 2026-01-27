@@ -507,16 +507,22 @@ const FilterControls = memo(({ filters, setFilters, sortBy, setSortBy }) => {
 });
 FilterControls.displayName = 'FilterControls';
 
-// v10.87 Tier Legend (includes TITANIUM_SMASH)
+// v12.0 Community Threshold - only show picks >= 6.5
+const COMMUNITY_THRESHOLD = 6.5;
+
+// v12.0 Tier Legend (TITANIUM requires score≥8.0 + 3/4 engines≥6.5)
 const TierLegend = memo(() => (
   <div style={{
     display: 'flex', gap: '12px', marginBottom: '12px', flexWrap: 'wrap',
     padding: '8px 12px', backgroundColor: '#0f0f1a', borderRadius: '8px'
   }}>
-    <span style={{ color: '#6B7280', fontSize: '11px', marginRight: '4px' }}>TIER:</span>
-    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-      <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#00FFFF' }} />
-      <span style={{ color: '#00FFFF', fontSize: '11px', fontWeight: 'bold' }}>TITANIUM ≥9.0</span>
+    <span style={{ color: '#6B7280', fontSize: '11px', marginRight: '4px' }}>v12.0 TIERS:</span>
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: '4px',
+      padding: '2px 6px', backgroundColor: '#00FFFF10', borderRadius: '4px', border: '1px solid #00FFFF30'
+    }}>
+      <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#00FFFF', boxShadow: '0 0 6px #00FFFF' }} />
+      <span style={{ color: '#00FFFF', fontSize: '11px', fontWeight: 'bold' }}>TITANIUM ≥8.0+3/4</span>
     </div>
     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
       <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#FFD700' }} />
@@ -525,10 +531,6 @@ const TierLegend = memo(() => (
     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
       <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10B981' }} />
       <span style={{ color: '#10B981', fontSize: '11px', fontWeight: 'bold' }}>EDGE LEAN ≥6.5</span>
-    </div>
-    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-      <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#F59E0B' }} />
-      <span style={{ color: '#F59E0B', fontSize: '11px', fontWeight: 'bold' }}>MONITOR ≥5.5</span>
     </div>
   </div>
 ));
@@ -627,9 +629,10 @@ const PropCard = memo(({ pick }) => {
   const aligningPillars = useMemo(() => getAligningPillars(pick), [pick.aligning_pillars]);
   const { isMobile, isTouchDevice } = useMobileDetect();
 
-  // v10.4: Get final_score (0-10 scale) or derive from confidence
+  // v12.0: Get final_score (0-10 scale) or derive from confidence
   const finalScore = pick.final_score || (pick.confidence / 10) || 0;
   const isSmashSpot = pick.smash_spot === true;
+  const isTitanium = pick.titanium_triggered || pick.tier === 'TITANIUM_SMASH';
 
   // Check if we have v10.4 reasons array
   const hasReasons = pick.reasons && Array.isArray(pick.reasons) && pick.reasons.length > 0;
@@ -655,14 +658,18 @@ const PropCard = memo(({ pick }) => {
     return market?.toUpperCase()?.replace('player_', '') || 'PROP';
   }, []);
 
-  // Card style varies by tier - SmashSpot gets special treatment
+  // Card style varies by tier - TITANIUM and SmashSpot get special treatment
   const cardStyle = {
-    backgroundColor: isSmashSpot ? '#1a1510' : '#1a1a2e',
+    backgroundColor: isTitanium ? '#0a1a2a' : isSmashSpot ? '#1a1510' : '#1a1a2e',
     borderRadius: '12px',
     padding: isMobile ? '12px' : (tierConfig.size === 'large' ? '20px' : '16px'),
     marginBottom: '12px',
-    border: isSmashSpot ? '2px solid #FF6400' : `1px solid ${tierConfig.border}`,
-    boxShadow: isSmashSpot ? '0 0 30px rgba(255, 100, 0, 0.3)' : tierConfig.glow,
+    border: isTitanium ? '2px solid #00FFFF' : isSmashSpot ? '2px solid #FF6400' : `1px solid ${tierConfig.border}`,
+    boxShadow: isTitanium
+      ? '0 0 30px rgba(0, 255, 255, 0.4), inset 0 0 20px rgba(0, 255, 255, 0.1)'
+      : isSmashSpot
+        ? '0 0 30px rgba(255, 100, 0, 0.3)'
+        : tierConfig.glow,
     transition: 'all 0.2s ease',
     cursor: isTouchDevice ? 'default' : 'pointer',
     position: 'relative'
@@ -670,8 +677,30 @@ const PropCard = memo(({ pick }) => {
 
   return (
     <div style={cardStyle} {...(isTouchDevice ? swipeHandlers : {})}>
+      {/* TITANIUM BANNER - Most prominent */}
+      {isTitanium && (
+        <div style={{
+          position: 'absolute',
+          top: '-1px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: 'linear-gradient(135deg, #00FFFF, #0088aa)',
+          color: '#000',
+          padding: '4px 20px',
+          borderRadius: '0 0 10px 10px',
+          fontSize: '11px',
+          fontWeight: 'bold',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          letterSpacing: '1px',
+          boxShadow: '0 4px 15px rgba(0, 255, 255, 0.4)'
+        }}>
+          💎 TITANIUM SMASH 💎
+        </div>
+      )}
       {/* TRUE SMASH SPOT BANNER */}
-      {isSmashSpot && (
+      {isSmashSpot && !isTitanium && (
         <div style={{
           position: 'absolute',
           top: '-1px',
@@ -693,7 +722,7 @@ const PropCard = memo(({ pick }) => {
       )}
 
       {/* TOP ROW: Tier badge + Badges + Prop type + Game */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', marginTop: isSmashSpot ? '16px' : 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', marginTop: (isTitanium || isSmashSpot) ? '16px' : 0 }}>
         {/* v10.4: Show tier from API or derived */}
         <span style={{
           padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold',
@@ -732,18 +761,26 @@ const PropCard = memo(({ pick }) => {
 
       {/* HERO SECTION: Player + Pick - LARGEST, MOST PROMINENT */}
       <div style={{
-        backgroundColor: isSmashSpot ? 'rgba(255, 100, 0, 0.1)' : `${tierConfig.color}10`,
+        backgroundColor: isTitanium
+          ? 'rgba(0, 255, 255, 0.1)'
+          : isSmashSpot
+            ? 'rgba(255, 100, 0, 0.1)'
+            : `${tierConfig.color}10`,
         borderRadius: '12px',
         padding: '16px 20px',
         marginBottom: '12px',
-        border: isSmashSpot ? '2px solid rgba(255, 100, 0, 0.4)' : `2px solid ${tierConfig.color}30`,
+        border: isTitanium
+          ? '2px solid rgba(0, 255, 255, 0.4)'
+          : isSmashSpot
+            ? '2px solid rgba(255, 100, 0, 0.4)'
+            : `2px solid ${tierConfig.color}30`,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center'
       }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-            <span style={{ fontSize: '20px' }}>{isSmashSpot ? '🔥' : getPropIcon(pick.market)}</span>
+            <span style={{ fontSize: '20px' }}>{isTitanium ? '💎' : isSmashSpot ? '🔥' : getPropIcon(pick.market)}</span>
             <span style={{
               color: '#fff',
               fontWeight: 'bold',
@@ -771,12 +808,13 @@ const PropCard = memo(({ pick }) => {
           </div>
         </div>
         <div style={{ textAlign: 'right' }}>
-          {/* v10.4: Show final_score (0-10) prominently */}
+          {/* v12.0: Show final_score (0-10) prominently */}
           <div style={{
-            color: isSmashSpot ? '#FF6400' : tierConfig.color,
+            color: isTitanium ? '#00FFFF' : isSmashSpot ? '#FF6400' : tierConfig.color,
             fontWeight: 'bold',
             fontSize: tierConfig.size === 'large' ? '36px' : '32px',
-            lineHeight: '1'
+            lineHeight: '1',
+            textShadow: isTitanium ? '0 0 15px rgba(0, 255, 255, 0.5)' : 'none'
           }}>
             {finalScore.toFixed(1)}
           </div>
@@ -1310,15 +1348,28 @@ const PropsSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortBy
         );
       }
 
+      // v12.0: Enforce community threshold (>= 6.5)
+      propPicks = propPicks.filter(p => {
+        const score = p.final_score || (p.confidence / 10) || 0;
+        return score >= COMMUNITY_THRESHOLD ||
+               p.tier === 'GOLD_STAR' ||
+               p.tier === 'EDGE_LEAN' ||
+               p.tier === 'TITANIUM_SMASH' ||
+               p.titanium_triggered;
+      });
+
       if (propPicks.length === 0) {
-        setPicks(getDemoProps(sport));
+        // Demo data also respects community threshold
+        const demoPicks = getDemoProps(sport).filter(p => (p.final_score || 0) >= COMMUNITY_THRESHOLD);
+        setPicks(demoPicks);
         setIsDemo(true);
       } else {
         setPicks(propPicks);
       }
     } catch (err) {
       console.error('Error fetching props picks:', err);
-      setPicks(getDemoProps(sport));
+      const demoPicks = getDemoProps(sport).filter(p => (p.final_score || 0) >= COMMUNITY_THRESHOLD);
+      setPicks(demoPicks);
       setIsDemo(true);
     } finally {
       setLoading(false);

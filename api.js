@@ -705,6 +705,67 @@ export const api = {
   },
 
   // ============================================================================
+  // LIVE BETTING (In-Play) - Games currently in progress
+  // ============================================================================
+
+  /**
+   * Get live betting picks for games currently in progress
+   * Only returns picks with final_score >= 6.5
+   */
+  async getLiveInPlay(sport = 'NBA') {
+    try {
+      const res = await authFetch(`${API_BASE_URL}/live/live/in-play/${sport.toUpperCase()}`);
+      if (!res.ok) return { sport: sport.toUpperCase(), type: 'LIVE_BETS', picks: [] };
+      return res.json();
+    } catch {
+      return { sport: sport.toUpperCase(), type: 'LIVE_BETS', picks: [] };
+    }
+  },
+
+  /**
+   * Get in-game betting data (alternate endpoint)
+   */
+  async getInGame(sport = 'NBA') {
+    try {
+      const res = await authFetch(`${API_BASE_URL}/live/in-game/${sport.toUpperCase()}`);
+      if (!res.ok) return { sport: sport.toUpperCase(), picks: [] };
+      return res.json();
+    } catch {
+      return { sport: sport.toUpperCase(), picks: [] };
+    }
+  },
+
+  // ============================================================================
+  // GRADER & SCHEDULER STATUS (v12.0)
+  // ============================================================================
+
+  /**
+   * Get autograder status and metrics
+   */
+  async getGraderStatus() {
+    try {
+      const res = await authFetch(`${API_BASE_URL}/live/grader/status`);
+      if (!res.ok) return { status: 'unavailable', last_run: null };
+      return res.json();
+    } catch {
+      return { status: 'unavailable', last_run: null };
+    }
+  },
+
+  /**
+   * Get scheduler status for background jobs
+   */
+  async getLiveSchedulerStatus() {
+    try {
+      const res = await authFetch(`${API_BASE_URL}/live/scheduler/status`);
+      if (!res.ok) return { status: 'unavailable', jobs: [] };
+      return res.json();
+    } catch {
+      return { status: 'unavailable', jobs: [] };
+    }
+  },
+
+  // ============================================================================
   // DEBUG / DEV TOOLS
   // ============================================================================
 
