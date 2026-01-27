@@ -6,6 +6,15 @@ import { ShareButton } from './ShareButton';
 import { AddToSlipButton } from './BetSlip';
 import { HelpIcon, METRIC_TOOLTIPS } from './Tooltip';
 import { useSwipe, useMobileDetect } from './useSwipe';
+import {
+  getPickScore,
+  isCommunityEligible,
+  isTitanium,
+  filterCommunityPicks,
+  getBookInfo,
+  formatOdds as normalizeFormatOdds,
+  COMMUNITY_THRESHOLD
+} from './src/utils/pickNormalize';
 
 // AI Models and Pillars for enhanced "Why?" breakdown
 const AI_MODELS = [
@@ -121,17 +130,21 @@ const TIER_CONFIGS = {
   }
 };
 
-// Get tier config from pick object (v10.87 schema)
+// Get tier config from pick object (v12.1 - TITANIUM is truth-based ONLY)
 const getTierConfigFromPick = (pick) => {
-  // Use tier from API if available (v10.87+) - backend is source of truth
-  if (pick.tier && TIER_CONFIGS[pick.tier]) {
+  // TITANIUM: ONLY when backend explicitly indicates it
+  if (isTitanium(pick)) {
+    return TIER_CONFIGS.TITANIUM_SMASH;
+  }
+
+  // Use tier from API (non-titanium)
+  if (pick.tier && TIER_CONFIGS[pick.tier] && pick.tier !== 'TITANIUM_SMASH') {
     return TIER_CONFIGS[pick.tier];
   }
-  // Fallback: derive from final_score (v12.0 thresholds)
-  const score = pick.final_score || (pick.confidence / 10) || 0;
-  // TITANIUM requires backend's titanium_triggered (score >= 8.0 + 3/4 engines >= 6.5)
-  // Frontend cannot verify engine rule, so only use titanium_triggered field
-  if (pick.titanium_triggered) return TIER_CONFIGS.TITANIUM_SMASH;
+
+  // Fallback: derive from score (NOT for titanium)
+  const score = getPickScore(pick);
+  if (score === null) return TIER_CONFIGS.PASS;
   if (score >= 7.5) return TIER_CONFIGS.GOLD_STAR;
   if (score >= 6.5) return TIER_CONFIGS.EDGE_LEAN;
   if (score >= 5.5) return TIER_CONFIGS.MONITOR;
@@ -233,10 +246,7 @@ const TierBadge = memo(({ confidence, showWinRate = false }) => {
 });
 TierBadge.displayName = 'TierBadge';
 
-// v12.0 Community Threshold - only show picks >= 6.5
-const COMMUNITY_THRESHOLD = 6.5;
-
-// v12.0 Tier Legend (TITANIUM requires score≥8.0 + 3/4 engines≥6.5)
+// v12.1 Tier Legend (TITANIUM requires score≥8.0 + 3/4 engines≥6.5, backend-verified)
 const TierLegend = memo(() => (
   <div style={{
     display: 'flex', gap: '12px', marginBottom: '12px', flexWrap: 'wrap',
@@ -248,7 +258,7 @@ const TierLegend = memo(() => (
       padding: '2px 6px', backgroundColor: '#00FFFF10', borderRadius: '4px', border: '1px solid #00FFFF30'
     }}>
       <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#00FFFF', boxShadow: '0 0 6px #00FFFF' }} />
-      <span style={{ color: '#00FFFF', fontSize: '11px', fontWeight: 'bold' }}>TITANIUM ≥8.0+3/4</span>
+      <span style={{ color: '#00FFFF', fontSize: '11px', fontWeight: 'bold' }}>TITANIUM (backend-verified)</span>
     </div>
     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
       <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#FFD700' }} />
@@ -376,9 +386,11 @@ const PickCard = memo(({ pick, injuries = [] }) => {
   const aligningPillars = useMemo(() => getAligningPillars(pick.pillar_score), [pick.pillar_score]);
   const { isMobile, isTouchDevice } = useMobileDetect();
 
-  // v10.4: Get final_score (0-10 scale) or derive from confidence
-  const finalScore = pick.final_score || (pick.confidence / 10) || 0;
+  // v12.1: Use canonical score extraction
+  const finalScore = getPickScore(pick) || 0;
   const isSmashSpot = pick.smash_spot === true;
+  // v12.1: TITANIUM is truth-based ONLY - use imported helper
+  const pickIsTitanium = isTitanium(pick);
 
   // Check if we have v10.4 reasons array
   const hasReasons = pick.reasons && Array.isArray(pick.reasons) && pick.reasons.length > 0;
@@ -412,22 +424,46 @@ const PickCard = memo(({ pick, injuries = [] }) => {
     return pick.description || 'N/A';
   }, [pick.selection, pick.market, pick.point, pick.line, pick.team, pick.side, pick.description]);
 
-  // Card style varies by tier - SmashSpot gets special treatment
+  // Card style varies by tier - TITANIUM and SmashSpot get special treatment
   const cardStyle = {
-    backgroundColor: isSmashSpot ? '#1a1510' : '#1a1a2e',
+    backgroundColor: pickIsTitanium ? '#0a1a2a' : isSmashSpot ? '#1a1510' : '#1a1a2e',
     borderRadius: '12px',
     padding: isMobile ? '12px' : (tierConfig.size === 'large' ? '20px' : '16px'),
     marginBottom: '12px',
-    border: isSmashSpot ? '2px solid #FF6400' : `1px solid ${tierConfig.border}`,
-    boxShadow: isSmashSpot ? '0 0 30px rgba(255, 100, 0, 0.3)' : tierConfig.glow,
+    border: pickIsTitanium ? '2px solid #00FFFF' : isSmashSpot ? '2px solid #FF6400' : `1px solid ${tierConfig.border}`,
+    boxShadow: pickIsTitanium
+      ? '0 0 30px rgba(0, 255, 255, 0.4), inset 0 0 20px rgba(0, 255, 255, 0.1)'
+      : isSmashSpot ? '0 0 30px rgba(255, 100, 0, 0.3)' : tierConfig.glow,
     transition: 'all 0.2s ease',
     position: 'relative'
   };
 
   return (
     <div style={cardStyle} {...(isTouchDevice ? swipeHandlers : {})}>
+      {/* TITANIUM BANNER - Most prominent */}
+      {pickIsTitanium && (
+        <div style={{
+          position: 'absolute',
+          top: '-1px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: 'linear-gradient(135deg, #00FFFF, #0088aa)',
+          color: '#000',
+          padding: '4px 20px',
+          borderRadius: '0 0 10px 10px',
+          fontSize: '11px',
+          fontWeight: 'bold',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          letterSpacing: '1px',
+          boxShadow: '0 4px 15px rgba(0, 255, 255, 0.4)'
+        }}>
+          💎 TITANIUM SMASH 💎
+        </div>
+      )}
       {/* TRUE SMASH SPOT BANNER */}
-      {isSmashSpot && (
+      {isSmashSpot && !pickIsTitanium && (
         <div style={{
           position: 'absolute',
           top: '-1px',
@@ -448,7 +484,7 @@ const PickCard = memo(({ pick, injuries = [] }) => {
         </div>
       )}
       {/* TOP ROW: Tier badge + Badges + Market type + Matchup */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', marginTop: isSmashSpot ? '16px' : 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', marginTop: (pickIsTitanium || isSmashSpot) ? '16px' : 0 }}>
         {/* v10.4: Show tier from API or derived */}
         <span style={{
           padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold',
@@ -487,18 +523,22 @@ const PickCard = memo(({ pick, injuries = [] }) => {
 
       {/* HERO SECTION: Main pick display - LARGEST, MOST PROMINENT */}
       <div style={{
-        backgroundColor: isSmashSpot ? 'rgba(255, 100, 0, 0.1)' : `${tierConfig.color}10`,
+        backgroundColor: pickIsTitanium
+          ? 'rgba(0, 255, 255, 0.1)'
+          : isSmashSpot ? 'rgba(255, 100, 0, 0.1)' : `${tierConfig.color}10`,
         borderRadius: '12px',
         padding: '16px 20px',
         marginBottom: '12px',
-        border: isSmashSpot ? '2px solid rgba(255, 100, 0, 0.4)' : `2px solid ${tierConfig.color}30`,
+        border: pickIsTitanium
+          ? '2px solid rgba(0, 255, 255, 0.4)'
+          : isSmashSpot ? '2px solid rgba(255, 100, 0, 0.4)' : `2px solid ${tierConfig.color}30`,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center'
       }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-            {isSmashSpot && <span style={{ fontSize: '20px' }}>🔥</span>}
+            {(pickIsTitanium || isSmashSpot) && <span style={{ fontSize: '20px' }}>{pickIsTitanium ? '💎' : '🔥'}</span>}
           </div>
           <div style={{
             color: '#fff',
@@ -521,10 +561,11 @@ const PickCard = memo(({ pick, injuries = [] }) => {
         <div style={{ textAlign: 'right' }}>
           {/* v10.4: Show final_score (0-10) prominently */}
           <div style={{
-            color: isSmashSpot ? '#FF6400' : tierConfig.color,
+            color: pickIsTitanium ? '#00FFFF' : isSmashSpot ? '#FF6400' : tierConfig.color,
             fontWeight: 'bold',
             fontSize: tierConfig.size === 'large' ? '36px' : '32px',
-            lineHeight: '1'
+            lineHeight: '1',
+            textShadow: pickIsTitanium ? '0 0 15px rgba(0, 255, 255, 0.5)' : 'none'
           }}>
             {finalScore.toFixed(1)}
           </div>
@@ -1042,19 +1083,13 @@ const GameSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortByC
         gamePicks = data.data.filter(p => p.market === 'spreads' || p.market === 'totals' || p.market === 'h2h');
       }
 
-      // v12.0: Enforce community threshold (>= 6.5)
-      gamePicks = gamePicks.filter(p => {
-        const score = p.final_score || (p.confidence / 10) || 0;
-        return score >= COMMUNITY_THRESHOLD ||
-               p.tier === 'GOLD_STAR' ||
-               p.tier === 'EDGE_LEAN' ||
-               p.tier === 'TITANIUM_SMASH' ||
-               p.titanium_triggered;
-      });
+      // v12.1: STRICT filtering - score >= 6.5 AND today ET
+      // NO tier-based bypass - score is canonical
+      gamePicks = filterCommunityPicks(gamePicks, { requireTodayET: true });
 
       if (gamePicks.length === 0) {
-        // Demo data also respects community threshold
-        const demoPicks = getDemoGamePicks(sport).filter(p => (p.final_score || 0) >= COMMUNITY_THRESHOLD);
+        // Demo data also respects strict community threshold
+        const demoPicks = getDemoGamePicks(sport).filter(isCommunityEligible);
         setPicks(demoPicks);
         setDailyEnergy(getDemoEnergy());
         setIsDemo(true);
@@ -1063,7 +1098,7 @@ const GameSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortByC
       }
     } catch (err) {
       console.error('Error fetching game picks:', err);
-      const demoPicks = getDemoGamePicks(sport).filter(p => (p.final_score || 0) >= COMMUNITY_THRESHOLD);
+      const demoPicks = getDemoGamePicks(sport).filter(isCommunityEligible);
       setPicks(demoPicks);
       setDailyEnergy(getDemoEnergy());
       setIsDemo(true);

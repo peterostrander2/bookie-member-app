@@ -5,12 +5,17 @@ import { usePreferences } from './usePreferences';
 import api from './api';
 import { AddToSlipButton } from './BetSlip';
 import { useToast } from './Toast';
+import {
+  getPickScore,
+  isCommunityEligible,
+  isTitanium,
+  getTierForStyling,
+  filterCommunityPicks,
+  COMMUNITY_THRESHOLD
+} from './src/utils/pickNormalize';
 
-// v12.0: 60 second polling for live data
+// v12.1: 60 second polling for live data
 const AUTO_REFRESH_INTERVAL = 60 * 1000; // 60 seconds for live experience
-
-// Community threshold - backend enforces >= 6.5, frontend must match
-const COMMUNITY_THRESHOLD = 6.5;
 
 // v12.0 Tier-based filter options (matches backend tiering.py)
 // Community threshold: >= 6.5 enforced - no MONITOR or below shown
@@ -66,22 +71,27 @@ const TIER_CONFIG = {
 // v12.0 Tier display for legend (TITANIUM is visually dominant)
 // Only show tiers at community threshold (>= 6.5)
 const CONFIDENCE_TIERS = [
-  { label: 'TITANIUM', color: '#00FFFF', range: '≥8.0 + 3/4 engines', tier: 'TITANIUM_SMASH', prominent: true },
+  { label: 'TITANIUM', color: '#00FFFF', range: '≥8.0 + 3/4 modules, backend-verified', tier: 'TITANIUM_SMASH', prominent: true },
   { label: 'GOLD STAR', color: '#FFD700', range: '≥7.5', tier: 'GOLD_STAR' },
   { label: 'EDGE LEAN', color: '#10B981', range: '≥6.5', tier: 'EDGE_LEAN' }
 ];
 
-// Get tier config from pick (v12.0 thresholds)
+// Get tier config from pick (v12.1 - TITANIUM is truth-based ONLY)
 const getTierFromPick = (pick) => {
-  // Use tier from API if available (v10.87+) - backend is source of truth
-  if (pick.tier && TIER_CONFIG[pick.tier]) {
+  // TITANIUM: ONLY when backend explicitly indicates it (truth-based)
+  // DO NOT infer from score >= 8.0
+  if (isTitanium(pick)) {
+    return TIER_CONFIG.TITANIUM_SMASH;
+  }
+
+  // Use tier from API if available and NOT titanium
+  if (pick.tier && TIER_CONFIG[pick.tier] && pick.tier !== 'TITANIUM_SMASH') {
     return TIER_CONFIG[pick.tier];
   }
-  // Fallback: derive from final_score (v12.0 thresholds)
-  const score = pick.final_score || (pick.confidence / 10) || 0;
-  // TITANIUM requires backend's titanium_triggered (score >= 8.0 + 3/4 engines >= 6.5)
-  // Frontend cannot verify engine rule, so only use titanium_triggered field
-  if (pick.titanium_triggered) return TIER_CONFIG.TITANIUM_SMASH;
+
+  // Fallback: derive from score (for styling only, NOT for titanium)
+  const score = getPickScore(pick);
+  if (score === null) return TIER_CONFIG.PASS;
   if (score >= 7.5) return TIER_CONFIG.GOLD_STAR;
   if (score >= 6.5) return TIER_CONFIG.EDGE_LEAN;
   if (score >= 5.5) return TIER_CONFIG.MONITOR;
@@ -178,10 +188,10 @@ const FILTER_CONTAINER = {
 
 // ============================================================================
 
-// Today's Best Bets Component - v12.0 with TITANIUM prominence
+// Today's Best Bets Component - v12.1 with strict filtering
 const TodaysBestBets = memo(({ sport, onPickClick }) => {
   const [bestPicks, setBestPicks] = useState([]);
-  const [titaniumPicks, setTitaniumPicks] = useState([]); // TITANIUM picks (rare, 3/4 engine rule)
+  const [titaniumPicks, setTitaniumPicks] = useState([]); // TITANIUM picks (backend truth-based)
   const [smashSpots, setSmashSpots] = useState([]); // TRUE SmashSpots (rare)
   const [displayTier, setDisplayTier] = useState('GOLD_STAR');
   const [totalActionable, setTotalActionable] = useState(0);
@@ -193,17 +203,12 @@ const TodaysBestBets = memo(({ sport, onPickClick }) => {
       try {
         const data = await api.getBestBets(sport);
 
-        // v12.0: Use response.picks, filter by community threshold (>= 6.5)
-        const allPicks = (data?.picks || []).filter(p =>
-          (p.final_score || 0) >= COMMUNITY_THRESHOLD ||
-          p.tier === 'GOLD_STAR' ||
-          p.tier === 'EDGE_LEAN' ||
-          p.tier === 'TITANIUM_SMASH' ||
-          p.titanium_triggered
-        );
+        // v12.1: STRICT filtering - score >= 6.5 AND today ET
+        // NO tier-based bypass - score is canonical
+        const allPicks = filterCommunityPicks(data?.picks || [], { requireTodayET: true });
 
-        // Find TITANIUM picks (rare, requires 3/4 engines >= 6.5)
-        const titanium = allPicks.filter(p => p.titanium_triggered || p.tier === 'TITANIUM_SMASH');
+        // Find TITANIUM picks (backend truth-based ONLY)
+        const titanium = allPicks.filter(isTitanium);
         setTitaniumPicks(titanium);
 
         // Find TRUE SmashSpots (rare, high-conviction)
@@ -213,20 +218,22 @@ const TodaysBestBets = memo(({ sport, onPickClick }) => {
         // Count actionable picks (community threshold >= 6.5)
         setTotalActionable(allPicks.length);
 
-        // Get top picks by tier priority
+        // Get top picks by score (not tier)
         const goldStarPicks = allPicks
-          .filter(p => p.tier === 'GOLD_STAR' || (p.final_score || 0) >= 7.5)
-          .sort((a, b) => (b.final_score || 0) - (a.final_score || 0))
+          .filter(p => {
+            const score = getPickScore(p);
+            return score !== null && score >= 7.5;
+          })
+          .sort((a, b) => (getPickScore(b) || 0) - (getPickScore(a) || 0))
           .slice(0, 3);
 
         if (goldStarPicks.length > 0) {
           setBestPicks(goldStarPicks);
           setDisplayTier('GOLD_STAR');
         } else {
-          // Fallback to EDGE_LEAN
+          // Fallback to EDGE_LEAN (>= 6.5)
           const edgeLeanPicks = allPicks
-            .filter(p => p.tier === 'EDGE_LEAN' || (p.final_score || 0) >= 6.5)
-            .sort((a, b) => (b.final_score || 0) - (a.final_score || 0))
+            .sort((a, b) => (getPickScore(b) || 0) - (getPickScore(a) || 0))
             .slice(0, 3);
 
           if (edgeLeanPicks.length > 0) {
@@ -468,27 +475,29 @@ const TodaysBestBets = memo(({ sport, onPickClick }) => {
         {bestPicks.map((pick, idx) => {
           const unitSize = getUnitSizeFromTier(pick);
           const isProp = pick.player || pick.player_name || pick.market?.includes('player');
-          // v12.0: Use selection field, fallback to constructed display
+          // v12.1: Use selection field, fallback to constructed display
           const pickDisplay = pick.selection || (isProp
             ? `${pick.player || pick.player_name} ${pick.side || 'Over'} ${pick.line || pick.point}`
             : `${pick.matchup || pick.game} ${pick.line > 0 ? `+${pick.line}` : pick.line || ''}`);
           const pickKey = pick.id || `${pick.player || pick.player_name || pick.matchup}-${pick.market || pick.bet_type}`;
           const isSmashSpot = pick.smash_spot === true;
-          const isTitanium = pick.titanium_triggered || pick.tier === 'TITANIUM_SMASH';
+          // v12.1: TITANIUM is truth-based ONLY - use imported helper
+          const pickIsTitanium = isTitanium(pick);
           const pickTierConfig = getTierFromPick(pick);
+          const pickScore = getPickScore(pick);
 
           return (
             <div
               key={pickKey}
               style={{
-                backgroundColor: isTitanium
+                backgroundColor: pickIsTitanium
                   ? 'rgba(0, 40, 60, 0.9)'
                   : isSmashSpot
                     ? 'rgba(255, 100, 50, 0.1)'
                     : 'rgba(10, 26, 21, 0.1)',
                 borderRadius: '12px',
                 padding: '14px 16px',
-                border: isTitanium
+                border: pickIsTitanium
                   ? '2px solid #00FFFF'
                   : isSmashSpot
                     ? '2px solid #FF6432'
@@ -499,12 +508,12 @@ const TodaysBestBets = memo(({ sport, onPickClick }) => {
                 cursor: 'pointer',
                 transition: 'all 0.2s',
                 position: 'relative',
-                boxShadow: isTitanium ? '0 0 15px rgba(0, 255, 255, 0.3)' : 'none'
+                boxShadow: pickIsTitanium ? '0 0 15px rgba(0, 255, 255, 0.3)' : 'none'
               }}
               onClick={() => onPickClick && onPickClick(isProp ? 'props' : 'games')}
             >
               {/* TITANIUM badge - most prominent */}
-              {isTitanium && (
+              {pickIsTitanium && (
                 <div style={{
                   position: 'absolute',
                   top: '-10px',
@@ -524,7 +533,7 @@ const TodaysBestBets = memo(({ sport, onPickClick }) => {
                 </div>
               )}
               {/* SmashSpot fire badge */}
-              {isSmashSpot && !isTitanium && (
+              {isSmashSpot && !pickIsTitanium && (
                 <div style={{
                   position: 'absolute',
                   top: '-8px',
@@ -548,7 +557,7 @@ const TodaysBestBets = memo(({ sport, onPickClick }) => {
                 width: '32px',
                 height: '32px',
                 borderRadius: '50%',
-                backgroundColor: isTitanium
+                backgroundColor: pickIsTitanium
                   ? '#00FFFF'
                   : isSmashSpot
                     ? '#FF6432'
@@ -559,9 +568,9 @@ const TodaysBestBets = memo(({ sport, onPickClick }) => {
                 fontWeight: 'bold',
                 fontSize: '14px',
                 color: '#000',
-                boxShadow: isTitanium ? '0 0 10px #00FFFF' : 'none'
+                boxShadow: pickIsTitanium ? '0 0 10px #00FFFF' : 'none'
               }}>
-                {isTitanium ? '💎' : isSmashSpot ? '🔥' : `#${idx + 1}`}
+                {pickIsTitanium ? '💎' : isSmashSpot ? '🔥' : `#${idx + 1}`}
               </div>
 
               {/* Pick details */}
@@ -608,28 +617,28 @@ const TodaysBestBets = memo(({ sport, onPickClick }) => {
               {/* Score + Unit size */}
               <div style={{ textAlign: 'right' }}>
                 <div style={{
-                  color: isTitanium ? '#00FFFF' : isSmashSpot ? '#FF6432' : pickTierConfig.color,
+                  color: pickIsTitanium ? '#00FFFF' : isSmashSpot ? '#FF6432' : pickTierConfig.color,
                   fontWeight: 'bold',
                   fontSize: '20px',
                   lineHeight: '1',
-                  textShadow: isTitanium ? '0 0 10px #00FFFF50' : 'none'
+                  textShadow: pickIsTitanium ? '0 0 10px #00FFFF50' : 'none'
                 }}>
-                  {pick.final_score?.toFixed(1) || ((pick.confidence || 0) / 10).toFixed(1)}
+                  {pickScore !== null ? pickScore.toFixed(1) : '--'}
                 </div>
                 <div style={{ color: '#6B7280', fontSize: '9px' }}>score</div>
                 <div style={{
-                  backgroundColor: isTitanium
+                  backgroundColor: pickIsTitanium
                     ? '#00FFFF20'
                     : isSmashSpot
                       ? '#FF643220'
                       : `${pickTierConfig.color}20`,
-                  color: isTitanium ? '#00FFFF' : isSmashSpot ? '#FF6432' : pickTierConfig.color,
+                  color: pickIsTitanium ? '#00FFFF' : isSmashSpot ? '#FF6432' : pickTierConfig.color,
                   padding: '2px 8px',
                   borderRadius: '4px',
                   fontSize: '10px',
                   fontWeight: 'bold',
                   marginTop: '4px',
-                  border: isTitanium ? '1px solid #00FFFF50' : 'none'
+                  border: pickIsTitanium ? '1px solid #00FFFF50' : 'none'
                 }}>
                   {unitSize.emoji} {unitSize.label}
                 </div>
@@ -702,14 +711,9 @@ const SmashSpotsPage = () => {
       const data = await api.getBestBets(sport);
       const picks = data?.picks || [];
 
-      // Filter to community threshold (>= 6.5)
-      const communityPicks = picks.filter(p =>
-        (p.final_score || 0) >= COMMUNITY_THRESHOLD ||
-        p.tier === 'GOLD_STAR' ||
-        p.tier === 'EDGE_LEAN' ||
-        p.tier === 'TITANIUM_SMASH' ||
-        p.titanium_triggered
-      );
+      // v12.1: STRICT filtering - score >= 6.5 AND today ET only
+      // NO tier-based bypass - score is canonical
+      const communityPicks = filterCommunityPicks(picks, { requireTodayET: true });
 
       // Detect new picks
       const currentIds = new Set(communityPicks.map(p => p.id || `${p.player || p.matchup}-${p.market}`));
@@ -719,9 +723,13 @@ const SmashSpotsPage = () => {
       });
 
       // Show toast for new TITANIUM or GOLD_STAR picks
+      // TITANIUM: truth-based only (not inferred from score)
       if (previousPicksRef.current.size > 0) {
-        const titaniumPicks = newPicks.filter(p => p.titanium_triggered || p.tier === 'TITANIUM_SMASH');
-        const goldStarPicks = newPicks.filter(p => p.tier === 'GOLD_STAR' && !p.titanium_triggered);
+        const titaniumPicks = newPicks.filter(isTitanium);
+        const goldStarPicks = newPicks.filter(p => {
+          const score = getPickScore(p);
+          return score !== null && score >= 7.5 && !isTitanium(p);
+        });
 
         if (titaniumPicks.length > 0) {
           showToast(`💎 ${titaniumPicks.length} NEW TITANIUM ${titaniumPicks.length === 1 ? 'PICK' : 'PICKS'}!`, 'success');
