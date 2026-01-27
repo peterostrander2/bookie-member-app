@@ -11,6 +11,7 @@ import {
   isTitanium,
   getTierForStyling,
   filterCommunityPicks,
+  communitySort,
   COMMUNITY_THRESHOLD
 } from './src/utils/pickNormalize';
 
@@ -218,13 +219,13 @@ const TodaysBestBets = memo(({ sport, onPickClick }) => {
         // Count actionable picks (community threshold >= 6.5)
         setTotalActionable(allPicks.length);
 
-        // Get top picks by score (not tier)
+        // Get top picks by deterministic sort (Titanium first, score desc, time asc)
         const goldStarPicks = allPicks
           .filter(p => {
             const score = getPickScore(p);
             return score !== null && score >= 7.5;
           })
-          .sort((a, b) => (getPickScore(b) || 0) - (getPickScore(a) || 0))
+          .sort(communitySort)
           .slice(0, 3);
 
         if (goldStarPicks.length > 0) {
@@ -233,7 +234,7 @@ const TodaysBestBets = memo(({ sport, onPickClick }) => {
         } else {
           // Fallback to EDGE_LEAN (>= 6.5)
           const edgeLeanPicks = allPicks
-            .sort((a, b) => (getPickScore(b) || 0) - (getPickScore(a) || 0))
+            .sort(communitySort)
             .slice(0, 3);
 
           if (edgeLeanPicks.length > 0) {

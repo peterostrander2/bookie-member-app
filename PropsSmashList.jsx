@@ -11,6 +11,7 @@ import {
   isCommunityEligible,
   isTitanium,
   filterCommunityPicks,
+  communitySort,
   getBookInfo,
   formatOdds,
   COMMUNITY_THRESHOLD
@@ -936,6 +937,28 @@ const PropCard = memo(({ pick }) => {
         </div>
       )}
 
+      {/* Dev-only Debug section */}
+      {process.env.NODE_ENV === 'development' && (
+        <details style={{ marginBottom: '8px' }}>
+          <summary style={{ color: '#6B7280', fontSize: '10px', cursor: 'pointer', padding: '4px 0' }}>
+            Debug
+          </summary>
+          <div style={{
+            backgroundColor: '#0a0a14', borderRadius: '6px', padding: '8px 10px', marginTop: '4px',
+            fontSize: '10px', fontFamily: 'monospace', color: '#9CA3AF', lineHeight: '1.6',
+            border: '1px solid #2a2a4a'
+          }}>
+            <div>final_score: {pick.final_score ?? 'null'}</div>
+            <div>tier: {pick.tier ?? 'null'}</div>
+            <div>titanium_triggered: {String(pick.titanium_triggered ?? 'null')}</div>
+            <div>titanium_modules_hit: {pick.titanium_modules_hit ?? pick.titanium?.modules_hit ?? 'null'}</div>
+            <div>start_time: {pick.start_time || pick.commence_time || pick.game_time || 'null'}</div>
+            <div>book: {pick.bookmaker || pick.best_book || 'null'}</div>
+            <div>event_id: {pick.event_id || pick.id || 'null'}</div>
+          </div>
+        </details>
+      )}
+
       {/* Action Row - only show "Why This Pick" if we have real data to show */}
       {(hasReasons || hasKeyStats || hasModelData || pick.jarvis_boost > 0) && (
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -1426,17 +1449,19 @@ const PropsSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortBy
       });
     }
 
-    // Apply sorting - sortByConfidence from parent means sort by score (v10.4)
-    const effectiveSortBy = sortByConfidence ? 'score' : sortBy;
-    result.sort((a, b) => {
-      switch (effectiveSortBy) {
-        case 'score': return (b.final_score || (b.confidence / 10) || 0) - (a.final_score || (a.confidence / 10) || 0);
-        case 'confidence': return (b.confidence || 0) - (a.confidence || 0);
-        case 'edge': return (b.edge || 0) - (a.edge || 0);
-        case 'odds': return (a.price || a.odds || 0) - (b.price || b.odds || 0);
-        default: return 0;
-      }
-    });
+    // Deterministic sort: Titanium first, score desc, start time asc
+    const effectiveSortBy = sortByConfidence ? 'deterministic' : sortBy;
+    if (effectiveSortBy === 'deterministic') {
+      result.sort(communitySort);
+    } else {
+      result.sort((a, b) => {
+        switch (effectiveSortBy) {
+          case 'edge': return (b.edge || 0) - (a.edge || 0);
+          case 'odds': return (a.price || a.odds || 0) - (b.price || b.odds || 0);
+          default: return communitySort(a, b);
+        }
+      });
+    }
 
     return result;
   }, [picks, filters, sortBy, minConfidence, minScore, sortByConfidence]);

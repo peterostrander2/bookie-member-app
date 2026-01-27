@@ -261,6 +261,27 @@ export function formatOdds(odds) {
 /**
  * Format line for display
  */
+/**
+ * Deterministic sort comparator for community picks.
+ * Order: Titanium first, then score desc, then start time asc.
+ */
+export function communitySort(a, b) {
+  const aTi = isTitanium(a) ? 1 : 0;
+  const bTi = isTitanium(b) ? 1 : 0;
+  if (bTi !== aTi) return bTi - aTi;
+
+  const aScore = getPickScore(a) || 0;
+  const bScore = getPickScore(b) || 0;
+  if (bScore !== aScore) return bScore - aScore;
+
+  const aTime = parseStartTime(a);
+  const bTime = parseStartTime(b);
+  if (aTime && bTime) return aTime - bTime;
+  if (aTime) return -1;
+  if (bTime) return 1;
+  return 0;
+}
+
 export function formatLine(line, side) {
   if (line === null || line === undefined) return '';
   const num = typeof line === 'number' ? line : parseFloat(line);
