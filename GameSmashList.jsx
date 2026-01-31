@@ -16,6 +16,13 @@ import {
   formatOdds as normalizeFormatOdds,
   COMMUNITY_THRESHOLD
 } from './src/utils/pickNormalize';
+import {
+  MIN_FINAL_SCORE,
+  GOLD_STAR_THRESHOLD,
+  TITANIUM_THRESHOLD,
+  MONITOR_THRESHOLD,
+  GOLD_STAR_GATES
+} from './core/frontend_scoring_contract';
 
 // AI Models and Pillars for enhanced "Why?" breakdown
 const AI_MODELS = [
@@ -146,9 +153,9 @@ const getTierConfigFromPick = (pick) => {
   // Fallback: derive from score (NOT for titanium)
   const score = getPickScore(pick);
   if (score === null) return TIER_CONFIGS.PASS;
-  if (score >= 7.5) return TIER_CONFIGS.GOLD_STAR;
-  if (score >= 6.5) return TIER_CONFIGS.EDGE_LEAN;
-  if (score >= 5.5) return TIER_CONFIGS.MONITOR;
+  if (score >= GOLD_STAR_THRESHOLD) return TIER_CONFIGS.GOLD_STAR;
+  if (score >= MIN_FINAL_SCORE) return TIER_CONFIGS.EDGE_LEAN;
+  if (score >= MONITOR_THRESHOLD) return TIER_CONFIGS.MONITOR;
   return TIER_CONFIGS.PASS;
 };
 
@@ -247,7 +254,7 @@ const TierBadge = memo(({ confidence, showWinRate = false }) => {
 });
 TierBadge.displayName = 'TierBadge';
 
-// v12.1 Tier Legend (TITANIUM requires score≥8.0 + 3/4 engines≥6.5, backend-verified)
+// v12.1 Tier Legend (TITANIUM requires score≥TITANIUM_THRESHOLD + 3/4 engines, backend-verified)
 const TierLegend = memo(() => (
   <div style={{
     display: 'flex', gap: '12px', marginBottom: '12px', flexWrap: 'wrap',
@@ -263,11 +270,11 @@ const TierLegend = memo(() => (
     </div>
     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
       <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#FFD700' }} />
-      <span style={{ color: '#FFD700', fontSize: '11px', fontWeight: 'bold' }}>GOLD STAR ≥7.5</span>
+      <span style={{ color: '#FFD700', fontSize: '11px', fontWeight: 'bold' }}>GOLD STAR ≥{GOLD_STAR_THRESHOLD}</span>
     </div>
     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
       <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10B981' }} />
-      <span style={{ color: '#10B981', fontSize: '11px', fontWeight: 'bold' }}>EDGE LEAN ≥6.5</span>
+      <span style={{ color: '#10B981', fontSize: '11px', fontWeight: 'bold' }}>EDGE LEAN ≥{MIN_FINAL_SCORE}</span>
     </div>
   </div>
 ));
@@ -1106,7 +1113,7 @@ const GameSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortByC
         gamePicks = data.data.filter(p => p.market === 'spreads' || p.market === 'totals' || p.market === 'h2h');
       }
 
-      // v12.1: STRICT filtering - score >= 6.5 AND today ET
+      // v12.1: STRICT filtering - score >= MIN_FINAL_SCORE AND today ET
       // NO tier-based bypass - score is canonical
       gamePicks = filterCommunityPicks(gamePicks, { requireTodayET: true });
 
@@ -1152,13 +1159,13 @@ const GameSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortByC
         switch (filters.tier) {
           // v12.0 tier filters - TITANIUM requires backend titanium_triggered
           case 'TITANIUM_SMASH': return tier === 'TITANIUM_SMASH' || pick.titanium_triggered;
-          case 'GOLD_STAR': return tier === 'GOLD_STAR' || tier === 'TITANIUM_SMASH' || score >= 7.5;
-          case 'EDGE_LEAN': return tier === 'EDGE_LEAN' || (score >= 6.5 && score < 7.5);
-          case 'MONITOR': return tier === 'MONITOR' || (score >= 5.5 && score < 6.5);
+          case 'GOLD_STAR': return tier === 'GOLD_STAR' || tier === 'TITANIUM_SMASH' || score >= GOLD_STAR_THRESHOLD;
+          case 'EDGE_LEAN': return tier === 'EDGE_LEAN' || (score >= MIN_FINAL_SCORE && score < GOLD_STAR_THRESHOLD);
+          case 'MONITOR': return tier === 'MONITOR' || (score >= MONITOR_THRESHOLD && score < MIN_FINAL_SCORE);
           // Legacy tier names for backwards compatibility
-          case 'SMASH': return tier === 'GOLD_STAR' || tier === 'TITANIUM_SMASH' || score >= 7.5;
-          case 'STRONG': return tier === 'EDGE_LEAN' || (score >= 6.5 && score < 7.5);
-          case 'LEAN': return tier === 'MONITOR' || (score >= 5.5 && score < 6.5);
+          case 'SMASH': return tier === 'GOLD_STAR' || tier === 'TITANIUM_SMASH' || score >= GOLD_STAR_THRESHOLD;
+          case 'STRONG': return tier === 'EDGE_LEAN' || (score >= MIN_FINAL_SCORE && score < GOLD_STAR_THRESHOLD);
+          case 'LEAN': return tier === 'MONITOR' || (score >= MONITOR_THRESHOLD && score < MIN_FINAL_SCORE);
           default: return true;
         }
       });

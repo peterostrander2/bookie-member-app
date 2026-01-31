@@ -21,7 +21,7 @@ import {
 import { getBankrollStats } from './kellyCalculator';
 import { analyzeCorrelation } from './correlationDetector';
 import { ROIChart, WinRateChart, LineChart, Sparkline } from './Charts';
-import { DBSyncCard, DBSyncIndicator } from './DBSyncIndicator';
+import DBSyncIndicator, { DBSyncCard } from './DBSyncIndicator';
 import api from './api';
 
 const PerformanceDashboard = () => {

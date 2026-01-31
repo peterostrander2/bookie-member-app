@@ -2,14 +2,20 @@
  * v12.1 Pick Normalization Utilities
  *
  * COMMUNITY RULES (NON-NEGOTIABLE):
- * 1. Never display picks with score < 6.5
+ * 1. Never display picks with score < MIN_FINAL_SCORE
  * 2. TITANIUM is truth-based from backend, NOT inferred from score
  * 3. Today-only guard in ET timezone
  * 4. Score is canonical; tier is only for styling
  */
 
-// Community threshold - absolute floor
-export const COMMUNITY_THRESHOLD = 6.5;
+import {
+  MIN_FINAL_SCORE,
+  GOLD_STAR_THRESHOLD,
+  MONITOR_THRESHOLD
+} from '../../core/frontend_scoring_contract';
+
+// Community threshold - re-export from contract
+export const COMMUNITY_THRESHOLD = MIN_FINAL_SCORE;
 
 /**
  * Extract canonical score from pick (0-10 scale)
@@ -52,7 +58,7 @@ export function getPickScore(pick) {
 
 /**
  * Check if pick is eligible for community display
- * STRICT: score must exist AND be >= 6.5
+ * STRICT: score must exist AND be >= MIN_FINAL_SCORE
  */
 export function isCommunityEligible(pick) {
   const score = getPickScore(pick);
@@ -87,9 +93,9 @@ export function getTierForStyling(pick) {
 
   // Other tiers based on score (for styling only, not eligibility)
   if (score === null) return 'PASS';
-  if (score >= 7.5) return 'GOLD_STAR';
-  if (score >= 6.5) return 'EDGE_LEAN';
-  if (score >= 5.5) return 'MONITOR';
+  if (score >= GOLD_STAR_THRESHOLD) return 'GOLD_STAR';
+  if (score >= MIN_FINAL_SCORE) return 'EDGE_LEAN';
+  if (score >= MONITOR_THRESHOLD) return 'MONITOR';
   return 'PASS';
 }
 

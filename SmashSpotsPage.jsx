@@ -14,16 +14,23 @@ import {
   communitySort,
   COMMUNITY_THRESHOLD
 } from './src/utils/pickNormalize';
+import {
+  MIN_FINAL_SCORE,
+  GOLD_STAR_THRESHOLD,
+  TITANIUM_THRESHOLD,
+  MONITOR_THRESHOLD,
+  TITANIUM_RULE
+} from './core/frontend_scoring_contract';
 
 // v12.1: 60 second polling for live data
 const AUTO_REFRESH_INTERVAL = 60 * 1000; // 60 seconds for live experience
 
 // v12.0 Tier-based filter options (matches backend tiering.py)
-// Community threshold: >= 6.5 enforced - no MONITOR or below shown
+// Community threshold enforced - no MONITOR or below shown
 const TIER_FILTERS = [
-  { id: 'titanium_smash', label: 'TITANIUM', tier: 'TITANIUM_SMASH', minScore: 8.0, color: '#00FFFF' },
-  { id: 'gold_star', label: 'GOLD STAR+', tier: 'GOLD_STAR', minScore: 7.5, color: '#FFD700' },
-  { id: 'edge_lean', label: 'ALL PLAYABLE', tier: 'EDGE_LEAN', minScore: 6.5, color: '#10B981', isDefault: true }
+  { id: 'titanium_smash', label: 'TITANIUM', tier: 'TITANIUM_SMASH', minScore: TITANIUM_THRESHOLD, color: '#00FFFF' },
+  { id: 'gold_star', label: 'GOLD STAR+', tier: 'GOLD_STAR', minScore: GOLD_STAR_THRESHOLD, color: '#FFD700' },
+  { id: 'edge_lean', label: 'ALL PLAYABLE', tier: 'EDGE_LEAN', minScore: MIN_FINAL_SCORE, color: '#10B981', isDefault: true }
   // NOTE: MONITOR and PASS filtered out by community threshold
 ];
 
@@ -51,36 +58,36 @@ const TABS = [
 ];
 
 // v12.0 Tier display configuration (matches backend tiering.py)
-// TITANIUM requires: final_score >= 8.0 AND 3/4 engines >= 6.5
+// TITANIUM requires: final_score >= TITANIUM_THRESHOLD AND 3/4 engines >= engineThreshold
 const TIER_CONFIG = {
   TITANIUM_SMASH: {
     label: 'TITANIUM SMASH',
     color: '#00FFFF',
     emoji: '💎',
-    minScore: 8.0,
+    minScore: TITANIUM_THRESHOLD,
     action: 'SMASH',
     units: 2.5,
     glow: '0 0 20px #00FFFF, 0 0 40px #00FFFF50',
     gradient: 'linear-gradient(135deg, #001a2e 0%, #003366 50%, #001a2e 100%)'
   },
-  GOLD_STAR: { label: 'GOLD STAR', color: '#FFD700', emoji: '🌟', minScore: 7.5, action: 'SMASH', units: 2.0 },
-  EDGE_LEAN: { label: 'EDGE LEAN', color: '#10B981', emoji: '💚', minScore: 6.5, action: 'PLAY', units: 1.0 },
-  MONITOR: { label: 'MONITOR', color: '#F59E0B', emoji: '🟡', minScore: 5.5, action: 'WATCH', units: 0.0 },
+  GOLD_STAR: { label: 'GOLD STAR', color: '#FFD700', emoji: '🌟', minScore: GOLD_STAR_THRESHOLD, action: 'SMASH', units: 2.0 },
+  EDGE_LEAN: { label: 'EDGE LEAN', color: '#10B981', emoji: '💚', minScore: MIN_FINAL_SCORE, action: 'PLAY', units: 1.0 },
+  MONITOR: { label: 'MONITOR', color: '#F59E0B', emoji: '🟡', minScore: MONITOR_THRESHOLD, action: 'WATCH', units: 0.0 },
   PASS: { label: 'PASS', color: '#6B7280', emoji: '⚪', minScore: 0, action: 'SKIP', units: 0.0 }
 };
 
 // v12.0 Tier display for legend (TITANIUM is visually dominant)
-// Only show tiers at community threshold (>= 6.5)
+// Only show tiers at community threshold
 const CONFIDENCE_TIERS = [
-  { label: 'TITANIUM', color: '#00FFFF', range: '≥8.0 + 3/4 modules, backend-verified', tier: 'TITANIUM_SMASH', prominent: true },
-  { label: 'GOLD STAR', color: '#FFD700', range: '≥7.5', tier: 'GOLD_STAR' },
-  { label: 'EDGE LEAN', color: '#10B981', range: '≥6.5', tier: 'EDGE_LEAN' }
+  { label: 'TITANIUM', color: '#00FFFF', range: `≥${TITANIUM_THRESHOLD} + 3/4 modules, backend-verified`, tier: 'TITANIUM_SMASH', prominent: true },
+  { label: 'GOLD STAR', color: '#FFD700', range: `≥${GOLD_STAR_THRESHOLD}`, tier: 'GOLD_STAR' },
+  { label: 'EDGE LEAN', color: '#10B981', range: `≥${MIN_FINAL_SCORE}`, tier: 'EDGE_LEAN' }
 ];
 
 // Get tier config from pick (v12.1 - TITANIUM is truth-based ONLY)
 const getTierFromPick = (pick) => {
   // TITANIUM: ONLY when backend explicitly indicates it (truth-based)
-  // DO NOT infer from score >= 8.0
+  // DO NOT infer from score >= TITANIUM_THRESHOLD
   if (isTitanium(pick)) {
     return TIER_CONFIG.TITANIUM_SMASH;
   }
@@ -93,9 +100,9 @@ const getTierFromPick = (pick) => {
   // Fallback: derive from score (for styling only, NOT for titanium)
   const score = getPickScore(pick);
   if (score === null) return TIER_CONFIG.PASS;
-  if (score >= 7.5) return TIER_CONFIG.GOLD_STAR;
-  if (score >= 6.5) return TIER_CONFIG.EDGE_LEAN;
-  if (score >= 5.5) return TIER_CONFIG.MONITOR;
+  if (score >= GOLD_STAR_THRESHOLD) return TIER_CONFIG.GOLD_STAR;
+  if (score >= MIN_FINAL_SCORE) return TIER_CONFIG.EDGE_LEAN;
+  if (score >= MONITOR_THRESHOLD) return TIER_CONFIG.MONITOR;
   return TIER_CONFIG.PASS;
 };
 
@@ -204,7 +211,7 @@ const TodaysBestBets = memo(({ sport, onPickClick }) => {
       try {
         const data = await api.getBestBets(sport);
 
-        // v12.1: STRICT filtering - score >= 6.5 AND today ET
+        // v12.1: STRICT filtering - score >= MIN_FINAL_SCORE AND today ET
         // NO tier-based bypass - score is canonical
         const allPicks = filterCommunityPicks(data?.picks || [], { requireTodayET: true });
 
@@ -216,14 +223,14 @@ const TodaysBestBets = memo(({ sport, onPickClick }) => {
         const trueSmashSpots = allPicks.filter(p => p.smash_spot === true);
         setSmashSpots(trueSmashSpots);
 
-        // Count actionable picks (community threshold >= 6.5)
+        // Count actionable picks (community threshold)
         setTotalActionable(allPicks.length);
 
         // Get top picks by deterministic sort (Titanium first, score desc, time asc)
         const goldStarPicks = allPicks
           .filter(p => {
             const score = getPickScore(p);
-            return score !== null && score >= 7.5;
+            return score !== null && score >= GOLD_STAR_THRESHOLD;
           })
           .sort(communitySort)
           .slice(0, 3);
@@ -232,7 +239,7 @@ const TodaysBestBets = memo(({ sport, onPickClick }) => {
           setBestPicks(goldStarPicks);
           setDisplayTier('GOLD_STAR');
         } else {
-          // Fallback to EDGE_LEAN (>= 6.5)
+          // Fallback to EDGE_LEAN (>= MIN_FINAL_SCORE)
           const edgeLeanPicks = allPicks
             .sort(communitySort)
             .slice(0, 3);
@@ -397,7 +404,7 @@ const TodaysBestBets = memo(({ sport, onPickClick }) => {
               {titaniumPicks.length} TITANIUM {titaniumPicks.length === 1 ? 'PICK' : 'PICKS'} DETECTED
             </div>
             <div style={{ color: '#7dd3fc', fontSize: '12px', marginTop: '2px' }}>
-              Ultra-rare: Score ≥8.0 + 3/4 engines at meaningful level (≥6.5)
+              Ultra-rare: Score ≥{TITANIUM_THRESHOLD} + {TITANIUM_RULE.minEnginesGte}/4 engines at meaningful level (≥{TITANIUM_RULE.engineThreshold})
             </div>
           </div>
           <div style={{
@@ -455,7 +462,7 @@ const TodaysBestBets = memo(({ sport, onPickClick }) => {
             )}
           </h3>
           <div style={{ color: '#6B7280', fontSize: '11px' }}>
-            {tierDisplayConfig.label} tier (score ≥{displayTier === 'GOLD_STAR' ? '7.5' : '6.5'}) • High conviction plays
+            {tierDisplayConfig.label} tier (score ≥{displayTier === 'GOLD_STAR' ? GOLD_STAR_THRESHOLD : MIN_FINAL_SCORE}) • High conviction plays
           </div>
         </div>
         <div style={{
@@ -694,7 +701,7 @@ const SmashSpotsPage = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [nextRefresh, setNextRefresh] = useState(AUTO_REFRESH_INTERVAL);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  // v12.0: Default to EDGE_LEAN (community threshold >= 6.5)
+  // v12.0: Default to EDGE_LEAN (community threshold >= MIN_FINAL_SCORE)
   const [confidenceFilter, setConfidenceFilter] = useState('edge_lean');
   const [sortByConfidence, setSortByConfidence] = useState(true);
   const [newPickCount, setNewPickCount] = useState(0);
@@ -712,7 +719,7 @@ const SmashSpotsPage = () => {
       const data = await api.getBestBets(sport);
       const picks = data?.picks || [];
 
-      // v12.1: STRICT filtering - score >= 6.5 AND today ET only
+      // v12.1: STRICT filtering - score >= MIN_FINAL_SCORE AND today ET only
       // NO tier-based bypass - score is canonical
       const communityPicks = filterCommunityPicks(picks, { requireTodayET: true });
 
@@ -729,7 +736,7 @@ const SmashSpotsPage = () => {
         const titaniumPicks = newPicks.filter(isTitanium);
         const goldStarPicks = newPicks.filter(p => {
           const score = getPickScore(p);
-          return score !== null && score >= 7.5 && !isTitanium(p);
+          return score !== null && score >= GOLD_STAR_THRESHOLD && !isTitanium(p);
         });
 
         if (titaniumPicks.length > 0) {
@@ -985,7 +992,7 @@ const SmashSpotsPage = () => {
           borderRadius: '12px', border: '1px solid #2a2a4a'
         }}>
           <div style={{ color: '#6B7280', fontSize: '11px', textAlign: 'center', marginBottom: '12px' }}>
-            TIER SYSTEM v12.0 • Community Threshold: ≥6.5
+            TIER SYSTEM v12.0 • Community Threshold: ≥{MIN_FINAL_SCORE}
           </div>
           <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
             {CONFIDENCE_TIERS.map(tier => (
