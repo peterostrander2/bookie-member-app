@@ -582,8 +582,9 @@ const AppContent = () => {
 
 const App = () => {
   return (
-    <BrowserRouter>
-      <ThemeProvider>
+    <ErrorBoundary name="App" fullPage>
+      <BrowserRouter>
+        <ThemeProvider>
         <OfflineProvider>
           <PushProvider>
             <GamificationProvider>
@@ -602,6 +603,7 @@ const App = () => {
         </OfflineProvider>
       </ThemeProvider>
     </BrowserRouter>
+    </ErrorBoundary>
   );
 };
 

@@ -185,7 +185,7 @@ export const api = {
     const url = `${API_BASE_URL}/live/best-bets/${sport.toUpperCase()}`;
     const resp = await authFetch(url);
     if (!resp.ok) {
-      const text = await resp.text();
+      const text = await resp.text().catch(() => '');
       console.error('getSmashSpots error', { status: resp.status, url, text });
       return {
         sport: sport.toUpperCase(),

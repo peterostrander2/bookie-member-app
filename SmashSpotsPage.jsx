@@ -205,10 +205,12 @@ const TodaysBestBets = memo(({ sport, onPickClick, onError }) => {
   const [displayTier, setDisplayTier] = useState(TIERS.GOLD_STAR);
   const [totalActionable, setTotalActionable] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchBestBets = async () => {
       setLoading(true);
+      setError(null);
       try {
         const data = await api.getBestBets(sport);
         if (data?.error) {
@@ -261,7 +263,9 @@ const TodaysBestBets = memo(({ sport, onPickClick, onError }) => {
           }
         }
       } catch (err) {
-        console.error('Error fetching best bets:', err);
+        const endpoint = `/live/best-bets/${sport}`;
+        console.error(`[TodaysBestBets] Failed: ${endpoint}`, err?.status || err?.message || err);
+        setError({ message: err?.message || 'Failed to load picks', endpoint, status: err?.status });
         onError?.({ status: 'FETCH_ERROR', text: err?.message || 'Unknown error' });
         setBestPicks([]);
         setDisplayTier('NONE');
@@ -291,6 +295,48 @@ const TodaysBestBets = memo(({ sport, onPickClick, onError }) => {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#10B981' }}>
           <span style={{ animation: 'pulse 1.5s infinite' }}>🎯</span>
           Loading Best Bets...
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{
+        background: 'linear-gradient(135deg, #2a0a0a 0%, #3a1a1a 100%)',
+        borderRadius: '16px',
+        padding: '20px',
+        marginBottom: '24px',
+        border: '2px solid #FF444440'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '32px', marginBottom: '12px' }}>⚠️</div>
+          <div style={{ color: '#FF6B6B', fontWeight: 'bold', marginBottom: '8px' }}>
+            Failed to load picks
+          </div>
+          <div style={{ color: '#9ca3af', fontSize: '13px', marginBottom: '12px' }}>
+            {error.status ? `Error ${error.status}` : error.message}
+          </div>
+          {process.env.NODE_ENV === 'development' && (
+            <div style={{ color: '#6b7280', fontSize: '11px', fontFamily: 'monospace' }}>
+              {error.endpoint}
+            </div>
+          )}
+          <button
+            onClick={() => window.location.reload()}
+            style={{
+              marginTop: '12px',
+              padding: '8px 16px',
+              backgroundColor: '#FF444430',
+              color: '#FF6B6B',
+              border: '1px solid #FF444450',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '13px'
+            }}
+          >
+            Retry
+          </button>
         </div>
       </div>
     );
