@@ -107,30 +107,35 @@ const MODEL_BADGE_INACTIVE = {
 // v10.87 Tier configuration based on API tier field (matches backend tiering.py)
 const TIER_CONFIGS = {
   [TIERS.TITANIUM_SMASH]: {
+    tier: TIERS.TITANIUM_SMASH,
     label: 'TITANIUM SMASH', color: '#00FFFF',
     bg: 'rgba(0, 255, 255, 0.15)', border: 'rgba(0, 255, 255, 0.5)',
     glow: '0 0 30px rgba(0, 255, 255, 0.4)', size: 'large',
     historicalWinRate: 92, isProfitable: true, action: 'SMASH', units: 2.5
   },
   [TIERS.GOLD_STAR]: {
+    tier: TIERS.GOLD_STAR,
     label: 'GOLD STAR', color: '#FFD700',
     bg: 'rgba(255, 215, 0, 0.15)', border: 'rgba(255, 215, 0, 0.5)',
     glow: '0 0 20px rgba(255, 215, 0, 0.3)', size: 'large',
     historicalWinRate: 87, isProfitable: true, action: 'SMASH', units: 2.0
   },
   [TIERS.EDGE_LEAN]: {
+    tier: TIERS.EDGE_LEAN,
     label: 'EDGE LEAN', color: '#10B981',
     bg: 'rgba(16, 185, 129, 0.15)', border: 'rgba(16, 185, 129, 0.5)',
     glow: 'none', size: 'medium',
     historicalWinRate: 72, isProfitable: true, action: 'PLAY', units: 1.0
   },
   [TIERS.MONITOR]: {
+    tier: TIERS.MONITOR,
     label: 'MONITOR', color: '#F59E0B',
     bg: 'rgba(245, 158, 11, 0.15)', border: 'rgba(245, 158, 11, 0.5)',
     glow: 'none', size: 'small',
     historicalWinRate: 58, isProfitable: true, action: 'WATCH', units: 0.0
   },
   [TIERS.PASS]: {
+    tier: TIERS.PASS,
     label: 'PASS', color: '#6B7280',
     bg: 'rgba(107, 114, 128, 0.15)', border: 'rgba(107, 114, 128, 0.5)',
     glow: 'none', size: 'small',

@@ -257,6 +257,7 @@ LineMovement.displayName = 'LineMovement';
 // v10.87 Tier configuration based on API tier field (matches backend tiering.py)
 const TIER_CONFIGS = {
   [TIERS.TITANIUM_SMASH]: {
+    tier: TIERS.TITANIUM_SMASH,
     label: 'TITANIUM SMASH',
     color: '#00FFFF',
     bg: 'rgba(0, 255, 255, 0.15)',
@@ -269,6 +270,7 @@ const TIER_CONFIGS = {
     units: 2.5
   },
   [TIERS.GOLD_STAR]: {
+    tier: TIERS.GOLD_STAR,
     label: 'GOLD STAR',
     color: '#FFD700',
     bg: 'rgba(255, 215, 0, 0.15)',
@@ -281,6 +283,7 @@ const TIER_CONFIGS = {
     units: 2.0
   },
   [TIERS.EDGE_LEAN]: {
+    tier: TIERS.EDGE_LEAN,
     label: 'EDGE LEAN',
     color: '#10B981',
     bg: 'rgba(16, 185, 129, 0.15)',
@@ -293,6 +296,7 @@ const TIER_CONFIGS = {
     units: 1.0
   },
   [TIERS.MONITOR]: {
+    tier: TIERS.MONITOR,
     label: 'MONITOR',
     color: '#F59E0B',
     bg: 'rgba(245, 158, 11, 0.15)',
@@ -305,6 +309,7 @@ const TIER_CONFIGS = {
     units: 0.0
   },
   [TIERS.PASS]: {
+    tier: TIERS.PASS,
     label: 'PASS',
     color: '#6B7280',
     bg: 'rgba(107, 114, 128, 0.15)',
@@ -1084,26 +1089,26 @@ const PropCard = memo(({ pick }) => {
 
           {/* Unit Size Recommendation - v10.87 uses backend units field */}
           <div style={{
-            backgroundColor: isSmashSpot ? 'rgba(255, 100, 0, 0.1)' : tierConfig.label === 'TITANIUM SMASH' ? 'rgba(0, 255, 255, 0.1)' : 'rgba(0, 212, 255, 0.1)',
+            backgroundColor: isSmashSpot ? 'rgba(255, 100, 0, 0.1)' : tierConfig.tier === TIERS.TITANIUM_SMASH ? 'rgba(0, 255, 255, 0.1)' : 'rgba(0, 212, 255, 0.1)',
             borderRadius: '8px',
             padding: '12px 14px',
             marginBottom: '16px',
-            border: `1px solid ${isSmashSpot ? 'rgba(255, 100, 0, 0.3)' : tierConfig.label === 'TITANIUM SMASH' ? 'rgba(0, 255, 255, 0.3)' : 'rgba(0, 212, 255, 0.2)'}`,
+            border: `1px solid ${isSmashSpot ? 'rgba(255, 100, 0, 0.3)' : tierConfig.tier === TIERS.TITANIUM_SMASH ? 'rgba(0, 255, 255, 0.3)' : 'rgba(0, 212, 255, 0.2)'}`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between'
           }}>
             <div>
-              <div style={{ color: isSmashSpot ? '#FF6400' : tierConfig.label === 'TITANIUM SMASH' ? '#00FFFF' : '#00D4FF', fontSize: '11px', fontWeight: 'bold', marginBottom: '2px' }}>
+              <div style={{ color: isSmashSpot ? '#FF6400' : tierConfig.tier === TIERS.TITANIUM_SMASH ? '#00FFFF' : '#00D4FF', fontSize: '11px', fontWeight: 'bold', marginBottom: '2px' }}>
                 RECOMMENDED STAKE
               </div>
               <div style={{ color: '#9CA3AF', fontSize: '11px' }}>
-                Based on {finalScore.toFixed(1)}/10 score {isSmashSpot && '(TRUE SMASH)'} {tierConfig.label === 'TITANIUM SMASH' && '(TITANIUM)'}
+                Based on {finalScore.toFixed(1)}/10 score {isSmashSpot && '(TRUE SMASH)'} {tierConfig.tier === TIERS.TITANIUM_SMASH && '(TITANIUM)'}
               </div>
             </div>
             <div style={{
-              backgroundColor: isSmashSpot ? '#FF640020' : tierConfig.label === 'TITANIUM SMASH' ? '#00FFFF20' : '#00D4FF20',
-              color: isSmashSpot ? '#FF6400' : tierConfig.label === 'TITANIUM SMASH' ? '#00FFFF' : '#00D4FF',
+              backgroundColor: isSmashSpot ? '#FF640020' : tierConfig.tier === TIERS.TITANIUM_SMASH ? '#00FFFF20' : '#00D4FF20',
+              color: isSmashSpot ? '#FF6400' : tierConfig.tier === TIERS.TITANIUM_SMASH ? '#00FFFF' : '#00D4FF',
               padding: '8px 16px',
               borderRadius: '8px',
               fontWeight: 'bold',
@@ -1116,7 +1121,7 @@ const PropCard = memo(({ pick }) => {
                 pick.units >= 1.0 ? `${pick.units} Unit${pick.units > 1 ? 's' : ''} ✓` :
                 pick.units > 0 ? `${pick.units} Units ⚡` : 'Pass ⚠️'
               ) : (
-                tierConfig.label === 'TITANIUM SMASH' ? '2.5 Units 💎🔥' :
+                tierConfig.tier === TIERS.TITANIUM_SMASH ? '2.5 Units 💎🔥' :
                 isSmashSpot ? '2 Units 🔥🔥' :
                 finalScore >= GOLD_STAR_THRESHOLD ? '2 Units 🔥🔥' :
                 finalScore >= MIN_FINAL_SCORE ? '1 Unit ✓' :

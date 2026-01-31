@@ -82,19 +82,29 @@ function checkNoScoringLiterals() {
   console.log("🔍 CHECK 2: No scoring literals outside contract");
 
   const BANNED_LITERALS = [
-    /\b6\.5\b/,
-    /\b7\.5\b/,
-    /\b8\.0\b/,
-    /\b5\.5\b/,
-    /"TITANIUM"/,
-    /"GOLD_STAR"/,
-    /"EDGE_LEAN"/,
+    { pattern: /\b6\.5\b/, name: "6.5 (MIN_FINAL_SCORE)" },
+    { pattern: /\b7\.5\b/, name: "7.5 (GOLD_STAR_THRESHOLD)" },
+    { pattern: /\b8\.0\b/, name: "8.0 (TITANIUM_THRESHOLD)" },
+    { pattern: /\b5\.5\b/, name: "5.5 (MONITOR_THRESHOLD)" },
+    { pattern: /"TITANIUM"/, name: '"TITANIUM" tier string' },
+    { pattern: /"TITANIUM_SMASH"/, name: '"TITANIUM_SMASH" tier string' },
+    { pattern: /"GOLD_STAR"/, name: '"GOLD_STAR" tier string' },
+    { pattern: /"EDGE_LEAN"/, name: '"EDGE_LEAN" tier string' },
+    { pattern: /"MONITOR"/, name: '"MONITOR" tier string' },
+    { pattern: /'TITANIUM'/, name: "'TITANIUM' tier string" },
+    { pattern: /'TITANIUM_SMASH'/, name: "'TITANIUM_SMASH' tier string" },
+    { pattern: /'GOLD_STAR'/, name: "'GOLD_STAR' tier string" },
+    { pattern: /'EDGE_LEAN'/, name: "'EDGE_LEAN' tier string" },
   ];
 
   const ALLOWED_FILES = new Set([
     path.resolve(ROOT, "core/frontend_scoring_contract.js"),
+    path.resolve(ROOT, "core/integration_contract.js"),
     path.resolve(ROOT, "scripts/validate_no_frontend_literals.mjs"),
     path.resolve(ROOT, "scripts/validate_frontend_contracts.mjs"),
+    path.resolve(ROOT, "scripts/generate_audit_map.mjs"),
+    path.resolve(ROOT, "CLAUDE.md"),
+    path.resolve(ROOT, "docs/MASTER_INDEX.md"),
   ]);
 
   // Directories to skip (test data, mocks, e2e)
@@ -154,17 +164,38 @@ function checkNoScoringLiterals() {
 
     const txt = readFile(f);
     if (!txt) continue;
-    const codeOnly = stripCommentsAndFalsePositives(txt);
+    const lines = txt.split('\n');
 
-    for (const pattern of BANNED_LITERALS) {
-      if (pattern.test(codeOnly)) {
-        if (isLegacy) {
-          warnings++;
-        } else {
-          addError("SCORING_LITERAL", `${path.relative(ROOT, f)}: ${pattern.source}`);
-          violations++;
+    for (const { pattern, name } of BANNED_LITERALS) {
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        // Skip comments
+        if (line.trim().startsWith('//') || line.trim().startsWith('*')) continue;
+        // Apply false positive filters to line
+        let cleanLine = line;
+        cleanLine = cleanLine.replace(/-\d+\.\d+/g, ""); // negative spreads
+        cleanLine = cleanLine.replace(/['"][^'"]*pts[^'"]*['"]/gi, ""); // pts strings
+        cleanLine = cleanLine.replace(/final_score:\s*\d+\.\d+/g, ""); // mock scores
+        cleanLine = cleanLine.replace(/research_score:\s*\d+\.\d+/g, ""); // mock research scores
+        cleanLine = cleanLine.replace(/esoteric_score:\s*\d+\.\d+/g, ""); // mock esoteric scores
+        cleanLine = cleanLine.replace(/ai_score:\s*\d+\.\d+/g, ""); // mock AI scores
+        cleanLine = cleanLine.replace(/jarvis_score:\s*\d+\.\d+/g, ""); // mock jarvis scores
+        cleanLine = cleanLine.replace(/base_score:\s*\d+\.\d+/g, ""); // mock base scores
+        cleanLine = cleanLine.replace(/isDemo:\s*true/g, ""); // demo data markers
+        // Display labels in UI config objects are allowed
+        cleanLine = cleanLine.replace(/label:\s*['"][^'"]*['"]/g, ""); // label: 'TITANIUM SMASH'
+        cleanLine = cleanLine.replace(/\[TIERS\.\w+\]:\s*['"][^'"]*['"]/g, ""); // {[TIERS.X]: 'LABEL'}
+
+        if (pattern.test(cleanLine)) {
+          if (isLegacy) {
+            warnings++;
+          } else {
+            const relPath = path.relative(ROOT, f);
+            addError("SCORING_LITERAL", `${relPath}:${i + 1}: Found ${name}`);
+            violations++;
+          }
+          break; // One error per pattern per file
         }
-        break; // One error per file is enough
       }
     }
   }
