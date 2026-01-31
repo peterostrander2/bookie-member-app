@@ -2,7 +2,16 @@ import fs from "node:fs";
 import path from "node:path";
 
 const ROOT = process.cwd();
-const EXT_ALLOW = new Set([".js", ".jsx", ".mjs"]);
+const EXT_ALLOW = new Set([
+  ".js",
+  ".jsx",
+  ".mjs",
+  ".cjs",
+  ".ts",
+  ".tsx",
+  ".cts",
+  ".mts",
+]);
 const SKIP_DIRS = new Set(["e2e", "test", "stories", "src/mocks"]);
 
 const BANNED = [
