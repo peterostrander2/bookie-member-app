@@ -7,10 +7,10 @@
 
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { useToast } from './Toast';
+import { authPost } from './lib/api/client.js';
 
 // VAPID public key (would come from environment in production)
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
-const API_BASE = import.meta.env.VITE_API_URL || 'https://web-production-7b2a.up.railway.app';
 
 // Push notification context
 const PushContext = createContext({
@@ -154,16 +154,9 @@ export const PushProvider = ({ children }) => {
 // Send subscription to server
 async function sendSubscriptionToServer(subscription) {
   try {
-    await fetch(`${API_BASE}/live/push/subscribe`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': import.meta.env.VITE_API_KEY || ''
-      },
-      body: JSON.stringify({
-        subscription: subscription.toJSON(),
-        preferences: JSON.parse(localStorage.getItem('pushPreferences') || '{}')
-      })
+    await authPost('/live/push/subscribe', {
+      subscription: subscription.toJSON(),
+      preferences: JSON.parse(localStorage.getItem('pushPreferences') || '{}')
     });
   } catch (error) {
     console.error('Failed to send subscription to server:', error);
@@ -173,15 +166,8 @@ async function sendSubscriptionToServer(subscription) {
 // Remove subscription from server
 async function removeSubscriptionFromServer(subscription) {
   try {
-    await fetch(`${API_BASE}/live/push/unsubscribe`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': import.meta.env.VITE_API_KEY || ''
-      },
-      body: JSON.stringify({
-        endpoint: subscription.endpoint
-      })
+    await authPost('/live/push/unsubscribe', {
+      endpoint: subscription.endpoint
     });
   } catch (error) {
     console.error('Failed to remove subscription from server:', error);
@@ -191,16 +177,9 @@ async function removeSubscriptionFromServer(subscription) {
 // Sync preferences with server
 async function syncPreferencesWithServer(subscription, preferences) {
   try {
-    await fetch(`${API_BASE}/live/push/preferences`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': import.meta.env.VITE_API_KEY || ''
-      },
-      body: JSON.stringify({
-        endpoint: subscription.endpoint,
-        preferences
-      })
+    await authPost('/live/push/preferences', {
+      endpoint: subscription.endpoint,
+      preferences
     });
   } catch (error) {
     console.error('Failed to sync preferences with server:', error);

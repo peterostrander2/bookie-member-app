@@ -9,6 +9,7 @@
 ### 1. Code + Docs Together
 - [ ] If you changed scoring logic → update `core/frontend_scoring_contract.js`
 - [ ] If you changed API integration → update `core/integration_contract.js`
+- [ ] If you changed env vars → update `.env.example` + `docs/MASTER_INDEX.md`
 - [ ] If you added/changed endpoints → regenerate `docs/AUDIT_MAP.md`
 - [ ] Code and docs committed in the **same commit**
 
@@ -50,7 +51,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 - ❌ Update docs without updating code (or vice versa)
 - ❌ Hardcode tier thresholds (use `core/frontend_scoring_contract.js`)
 - ❌ Hardcode API URLs (use `lib/api/client.js`)
-- ❌ Add API calls outside `api.js`
+- ❌ Call `fetch`/`axios`/`new Request` outside `lib/api/client.js`
 - ❌ Edit generated files manually (`docs/AUDIT_MAP.md`)
 
 ---

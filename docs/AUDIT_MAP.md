@@ -8,8 +8,8 @@ Run: node scripts/generate_audit_map.mjs
 
 | Variable | Default | Purpose |
 |---|---|---|
-| VITE_API_BASE | https://web-production-7b2a.up.railway.app | Backend base URL |
-| VITE_API_KEY | *(required)* | Backend API authentication |
+| VITE_API_BASE_URL | https://web-production-7b2a.up.railway.app | Backend base URL |
+| VITE_BOOKIE_API_KEY | *(required)* | Backend API authentication |
 
 ## Backend Endpoints
 

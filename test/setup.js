@@ -11,7 +11,7 @@ const localStorageMock = {
 global.localStorage = localStorageMock
 
 // Mock environment variables
-vi.stubEnv('VITE_API_KEY', 'test-api-key')
+vi.stubEnv('VITE_BOOKIE_API_KEY', 'test-api-key')
 vi.stubEnv('VITE_RATE_LIMIT', 'false') // Disable rate limiting in tests
 
 // Mock rate limiting module to pass through to fetch in tests

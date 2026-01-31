@@ -182,7 +182,23 @@ export const api = {
 
   // Get best bets / smash spots for a sport
   async getSmashSpots(sport = 'NBA') {
-    const resp = await authFetch(`${API_BASE_URL}/live/best-bets/${sport.toUpperCase()}`);
+    const url = `${API_BASE_URL}/live/best-bets/${sport.toUpperCase()}`;
+    const resp = await authFetch(url);
+    if (!resp.ok) {
+      const text = await resp.text();
+      console.error('getSmashSpots error', { status: resp.status, url, text });
+      return {
+        sport: sport.toUpperCase(),
+        source: 'error',
+        picks: [],
+        data: [],
+        slate: [],
+        props: { picks: [], count: 0 },
+        game_picks: { picks: [], count: 0 },
+        count: 0,
+        error: { status: resp.status, text },
+      };
+    }
     const data = await resp.json();
 
     // Convert confidence tier string to percentage number

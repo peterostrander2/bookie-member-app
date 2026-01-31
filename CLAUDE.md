@@ -323,7 +323,7 @@ npm run build:analyze
 Create `.env.local` for development:
 ```bash
 # Required
-VITE_API_KEY=your-api-key              # Backend auth for /live/* endpoints
+VITE_BOOKIE_API_KEY=your-api-key              # Backend auth for /live/* endpoints
 
 # Optional - Production monitoring
 VITE_SENTRY_DSN=https://...@sentry.io  # Error monitoring
@@ -333,7 +333,7 @@ VITE_GA_MEASUREMENT_ID=G-XXXXXXXXXX    # Google Analytics
 VITE_VAPID_PUBLIC_KEY=...              # Web Push VAPID key
 
 # Optional - Override API URL
-VITE_API_URL=https://custom-backend.com
+VITE_API_BASE_URL=https://custom-backend.com
 
 # Development flags
 VITE_RATE_LIMIT=false                  # Disable rate limiting in dev
@@ -343,8 +343,8 @@ VITE_RATE_LIMIT=false                  # Disable rate limiting in dev
 
 ### Frontend Service (bookie-member-app)
 ```bash
-VITE_API_KEY=bookie-prod-2026-xK9mP2nQ7vR4
-VITE_API_URL=https://web-production-7b2a.up.railway.app
+VITE_BOOKIE_API_KEY=bookie-prod-2026-xK9mP2nQ7vR4
+VITE_API_BASE_URL=https://web-production-7b2a.up.railway.app
 VITE_SENTRY_DSN=https://ccb0b500db139f1b7df6c4a269bc04e7@o4510720913833984.ingest.us.sentry.io/4510720944570368
 VITE_GA_MEASUREMENT_ID=<your-measurement-id>
 VITE_VAPID_PUBLIC_KEY=BLxvqRoFaLbldx0OCjMtctyCF1Ar1WvQsqMib7AmXMo7VVE8AYnb240PF1C08v9EzZ2p_yGKDletzbBfLzrkd60
@@ -517,10 +517,10 @@ All endpoints implemented:
 
 ### API Authentication (Completed)
 - `X-API-Key` header sent on all `/live/*` endpoints
-- Uses `VITE_API_KEY` environment variable
+- Uses `VITE_BOOKIE_API_KEY` environment variable
 - `authFetch` helper for authenticated GET requests
 - `getAuthHeaders` helper for authenticated POST requests
-- Set `VITE_API_KEY` in Railway Variables for production
+- Set `VITE_BOOKIE_API_KEY` in Railway Variables for production
 
 ---
 
@@ -653,7 +653,7 @@ Automated pipeline that runs on every push and PR:
 
 **Required Secrets (set in GitHub repo settings):**
 ```
-VITE_API_KEY      - API key for backend authentication
+VITE_BOOKIE_API_KEY      - API key for backend authentication
 RAILWAY_TOKEN     - Railway API token for deployments
 RAILWAY_SERVICE_ID - Railway service ID for this app
 ```
@@ -901,7 +901,7 @@ try {
 
 3. **Copy Environment Variables:**
    ```
-   VITE_API_KEY=<staging-api-key>
+   VITE_BOOKIE_API_KEY=<staging-api-key>
    VITE_SENTRY_DSN=<staging-sentry-dsn>
    VITE_GA_MEASUREMENT_ID=<staging-ga-id>
    ```
@@ -909,7 +909,7 @@ try {
 4. **Set different API URL (optional):**
    If you have a staging backend, add:
    ```
-   VITE_API_URL=https://staging-api.example.com
+   VITE_API_BASE_URL=https://staging-api.example.com
    ```
 
 ### Workflow

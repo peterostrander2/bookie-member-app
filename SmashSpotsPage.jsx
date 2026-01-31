@@ -198,7 +198,7 @@ const FILTER_CONTAINER = {
 // ============================================================================
 
 // Today's Best Bets Component - v12.1 with strict filtering
-const TodaysBestBets = memo(({ sport, onPickClick }) => {
+const TodaysBestBets = memo(({ sport, onPickClick, onError }) => {
   const [bestPicks, setBestPicks] = useState([]);
   const [titaniumPicks, setTitaniumPicks] = useState([]); // TITANIUM picks (backend truth-based)
   const [smashSpots, setSmashSpots] = useState([]); // TRUE SmashSpots (rare)
@@ -211,50 +211,58 @@ const TodaysBestBets = memo(({ sport, onPickClick }) => {
       setLoading(true);
       try {
         const data = await api.getBestBets(sport);
+        if (data?.error) {
+          onError?.(data.error);
+          setBestPicks([]);
+          setDisplayTier('NONE');
+        } else {
+          onError?.(null);
 
         // v12.1: STRICT filtering - score >= MIN_FINAL_SCORE AND today ET
         // NO tier-based bypass - score is canonical
-        const allPicks = filterCommunityPicks(data?.picks || [], { requireTodayET: true });
+          const allPicks = filterCommunityPicks(data?.picks || [], { requireTodayET: true });
 
         // Find TITANIUM picks (backend truth-based ONLY)
-        const titanium = allPicks.filter(isTitanium);
-        setTitaniumPicks(titanium);
+          const titanium = allPicks.filter(isTitanium);
+          setTitaniumPicks(titanium);
 
         // Find TRUE SmashSpots (rare, high-conviction)
-        const trueSmashSpots = allPicks.filter(p => p.smash_spot === true);
-        setSmashSpots(trueSmashSpots);
+          const trueSmashSpots = allPicks.filter(p => p.smash_spot === true);
+          setSmashSpots(trueSmashSpots);
 
         // Count actionable picks (community threshold)
-        setTotalActionable(allPicks.length);
+          setTotalActionable(allPicks.length);
 
         // Get top picks by deterministic sort (Titanium first, score desc, time asc)
-        const goldStarPicks = allPicks
-          .filter(p => {
-            const score = getPickScore(p);
-            return score !== null && score >= GOLD_STAR_THRESHOLD;
-          })
-          .sort(communitySort)
-          .slice(0, 3);
-
-        if (goldStarPicks.length > 0) {
-          setBestPicks(goldStarPicks);
-          setDisplayTier(TIERS.GOLD_STAR);
-        } else {
-          // Fallback to EDGE_LEAN (>= MIN_FINAL_SCORE)
-          const edgeLeanPicks = allPicks
+          const goldStarPicks = allPicks
+            .filter(p => {
+              const score = getPickScore(p);
+              return score !== null && score >= GOLD_STAR_THRESHOLD;
+            })
             .sort(communitySort)
             .slice(0, 3);
 
-          if (edgeLeanPicks.length > 0) {
-            setBestPicks(edgeLeanPicks);
-            setDisplayTier(TIERS.EDGE_LEAN);
+          if (goldStarPicks.length > 0) {
+            setBestPicks(goldStarPicks);
+            setDisplayTier(TIERS.GOLD_STAR);
           } else {
-            setBestPicks([]);
-            setDisplayTier('NONE');
+            // Fallback to EDGE_LEAN (>= MIN_FINAL_SCORE)
+            const edgeLeanPicks = allPicks
+              .sort(communitySort)
+              .slice(0, 3);
+
+            if (edgeLeanPicks.length > 0) {
+              setBestPicks(edgeLeanPicks);
+              setDisplayTier(TIERS.EDGE_LEAN);
+            } else {
+              setBestPicks([]);
+              setDisplayTier('NONE');
+            }
           }
         }
       } catch (err) {
         console.error('Error fetching best bets:', err);
+        onError?.({ status: 'FETCH_ERROR', text: err?.message || 'Unknown error' });
         setBestPicks([]);
         setDisplayTier('NONE');
       }
@@ -706,6 +714,7 @@ const SmashSpotsPage = () => {
   const [confidenceFilter, setConfidenceFilter] = useState('edge_lean');
   const [sortByConfidence, setSortByConfidence] = useState(true);
   const [newPickCount, setNewPickCount] = useState(0);
+  const [apiError, setApiError] = useState(null);
   const previousPicksRef = useRef(new Set());
 
   // Manual refresh function with toast notifications for new picks
@@ -718,6 +727,12 @@ const SmashSpotsPage = () => {
     // Check for new picks and notify
     try {
       const data = await api.getBestBets(sport);
+      if (data?.error) {
+        setApiError(data.error);
+        setIsRefreshing(false);
+        return;
+      }
+      setApiError(null);
       const picks = data?.picks || [];
 
       // v12.1: STRICT filtering - score >= MIN_FINAL_SCORE AND today ET only
@@ -752,6 +767,7 @@ const SmashSpotsPage = () => {
       previousPicksRef.current = currentIds;
     } catch (err) {
       console.error('Refresh error:', err);
+      setApiError({ status: 'FETCH_ERROR', text: err?.message || 'Unknown error' });
     }
 
     setTimeout(() => setIsRefreshing(false), 1000);
@@ -819,6 +835,22 @@ const SmashSpotsPage = () => {
             Highest conviction picks • 8 ML Models + 8 Pillars
           </p>
         </div>
+
+        {apiError && (
+          <div style={{
+            background: 'rgba(239, 68, 68, 0.12)',
+            border: '1px solid rgba(239, 68, 68, 0.4)',
+            borderRadius: '10px',
+            padding: '12px 14px',
+            marginBottom: '16px',
+            color: '#FCA5A5',
+            fontSize: '13px',
+          }}>
+            <strong style={{ color: '#F87171' }}>Backend Error</strong>
+            <div>HTTP: {apiError.status}</div>
+            <div>Body: {(apiError.text || '').slice(0, 200)}</div>
+          </div>
+        )}
 
         {/* Last Updated & Auto-Refresh Indicator */}
         <div style={{
@@ -908,7 +940,11 @@ const SmashSpotsPage = () => {
         </div>
 
         {/* Today's Best Bets - Top SMASH picks with quick action */}
-        <TodaysBestBets sport={sport} onPickClick={handleTabChange} />
+        <TodaysBestBets
+          sport={sport}
+          onPickClick={handleTabChange}
+          onError={setApiError}
+        />
 
         {/* v10.4 Tier Filter Controls */}
         <div style={{

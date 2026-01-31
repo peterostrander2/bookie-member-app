@@ -4,8 +4,8 @@
  */
 
 export const ENV = Object.freeze({
-  API_BASE: "VITE_API_BASE",
-  API_KEY: "VITE_API_KEY",
+  API_BASE: "VITE_API_BASE_URL",
+  API_KEY: "VITE_BOOKIE_API_KEY",
 });
 
 export const DEFAULTS = Object.freeze({

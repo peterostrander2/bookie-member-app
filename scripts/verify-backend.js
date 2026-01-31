@@ -8,8 +8,8 @@
  * Optional: API_KEY=your-key node scripts/verify-backend.js
  */
 
-const API_BASE = process.env.API_URL || 'https://web-production-7b2a.up.railway.app';
-const API_KEY = process.env.API_KEY || process.env.VITE_API_KEY || '';
+const API_BASE = process.env.VITE_API_BASE_URL || process.env.API_URL || 'https://web-production-7b2a.up.railway.app';
+const API_KEY = process.env.VITE_BOOKIE_API_KEY || process.env.API_KEY || '';
 
 const SPORTS = ['NBA', 'NFL', 'MLB', 'NHL'];
 

@@ -49,7 +49,7 @@ Before touching code or docs: use this file to route yourself to the canonical s
 - `api.js` - API method implementations (imports from client)
 
 **Never do:**
-- Add API calls outside `api.js`
+- Call `fetch`/`axios`/`new Request` outside `lib/api/client.js`
 - Hardcode backend URL anywhere (must come from contract via client)
 - Import fetch helpers from anywhere except `lib/api/client.js`
 - Duplicate endpoint logic across files
@@ -94,7 +94,7 @@ npm test
 
 - ❌ Hardcode tier thresholds (6.5, 7.5, 8.0) anywhere except contract
 - ❌ Hardcode tier names ("TITANIUM", "GOLD_STAR") anywhere except contract
-- ❌ Add API calls outside `api.js`
+- ❌ Call `fetch`/`axios`/`new Request` outside `lib/api/client.js`
 - ❌ Access `import.meta.env` directly in components
 - ❌ Recalculate tiers on client (trust backend)
 - ❌ Edit generated files (`docs/AUDIT_MAP.md`)
@@ -105,6 +105,7 @@ npm test
 
 **Backend Repo:** `~/Desktop/ai-betting-backend-main`  
 **Backend URL:** `https://web-production-7b2a.up.railway.app`  
+**Env vars (frontend):** `VITE_API_BASE_URL`, `VITE_BOOKIE_API_KEY`  
 
 **Frontend MUST match backend:**
 1. **Tiers:** TITANIUM (≥8.0, 3/4 rule), GOLD_STAR (≥7.5, gates), EDGE_LEAN (≥6.5)

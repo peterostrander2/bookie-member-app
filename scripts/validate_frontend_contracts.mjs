@@ -178,11 +178,71 @@ function checkNoScoringLiterals() {
 }
 
 // =============================================================================
-// CHECK 3: api.js uses client (not hardcoding)
+// CHECK 3: No direct fetch/axios/new Request outside client
+// =============================================================================
+
+function checkNoDirectNetworkCalls() {
+  console.log("🔍 CHECK 3: No direct fetch/axios/new Request outside lib/api/client.js");
+
+  const FORBIDDEN = [
+    /\bfetch\s*\(/,
+    /\baxios\./,
+    /new\s+Request\s*\(/,
+  ];
+
+  const ALLOWED_FILES = new Set([
+    path.resolve(ROOT, "lib/api/client.js"),
+    path.resolve(ROOT, "rateLimit.js"),
+    path.resolve(ROOT, "scripts/verify-backend.js"),
+    path.resolve(ROOT, "test/setup.js"),
+    path.resolve(ROOT, "public/sw.js"),
+  ]);
+
+  const SKIP_DIRS = new Set(["e2e", "test", "scripts", "public", "node_modules", "dist"]);
+  const EXT_ALLOW = new Set([".js", ".jsx", ".mjs"]);
+
+  function walk(dir, out = []) {
+    if (!fs.existsSync(dir)) return out;
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (entry.name.startsWith(".")) continue;
+      if (SKIP_DIRS.has(entry.name)) continue;
+      const p = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        walk(p, out);
+      } else if (EXT_ALLOW.has(path.extname(p))) {
+        out.push(p);
+      }
+    }
+    return out;
+  }
+
+  const files = walk(ROOT);
+  let violations = 0;
+
+  for (const f of files) {
+    if (ALLOWED_FILES.has(f)) continue;
+    const content = readFile(f);
+    if (!content) continue;
+    for (const pattern of FORBIDDEN) {
+      if (pattern.test(content)) {
+        addError("DIRECT_NETWORK_CALL", `${path.relative(ROOT, f)}: ${pattern.source}`);
+        violations++;
+        break;
+      }
+    }
+  }
+
+  if (violations === 0) {
+    console.log("  ✅ No direct network calls found");
+  }
+}
+
+// =============================================================================
+// CHECK 4: api.js uses client (not hardcoding)
 // =============================================================================
 
 function checkApiUsesClient() {
-  console.log("🔍 CHECK 3: api.js imports from lib/api/client.js");
+  console.log("🔍 CHECK 4: api.js imports from lib/api/client.js");
 
   const content = readFile("api.js");
   if (!content) {
@@ -207,11 +267,11 @@ function checkApiUsesClient() {
 }
 
 // =============================================================================
-// CHECK 4: MASTER_INDEX.md exists and is valid
+// CHECK 5: MASTER_INDEX.md exists and is valid
 // =============================================================================
 
 function checkMasterIndex() {
-  console.log("🔍 CHECK 4: docs/MASTER_INDEX.md exists and references contracts");
+  console.log("🔍 CHECK 5: docs/MASTER_INDEX.md exists and references contracts");
 
   const content = readFile("docs/MASTER_INDEX.md");
   if (!content) {
@@ -237,11 +297,11 @@ function checkMasterIndex() {
 }
 
 // =============================================================================
-// CHECK 5: Required files exist
+// CHECK 6: Required files exist
 // =============================================================================
 
 function checkRequiredFiles() {
-  console.log("🔍 CHECK 5: Required contract files exist");
+  console.log("🔍 CHECK 6: Required contract files exist");
 
   const REQUIRED = [
     "core/frontend_scoring_contract.js",
@@ -272,6 +332,7 @@ console.log("============================================\n");
 checkRequiredFiles();
 checkNoHardcodedUrls();
 checkNoScoringLiterals();
+checkNoDirectNetworkCalls();
 checkApiUsesClient();
 checkMasterIndex();
 
