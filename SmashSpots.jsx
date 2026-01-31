@@ -463,6 +463,8 @@ const SmashSpots = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{ color: '#6b7280', fontSize: '12px' }}>Sort:</span>
               <select
+                id="smash-spots-sort"
+                name="smashSpotsSort"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
                 style={{

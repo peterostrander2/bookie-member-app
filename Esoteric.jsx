@@ -364,8 +364,10 @@ const Esoteric = () => {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '15px', marginBottom: '20px' }}>
             <div>
-              <label style={{ color: '#9ca3af', fontSize: '12px', display: 'block', marginBottom: '6px' }}>Away Team</label>
+              <label htmlFor="esoteric-away-team" style={{ color: '#9ca3af', fontSize: '12px', display: 'block', marginBottom: '6px' }}>Away Team</label>
               <input
+                id="esoteric-away-team"
+                name="esotericAwayTeam"
                 type="text"
                 value={awayTeam}
                 onChange={(e) => setAwayTeam(e.target.value)}
@@ -384,8 +386,10 @@ const Esoteric = () => {
             </div>
 
             <div>
-              <label style={{ color: '#9ca3af', fontSize: '12px', display: 'block', marginBottom: '6px' }}>Home Team</label>
+              <label htmlFor="esoteric-home-team" style={{ color: '#9ca3af', fontSize: '12px', display: 'block', marginBottom: '6px' }}>Home Team</label>
               <input
+                id="esoteric-home-team"
+                name="esotericHomeTeam"
                 type="text"
                 value={homeTeam}
                 onChange={(e) => setHomeTeam(e.target.value)}
@@ -404,8 +408,10 @@ const Esoteric = () => {
             </div>
 
             <div>
-              <label style={{ color: '#9ca3af', fontSize: '12px', display: 'block', marginBottom: '6px' }}>Game Date</label>
+              <label htmlFor="esoteric-game-date" style={{ color: '#9ca3af', fontSize: '12px', display: 'block', marginBottom: '6px' }}>Game Date</label>
               <input
+                id="esoteric-game-date"
+                name="esotericGameDate"
                 type="date"
                 value={gameDate}
                 onChange={(e) => setGameDate(e.target.value)}
@@ -423,8 +429,10 @@ const Esoteric = () => {
             </div>
 
             <div>
-              <label style={{ color: '#9ca3af', fontSize: '12px', display: 'block', marginBottom: '6px' }}>Spread (opt)</label>
+              <label htmlFor="esoteric-spread" style={{ color: '#9ca3af', fontSize: '12px', display: 'block', marginBottom: '6px' }}>Spread (opt)</label>
               <input
+                id="esoteric-spread"
+                name="esotericSpread"
                 type="number"
                 value={spread}
                 onChange={(e) => setSpread(e.target.value)}
@@ -443,8 +451,10 @@ const Esoteric = () => {
             </div>
 
             <div>
-              <label style={{ color: '#9ca3af', fontSize: '12px', display: 'block', marginBottom: '6px' }}>Total (opt)</label>
+              <label htmlFor="esoteric-total" style={{ color: '#9ca3af', fontSize: '12px', display: 'block', marginBottom: '6px' }}>Total (opt)</label>
               <input
+                id="esoteric-total"
+                name="esotericTotal"
                 type="number"
                 value={total}
                 onChange={(e) => setTotal(e.target.value)}

@@ -410,6 +410,8 @@ export const NotificationOnboardingModal = ({ isOpen, onClose, onEnabled }) => {
                   </div>
                 </div>
                 <input
+                  id="notify-confidence-threshold"
+                  name="notifyConfidenceThreshold"
                   type="range"
                   min="65"
                   max="95"
@@ -490,6 +492,8 @@ export const NotificationOnboardingModal = ({ isOpen, onClose, onEnabled }) => {
                 {selectedPrefs.emailNotifications && (
                   <div style={{ marginTop: '12px' }}>
                     <input
+                      id="notify-email"
+                      name="notifyEmail"
                       type="email"
                       placeholder="Enter your email address"
                       value={selectedPrefs.email}
@@ -562,7 +566,9 @@ export const NotificationOnboardingModal = ({ isOpen, onClose, onEnabled }) => {
 };
 
 // Toggle component for notification preferences
-const NotificationToggle = ({ icon, label, description, checked, onChange, highlight = false }) => (
+const NotificationToggle = ({ icon, label, description, checked, onChange, highlight = false }) => {
+  const inputId = `notify-toggle-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+  return (
   <div style={{
     display: 'flex',
     justifyContent: 'space-between',
@@ -579,13 +585,15 @@ const NotificationToggle = ({ icon, label, description, checked, onChange, highl
         <div style={{ color: '#6b7280', fontSize: '11px' }}>{description}</div>
       </div>
     </div>
-    <label style={{
+    <label htmlFor={inputId} style={{
       position: 'relative',
       width: '48px',
       height: '26px',
       cursor: 'pointer'
     }}>
       <input
+        id={inputId}
+        name={inputId}
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
@@ -626,6 +634,7 @@ const NotificationToggle = ({ icon, label, description, checked, onChange, highl
     </label>
   </div>
 );
+};
 
 // Hook to manage notification onboarding state
 export const useNotificationOnboarding = () => {

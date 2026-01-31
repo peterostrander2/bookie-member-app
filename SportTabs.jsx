@@ -114,6 +114,8 @@ export const SportDropdown = ({ selected, onChange }) => {
 
   return (
     <select
+      id="sport-dropdown"
+      name="sport"
       value={selected}
       onChange={(e) => onChange(e.target.value)}
       aria-label="Select sport"

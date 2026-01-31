@@ -357,6 +357,8 @@ export const PushNotificationSettings = ({ onOpenModal }) => {
               </div>
             </div>
             <input
+              id="push-confidence-threshold"
+              name="pushConfidenceThreshold"
               type="range"
               min="65"
               max="95"
@@ -432,6 +434,8 @@ export const PushNotificationSettings = ({ onOpenModal }) => {
               <div style={{ marginTop: '12px' }}>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <input
+                    id="push-email"
+                    name="pushEmail"
                     type="email"
                     placeholder="Enter your email"
                     value={email}
@@ -504,7 +508,9 @@ export const PushNotificationSettings = ({ onOpenModal }) => {
 };
 
 // Toggle Option Component
-const ToggleOption = ({ label, description, checked, onChange, highlight = false }) => (
+const ToggleOption = ({ label, description, checked, onChange, highlight = false }) => {
+  const inputId = `push-toggle-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+  return (
   <div style={{
     display: 'flex',
     justifyContent: 'space-between',
@@ -519,13 +525,15 @@ const ToggleOption = ({ label, description, checked, onChange, highlight = false
       <div style={{ color: '#6b7280', fontSize: '11px' }}>{description}</div>
     </div>
 
-    <label style={{
+    <label htmlFor={inputId} style={{
       position: 'relative',
       width: '44px',
       height: '24px',
       cursor: 'pointer'
     }}>
       <input
+        id={inputId}
+        name={inputId}
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
@@ -554,6 +562,7 @@ const ToggleOption = ({ label, description, checked, onChange, highlight = false
     </label>
   </div>
 );
+};
 
 // SMASH Alert Bell (mini component for navbar) - Now opens onboarding modal
 export const SmashAlertBell = ({ onOpenModal }) => {

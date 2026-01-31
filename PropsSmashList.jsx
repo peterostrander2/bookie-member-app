@@ -495,6 +495,8 @@ const FilterControls = memo(({ filters, setFilters, sortBy, setSortBy }) => {
         <div>
           <span style={{ color: '#6B7280', fontSize: '11px', marginRight: '8px' }}>TYPE:</span>
           <select
+            id="props-smash-type"
+            name="propsSmashType"
             value={filters.propType}
             onChange={(e) => setFilters({ ...filters, propType: e.target.value })}
             style={{
@@ -512,6 +514,8 @@ const FilterControls = memo(({ filters, setFilters, sortBy, setSortBy }) => {
         <div style={{ marginLeft: 'auto' }}>
           <span style={{ color: '#6B7280', fontSize: '11px', marginRight: '8px' }}>SORT:</span>
           <select
+            id="props-smash-sort"
+            name="propsSmashSort"
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
             style={{

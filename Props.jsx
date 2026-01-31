@@ -179,6 +179,8 @@ const Props = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span style={{ color: '#6b7280', fontSize: '13px' }}>Sort:</span>
             <select
+              id="props-sort"
+              name="propsSort"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
               style={{

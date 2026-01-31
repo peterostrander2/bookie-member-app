@@ -126,6 +126,8 @@ const SearchBar = memo(({ placeholder = 'Search players, teams, games...', compa
         <span style={{ color: '#6b7280', marginRight: '10px', fontSize: compact ? '14px' : '16px' }}>🔍</span>
         <input
           ref={inputRef}
+          id="global-search"
+          name="globalSearch"
           type="text"
           value={query}
           onChange={(e) => {

@@ -489,7 +489,7 @@ const ParlayBuilder = () => {
 
               {/* Stake Input */}
               <div style={{ marginBottom: '20px' }}>
-                <label style={{
+                <label htmlFor="parlay-stake" style={{
                   color: '#6b7280',
                   fontSize: '12px',
                   display: 'block',
@@ -508,6 +508,8 @@ const ParlayBuilder = () => {
                     $
                   </span>
                   <input
+                    id="parlay-stake"
+                    name="parlayStake"
                     type="number"
                     value={stake}
                     onChange={(e) => setStake(parseFloat(e.target.value) || 0)}
@@ -673,6 +675,8 @@ const AddLegForm = React.memo(({ onAdd }) => {
     setExpanded(false);
   };
 
+  const fieldId = (name) => `parlay-leg-${name}`;
+
   return (
     <div style={{
       backgroundColor: '#1a1a2e',
@@ -710,10 +714,12 @@ const AddLegForm = React.memo(({ onAdd }) => {
             gap: '12px'
           }}>
             <div>
-              <label style={{ color: '#6b7280', fontSize: '11px', display: 'block', marginBottom: '4px' }}>
+              <label htmlFor={fieldId('player')} style={{ color: '#6b7280', fontSize: '11px', display: 'block', marginBottom: '4px' }}>
                 PLAYER
               </label>
               <input
+                id={fieldId('player')}
+                name="parlayLegPlayer"
                 type="text"
                 value={formData.player}
                 onChange={(e) => setFormData({ ...formData, player: e.target.value })}
@@ -730,10 +736,12 @@ const AddLegForm = React.memo(({ onAdd }) => {
               />
             </div>
             <div>
-              <label style={{ color: '#6b7280', fontSize: '11px', display: 'block', marginBottom: '4px' }}>
+              <label htmlFor={fieldId('team')} style={{ color: '#6b7280', fontSize: '11px', display: 'block', marginBottom: '4px' }}>
                 TEAM
               </label>
               <input
+                id={fieldId('team')}
+                name="parlayLegTeam"
                 type="text"
                 value={formData.team}
                 onChange={(e) => setFormData({ ...formData, team: e.target.value })}
@@ -750,10 +758,12 @@ const AddLegForm = React.memo(({ onAdd }) => {
               />
             </div>
             <div>
-              <label style={{ color: '#6b7280', fontSize: '11px', display: 'block', marginBottom: '4px' }}>
+              <label htmlFor={fieldId('bet-type')} style={{ color: '#6b7280', fontSize: '11px', display: 'block', marginBottom: '4px' }}>
                 BET TYPE
               </label>
               <select
+                id={fieldId('bet-type')}
+                name="parlayLegBetType"
                 value={formData.bet_type}
                 onChange={(e) => setFormData({ ...formData, bet_type: e.target.value })}
                 style={{
@@ -775,10 +785,12 @@ const AddLegForm = React.memo(({ onAdd }) => {
               </select>
             </div>
             <div>
-              <label style={{ color: '#6b7280', fontSize: '11px', display: 'block', marginBottom: '4px' }}>
+              <label htmlFor={fieldId('side')} style={{ color: '#6b7280', fontSize: '11px', display: 'block', marginBottom: '4px' }}>
                 SIDE
               </label>
               <select
+                id={fieldId('side')}
+                name="parlayLegSide"
                 value={formData.side}
                 onChange={(e) => setFormData({ ...formData, side: e.target.value })}
                 style={{
@@ -798,10 +810,12 @@ const AddLegForm = React.memo(({ onAdd }) => {
               </select>
             </div>
             <div>
-              <label style={{ color: '#6b7280', fontSize: '11px', display: 'block', marginBottom: '4px' }}>
+              <label htmlFor={fieldId('line')} style={{ color: '#6b7280', fontSize: '11px', display: 'block', marginBottom: '4px' }}>
                 LINE
               </label>
               <input
+                id={fieldId('line')}
+                name="parlayLegLine"
                 type="text"
                 value={formData.line}
                 onChange={(e) => setFormData({ ...formData, line: e.target.value })}
@@ -818,10 +832,12 @@ const AddLegForm = React.memo(({ onAdd }) => {
               />
             </div>
             <div>
-              <label style={{ color: '#6b7280', fontSize: '11px', display: 'block', marginBottom: '4px' }}>
+              <label htmlFor={fieldId('odds')} style={{ color: '#6b7280', fontSize: '11px', display: 'block', marginBottom: '4px' }}>
                 ODDS
               </label>
               <input
+                id={fieldId('odds')}
+                name="parlayLegOdds"
                 type="number"
                 value={formData.odds}
                 onChange={(e) => setFormData({ ...formData, odds: parseInt(e.target.value) || -110 })}

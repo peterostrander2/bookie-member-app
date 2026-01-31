@@ -144,6 +144,8 @@ const DailySummary = () => {
           </div>
 
           <select
+            id="daily-summary-date"
+            name="dailySummaryDate"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
             style={{

@@ -199,10 +199,12 @@ const Profile = () => {
           
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px', marginBottom: '20px' }}>
             <div>
-              <label style={{ color: '#6b7280', fontSize: '12px', display: 'block', marginBottom: '6px' }}>
+              <label htmlFor="profile-bankroll-starting" style={{ color: '#6b7280', fontSize: '12px', display: 'block', marginBottom: '6px' }}>
                 Starting Bankroll ($)
               </label>
               <input
+                id="profile-bankroll-starting"
+                name="profileBankrollStarting"
                 type="number"
                 value={bankroll.starting}
                 onChange={(e) => handleBankrollChange('starting', e.target.value)}
@@ -219,10 +221,12 @@ const Profile = () => {
               />
             </div>
             <div>
-              <label style={{ color: '#6b7280', fontSize: '12px', display: 'block', marginBottom: '6px' }}>
+              <label htmlFor="profile-bankroll-current" style={{ color: '#6b7280', fontSize: '12px', display: 'block', marginBottom: '6px' }}>
                 Current Bankroll ($)
               </label>
               <input
+                id="profile-bankroll-current"
+                name="profileBankrollCurrent"
                 type="number"
                 value={bankroll.current}
                 onChange={(e) => handleBankrollChange('current', e.target.value)}
@@ -239,10 +243,12 @@ const Profile = () => {
               />
             </div>
             <div>
-              <label style={{ color: '#6b7280', fontSize: '12px', display: 'block', marginBottom: '6px' }}>
+              <label htmlFor="profile-bankroll-kelly" style={{ color: '#6b7280', fontSize: '12px', display: 'block', marginBottom: '6px' }}>
                 Kelly Fraction (0.1 - 1.0)
               </label>
               <input
+                id="profile-bankroll-kelly"
+                name="profileBankrollKellyFraction"
                 type="number"
                 step="0.05"
                 min="0.1"
@@ -262,10 +268,12 @@ const Profile = () => {
               />
             </div>
             <div>
-              <label style={{ color: '#6b7280', fontSize: '12px', display: 'block', marginBottom: '6px' }}>
+              <label htmlFor="profile-bankroll-max-bet" style={{ color: '#6b7280', fontSize: '12px', display: 'block', marginBottom: '6px' }}>
                 Max Bet Size (% of bankroll)
               </label>
               <input
+                id="profile-bankroll-max-bet"
+                name="profileBankrollMaxBetSize"
                 type="number"
                 min="1"
                 max="10"

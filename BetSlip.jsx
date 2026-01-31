@@ -514,6 +514,7 @@ export const FloatingBetSlip = () => {
                 <label htmlFor="betslip-stake" style={{ color: '#6b7280', fontSize: '12px' }}>Stake $</label>
                 <input
                   id="betslip-stake"
+                  name="betslipStake"
                   type="number"
                   value={totalStake}
                   onChange={(e) => setTotalStake(parseFloat(e.target.value) || 0)}

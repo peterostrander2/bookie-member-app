@@ -323,7 +323,11 @@ const GameFilterControls = memo(({ filters, setFilters, sortBy, setSortBy }) => 
         </div>
         <div style={{ marginLeft: 'auto' }}>
           <span style={{ color: '#6B7280', fontSize: '11px', marginRight: '8px' }}>SORT:</span>
-          <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}
+          <select
+            id="game-smash-sort"
+            name="gameSmashSort"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
             style={{
               backgroundColor: '#1a1a2e', color: '#fff', border: '1px solid #4B5563',
               borderRadius: '6px', padding: '4px 8px', fontSize: '12px', cursor: 'pointer'

@@ -4,6 +4,7 @@ import App from './App';
 import './index.css';
 import { initSentry } from './sentry';
 import { initAnalytics } from './analytics';
+import ErrorBoundary from './ErrorBoundary';
 
 // Initialize error monitoring (before app renders)
 initSentry();
@@ -13,6 +14,8 @@ initAnalytics();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <App />
+    <ErrorBoundary fullPage message="The app hit an unexpected error. Please try again.">
+      <App />
+    </ErrorBoundary>
   </React.StrictMode>
 );

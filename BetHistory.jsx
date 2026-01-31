@@ -199,6 +199,8 @@ const BetHistory = () => {
 
         {/* Sport Filter */}
         <select
+          id="bet-history-sport"
+          name="betHistorySport"
           value={sport}
           onChange={(e) => setSport(e.target.value)}
           style={{

@@ -481,10 +481,12 @@ const BankrollManager = () => {
               </h3>
 
               <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', color: '#9ca3af', fontSize: '12px', marginBottom: '8px' }}>
+                <label htmlFor="bankroll-confidence" style={{ display: 'block', color: '#9ca3af', fontSize: '12px', marginBottom: '8px' }}>
                   Confidence Level: {calcConfidence}%
                 </label>
                 <input
+                  id="bankroll-confidence"
+                  name="bankrollConfidence"
                   type="range"
                   min="50"
                   max="95"
@@ -495,10 +497,12 @@ const BankrollManager = () => {
               </div>
 
               <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', color: '#9ca3af', fontSize: '12px', marginBottom: '8px' }}>
+                <label htmlFor="bankroll-odds" style={{ display: 'block', color: '#9ca3af', fontSize: '12px', marginBottom: '8px' }}>
                   Odds (American)
                 </label>
                 <input
+                  id="bankroll-odds"
+                  name="bankrollOdds"
                   type="number"
                   value={calcOdds}
                   onChange={(e) => setCalcOdds(parseInt(e.target.value) || -110)}
@@ -618,6 +622,8 @@ const BankrollManager = () => {
               </h3>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <input
+                  id="bankroll-import-csv"
+                  name="bankrollImportCsv"
                   type="file"
                   ref={fileInputRef}
                   accept=".csv"
@@ -1095,14 +1101,18 @@ const SimCard = ({ label, value, color }) => (
   </div>
 );
 
-const SettingInput = ({ label, value, onChange, disabled, prefix, suffix }) => (
+const SettingInput = ({ label, value, onChange, disabled, prefix, suffix }) => {
+  const inputId = `bankroll-setting-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+  return (
   <div>
-    <label style={{ display: 'block', color: '#9ca3af', fontSize: '12px', marginBottom: '8px' }}>
+    <label htmlFor={inputId} style={{ display: 'block', color: '#9ca3af', fontSize: '12px', marginBottom: '8px' }}>
       {label}
     </label>
     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
       {prefix && <span style={{ color: '#6b7280' }}>{prefix}</span>}
       <input
+        id={inputId}
+        name={inputId}
         type="number"
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -1121,5 +1131,6 @@ const SettingInput = ({ label, value, onChange, disabled, prefix, suffix }) => (
     </div>
   </div>
 );
+};
 
 export default BankrollManager;

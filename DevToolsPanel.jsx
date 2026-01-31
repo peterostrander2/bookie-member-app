@@ -311,6 +311,8 @@ const DevToolsPanel = ({ style = {} }) => {
         </button>
         <div style={{ flex: 1 }} />
         <select
+          id="devtools-sport"
+          name="devtoolsSport"
           value={sport}
           onChange={(e) => setSport(e.target.value)}
           style={{

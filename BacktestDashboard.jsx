@@ -375,10 +375,12 @@ const BacktestDashboard = () => {
                     backgroundColor: '#0a0a0f',
                     borderRadius: '6px'
                   }}>
-                    <span style={{ color: '#9ca3af', flex: 1, fontSize: '12px', textTransform: 'capitalize' }}>
+                    <label htmlFor={`backtest-weight-${signal}`} style={{ color: '#9ca3af', flex: 1, fontSize: '12px', textTransform: 'capitalize' }}>
                       {signal.replace(/_/g, ' ')}
-                    </span>
+                    </label>
                     <input
+                      id={`backtest-weight-${signal}`}
+                      name={`backtestWeight-${signal}`}
                       type="number"
                       min="0"
                       max="30"
