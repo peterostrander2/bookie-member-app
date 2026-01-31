@@ -1,37 +1,23 @@
-import { rateLimitedFetch, RateLimitError } from './rateLimit';
+/**
+ * API Module - Re-exports from centralized client
+ *
+ * ALL requests go through lib/api/client.js which imports config from
+ * core/integration_contract.js. DO NOT hardcode URLs here.
+ */
 
-const API_BASE_URL = 'https://web-production-7b2a.up.railway.app';
+import {
+  getBaseUrl,
+  apiFetch,
+  authFetch,
+  getAuthHeaders,
+  RateLimitError,
+} from './lib/api/client.js';
 
-// API Key for authenticated endpoints (set in environment)
-const API_KEY = import.meta.env.VITE_API_KEY || '';
-
-// Fetch wrapper that optionally applies rate limiting
-// Rate limiting disabled when VITE_RATE_LIMIT=false (checked at runtime for testing)
-const apiFetch = async (url, options = {}) => {
-  const rateLimitEnabled = import.meta.env.VITE_RATE_LIMIT !== 'false';
-  if (rateLimitEnabled) {
-    return rateLimitedFetch(url, options);
-  }
-  return fetch(url, options);
-};
-
-// Helper for authenticated GET requests
-const authFetch = async (url) => {
-  const headers = API_KEY ? { 'X-API-Key': API_KEY } : {};
-  return apiFetch(url, { headers });
-};
-
-// Helper to get headers for authenticated requests
-const getAuthHeaders = () => {
-  const headers = { 'Content-Type': 'application/json' };
-  if (API_KEY) {
-    headers['X-API-Key'] = API_KEY;
-  }
-  return headers;
-};
-
-// Export rate limit error for consumers
+// Re-export for backwards compatibility
 export { RateLimitError };
+
+// API_BASE_URL is now derived from contract (not hardcoded)
+const API_BASE_URL = getBaseUrl();
 
 export const api = {
   // Health (public)

@@ -21,6 +21,7 @@ const ALLOWLIST = new Set([
   path.resolve(ROOT, "core/frontend_scoring_contract.js"),
   path.resolve(ROOT, "core/integration_contract.js"),
   path.resolve(ROOT, "scripts/validate_no_frontend_literals.mjs"),
+  path.resolve(ROOT, "scripts/validate_frontend_contracts.mjs"),
   path.resolve(ROOT, "scripts/generate_audit_map.mjs"),
 ]);
 

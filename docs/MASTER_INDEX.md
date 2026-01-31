@@ -44,12 +44,14 @@ Before touching code or docs: use this file to route yourself to the canonical s
 **Examples:** Endpoint URLs, API key handling, response parsing
 
 **Canonical sources:**
-- `core/integration_contract.js` - Endpoint definitions, env vars
-- `api.js` - ALL API call implementations (single file)
+- `core/integration_contract.js` - Endpoint definitions, env vars, base URL
+- `lib/api/client.js` - Centralized fetch helpers (ALL requests go through here)
+- `api.js` - API method implementations (imports from client)
 
 **Never do:**
 - Add API calls outside `api.js`
-- Hardcode backend URL (use `import.meta.env.VITE_API_BASE`)
+- Hardcode backend URL anywhere (must come from contract via client)
+- Import fetch helpers from anywhere except `lib/api/client.js`
 - Duplicate endpoint logic across files
 
 ---
@@ -59,7 +61,9 @@ Before touching code or docs: use this file to route yourself to the canonical s
 | Topic | Canonical File(s) | What It Defines |
 |---|---|---|
 | Scoring/Tiers | `core/frontend_scoring_contract.js` | Thresholds, tier names, colors |
-| API Integration | `core/integration_contract.js` + `api.js` | Endpoints, env vars, calls |
+| API Config | `core/integration_contract.js` | Base URL, env vars, endpoints |
+| API Client | `lib/api/client.js` | Centralized fetch, auth headers |
+| API Methods | `api.js` | All endpoint implementations |
 | Components | `App.jsx` | Routing, lazy loading |
 | Signals | `signalEngine.js` | Client calculations |
 | Storage | `storageUtils.js` | localStorage keys |
@@ -69,7 +73,10 @@ Before touching code or docs: use this file to route yourself to the canonical s
 ## Validators — What to Run
 
 ```bash
-# Run all validators
+# Run all validators (combined)
+node scripts/validate_frontend_contracts.mjs
+
+# Or run CI sanity check (includes all validators)
 ./scripts/ci_sanity_check_frontend.sh
 
 # Individual validators
