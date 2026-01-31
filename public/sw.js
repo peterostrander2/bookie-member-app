@@ -5,6 +5,11 @@ const CACHE_VERSION = 'v2';
 const STATIC_CACHE = `bookie-static-${CACHE_VERSION}`;
 const API_CACHE = `bookie-api-${CACHE_VERSION}`;
 const IMAGE_CACHE = `bookie-images-${CACHE_VERSION}`;
+const SW_DEBUG = self.location.hostname === 'localhost' || self.location.hostname === '127.0.0.1';
+
+function swLog(...args) {
+  if (SW_DEBUG) console.log(...args);
+}
 
 // Static assets to cache on install
 const STATIC_ASSETS = [
@@ -28,7 +33,7 @@ const API_CACHE_CONFIG = {
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(STATIC_CACHE).then((cache) => {
-      console.log('[SW] Caching static assets');
+      swLog('[SW] Caching static assets');
       return cache.addAll(STATIC_ASSETS);
     })
   );
@@ -45,7 +50,7 @@ self.addEventListener('activate', (event) => {
         cacheNames
           .filter((name) => !currentCaches.includes(name))
           .map((name) => {
-            console.log('[SW] Deleting old cache:', name);
+            swLog('[SW] Deleting old cache:', name);
             return caches.delete(name);
           })
       );
@@ -122,13 +127,13 @@ async function handleApiRequest(request) {
 
   // If we have a fresh cached response, return it
   if (cachedResponse && config && isCacheFresh(cachedResponse, config.ttl)) {
-    console.log('[SW] Returning fresh cached API response:', request.url);
+    swLog('[SW] Returning fresh cached API response:', request.url);
     return cachedResponse;
   }
 
   // If stale-while-revalidate and we have a stale cache, return it while fetching
   if (cachedResponse && config?.staleWhileRevalidate) {
-    console.log('[SW] Returning stale cache while revalidating:', request.url);
+    swLog('[SW] Returning stale cache while revalidating:', request.url);
 
     // Revalidate in background
     fetchAndCache(request, cache).catch(console.error);
@@ -141,11 +146,11 @@ async function handleApiRequest(request) {
     const response = await fetchAndCache(request, cache);
     return response;
   } catch (error) {
-    console.log('[SW] Network failed, checking cache:', request.url);
+    swLog('[SW] Network failed, checking cache:', request.url);
 
     // Return stale cache if available (better than nothing)
     if (cachedResponse) {
-      console.log('[SW] Returning stale cached response:', request.url);
+      swLog('[SW] Returning stale cached response:', request.url);
       return cachedResponse;
     }
 
@@ -172,7 +177,7 @@ async function fetchAndCache(request, cache) {
   if (response.ok) {
     const timestampedResponse = await addCacheTimestamp(response.clone());
     cache.put(request, timestampedResponse);
-    console.log('[SW] Cached API response:', request.url);
+    swLog('[SW] Cached API response:', request.url);
   }
 
   return response;
@@ -234,13 +239,13 @@ self.addEventListener('sync', (event) => {
 
 // Sync offline bets when back online
 async function syncOfflineBets() {
-  console.log('[SW] Syncing offline bets...');
+  swLog('[SW] Syncing offline bets...');
 
   // Get pending bets from IndexedDB
   const pendingBets = await getFromIndexedDB('pendingBets');
 
   if (!pendingBets || pendingBets.length === 0) {
-    console.log('[SW] No pending bets to sync');
+    swLog('[SW] No pending bets to sync');
     return;
   }
 
@@ -254,7 +259,7 @@ async function syncOfflineBets() {
 
       if (response.ok) {
         await removeFromIndexedDB('pendingBets', bet.id);
-        console.log('[SW] Synced bet:', bet.id);
+        swLog('[SW] Synced bet:', bet.id);
       }
     } catch (error) {
       console.error('[SW] Failed to sync bet:', bet.id, error);
@@ -399,7 +404,7 @@ async function cachePicksData(picks) {
     }
   });
   await cache.put('/offline/picks', response);
-  console.log('[SW] Cached picks data for offline viewing');
+  swLog('[SW] Cached picks data for offline viewing');
 }
 
 // Get cache status
@@ -426,4 +431,4 @@ async function getCacheStatus() {
   return status;
 }
 
-console.log('[SW] Service Worker loaded - v2 with offline support');
+swLog('[SW] Service Worker loaded - v2 with offline support');
