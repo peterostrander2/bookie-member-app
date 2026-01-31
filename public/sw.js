@@ -83,6 +83,15 @@ async function addCacheTimestamp(response) {
   });
 }
 
+function isHttpRequest(request) {
+  try {
+    const url = new URL(request.url);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 // Fetch event handler
 self.addEventListener('fetch', (event) => {
   const { request } = event;
@@ -90,6 +99,8 @@ self.addEventListener('fetch', (event) => {
 
   // Skip non-GET requests
   if (request.method !== 'GET') return;
+  // Skip non-http(s) schemes (e.g., chrome-extension)
+  if (!isHttpRequest(request)) return;
 
   // Handle API requests with caching
   if (url.includes('railway.app') || url.includes('/live/') || url.includes('/esoteric/')) {
@@ -169,6 +180,22 @@ async function fetchAndCache(request, cache) {
 
 // Handle static requests
 async function handleStaticRequest(request) {
+  // Navigation/documents: network-first to avoid stale HTML/asset hashes
+  if (request.mode === 'navigate' || request.destination === 'document') {
+    try {
+      const response = await fetch(request);
+      if (response.ok) {
+        const cache = await caches.open(STATIC_CACHE);
+        cache.put(request, response.clone());
+      }
+      return response;
+    } catch (error) {
+      const offlineResponse = await caches.match('/');
+      if (offlineResponse) return offlineResponse;
+      throw error;
+    }
+  }
+
   // Try cache first for static assets
   const cachedResponse = await caches.match(request);
 
