@@ -21,7 +21,8 @@ import {
   GOLD_STAR_THRESHOLD,
   TITANIUM_THRESHOLD,
   MONITOR_THRESHOLD,
-  GOLD_STAR_GATES
+  GOLD_STAR_GATES,
+  TIERS
 } from './core/frontend_scoring_contract';
 
 // AI Models and Pillars for enhanced "Why?" breakdown
@@ -105,31 +106,31 @@ const MODEL_BADGE_INACTIVE = {
 
 // v10.87 Tier configuration based on API tier field (matches backend tiering.py)
 const TIER_CONFIGS = {
-  TITANIUM_SMASH: {
+  [TIERS.TITANIUM_SMASH]: {
     label: 'TITANIUM SMASH', color: '#00FFFF',
     bg: 'rgba(0, 255, 255, 0.15)', border: 'rgba(0, 255, 255, 0.5)',
     glow: '0 0 30px rgba(0, 255, 255, 0.4)', size: 'large',
     historicalWinRate: 92, isProfitable: true, action: 'SMASH', units: 2.5
   },
-  GOLD_STAR: {
+  [TIERS.GOLD_STAR]: {
     label: 'GOLD STAR', color: '#FFD700',
     bg: 'rgba(255, 215, 0, 0.15)', border: 'rgba(255, 215, 0, 0.5)',
     glow: '0 0 20px rgba(255, 215, 0, 0.3)', size: 'large',
     historicalWinRate: 87, isProfitable: true, action: 'SMASH', units: 2.0
   },
-  EDGE_LEAN: {
+  [TIERS.EDGE_LEAN]: {
     label: 'EDGE LEAN', color: '#10B981',
     bg: 'rgba(16, 185, 129, 0.15)', border: 'rgba(16, 185, 129, 0.5)',
     glow: 'none', size: 'medium',
     historicalWinRate: 72, isProfitable: true, action: 'PLAY', units: 1.0
   },
-  MONITOR: {
+  [TIERS.MONITOR]: {
     label: 'MONITOR', color: '#F59E0B',
     bg: 'rgba(245, 158, 11, 0.15)', border: 'rgba(245, 158, 11, 0.5)',
     glow: 'none', size: 'small',
     historicalWinRate: 58, isProfitable: true, action: 'WATCH', units: 0.0
   },
-  PASS: {
+  [TIERS.PASS]: {
     label: 'PASS', color: '#6B7280',
     bg: 'rgba(107, 114, 128, 0.15)', border: 'rgba(107, 114, 128, 0.5)',
     glow: 'none', size: 'small',
@@ -142,29 +143,29 @@ const TIER_CONFIGS = {
 const getTierConfigFromPick = (pick) => {
   // TITANIUM: ONLY when backend explicitly indicates it
   if (isTitanium(pick)) {
-    return TIER_CONFIGS.TITANIUM_SMASH;
+    return TIER_CONFIGS[TIERS.TITANIUM_SMASH];
   }
 
   // Use tier from API (non-titanium)
-  if (pick.tier && TIER_CONFIGS[pick.tier] && pick.tier !== 'TITANIUM_SMASH') {
+  if (pick.tier && TIER_CONFIGS[pick.tier] && pick.tier !== TIERS.TITANIUM_SMASH) {
     return TIER_CONFIGS[pick.tier];
   }
 
   // Fallback: derive from score (NOT for titanium)
   const score = getPickScore(pick);
-  if (score === null) return TIER_CONFIGS.PASS;
-  if (score >= GOLD_STAR_THRESHOLD) return TIER_CONFIGS.GOLD_STAR;
-  if (score >= MIN_FINAL_SCORE) return TIER_CONFIGS.EDGE_LEAN;
-  if (score >= MONITOR_THRESHOLD) return TIER_CONFIGS.MONITOR;
-  return TIER_CONFIGS.PASS;
+  if (score === null) return TIER_CONFIGS[TIERS.PASS];
+  if (score >= GOLD_STAR_THRESHOLD) return TIER_CONFIGS[TIERS.GOLD_STAR];
+  if (score >= MIN_FINAL_SCORE) return TIER_CONFIGS[TIERS.EDGE_LEAN];
+  if (score >= MONITOR_THRESHOLD) return TIER_CONFIGS[TIERS.MONITOR];
+  return TIER_CONFIGS[TIERS.PASS];
 };
 
 // Legacy: Confidence tier configuration (for backwards compatibility)
 const getTierConfig = (conf) => {
-  if (conf >= 85) return TIER_CONFIGS.GOLD_STAR;
-  if (conf >= 75) return TIER_CONFIGS.EDGE_LEAN;
-  if (conf >= 65) return TIER_CONFIGS.MONITOR;
-  return TIER_CONFIGS.PASS;
+  if (conf >= 85) return TIER_CONFIGS[TIERS.GOLD_STAR];
+  if (conf >= 75) return TIER_CONFIGS[TIERS.EDGE_LEAN];
+  if (conf >= 65) return TIER_CONFIGS[TIERS.MONITOR];
+  return TIER_CONFIGS[TIERS.PASS];
 };
 
 // v10.4 Badge display component
@@ -282,8 +283,8 @@ TierLegend.displayName = 'TierLegend';
 
 // Filter controls for game picks (v10.87 - includes TITANIUM_SMASH)
 const GameFilterControls = memo(({ filters, setFilters, sortBy, setSortBy }) => {
-  const tierOptions = ['ALL', 'TITANIUM_SMASH', 'GOLD_STAR', 'EDGE_LEAN', 'MONITOR'];
-  const tierLabels = { ALL: 'ALL', TITANIUM_SMASH: 'TITANIUM', GOLD_STAR: 'GOLD', EDGE_LEAN: 'EDGE', MONITOR: 'MONITOR' };
+  const tierOptions = ['ALL', TIERS.TITANIUM_SMASH, TIERS.GOLD_STAR, TIERS.EDGE_LEAN, TIERS.MONITOR];
+  const tierLabels = { ALL: 'ALL', [TIERS.TITANIUM_SMASH]: 'TITANIUM', [TIERS.GOLD_STAR]: 'GOLD', [TIERS.EDGE_LEAN]: 'EDGE', [TIERS.MONITOR]: 'MONITOR' };
   const marketOptions = ['ALL', 'SPREAD', 'TOTAL', 'ML'];
 
   return (
@@ -300,7 +301,7 @@ const GameFilterControls = memo(({ filters, setFilters, sortBy, setSortBy }) => 
                 style={{
                   padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold',
                   cursor: 'pointer', border: 'none',
-                  backgroundColor: filters.tier === tier ? (tier === 'TITANIUM_SMASH' ? '#00FFFF' : '#00D4FF') : '#1a1a2e',
+                  backgroundColor: filters.tier === tier ? (tier === TIERS.TITANIUM_SMASH ? '#00FFFF' : '#00D4FF') : '#1a1a2e',
                   color: filters.tier === tier ? '#0a0a0f' : '#9CA3AF'
                 }}>{tierLabels[tier]}</button>
             ))}
@@ -882,7 +883,7 @@ const getDemoGamePicks = (sport) => {
       // TRUE SMASH SPOT
       {
         team: 'Lakers', market: 'spreads', side: 'Lakers', line: -3.5, point: -3.5, odds: -110, price: -110,
-        selection: 'Lakers -3.5', tier: 'GOLD_STAR', final_score: 8.0, smash_spot: true, jarvis_active: true,
+        selection: 'Lakers -3.5', tier: TIERS.GOLD_STAR, final_score: 8.0, smash_spot: true, jarvis_active: true,
         confluence_level: 'JARVIS_PERFECT', alignment_pct: 86.5,
         scoring_breakdown: { research_score: 8.2, esoteric_score: 7.6 },
         badges: ['SMASH_SPOT', 'SHARP_MONEY', 'JARVIS_TRIGGER'],
@@ -892,7 +893,7 @@ const getDemoGamePicks = (sport) => {
       // GOLD_STAR total
       {
         team: null, market: 'totals', side: 'Over', line: 224.5, point: 224.5, odds: -108, price: -108,
-        selection: 'Over 224.5', tier: 'GOLD_STAR', final_score: 7.6, smash_spot: false, jarvis_active: false,
+        selection: 'Over 224.5', tier: TIERS.GOLD_STAR, final_score: 7.6, smash_spot: false, jarvis_active: false,
         confluence_level: 'PERFECT', alignment_pct: 82.0,
         scoring_breakdown: { research_score: 7.8, esoteric_score: 7.2 },
         badges: ['REVERSE_LINE'],
@@ -902,7 +903,7 @@ const getDemoGamePicks = (sport) => {
       // EDGE_LEAN moneyline
       {
         team: 'Nuggets', market: 'h2h', side: 'Nuggets', line: null, point: null, odds: -145, price: -145,
-        selection: 'Nuggets ML', tier: 'EDGE_LEAN', final_score: 6.9, smash_spot: false, jarvis_active: true,
+        selection: 'Nuggets ML', tier: TIERS.EDGE_LEAN, final_score: 6.9, smash_spot: false, jarvis_active: true,
         confluence_level: 'MODERATE', alignment_pct: 72.0,
         scoring_breakdown: { research_score: 7.2, esoteric_score: 6.5 },
         badges: ['JARVIS_TRIGGER', 'PRIME_TIME'],
@@ -913,7 +914,7 @@ const getDemoGamePicks = (sport) => {
     NFL: [
       {
         team: 'Chiefs', market: 'spreads', side: 'Chiefs', line: -4.5, point: -4.5, odds: -110, price: -110,
-        selection: 'Chiefs -4.5', tier: 'GOLD_STAR', final_score: 7.8, smash_spot: true, jarvis_active: true,
+        selection: 'Chiefs -4.5', tier: TIERS.GOLD_STAR, final_score: 7.8, smash_spot: true, jarvis_active: true,
         confluence_level: 'IMMORTAL', alignment_pct: 91.0,
         scoring_breakdown: { research_score: 8.0, esoteric_score: 7.5 },
         badges: ['SMASH_SPOT', 'SHARP_MONEY', 'PRIME_TIME', 'JARVIS_TRIGGER'],
@@ -924,7 +925,7 @@ const getDemoGamePicks = (sport) => {
     MLB: [
       {
         team: 'Dodgers', market: 'h2h', side: 'Dodgers', line: null, point: null, odds: -165, price: -165,
-        selection: 'Dodgers ML', tier: 'EDGE_LEAN', final_score: 6.7, smash_spot: false,
+        selection: 'Dodgers ML', tier: TIERS.EDGE_LEAN, final_score: 6.7, smash_spot: false,
         confluence_level: 'MODERATE', alignment_pct: 68.0,
         scoring_breakdown: { research_score: 7.0, esoteric_score: 6.2 },
         badges: [],
@@ -935,7 +936,7 @@ const getDemoGamePicks = (sport) => {
     NHL: [
       {
         team: 'Oilers', market: 'spreads', side: 'Oilers', line: -1.5, point: -1.5, odds: 125, price: 125,
-        selection: 'Oilers -1.5', tier: 'EDGE_LEAN', final_score: 6.5, smash_spot: false,
+        selection: 'Oilers -1.5', tier: TIERS.EDGE_LEAN, final_score: 6.5, smash_spot: false,
         confluence_level: 'MODERATE', alignment_pct: 65.0,
         scoring_breakdown: { research_score: 6.8, esoteric_score: 6.0 },
         badges: [],
@@ -1158,14 +1159,14 @@ const GameSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortByC
         const score = pick.final_score || (pick.confidence / 10) || 0;
         switch (filters.tier) {
           // v12.0 tier filters - TITANIUM requires backend titanium_triggered
-          case 'TITANIUM_SMASH': return tier === 'TITANIUM_SMASH' || pick.titanium_triggered;
-          case 'GOLD_STAR': return tier === 'GOLD_STAR' || tier === 'TITANIUM_SMASH' || score >= GOLD_STAR_THRESHOLD;
-          case 'EDGE_LEAN': return tier === 'EDGE_LEAN' || (score >= MIN_FINAL_SCORE && score < GOLD_STAR_THRESHOLD);
-          case 'MONITOR': return tier === 'MONITOR' || (score >= MONITOR_THRESHOLD && score < MIN_FINAL_SCORE);
+          case TIERS.TITANIUM_SMASH: return tier === TIERS.TITANIUM_SMASH || pick.titanium_triggered;
+          case TIERS.GOLD_STAR: return tier === TIERS.GOLD_STAR || tier === TIERS.TITANIUM_SMASH || score >= GOLD_STAR_THRESHOLD;
+          case TIERS.EDGE_LEAN: return tier === TIERS.EDGE_LEAN || (score >= MIN_FINAL_SCORE && score < GOLD_STAR_THRESHOLD);
+          case TIERS.MONITOR: return tier === TIERS.MONITOR || (score >= MONITOR_THRESHOLD && score < MIN_FINAL_SCORE);
           // Legacy tier names for backwards compatibility
-          case 'SMASH': return tier === 'GOLD_STAR' || tier === 'TITANIUM_SMASH' || score >= GOLD_STAR_THRESHOLD;
-          case 'STRONG': return tier === 'EDGE_LEAN' || (score >= MIN_FINAL_SCORE && score < GOLD_STAR_THRESHOLD);
-          case 'LEAN': return tier === 'MONITOR' || (score >= MONITOR_THRESHOLD && score < MIN_FINAL_SCORE);
+          case 'SMASH': return tier === TIERS.GOLD_STAR || tier === TIERS.TITANIUM_SMASH || score >= GOLD_STAR_THRESHOLD;
+          case 'STRONG': return tier === TIERS.EDGE_LEAN || (score >= MIN_FINAL_SCORE && score < GOLD_STAR_THRESHOLD);
+          case 'LEAN': return tier === TIERS.MONITOR || (score >= MONITOR_THRESHOLD && score < MIN_FINAL_SCORE);
           default: return true;
         }
       });

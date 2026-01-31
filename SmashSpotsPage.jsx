@@ -19,7 +19,8 @@ import {
   GOLD_STAR_THRESHOLD,
   TITANIUM_THRESHOLD,
   MONITOR_THRESHOLD,
-  TITANIUM_RULE
+  TITANIUM_RULE,
+  TIERS
 } from './core/frontend_scoring_contract';
 
 // v12.1: 60 second polling for live data
@@ -28,9 +29,9 @@ const AUTO_REFRESH_INTERVAL = 60 * 1000; // 60 seconds for live experience
 // v12.0 Tier-based filter options (matches backend tiering.py)
 // Community threshold enforced - no MONITOR or below shown
 const TIER_FILTERS = [
-  { id: 'titanium_smash', label: 'TITANIUM', tier: 'TITANIUM_SMASH', minScore: TITANIUM_THRESHOLD, color: '#00FFFF' },
-  { id: 'gold_star', label: 'GOLD STAR+', tier: 'GOLD_STAR', minScore: GOLD_STAR_THRESHOLD, color: '#FFD700' },
-  { id: 'edge_lean', label: 'ALL PLAYABLE', tier: 'EDGE_LEAN', minScore: MIN_FINAL_SCORE, color: '#10B981', isDefault: true }
+  { id: 'titanium_smash', label: 'TITANIUM', tier: TIERS.TITANIUM_SMASH, minScore: TITANIUM_THRESHOLD, color: '#00FFFF' },
+  { id: 'gold_star', label: 'GOLD STAR+', tier: TIERS.GOLD_STAR, minScore: GOLD_STAR_THRESHOLD, color: '#FFD700' },
+  { id: 'edge_lean', label: 'ALL PLAYABLE', tier: TIERS.EDGE_LEAN, minScore: MIN_FINAL_SCORE, color: '#10B981', isDefault: true }
   // NOTE: MONITOR and PASS filtered out by community threshold
 ];
 
@@ -60,7 +61,7 @@ const TABS = [
 // v12.0 Tier display configuration (matches backend tiering.py)
 // TITANIUM requires: final_score >= TITANIUM_THRESHOLD AND 3/4 engines >= engineThreshold
 const TIER_CONFIG = {
-  TITANIUM_SMASH: {
+  [TIERS.TITANIUM_SMASH]: {
     label: 'TITANIUM SMASH',
     color: '#00FFFF',
     emoji: '💎',
@@ -70,18 +71,18 @@ const TIER_CONFIG = {
     glow: '0 0 20px #00FFFF, 0 0 40px #00FFFF50',
     gradient: 'linear-gradient(135deg, #001a2e 0%, #003366 50%, #001a2e 100%)'
   },
-  GOLD_STAR: { label: 'GOLD STAR', color: '#FFD700', emoji: '🌟', minScore: GOLD_STAR_THRESHOLD, action: 'SMASH', units: 2.0 },
-  EDGE_LEAN: { label: 'EDGE LEAN', color: '#10B981', emoji: '💚', minScore: MIN_FINAL_SCORE, action: 'PLAY', units: 1.0 },
-  MONITOR: { label: 'MONITOR', color: '#F59E0B', emoji: '🟡', minScore: MONITOR_THRESHOLD, action: 'WATCH', units: 0.0 },
-  PASS: { label: 'PASS', color: '#6B7280', emoji: '⚪', minScore: 0, action: 'SKIP', units: 0.0 }
+  [TIERS.GOLD_STAR]: { label: 'GOLD STAR', color: '#FFD700', emoji: '🌟', minScore: GOLD_STAR_THRESHOLD, action: 'SMASH', units: 2.0 },
+  [TIERS.EDGE_LEAN]: { label: 'EDGE LEAN', color: '#10B981', emoji: '💚', minScore: MIN_FINAL_SCORE, action: 'PLAY', units: 1.0 },
+  [TIERS.MONITOR]: { label: 'MONITOR', color: '#F59E0B', emoji: '🟡', minScore: MONITOR_THRESHOLD, action: 'WATCH', units: 0.0 },
+  [TIERS.PASS]: { label: 'PASS', color: '#6B7280', emoji: '⚪', minScore: 0, action: 'SKIP', units: 0.0 }
 };
 
 // v12.0 Tier display for legend (TITANIUM is visually dominant)
 // Only show tiers at community threshold
 const CONFIDENCE_TIERS = [
-  { label: 'TITANIUM', color: '#00FFFF', range: `≥${TITANIUM_THRESHOLD} + 3/4 modules, backend-verified`, tier: 'TITANIUM_SMASH', prominent: true },
-  { label: 'GOLD STAR', color: '#FFD700', range: `≥${GOLD_STAR_THRESHOLD}`, tier: 'GOLD_STAR' },
-  { label: 'EDGE LEAN', color: '#10B981', range: `≥${MIN_FINAL_SCORE}`, tier: 'EDGE_LEAN' }
+  { label: 'TITANIUM', color: '#00FFFF', range: `≥${TITANIUM_THRESHOLD} + 3/4 modules, backend-verified`, tier: TIERS.TITANIUM_SMASH, prominent: true },
+  { label: 'GOLD STAR', color: '#FFD700', range: `≥${GOLD_STAR_THRESHOLD}`, tier: TIERS.GOLD_STAR },
+  { label: 'EDGE LEAN', color: '#10B981', range: `≥${MIN_FINAL_SCORE}`, tier: TIERS.EDGE_LEAN }
 ];
 
 // Get tier config from pick (v12.1 - TITANIUM is truth-based ONLY)
@@ -89,21 +90,21 @@ const getTierFromPick = (pick) => {
   // TITANIUM: ONLY when backend explicitly indicates it (truth-based)
   // DO NOT infer from score >= TITANIUM_THRESHOLD
   if (isTitanium(pick)) {
-    return TIER_CONFIG.TITANIUM_SMASH;
+    return TIER_CONFIG[TIERS.TITANIUM_SMASH];
   }
 
   // Use tier from API if available and NOT titanium
-  if (pick.tier && TIER_CONFIG[pick.tier] && pick.tier !== 'TITANIUM_SMASH') {
+  if (pick.tier && TIER_CONFIG[pick.tier] && pick.tier !== TIERS.TITANIUM_SMASH) {
     return TIER_CONFIG[pick.tier];
   }
 
   // Fallback: derive from score (for styling only, NOT for titanium)
   const score = getPickScore(pick);
-  if (score === null) return TIER_CONFIG.PASS;
-  if (score >= GOLD_STAR_THRESHOLD) return TIER_CONFIG.GOLD_STAR;
-  if (score >= MIN_FINAL_SCORE) return TIER_CONFIG.EDGE_LEAN;
-  if (score >= MONITOR_THRESHOLD) return TIER_CONFIG.MONITOR;
-  return TIER_CONFIG.PASS;
+  if (score === null) return TIER_CONFIG[TIERS.PASS];
+  if (score >= GOLD_STAR_THRESHOLD) return TIER_CONFIG[TIERS.GOLD_STAR];
+  if (score >= MIN_FINAL_SCORE) return TIER_CONFIG[TIERS.EDGE_LEAN];
+  if (score >= MONITOR_THRESHOLD) return TIER_CONFIG[TIERS.MONITOR];
+  return TIER_CONFIG[TIERS.PASS];
 };
 
 // Unit sizing based on tier (v10.87 - uses backend units field when available)
@@ -120,14 +121,14 @@ const getUnitSizeFromTier = (pick) => {
   }
 
   // Fallback: derive from tier
-  const tier = pick.tier || 'PASS';
+  const tier = pick.tier || TIERS.PASS;
   const isSmashSpot = pick.smash_spot === true;
 
-  if (tier === 'TITANIUM_SMASH') return { units: 2.5, label: '2.5 Units', emoji: '💎🔥' };
+  if (tier === TIERS.TITANIUM_SMASH) return { units: 2.5, label: '2.5 Units', emoji: '💎🔥' };
   if (isSmashSpot) return { units: 2, label: '2 Units', emoji: '🔥🔥' };
-  if (tier === 'GOLD_STAR') return { units: 2, label: '2 Units', emoji: '🔥🔥' };
-  if (tier === 'EDGE_LEAN') return { units: 1, label: '1 Unit', emoji: '✓' };
-  if (tier === 'MONITOR') return { units: 0, label: 'Watch', emoji: '⚡' };
+  if (tier === TIERS.GOLD_STAR) return { units: 2, label: '2 Units', emoji: '🔥🔥' };
+  if (tier === TIERS.EDGE_LEAN) return { units: 1, label: '1 Unit', emoji: '✓' };
+  if (tier === TIERS.MONITOR) return { units: 0, label: 'Watch', emoji: '⚡' };
   return { units: 0, label: 'Pass', emoji: '⚠️' };
 };
 
@@ -201,7 +202,7 @@ const TodaysBestBets = memo(({ sport, onPickClick }) => {
   const [bestPicks, setBestPicks] = useState([]);
   const [titaniumPicks, setTitaniumPicks] = useState([]); // TITANIUM picks (backend truth-based)
   const [smashSpots, setSmashSpots] = useState([]); // TRUE SmashSpots (rare)
-  const [displayTier, setDisplayTier] = useState('GOLD_STAR');
+  const [displayTier, setDisplayTier] = useState(TIERS.GOLD_STAR);
   const [totalActionable, setTotalActionable] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -237,7 +238,7 @@ const TodaysBestBets = memo(({ sport, onPickClick }) => {
 
         if (goldStarPicks.length > 0) {
           setBestPicks(goldStarPicks);
-          setDisplayTier('GOLD_STAR');
+          setDisplayTier(TIERS.GOLD_STAR);
         } else {
           // Fallback to EDGE_LEAN (>= MIN_FINAL_SCORE)
           const edgeLeanPicks = allPicks
@@ -246,7 +247,7 @@ const TodaysBestBets = memo(({ sport, onPickClick }) => {
 
           if (edgeLeanPicks.length > 0) {
             setBestPicks(edgeLeanPicks);
-            setDisplayTier('EDGE_LEAN');
+            setDisplayTier(TIERS.EDGE_LEAN);
           } else {
             setBestPicks([]);
             setDisplayTier('NONE');
@@ -264,9 +265,9 @@ const TodaysBestBets = memo(({ sport, onPickClick }) => {
   }, [sport]);
 
   // v10.4 tier-based styling
-  const tierDisplayConfig = displayTier === 'GOLD_STAR'
+  const tierDisplayConfig = displayTier === TIERS.GOLD_STAR
     ? { color: '#FFD700', label: 'GOLD STAR', borderColor: '#FFD70040', bgGradient: 'linear-gradient(135deg, #2a2a0a 0%, #3a3a1a 100%)', emoji: '🌟' }
-    : displayTier === 'EDGE_LEAN'
+    : displayTier === TIERS.EDGE_LEAN
     ? { color: '#10B981', label: 'EDGE LEAN', borderColor: '#10B98140', bgGradient: 'linear-gradient(135deg, #0a2a1a 0%, #1a3a2a 100%)', emoji: '💚' }
     : { color: '#F59E0B', label: 'MONITOR', borderColor: '#F59E0B40', bgGradient: 'linear-gradient(135deg, #2a1a0a 0%, #3a2a1a 100%)', emoji: '🟡' };
 
@@ -455,14 +456,14 @@ const TodaysBestBets = memo(({ sport, onPickClick }) => {
         <div>
           <h3 style={{ color: tierDisplayConfig.color, margin: 0, fontSize: '16px', fontWeight: 'bold' }}>
             Today's Best Bets
-            {displayTier === 'EDGE_LEAN' && (
+            {displayTier === TIERS.EDGE_LEAN && (
               <span style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 'normal', marginLeft: '8px' }}>
                 (No GOLD STAR picks available)
               </span>
             )}
           </h3>
           <div style={{ color: '#6B7280', fontSize: '11px' }}>
-            {tierDisplayConfig.label} tier (score ≥{displayTier === 'GOLD_STAR' ? GOLD_STAR_THRESHOLD : MIN_FINAL_SCORE}) • High conviction plays
+            {tierDisplayConfig.label} tier (score ≥{displayTier === TIERS.GOLD_STAR ? GOLD_STAR_THRESHOLD : MIN_FINAL_SCORE}) • High conviction plays
           </div>
         </div>
         <div style={{

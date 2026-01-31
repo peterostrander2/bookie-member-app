@@ -11,7 +11,8 @@
 import {
   MIN_FINAL_SCORE,
   GOLD_STAR_THRESHOLD,
-  MONITOR_THRESHOLD
+  MONITOR_THRESHOLD,
+  TIERS
 } from '../../core/frontend_scoring_contract';
 
 // Community threshold - re-export from contract
@@ -73,7 +74,7 @@ export function isTitanium(pick) {
   if (!pick) return false;
 
   return (
-    pick.tier === 'TITANIUM_SMASH' ||
+    pick.tier === TIERS.TITANIUM_SMASH ||
     pick.titanium_triggered === true ||
     (pick.titanium && pick.titanium.triggered === true)
   );
@@ -88,15 +89,15 @@ export function getTierForStyling(pick) {
 
   // TITANIUM must be explicit from backend
   if (isTitanium(pick)) {
-    return 'TITANIUM_SMASH';
+    return TIERS.TITANIUM_SMASH;
   }
 
   // Other tiers based on score (for styling only, not eligibility)
-  if (score === null) return 'PASS';
-  if (score >= GOLD_STAR_THRESHOLD) return 'GOLD_STAR';
-  if (score >= MIN_FINAL_SCORE) return 'EDGE_LEAN';
-  if (score >= MONITOR_THRESHOLD) return 'MONITOR';
-  return 'PASS';
+  if (score === null) return TIERS.PASS;
+  if (score >= GOLD_STAR_THRESHOLD) return TIERS.GOLD_STAR;
+  if (score >= MIN_FINAL_SCORE) return TIERS.EDGE_LEAN;
+  if (score >= MONITOR_THRESHOLD) return TIERS.MONITOR;
+  return TIERS.PASS;
 }
 
 /**

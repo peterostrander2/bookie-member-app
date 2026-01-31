@@ -33,8 +33,11 @@ export const GOLD_STAR_GATES = {
 // Tier labels - must match backend exactly
 export const TIERS = Object.freeze({
   TITANIUM: "TITANIUM",
+  TITANIUM_SMASH: "TITANIUM_SMASH",  // Frontend variant with UI emphasis
   GOLD_STAR: "GOLD_STAR",
   EDGE_LEAN: "EDGE_LEAN",
+  MONITOR: "MONITOR",
+  PASS: "PASS",
 });
 
 // Tier colors for UI

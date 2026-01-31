@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { MIN_FINAL_SCORE } from './core/frontend_scoring_contract';
 
 const ONBOARDING_KEY = 'bookie_onboarding_complete';
 const PREFERENCES_KEY = 'bookie_user_preferences'; // Must match usePreferences.js
@@ -218,7 +219,7 @@ const OnboardingWizard = ({ onComplete }) => {
                   fontWeight: 'bold',
                   minWidth: '40px',
                   textAlign: 'center'
-                }}>6.5</div>
+                }}>{MIN_FINAL_SCORE}</div>
                 <span style={{ color: '#fff', fontWeight: '500', fontSize: '14px' }}>AI Score (0-8)</span>
               </div>
               <p style={{ color: '#6b7280', fontSize: '12px', margin: 0, lineHeight: 1.4 }}>
