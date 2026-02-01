@@ -37,6 +37,9 @@ export const SignalNotificationProvider = ({ children }) => {
   const [lastCheck, setLastCheck] = useState(null);
   const toast = useToast();
   const seenSignalsRef = useRef(new Set());
+  const pollInFlightRef = useRef(false);
+  const pollBackoffUntilRef = useRef(0);
+  const pollErrorStreakRef = useRef(0);
 
   // Load seen signals from storage
   useEffect(() => {
@@ -67,9 +70,13 @@ export const SignalNotificationProvider = ({ children }) => {
   // Check for new signals
   const checkForNewSignals = async () => {
     if (!isEnabled) return;
+    if (pollInFlightRef.current) return;
+    if (Date.now() < pollBackoffUntilRef.current) return;
 
-    const sports = ['nba', 'nfl', 'mlb', 'nhl'];
-    const allNewSignals = [];
+    pollInFlightRef.current = true;
+    try {
+      const sports = ['nba', 'nfl', 'mlb', 'nhl'];
+      const allNewSignals = [];
 
     for (const sport of sports) {
       try {
@@ -95,9 +102,9 @@ export const SignalNotificationProvider = ({ children }) => {
       }
     }
 
-    if (allNewSignals.length > 0) {
-      setNewSignals(prev => [...allNewSignals, ...prev].slice(0, 20));
-      saveSeenSignals();
+      if (allNewSignals.length > 0) {
+        setNewSignals(prev => [...allNewSignals, ...prev].slice(0, 20));
+        saveSeenSignals();
 
       // Show toast for top signal
       const topSignal = allNewSignals[0];
@@ -120,7 +127,15 @@ export const SignalNotificationProvider = ({ children }) => {
       }
     }
 
-    setLastCheck(new Date());
+      setLastCheck(new Date());
+      pollErrorStreakRef.current = 0;
+    } catch (err) {
+      pollErrorStreakRef.current += 1;
+      const backoffMs = Math.min(60000, 1000 * (2 ** pollErrorStreakRef.current));
+      pollBackoffUntilRef.current = Date.now() + backoffMs;
+    } finally {
+      pollInFlightRef.current = false;
+    }
   };
 
   // Poll for new signals

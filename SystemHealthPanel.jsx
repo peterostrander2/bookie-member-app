@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import api from './api';
 import { isAuthInvalid, onAuthInvalid } from './lib/api/client';
 
@@ -9,6 +9,9 @@ const SystemHealthPanel = ({ compact = false }) => {
   const [modelStatus, setModelStatus] = useState(null);
   const [weights, setWeights] = useState(null);
   const [loading, setLoading] = useState(true);
+  const pollInFlightRef = useRef(false);
+  const pollBackoffUntilRef = useRef(0);
+  const pollErrorStreakRef = useRef(0);
 
   useEffect(() => {
     if (!apiKey || isAuthInvalid()) return;
@@ -22,6 +25,9 @@ const SystemHealthPanel = ({ compact = false }) => {
   }, []);
 
   const fetchHealth = async () => {
+    if (pollInFlightRef.current) return;
+    if (Date.now() < pollBackoffUntilRef.current) return;
+    pollInFlightRef.current = true;
     try {
       const [healthData, statusData, weightsData] = await Promise.all([
         api.getHealth().catch(() => ({ status: 'offline' })),
@@ -31,9 +37,14 @@ const SystemHealthPanel = ({ compact = false }) => {
       setHealth(healthData);
       setModelStatus(statusData);
       setWeights(weightsData);
+      pollErrorStreakRef.current = 0;
     } catch (err) {
       console.error(err);
+      pollErrorStreakRef.current += 1;
+      const backoffMs = Math.min(60000, 1000 * (2 ** pollErrorStreakRef.current));
+      pollBackoffUntilRef.current = Date.now() + backoffMs;
     }
+    pollInFlightRef.current = false;
     setLoading(false);
   };
 

@@ -765,9 +765,16 @@ const SmashSpotsPage = () => {
   const [newPickCount, setNewPickCount] = useState(0);
   const [apiError, setApiError] = useState(null);
   const previousPicksRef = useRef(new Set());
+  const refreshInFlightRef = useRef(false);
+  const refreshBackoffUntilRef = useRef(0);
+  const refreshErrorStreakRef = useRef(0);
 
   // Manual refresh function with toast notifications for new picks
   const handleRefresh = useCallback(async () => {
+    if (refreshInFlightRef.current) return;
+    if (Date.now() < refreshBackoffUntilRef.current) return;
+
+    refreshInFlightRef.current = true;
     setIsRefreshing(true);
     setRefreshKey(prev => prev + 1);
     setLastUpdated(new Date());
@@ -778,10 +785,13 @@ const SmashSpotsPage = () => {
       const data = await api.getBestBets(sport);
       if (data?.error) {
         setApiError(data.error);
-        setIsRefreshing(false);
+        refreshErrorStreakRef.current += 1;
+        const backoffMs = Math.min(60000, 1000 * (2 ** refreshErrorStreakRef.current));
+        refreshBackoffUntilRef.current = Date.now() + backoffMs;
         return;
       }
       setApiError(null);
+      refreshErrorStreakRef.current = 0;
       const picks = data?.picks || [];
 
       // v12.1: STRICT filtering - score >= MIN_FINAL_SCORE AND today ET only
@@ -817,9 +827,14 @@ const SmashSpotsPage = () => {
     } catch (err) {
       console.error('Refresh error:', err);
       setApiError({ status: 'FETCH_ERROR', text: err?.message || 'Unknown error' });
+      refreshErrorStreakRef.current += 1;
+      const backoffMs = Math.min(60000, 1000 * (2 ** refreshErrorStreakRef.current));
+      refreshBackoffUntilRef.current = Date.now() + backoffMs;
     }
-
-    setTimeout(() => setIsRefreshing(false), 1000);
+    finally {
+      refreshInFlightRef.current = false;
+      setTimeout(() => setIsRefreshing(false), 600);
+    }
   }, [sport, showToast]);
 
   // Auto-refresh timer

@@ -107,9 +107,15 @@ self.addEventListener('fetch', (event) => {
   // Skip non-http(s) schemes (e.g., chrome-extension)
   if (!isHttpRequest(request)) return;
 
-  // Handle API requests with caching
-  if (url.includes('railway.app') || url.includes('/live/') || url.includes('/esoteric/')) {
-    event.respondWith(handleApiRequest(request));
+  // Never cache API responses (live/ops/health/esoteric)
+  if (
+    url.includes('railway.app') ||
+    url.includes('/live/') ||
+    url.includes('/ops/') ||
+    url.includes('/health') ||
+    url.includes('/esoteric/')
+  ) {
+    event.respondWith(fetch(request, { cache: 'no-store' }));
     return;
   }
 
