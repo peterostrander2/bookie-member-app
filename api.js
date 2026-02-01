@@ -216,6 +216,7 @@ export const api = {
       // Preserve other fields
       market: item.market,
       market_label: item.market_label || item.marketLabel,
+      side_label: item.side_label || item.sideLabel,
       pick_type: item.pick_type || item.pickType,
       bet_string: item.bet_string || item.betString,
       recommended_units: item.recommended_units ?? item.units,

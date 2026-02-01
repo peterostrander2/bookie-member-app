@@ -686,6 +686,26 @@ const PropCard = memo(({ pick }) => {
     return market?.toUpperCase()?.replace('player_', '') || 'PROP';
   }, []);
 
+  const betString = typeof pick.bet_string === 'string' ? pick.bet_string.trim() : '';
+  const playerName =
+    pick.selection ||
+    pick.player ||
+    pick.player_name ||
+    pick.description?.split(' ').slice(0, 2).join(' ') ||
+    'Player';
+  const marketLabel = pick.market_label || pick.stat_type || getMarketLabel(pick.market);
+  const sideLabel = pick.side_label || pick.side || pick.over_under || pick.direction || '';
+  const lineValue = pick.line ?? pick.point;
+  const lineLabel = lineValue !== undefined && lineValue !== null ? lineValue : 'line TBD';
+  const oddsValue = pick.odds_american ?? pick.odds ?? pick.price;
+  const oddsLabel = formatOdds(oddsValue);
+  const unitsValue = pick.recommended_units ?? pick.units;
+  const unitsLabel = unitsValue !== undefined && unitsValue !== null ? `${unitsValue}u` : 'units TBD';
+  const statLine = sideLabel ? `${sideLabel} ${lineLabel}` : `${lineLabel}`;
+  const betDisplay = betString
+    ? betString
+    : `${marketLabel} ${statLine} (${oddsLabel}) — ${unitsLabel}`;
+
   // Card style varies by tier - TITANIUM and SmashSpot get special treatment
   const cardStyle = {
     backgroundColor: pickIsTitanium ? '#0a1a2a' : isSmashSpot ? '#1a1510' : '#1a1a2e',
@@ -762,7 +782,7 @@ const PropCard = memo(({ pick }) => {
           backgroundColor: '#8B5CF620', color: '#8B5CF6',
           padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold',
           border: '1px solid #8B5CF640'
-        }}>{getMarketLabel(pick.market)}</span>
+        }}>{pick.market_label || getMarketLabel(pick.market)}</span>
         <span style={{ color: '#6B7280', fontSize: '12px', marginLeft: 'auto' }}>
           {pick.game || `${pick.away_team} @ ${pick.home_team}`}
         </span>
@@ -814,7 +834,7 @@ const PropCard = memo(({ pick }) => {
               fontWeight: 'bold',
               fontSize: tierConfig.size === 'large' ? '22px' : '18px'
             }}>
-              {pick.player || pick.player_name || pick.description?.split(' ').slice(0, 2).join(' ') || 'Player'}
+              {playerName}
             </span>
           </div>
           <div style={{
@@ -824,14 +844,14 @@ const PropCard = memo(({ pick }) => {
             letterSpacing: '-0.5px',
             marginTop: '4px'
           }}>
-            {pick.bet_string || `${pick.side || 'Play'} ${pick.line ?? pick.point ?? 'line TBD'}`}
+            {betDisplay}
           </div>
           <div style={{
             color: '#9CA3AF',
             fontSize: '13px',
             marginTop: '4px'
           }}>
-            {pick.market_label || pick.stat_type || 'Stat'}
+            {marketLabel}
           </div>
           <div style={{
             color: '#8B5CF6',
@@ -839,7 +859,7 @@ const PropCard = memo(({ pick }) => {
             fontWeight: '600',
             marginTop: '4px'
           }}>
-            {formatOdds(pick.odds_american ?? pick.odds ?? pick.price)} • {(pick.recommended_units ?? pick.units ?? 'units TBD')}u
+            {oddsLabel} • {unitsLabel}
           </div>
         </div>
         <div style={{ textAlign: 'right' }}>
