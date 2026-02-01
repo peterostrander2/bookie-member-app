@@ -101,12 +101,13 @@ self.addEventListener('fetch', (event) => {
   // Skip non-http(s) schemes (e.g., chrome-extension)
   if (!isHttpRequest(request)) return;
 
-  // Never cache API responses (live/ops/health/esoteric)
+  // Never cache API responses (live/ops/health/esoteric/debug)
   if (
     url.includes('railway.app') ||
     url.includes('/live/') ||
     url.includes('/ops/') ||
     url.includes('/health') ||
+    url.includes('/debug/') ||
     url.includes('/internal/') ||
     url.includes('/esoteric/')
   ) {
