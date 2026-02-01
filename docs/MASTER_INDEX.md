@@ -1,5 +1,9 @@
 # MASTER INDEX — START HERE (Frontend)
 
+Quick entry points:
+- `SESSION_START.md` (new session checklist)
+- `docs/RECOVERY.md` (what to do if things break)
+
 **Single entry point for all frontend code and documentation changes.**
 
 Before touching code or docs: use this file to route yourself to the canonical source. Goal: **zero drift between frontend ↔ backend**.
