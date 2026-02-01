@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#00D4FF" />
     <meta name="description" content="AI-Powered Betting Signals - Beat the Books with ML Models" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Bookie" />
@@ -16,9 +17,9 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/main.jsx"></script>
-    <script>
-      // Register Service Worker
-      if ('serviceWorker' in navigator) {
+    <script type="module">
+      // Only register service worker in production builds
+      if (import.meta.env.PROD && 'serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/sw.js')
             .then(reg => console.log('SW registered:', reg.scope))

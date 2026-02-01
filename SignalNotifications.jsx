@@ -8,7 +8,9 @@
 import React, { useEffect, useState, useRef, createContext, useContext } from 'react';
 import api from './api';
 import { useToast } from './Toast';
+import { isAuthInvalid, onAuthInvalid } from './lib/api/client';
 
+const apiKey = import.meta.env.VITE_BOOKIE_API_KEY;
 const POLL_INTERVAL = 60000; // 1 minute
 const STORAGE_KEY = 'bookie_seen_signals';
 
@@ -123,7 +125,7 @@ export const SignalNotificationProvider = ({ children }) => {
 
   // Poll for new signals
   useEffect(() => {
-    if (!isEnabled) return;
+    if (!isEnabled || !apiKey || isAuthInvalid()) return;
 
     // Initial check after short delay
     const initialTimeout = setTimeout(checkForNewSignals, 5000);
@@ -131,9 +133,16 @@ export const SignalNotificationProvider = ({ children }) => {
     // Regular polling
     const interval = setInterval(checkForNewSignals, POLL_INTERVAL);
 
+    // Stop polling if auth becomes invalid
+    const unsubscribe = onAuthInvalid(() => {
+      clearTimeout(initialTimeout);
+      clearInterval(interval);
+    });
+
     return () => {
       clearTimeout(initialTimeout);
       clearInterval(interval);
+      unsubscribe();
     };
   }, [isEnabled]);
 

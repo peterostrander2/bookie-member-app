@@ -23,8 +23,11 @@ import {
   TIERS
 } from './core/frontend_scoring_contract';
 
+import { isAuthInvalid, onAuthInvalid } from './lib/api/client';
+
 // v12.1: 60 second polling for live data
 const AUTO_REFRESH_INTERVAL = 60 * 1000; // 60 seconds for live experience
+const apiKey = import.meta.env.VITE_BOOKIE_API_KEY;
 
 // v12.0 Tier-based filter options (matches backend tiering.py)
 // Community threshold enforced - no MONITOR or below shown
@@ -821,6 +824,8 @@ const SmashSpotsPage = () => {
 
   // Auto-refresh timer
   useEffect(() => {
+    if (!apiKey || isAuthInvalid()) return;
+
     const refreshTimer = setInterval(() => {
       handleRefresh();
     }, AUTO_REFRESH_INTERVAL);
@@ -830,9 +835,16 @@ const SmashSpotsPage = () => {
       setNextRefresh(prev => Math.max(0, prev - 1000));
     }, 1000);
 
+    // Stop polling if auth becomes invalid
+    const unsubscribe = onAuthInvalid(() => {
+      clearInterval(refreshTimer);
+      clearInterval(countdownTimer);
+    });
+
     return () => {
       clearInterval(refreshTimer);
       clearInterval(countdownTimer);
+      unsubscribe();
     };
   }, [handleRefresh]);
 

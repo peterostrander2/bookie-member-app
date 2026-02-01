@@ -42,6 +42,36 @@ import { PushProvider, SmashAlertBell } from './PushNotifications';
 import { NotificationOnboardingModal, useNotificationOnboarding } from './NotificationOnboarding';
 import SearchBar from './SearchBar';
 import api from './api';
+import { isAuthInvalid, onAuthInvalid } from './lib/api/client';
+
+// Banner shown when API key is missing or invalid
+const AuthInvalidBanner = () => {
+  const [show, setShow] = useState(isAuthInvalid());
+
+  useEffect(() => {
+    return onAuthInvalid(() => setShow(true));
+  }, []);
+
+  if (!show) return null;
+
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      backgroundColor: '#FF4444',
+      color: '#fff',
+      padding: '12px 20px',
+      textAlign: 'center',
+      zIndex: 9999,
+      fontSize: '14px',
+      fontWeight: 'bold'
+    }}>
+      API Key Missing or Invalid - Check your VITE_BOOKIE_API_KEY environment variable
+    </div>
+  );
+};
 
 // Simplified Navigation structure - fewer dropdowns, more direct links
 // "Picks" is now direct link to /smash-spots (which has tabs for Props/Games/Sharp)
@@ -582,7 +612,7 @@ const AppContent = () => {
 const App = () => {
   return (
     <ErrorBoundary name="App" fullPage>
-      <BrowserRouter>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <ThemeProvider>
         <OfflineProvider>
           <PushProvider>
@@ -592,6 +622,7 @@ const App = () => {
                   <BetSlipProvider>
                     <OfflineBanner />
                     <UpdateBanner />
+                    <AuthInvalidBanner />
                     <AppContent />
                     <FloatingBetSlip />
                   </BetSlipProvider>

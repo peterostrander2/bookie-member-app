@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import api from './api'
+import api from './api';
+import { isAuthInvalid, onAuthInvalid } from './lib/api/client';
+
+const apiKey = import.meta.env.VITE_BOOKIE_API_KEY;
 
 const SystemHealthPanel = ({ compact = false }) => {
   const [health, setHealth] = useState(null);
@@ -8,9 +11,14 @@ const SystemHealthPanel = ({ compact = false }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!apiKey || isAuthInvalid()) return;
     fetchHealth();
     const interval = setInterval(fetchHealth, 30000); // Refresh every 30s
-    return () => clearInterval(interval);
+    const unsubscribe = onAuthInvalid(() => clearInterval(interval));
+    return () => {
+      clearInterval(interval);
+      unsubscribe();
+    };
   }, []);
 
   const fetchHealth = async () => {
