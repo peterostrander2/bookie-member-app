@@ -686,17 +686,35 @@ const PropCard = memo(({ pick }) => {
     return market?.toUpperCase()?.replace('player_', '') || 'PROP';
   }, []);
 
-  const betString = pick.bet_string;
-  const playerName = pick.selection;
-  const marketLabel = pick.market_label;
-  const sideLabel = pick.side_label;
+  const betString = typeof pick.bet_string === 'string' ? pick.bet_string.trim() : '';
+  const pickType = (pick.pick_type || '').toLowerCase();
+  const playerName = pick.selection || '—';
+  const marketLabel = pick.market_label || '—';
+  const sideLabel = pick.side_label || '—';
   const lineValue = pick.line;
-  const oddsValue = pick.odds_american;
-  const unitsValue = pick.recommended_units;
+  const lineLabel = lineValue !== undefined && lineValue !== null ? lineValue : '—';
+  const oddsValue = pick.odds_american ?? pick.odds ?? pick.price;
   const oddsLabel = formatOdds(oddsValue);
-  const unitsLabel = `${unitsValue}u`;
-  const statLine = `${sideLabel} ${lineValue}`;
-  const betDisplay = betString;
+  const unitsValue = pick.recommended_units ?? pick.units;
+  const unitsLabel = unitsValue !== undefined && unitsValue !== null ? `${unitsValue}u` : '—';
+
+  let betDisplay = betString;
+  if (!betDisplay) {
+    if (pickType === 'player_prop') {
+      betDisplay = `${playerName} ${sideLabel} ${lineLabel} ${marketLabel} (${oddsLabel}) — ${unitsLabel}`;
+    } else if (pickType === 'total') {
+      betDisplay = `${sideLabel} ${lineLabel} (${oddsLabel}) — ${unitsLabel}`;
+    } else if (pickType === 'spread') {
+      const signedLine = lineValue !== undefined && lineValue !== null
+        ? (lineValue > 0 ? `+${lineValue}` : `${lineValue}`)
+        : '—';
+      betDisplay = `${playerName} ${signedLine} (${oddsLabel}) — ${unitsLabel}`;
+    } else if (pickType === 'moneyline') {
+      betDisplay = `${playerName} ML (${oddsLabel}) — ${unitsLabel}`;
+    } else {
+      betDisplay = `${playerName} (${oddsLabel}) — ${unitsLabel}`;
+    }
+  }
 
   // Card style varies by tier - TITANIUM and SmashSpot get special treatment
   const cardStyle = {
@@ -774,7 +792,7 @@ const PropCard = memo(({ pick }) => {
           backgroundColor: '#8B5CF620', color: '#8B5CF6',
           padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold',
           border: '1px solid #8B5CF640'
-        }}>{marketLabel}</span>
+        }}>{pickType === 'player_prop' ? 'PROP' : (pickType ? pickType.toUpperCase() : 'BET')}</span>
         <span style={{ color: '#6B7280', fontSize: '12px', marginLeft: 'auto' }}>
           {pick.game || `${pick.away_team} @ ${pick.home_team}`}
         </span>
@@ -1297,12 +1315,21 @@ const PropsSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortBy
   const [picks, setPicks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const didLogPickRef = useRef(false);
 
   // Filter and sort state
   const [filters, setFilters] = useState({ tier: 'ALL', propType: 'ALL' });
   const [sortBy, setSortBy] = useState(sortByConfidence ? 'score' : 'edge');
 
   useEffect(() => { fetchPropsPicks(); }, [sport]);
+
+  useEffect(() => {
+    if (!didLogPickRef.current && picks.length > 0) {
+      didLogPickRef.current = true;
+      console.info('[SmashSpots][Props] Render pick sample:', picks[0]);
+      console.info('[SmashSpots][Props] bet_string present:', !!picks[0]?.bet_string);
+    }
+  }, [picks]);
 
   const fetchPropsPicks = async () => {
     setLoading(true);

@@ -390,7 +390,7 @@ const getAligningPillars = (pillarScore) => {
 };
 
 const formatOdds = (odds) => {
-  if (!odds) return '--';
+  if (odds === undefined || odds === null) return '—';
   return odds > 0 ? `+${odds}` : odds.toString();
 };
 
@@ -420,18 +420,55 @@ const PickCard = memo(({ pick, injuries = [] }) => {
     threshold: 40
   });
 
-  const getMarketLabel = useCallback((market) => {
-    switch(market) {
-      case 'spreads': return 'SPREAD';
-      case 'totals': return 'TOTAL';
-      case 'h2h': return 'MONEYLINE';
-      default: return market?.toUpperCase() || 'BET';
+  const getMarketLabel = useCallback((pickType) => {
+    switch ((pickType || '').toLowerCase()) {
+      case 'spread': return 'SPREAD';
+      case 'total': return 'TOTAL';
+      case 'moneyline': return 'MONEYLINE';
+      default: return 'BET';
     }
   }, []);
 
   const getPickDisplay = useCallback(() => {
-    return pick.bet_string;
-  }, [pick.bet_string]);
+    const betString = typeof pick.bet_string === 'string' ? pick.bet_string.trim() : '';
+    if (betString) return betString;
+
+    const pickType = (pick.pick_type || '').toLowerCase();
+    const selection = pick.selection || '—';
+    const odds = pick.odds_american ?? pick.odds ?? pick.price;
+    const oddsLabel = formatOdds(odds);
+    const units = pick.recommended_units ?? pick.units;
+    const unitsLabel = units !== undefined && units !== null ? `${units}u` : '—';
+
+    if (pickType === 'moneyline') {
+      return `${selection} ML (${oddsLabel}) — ${unitsLabel}`;
+    }
+
+    if (pickType === 'total') {
+      const sideLabel = pick.side_label || pick.side || '—';
+      const line = pick.line ?? pick.point;
+      const lineLabel = line !== undefined && line !== null ? line : '—';
+      return `${sideLabel} ${lineLabel} (${oddsLabel}) — ${unitsLabel}`;
+    }
+
+    if (pickType === 'spread') {
+      const line = pick.line ?? pick.point;
+      const signedLine = line !== undefined && line !== null
+        ? (line > 0 ? `+${line}` : `${line}`)
+        : '—';
+      return `${selection} ${signedLine} (${oddsLabel}) — ${unitsLabel}`;
+    }
+
+    if (pickType === 'player_prop') {
+      const sideLabel = pick.side_label || pick.side || '—';
+      const line = pick.line ?? pick.point;
+      const lineLabel = line !== undefined && line !== null ? line : '—';
+      const marketLabel = pick.market_label || 'Prop';
+      return `${selection} ${sideLabel} ${lineLabel} ${marketLabel} (${oddsLabel}) — ${unitsLabel}`;
+    }
+
+    return `${selection} (${oddsLabel}) — ${unitsLabel}`;
+  }, [pick.bet_string, pick.pick_type, pick.selection, pick.odds_american, pick.odds, pick.price, pick.recommended_units, pick.units, pick.side_label, pick.side, pick.line, pick.point, pick.market_label]);
 
   // Card style varies by tier - TITANIUM and SmashSpot get special treatment
   const cardStyle = {
@@ -505,7 +542,7 @@ const PickCard = memo(({ pick, injuries = [] }) => {
           backgroundColor: '#00D4FF20', color: '#00D4FF',
           padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold',
           border: '1px solid #00D4FF40'
-        }}>{getMarketLabel(pick.market)}</span>
+        }}>{getMarketLabel(pick.pick_type)}</span>
         <span style={{ color: '#6B7280', fontSize: '12px', marginLeft: 'auto' }}>
           {pick.game || pick.matchup || `${pick.away_team} @ ${pick.home_team}`}
         </span>
@@ -564,7 +601,7 @@ const PickCard = memo(({ pick, injuries = [] }) => {
             fontWeight: '600',
             marginTop: '4px'
           }}>
-            {formatOdds(pick.odds || pick.price)}
+            {formatOdds(pick.odds_american ?? pick.odds ?? pick.price)}
           </div>
         </div>
         <div style={{ textAlign: 'right' }}>
@@ -826,7 +863,7 @@ const PickCard = memo(({ pick, injuries = [] }) => {
             bet_type: pick.market,
             selection: pick.selection || pick.side || pick.team,
             spread: pick.line || pick.point,
-            odds: pick.odds || pick.price,
+            odds: pick.odds_american ?? pick.odds ?? pick.price,
             confidence: Math.round(finalScore * 10),
             smash_spot: isSmashSpot,
             tier: tierConfig.label,
@@ -844,7 +881,7 @@ const PickCard = memo(({ pick, injuries = [] }) => {
             bet_type: pick.market,
             side: pick.side || pick.team,
             line: pick.line || pick.point,
-            odds: pick.odds || pick.price || -110,
+            odds: pick.odds_american ?? pick.odds ?? pick.price,
             confidence: Math.round(finalScore * 10),
             tier: tierConfig.label,
             smash_spot: isSmashSpot,
@@ -855,7 +892,7 @@ const PickCard = memo(({ pick, injuries = [] }) => {
           bet={{
             sport: pick.sport, home_team: pick.home_team, away_team: pick.away_team,
             bet_type: pick.market, side: pick.side || pick.team,
-            line: pick.line || pick.point, odds: pick.odds || pick.price, book: pick.bookmaker
+            line: pick.line || pick.point, odds: pick.odds_american ?? pick.odds ?? pick.price, book: pick.bookmaker
           }}
           label={pick.bookmaker ? `Bet at ${pick.bookmaker}` : 'Compare Odds'}
         />
@@ -969,12 +1006,21 @@ const GameSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortByC
   const [error, setError] = useState(null);
   const [dailyEnergy, setDailyEnergy] = useState(null);
   const [injuries, setInjuries] = useState([]);
+  const didLogPickRef = useRef(false);
 
   // Filter and sort state
   const [filters, setFilters] = useState({ tier: 'ALL', market: 'ALL' });
   const [sortBy, setSortBy] = useState(sortByConfidence ? 'confidence' : 'edge');
 
   useEffect(() => { fetchGamePicks(); fetchInjuries(); }, [sport]);
+
+  useEffect(() => {
+    if (!didLogPickRef.current && picks.length > 0) {
+      didLogPickRef.current = true;
+      console.info('[SmashSpots][Game] Render pick sample:', picks[0]);
+      console.info('[SmashSpots][Game] bet_string present:', !!picks[0]?.bet_string);
+    }
+  }, [picks]);
 
   const fetchInjuries = async () => {
     try {
