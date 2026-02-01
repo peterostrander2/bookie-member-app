@@ -10,6 +10,7 @@ import {
   apiFetch,
   authFetch,
   getAuthHeaders,
+  safeJson,
   RateLimitError,
 } from './lib/api/client.js';
 
@@ -22,33 +23,33 @@ const API_BASE_URL = getBaseUrl();
 export const api = {
   // Health (public)
   async getHealth() {
-    return (await apiFetch(`${API_BASE_URL}/health`)).json()
+    return safeJson(await apiFetch(`${API_BASE_URL}/health`)) || { status: 'offline' };
   },
 
   async getModelStatus() {
-    return (await apiFetch(`${API_BASE_URL}/model-status`)).json()
+    return safeJson(await apiFetch(`${API_BASE_URL}/model-status`));
   },
 
   // Live Data (authenticated)
   async getLiveGames(sport = 'NBA') {
-    return (await authFetch(`${API_BASE_URL}/live/games/${sport.toUpperCase()}`)).json()
+    return safeJson(await authFetch(`${API_BASE_URL}/live/games/${sport.toUpperCase()}`)) || [];
   },
 
   async getRoster(sport, team) {
-    return (await authFetch(`${API_BASE_URL}/live/roster/${sport.toUpperCase()}/${encodeURIComponent(team)}`)).json()
+    return safeJson(await authFetch(`${API_BASE_URL}/live/roster/${sport.toUpperCase()}/${encodeURIComponent(team)}`)) || [];
   },
 
   async getLiveSlate(sport = 'NBA') {
-    return (await authFetch(`${API_BASE_URL}/live/slate/${sport.toUpperCase()}`)).json()
+    return safeJson(await authFetch(`${API_BASE_URL}/live/slate/${sport.toUpperCase()}`)) || [];
   },
 
   async getPlayerStats(playerName) {
-    return (await authFetch(`${API_BASE_URL}/live/player/${encodeURIComponent(playerName)}`)).json()
+    return safeJson(await authFetch(`${API_BASE_URL}/live/player/${encodeURIComponent(playerName)}`));
   },
 
   // Predictions (public)
   async predictLive(data) {
-    return (await apiFetch(`${API_BASE_URL}/predict-live`, {
+    return safeJson(await apiFetch(`${API_BASE_URL}/predict-live`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -59,57 +60,57 @@ export const api = {
         stat_type: data.statType || 'points',
         use_lstm_brain: data.useLstm !== false
       })
-    })).json()
+    }));
   },
 
   async predictContext(data) {
-    return (await apiFetch(`${API_BASE_URL}/predict-context`, {
+    return safeJson(await apiFetch(`${API_BASE_URL}/predict-context`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
-    })).json()
+    }));
   },
 
   // LSTM Brain (public)
   async getBrainStatus() {
-    return (await apiFetch(`${API_BASE_URL}/brain/status`)).json()
+    return safeJson(await apiFetch(`${API_BASE_URL}/brain/status`));
   },
 
   // Grader (public)
   async getGraderWeights() {
-    return (await apiFetch(`${API_BASE_URL}/grader/weights`)).json()
+    return safeJson(await apiFetch(`${API_BASE_URL}/grader/weights`))
   },
 
   // Esoteric (public)
   async analyzeEsoteric(data) {
-    return (await apiFetch(`${API_BASE_URL}/esoteric/analyze`, {
+    return safeJson(await apiFetch(`${API_BASE_URL}/esoteric/analyze`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
-    })).json()
+    }));
   },
 
   // Teams (public)
   async getTeams(sport) {
-    return (await apiFetch(`${API_BASE_URL}/teams/${sport.toUpperCase()}`)).json()
+    return safeJson(await apiFetch(`${API_BASE_URL}/teams/${sport.toUpperCase()}`)) || [];
   },
 
   async normalizeTeam(teamInput, sport) {
-    return (await apiFetch(`${API_BASE_URL}/teams/normalize?team_input=${encodeURIComponent(teamInput)}&sport=${sport}`)).json()
+    return safeJson(await apiFetch(`${API_BASE_URL}/teams/normalize?team_input=${encodeURIComponent(teamInput)}&sport=${sport}`));
   },
 
   // Edge Calculator (public)
   async calculateEdge(probability, odds) {
-    return (await apiFetch(`${API_BASE_URL}/calculate-edge`, {
+    return safeJson(await apiFetch(`${API_BASE_URL}/calculate-edge`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ your_probability: probability, betting_odds: odds })
-    })).json()
+    }));
   },
 
   // Scheduler (public)
   async getSchedulerStatus() {
-    return (await apiFetch(`${API_BASE_URL}/scheduler/status`)).json()
+    return safeJson(await apiFetch(`${API_BASE_URL}/scheduler/status`));
   },
 
   // ============================================================================
@@ -118,25 +119,20 @@ export const api = {
 
   // Get list of supported sportsbooks with branding
   async getSportsbooks() {
-    try {
-      const resp = await authFetch(`${API_BASE_URL}/live/sportsbooks`);
-      if (!resp.ok) return { sportsbooks: [], active_count: 0 };
-      const data = await resp.json();
-      // Defensive: ensure expected fields exist
-      return {
-        sportsbooks: (data.sportsbooks || []).map(book => ({
-          id: book.key,
-          name: book.name,
-          color: book.color,
-          logo: book.logo,
-          web_url: book.web_url,
-          available: true
-        })),
-        active_count: data.active_count ?? (data.sportsbooks?.length || 0)
-      };
-    } catch {
-      return { sportsbooks: [], active_count: 0 };
-    }
+    const data = await safeJson(await authFetch(`${API_BASE_URL}/live/sportsbooks`));
+    if (!data) return { sportsbooks: [], active_count: 0 };
+    // Defensive: ensure expected fields exist
+    return {
+      sportsbooks: (data.sportsbooks || []).map(book => ({
+        id: book.key,
+        name: book.name,
+        color: book.color,
+        logo: book.logo,
+        web_url: book.web_url,
+        available: true
+      })),
+      active_count: data.active_count ?? (data.sportsbooks?.length || 0)
+    };
   },
 
   // Generate betslip options across sportsbooks for a specific bet
@@ -150,7 +146,7 @@ export const api = {
     });
 
     const resp = await authFetch(`${API_BASE_URL}/live/betslip/generate?${params}`);
-    const data = await resp.json();
+    const data = await safeJson(resp) || {};
 
     // Transform to match BetslipModal expected format
     return {
@@ -177,16 +173,15 @@ export const api = {
     if (gameId) {
       url += `?game_id=${encodeURIComponent(gameId)}`;
     }
-    return (await authFetch(url)).json();
+    return safeJson(await authFetch(url)) || { games: [] };
   },
 
   // Get best bets / smash spots for a sport
   async getSmashSpots(sport = 'NBA') {
     const url = `${API_BASE_URL}/live/best-bets/${sport.toUpperCase()}`;
     const resp = await authFetch(url);
-    if (!resp.ok) {
-      const text = await resp.text().catch(() => '');
-      console.error('getSmashSpots error', { status: resp.status, url, text });
+    const data = await safeJson(resp);
+    if (!data) {
       return {
         sport: sport.toUpperCase(),
         source: 'error',
@@ -196,10 +191,9 @@ export const api = {
         props: { picks: [], count: 0 },
         game_picks: { picks: [], count: 0 },
         count: 0,
-        error: { status: resp.status, text },
+        error: { status: resp.status },
       };
     }
-    const data = await resp.json();
 
     // Convert confidence tier string to percentage number
     const confidenceToPercent = (conf) => {
@@ -304,17 +298,17 @@ export const api = {
 
   // Get sharp money data
   async getSharpMoney(sport = 'NBA') {
-    return (await authFetch(`${API_BASE_URL}/live/sharp/${sport.toUpperCase()}`)).json();
+    return safeJson(await authFetch(`${API_BASE_URL}/live/sharp/${sport.toUpperCase()}`)) || { alerts: [] };
   },
 
   // Get betting splits
   async getSplits(sport = 'NBA') {
-    return (await authFetch(`${API_BASE_URL}/live/splits/${sport.toUpperCase()}`)).json();
+    return safeJson(await authFetch(`${API_BASE_URL}/live/splits/${sport.toUpperCase()}`)) || { games: [] };
   },
 
   // Get player props
   async getProps(sport = 'NBA') {
-    return (await authFetch(`${API_BASE_URL}/live/props/${sport.toUpperCase()}`)).json();
+    return safeJson(await authFetch(`${API_BASE_URL}/live/props/${sport.toUpperCase()}`)) || { props: [] };
   },
 
   // Alias for Props.jsx and Signals.jsx compatibility
@@ -324,46 +318,29 @@ export const api = {
 
   // Get live lines for line shopping (BestOdds.jsx, Splits.jsx)
   async getLiveOdds(sport = 'NBA') {
-    try {
-      const resp = await authFetch(`${API_BASE_URL}/live/lines/${sport.toUpperCase()}`);
-      if (!resp.ok) return { games: [], lines: [] };
-      return resp.json();
-    } catch {
-      return { games: [], lines: [] };
-    }
+    const data = await safeJson(await authFetch(`${API_BASE_URL}/live/lines/${sport.toUpperCase()}`));
+    return data || { games: [], lines: [] };
   },
 
   // Get injuries for a sport (InjuryVacuum.jsx)
   async getInjuries(sport = 'NBA') {
-    try {
-      const resp = await authFetch(`${API_BASE_URL}/live/injuries/${sport.toUpperCase()}`);
-      if (!resp.ok) return { injuries: [] };
-      return resp.json();
-    } catch {
-      return { injuries: [] };
-    }
+    const data = await safeJson(await authFetch(`${API_BASE_URL}/live/injuries/${sport.toUpperCase()}`));
+    return data || { injuries: [] };
   },
 
   // Get esoteric edge analysis
   async getEsotericEdge() {
-    return (await authFetch(`${API_BASE_URL}/live/esoteric-edge`)).json();
+    return safeJson(await authFetch(`${API_BASE_URL}/live/esoteric-edge`)) || {};
   },
 
   // Get today's energy (with defensive handling)
   async getTodayEnergy() {
-    try {
-      const res = await apiFetch(`${API_BASE_URL}/esoteric/today-energy`);
-      if (!res.ok) return { betting_outlook: 'NEUTRAL', overall_energy: 5.0 };
-      const data = await res.json();
-      // Defensive: ensure expected fields exist
-      return {
-        betting_outlook: data.betting_outlook || 'NEUTRAL',
-        overall_energy: data.overall_energy ?? 5.0,
-        ...data
-      };
-    } catch {
-      return { betting_outlook: 'NEUTRAL', overall_energy: 5.0 };
-    }
+    const data = await safeJson(await apiFetch(`${API_BASE_URL}/esoteric/today-energy`));
+    return {
+      betting_outlook: data?.betting_outlook || 'NEUTRAL',
+      overall_energy: data?.overall_energy ?? 5.0,
+      ...data
+    };
   },
 
   // ============================================================================
@@ -371,42 +348,26 @@ export const api = {
   // ============================================================================
 
   async trackBet(betData) {
-    try {
-      const res = await apiFetch(`${API_BASE_URL}/live/bets/track`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(betData)
-      });
-      if (!res.ok) return null;
-      return res.json();
-    } catch {
-      return null;
-    }
+    const res = await apiFetch(`${API_BASE_URL}/live/bets/track`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(betData)
+    });
+    return safeJson(res);
   },
 
   async gradeBet(betId, outcome) {
-    try {
-      const res = await apiFetch(`${API_BASE_URL}/live/bets/grade/${betId}`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ outcome })
-      });
-      if (!res.ok) return null;
-      return res.json();
-    } catch {
-      return null;
-    }
+    const res = await apiFetch(`${API_BASE_URL}/live/bets/grade/${betId}`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ outcome })
+    });
+    return safeJson(res);
   },
 
   async getBetHistory(userId) {
-    try {
-      const url = userId ? `${API_BASE_URL}/live/bets/history?user_id=${userId}` : `${API_BASE_URL}/live/bets/history`;
-      const res = await authFetch(url);
-      if (!res.ok) return { bets: [], stats: {} };
-      return res.json();
-    } catch {
-      return { bets: [], stats: {} };
-    }
+    const url = userId ? `${API_BASE_URL}/live/bets/history?user_id=${userId}` : `${API_BASE_URL}/live/bets/history`;
+    return safeJson(await authFetch(url)) || { bets: [], stats: {} };
   },
 
   // ============================================================================
@@ -414,79 +375,47 @@ export const api = {
   // ============================================================================
 
   async getParlay(userId) {
-    try {
-      const res = await authFetch(`${API_BASE_URL}/live/parlay/${userId}`);
-      if (!res.ok) return { legs: [], combined_odds: null };
-      return res.json();
-    } catch {
-      return { legs: [], combined_odds: null };
-    }
+    return safeJson(await authFetch(`${API_BASE_URL}/live/parlay/${userId}`)) || { legs: [], combined_odds: null };
   },
 
   async addParlayLeg(legData) {
-    try {
-      const res = await apiFetch(`${API_BASE_URL}/live/parlay/add`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(legData)
-      });
-      if (!res.ok) return null;
-      return res.json();
-    } catch {
-      return null;
-    }
+    const res = await apiFetch(`${API_BASE_URL}/live/parlay/add`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(legData)
+    });
+    return safeJson(res);
   },
 
   async calculateParlay(legs, stake) {
-    try {
-      const res = await apiFetch(`${API_BASE_URL}/live/parlay/calculate`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ legs, stake })
-      });
-      if (!res.ok) return null;
-      return res.json();
-    } catch {
-      return null;
-    }
+    const res = await apiFetch(`${API_BASE_URL}/live/parlay/calculate`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ legs, stake })
+    });
+    return safeJson(res);
   },
 
   async placeParlay(parlayData) {
-    try {
-      const res = await apiFetch(`${API_BASE_URL}/live/parlay/place`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(parlayData)
-      });
-      if (!res.ok) return null;
-      return res.json();
-    } catch {
-      return null;
-    }
+    const res = await apiFetch(`${API_BASE_URL}/live/parlay/place`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(parlayData)
+    });
+    return safeJson(res);
   },
 
   async clearParlay(userId) {
-    try {
-      const res = await apiFetch(`${API_BASE_URL}/live/parlay/clear/${userId}`, {
-        method: 'DELETE',
-        headers: getAuthHeaders()
-      });
-      if (!res.ok) return null;
-      return res.json();
-    } catch {
-      return null;
-    }
+    const res = await apiFetch(`${API_BASE_URL}/live/parlay/clear/${userId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+    return safeJson(res);
   },
 
   async getParlayHistory(userId) {
-    try {
-      const url = userId ? `${API_BASE_URL}/live/parlay/history?user_id=${userId}` : `${API_BASE_URL}/live/parlay/history`;
-      const res = await authFetch(url);
-      if (!res.ok) return { parlays: [], stats: {} };
-      return res.json();
-    } catch {
-      return { parlays: [], stats: {} };
-    }
+    const url = userId ? `${API_BASE_URL}/live/parlay/history?user_id=${userId}` : `${API_BASE_URL}/live/parlay/history`;
+    return safeJson(await authFetch(url)) || { parlays: [], stats: {} };
   },
 
   // ============================================================================
@@ -494,27 +423,16 @@ export const api = {
   // ============================================================================
 
   async getUserPreferences(userId) {
-    try {
-      const res = await authFetch(`${API_BASE_URL}/live/user/preferences/${userId}`);
-      if (!res.ok) return {};
-      return res.json();
-    } catch {
-      return {};
-    }
+    return safeJson(await authFetch(`${API_BASE_URL}/live/user/preferences/${userId}`)) || {};
   },
 
   async setUserPreferences(userId, preferences) {
-    try {
-      const res = await apiFetch(`${API_BASE_URL}/live/user/preferences/${userId}`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(preferences)
-      });
-      if (!res.ok) return null;
-      return res.json();
-    } catch {
-      return null;
-    }
+    const res = await apiFetch(`${API_BASE_URL}/live/user/preferences/${userId}`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(preferences)
+    });
+    return safeJson(res);
   },
 
   // ============================================================================
@@ -522,27 +440,16 @@ export const api = {
   // ============================================================================
 
   async getVotes(gameVoteId) {
-    try {
-      const res = await authFetch(`${API_BASE_URL}/live/votes/${encodeURIComponent(gameVoteId)}`);
-      if (!res.ok) return null;
-      return res.json();
-    } catch {
-      return null;
-    }
+    return safeJson(await authFetch(`${API_BASE_URL}/live/votes/${encodeURIComponent(gameVoteId)}`));
   },
 
   async submitVote(gameVoteId, side) {
-    try {
-      const res = await apiFetch(`${API_BASE_URL}/live/votes/${encodeURIComponent(gameVoteId)}`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ side })
-      });
-      if (!res.ok) return null;
-      return res.json();
-    } catch {
-      return null;
-    }
+    const res = await apiFetch(`${API_BASE_URL}/live/votes/${encodeURIComponent(gameVoteId)}`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ side })
+    });
+    return safeJson(res);
   },
 
   // ============================================================================
@@ -550,13 +457,7 @@ export const api = {
   // ============================================================================
 
   async getVoteLeaderboard() {
-    try {
-      const res = await authFetch(`${API_BASE_URL}/live/leaderboard`);
-      if (!res.ok) return { leaders: null };
-      return res.json();
-    } catch {
-      return { leaders: null };
-    }
+    return safeJson(await authFetch(`${API_BASE_URL}/live/leaderboard`)) || { leaders: null };
   },
 
   // ============================================================================
@@ -564,27 +465,16 @@ export const api = {
   // ============================================================================
 
   async getGradedPicks() {
-    try {
-      const res = await authFetch(`${API_BASE_URL}/live/picks/graded`);
-      if (!res.ok) return { picks: [] };
-      return res.json();
-    } catch {
-      return { picks: [] };
-    }
+    return safeJson(await authFetch(`${API_BASE_URL}/live/picks/graded`)) || { picks: [] };
   },
 
   async gradePick(data) {
-    try {
-      const res = await apiFetch(`${API_BASE_URL}/live/picks/grade`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(data)
-      });
-      if (!res.ok) return null;
-      return res.json();
-    } catch {
-      return null;
-    }
+    const res = await apiFetch(`${API_BASE_URL}/live/picks/grade`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data)
+    });
+    return safeJson(res);
   },
 
   // ============================================================================
@@ -597,50 +487,34 @@ export const api = {
    * Combines: best-bets, sharp, splits, today-energy in one call
    */
   async getSportDashboard(sport = 'NBA') {
-    try {
-      const res = await authFetch(`${API_BASE_URL}/live/sport-dashboard/${sport.toUpperCase()}`);
-      if (!res.ok) {
-        // Fallback to individual calls if consolidated endpoint not available
-        const [bestBets, sharp, energy] = await Promise.all([
-          this.getSmashSpots(sport),
-          this.getSharpMoney(sport),
-          this.getTodayEnergy()
-        ]);
-        return {
-          sport: sport.toUpperCase(),
-          picks: bestBets.picks || [],
-          props: bestBets.props,
-          game_picks: bestBets.game_picks,
-          sharp_signals: sharp.signals || [],
-          daily_energy: energy,
-          database_available: bestBets.database_available ?? false,
-          picks_saved: bestBets.picks_saved ?? 0,
-          signals_saved: bestBets.signals_saved ?? 0,
-          _fallback: true
-        };
-      }
-      const data = await res.json();
-      return {
-        ...data,
-        database_available: data.database_available ?? false,
-        picks_saved: data.picks_saved ?? 0,
-        signals_saved: data.signals_saved ?? 0
-      };
-    } catch (err) {
-      console.error('getSportDashboard error:', err);
+    const res = await authFetch(`${API_BASE_URL}/live/sport-dashboard/${sport.toUpperCase()}`);
+    const data = await safeJson(res);
+    if (!data) {
+      // Fallback to individual calls if consolidated endpoint not available
+      const [bestBets, sharp, energy] = await Promise.all([
+        this.getSmashSpots(sport),
+        this.getSharpMoney(sport),
+        this.getTodayEnergy()
+      ]);
       return {
         sport: sport.toUpperCase(),
-        picks: [],
-        props: { picks: [], count: 0 },
-        game_picks: { picks: [], count: 0 },
-        sharp_signals: [],
-        daily_energy: { betting_outlook: 'NEUTRAL', overall_energy: 5.0 },
-        database_available: false,
-        picks_saved: 0,
-        signals_saved: 0,
-        _error: true
+        picks: bestBets?.picks || [],
+        props: bestBets?.props,
+        game_picks: bestBets?.game_picks,
+        sharp_signals: sharp?.signals || [],
+        daily_energy: energy,
+        database_available: bestBets?.database_available ?? false,
+        picks_saved: bestBets?.picks_saved ?? 0,
+        signals_saved: bestBets?.signals_saved ?? 0,
+        _fallback: true
       };
     }
+    return {
+      ...data,
+      database_available: data.database_available ?? false,
+      picks_saved: data.picks_saved ?? 0,
+      signals_saved: data.signals_saved ?? 0
+    };
   },
 
   /**
@@ -648,21 +522,16 @@ export const api = {
    * Combines: game data, odds across books, props, sharp signals
    */
   async getGameDetails(gameId, sport = 'NBA') {
-    try {
-      const res = await authFetch(`${API_BASE_URL}/live/game-details/${encodeURIComponent(gameId)}?sport=${sport.toUpperCase()}`);
-      if (!res.ok) {
-        return { game_id: gameId, error: 'Game not found', available: false };
-      }
-      const data = await res.json();
-      return {
-        ...data,
-        available: true,
-        database_available: data.database_available ?? false
-      };
-    } catch (err) {
-      console.error('getGameDetails error:', err);
-      return { game_id: gameId, error: err.message, available: false };
+    const res = await authFetch(`${API_BASE_URL}/live/game-details/${encodeURIComponent(gameId)}?sport=${sport.toUpperCase()}`);
+    const data = await safeJson(res);
+    if (!data) {
+      return { game_id: gameId, error: 'Game not found', available: false };
     }
+    return {
+      ...data,
+      available: true,
+      database_available: data.database_available ?? false
+    };
   },
 
   /**
@@ -670,40 +539,28 @@ export const api = {
    * Combines: current parlay, best available legs, correlation warnings
    */
   async getParlayBuilderInit(userId, sport = 'NBA') {
-    try {
-      const params = new URLSearchParams({ sport: sport.toUpperCase() });
-      if (userId) params.append('user_id', userId);
+    const params = new URLSearchParams({ sport: sport.toUpperCase() });
+    if (userId) params.append('user_id', userId);
 
-      const res = await authFetch(`${API_BASE_URL}/live/parlay-builder-init?${params}`);
-      if (!res.ok) {
-        // Fallback to individual calls
-        const [parlay, picks] = await Promise.all([
-          userId ? this.getParlay(userId) : Promise.resolve({ legs: [] }),
-          this.getSmashSpots(sport)
-        ]);
-        return {
-          current_parlay: parlay,
-          suggested_legs: picks.picks?.slice(0, 10) || [],
-          correlation_warnings: [],
-          database_available: picks.database_available ?? false,
-          _fallback: true
-        };
-      }
-      const data = await res.json();
+    const data = await safeJson(await authFetch(`${API_BASE_URL}/live/parlay-builder-init?${params}`));
+    if (!data) {
+      // Fallback to individual calls
+      const [parlay, picks] = await Promise.all([
+        userId ? this.getParlay(userId) : Promise.resolve({ legs: [] }),
+        this.getSmashSpots(sport)
+      ]);
       return {
-        ...data,
-        database_available: data.database_available ?? false
-      };
-    } catch (err) {
-      console.error('getParlayBuilderInit error:', err);
-      return {
-        current_parlay: { legs: [] },
-        suggested_legs: [],
+        current_parlay: parlay,
+        suggested_legs: picks?.picks?.slice(0, 10) || [],
         correlation_warnings: [],
-        database_available: false,
-        _error: true
+        database_available: picks?.database_available ?? false,
+        _fallback: true
       };
     }
+    return {
+      ...data,
+      database_available: data.database_available ?? false
+    };
   },
 
   // ============================================================================
@@ -715,26 +572,14 @@ export const api = {
    * Only returns picks with final_score >= 6.5
    */
   async getLiveInPlay(sport = 'NBA') {
-    try {
-      const res = await authFetch(`${API_BASE_URL}/live/live/in-play/${sport.toUpperCase()}`);
-      if (!res.ok) return { sport: sport.toUpperCase(), type: 'LIVE_BETS', picks: [] };
-      return res.json();
-    } catch {
-      return { sport: sport.toUpperCase(), type: 'LIVE_BETS', picks: [] };
-    }
+    return safeJson(await authFetch(`${API_BASE_URL}/live/live/in-play/${sport.toUpperCase()}`)) || { sport: sport.toUpperCase(), type: 'LIVE_BETS', picks: [] };
   },
 
   /**
    * Get in-game betting data (alternate endpoint)
    */
   async getInGame(sport = 'NBA') {
-    try {
-      const res = await authFetch(`${API_BASE_URL}/live/in-game/${sport.toUpperCase()}`);
-      if (!res.ok) return { sport: sport.toUpperCase(), picks: [] };
-      return res.json();
-    } catch {
-      return { sport: sport.toUpperCase(), picks: [] };
-    }
+    return safeJson(await authFetch(`${API_BASE_URL}/live/in-game/${sport.toUpperCase()}`)) || { sport: sport.toUpperCase(), picks: [] };
   },
 
   // ============================================================================
@@ -745,26 +590,14 @@ export const api = {
    * Get autograder status and metrics
    */
   async getGraderStatus() {
-    try {
-      const res = await authFetch(`${API_BASE_URL}/live/grader/status`);
-      if (!res.ok) return { status: 'unavailable', last_run: null };
-      return res.json();
-    } catch {
-      return { status: 'unavailable', last_run: null };
-    }
+    return safeJson(await authFetch(`${API_BASE_URL}/live/grader/status`)) || { status: 'unavailable', last_run: null };
   },
 
   /**
    * Get scheduler status for background jobs
    */
   async getLiveSchedulerStatus() {
-    try {
-      const res = await authFetch(`${API_BASE_URL}/live/scheduler/status`);
-      if (!res.ok) return { status: 'unavailable', jobs: [] };
-      return res.json();
-    } catch {
-      return { status: 'unavailable', jobs: [] };
-    }
+    return safeJson(await authFetch(`${API_BASE_URL}/live/scheduler/status`)) || { status: 'unavailable', jobs: [] };
   },
 
   // ============================================================================
@@ -775,27 +608,18 @@ export const api = {
    * Get raw API response for debugging
    */
   async getRawResponse(endpoint, sport = 'NBA') {
-    try {
-      const url = endpoint.includes('/')
-        ? `${API_BASE_URL}${endpoint}`
-        : `${API_BASE_URL}/live/${endpoint}/${sport.toUpperCase()}`;
-      const res = await authFetch(url);
-      const data = await res.json();
-      return {
-        status: res.status,
-        ok: res.ok,
-        url: url,
-        timestamp: new Date().toISOString(),
-        data
-      };
-    } catch (err) {
-      return {
-        status: 0,
-        ok: false,
-        error: err.message,
-        timestamp: new Date().toISOString()
-      };
-    }
+    const url = endpoint.includes('/')
+      ? `${API_BASE_URL}${endpoint}`
+      : `${API_BASE_URL}/live/${endpoint}/${sport.toUpperCase()}`;
+    const res = await authFetch(url);
+    const data = await safeJson(res);
+    return {
+      status: res.status,
+      ok: res.ok,
+      url: url,
+      timestamp: new Date().toISOString(),
+      data
+    };
   },
 
   /**
