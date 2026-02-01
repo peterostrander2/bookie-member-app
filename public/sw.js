@@ -1,7 +1,7 @@
 // Bookie-o-em Service Worker v2
 // Enhanced offline support with API caching
 
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const STATIC_CACHE = `bookie-static-${CACHE_VERSION}`;
 const API_CACHE = `bookie-api-${CACHE_VERSION}`;
 const IMAGE_CACHE = `bookie-images-${CACHE_VERSION}`;
@@ -20,13 +20,7 @@ const STATIC_ASSETS = [
 
 // API endpoints to cache with their TTL (in ms)
 const API_CACHE_CONFIG = {
-  '/live/best-bets/': { ttl: 2 * 60 * 1000, staleWhileRevalidate: true }, // 2 min
-  '/live/props/': { ttl: 2 * 60 * 1000, staleWhileRevalidate: true },
-  '/live/sharp/': { ttl: 5 * 60 * 1000, staleWhileRevalidate: true }, // 5 min
-  '/live/splits/': { ttl: 5 * 60 * 1000, staleWhileRevalidate: true },
-  '/live/sportsbooks': { ttl: 30 * 60 * 1000, staleWhileRevalidate: true }, // 30 min
   '/esoteric/today-energy': { ttl: 60 * 60 * 1000, staleWhileRevalidate: true }, // 1 hour
-  '/live/bets/history': { ttl: 1 * 60 * 1000, staleWhileRevalidate: true }, // 1 min
 };
 
 // Install event - cache static assets

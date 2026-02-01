@@ -1,4 +1,4 @@
-import React, { useState, useEffect, memo, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, memo, useCallback, useMemo, useRef } from 'react';
 import api from './api';
 import { useToast } from './Toast';
 import { PlaceBetButton } from './BetslipModal';
@@ -452,10 +452,11 @@ const PickCard = memo(({ pick, injuries = [] }) => {
     }
 
     if (pickType === 'spread') {
+      const lineSigned = pick.line_signed || pick.line_signed === 0 ? pick.line_signed : null;
       const line = pick.line ?? pick.point;
-      const signedLine = line !== undefined && line !== null
+      const signedLine = lineSigned ?? (line !== undefined && line !== null
         ? (line > 0 ? `+${line}` : `${line}`)
-        : '—';
+        : '—');
       return `${selection} ${signedLine} (${oddsLabel}) — ${unitsLabel}`;
     }
 
@@ -468,7 +469,7 @@ const PickCard = memo(({ pick, injuries = [] }) => {
     }
 
     return `${selection} (${oddsLabel}) — ${unitsLabel}`;
-  }, [pick.bet_string, pick.pick_type, pick.selection, pick.odds_american, pick.odds, pick.price, pick.recommended_units, pick.units, pick.side_label, pick.side, pick.line, pick.point, pick.market_label]);
+  }, [pick.bet_string, pick.pick_type, pick.selection, pick.odds_american, pick.odds, pick.price, pick.recommended_units, pick.units, pick.side_label, pick.side, pick.line, pick.point, pick.line_signed, pick.market_label]);
 
   // Card style varies by tier - TITANIUM and SmashSpot get special treatment
   const cardStyle = {
@@ -1015,7 +1016,8 @@ const GameSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortByC
   useEffect(() => { fetchGamePicks(); fetchInjuries(); }, [sport]);
 
   useEffect(() => {
-    if (!didLogPickRef.current && picks.length > 0) {
+    const shouldLog = import.meta.env.DEV && localStorage.getItem('debugPicks') === '1';
+    if (!didLogPickRef.current && shouldLog && picks.length > 0) {
       didLogPickRef.current = true;
       console.info('[SmashSpots][Game] Render pick sample:', picks[0]);
       console.info('[SmashSpots][Game] bet_string present:', !!picks[0]?.bet_string);

@@ -260,9 +260,9 @@ export function getBookInfo(pick) {
  * Format odds for display (American format)
  */
 export function formatOdds(odds) {
-  if (odds === null || odds === undefined) return '--';
+  if (odds === null || odds === undefined) return '—';
   const num = typeof odds === 'number' ? odds : parseFloat(odds);
-  if (isNaN(num)) return '--';
+  if (isNaN(num)) return '—';
   return num > 0 ? `+${num}` : num.toString();
 }
 

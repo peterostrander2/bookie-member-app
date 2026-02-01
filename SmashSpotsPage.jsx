@@ -759,6 +759,9 @@ const SmashSpotsPage = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [nextRefresh, setNextRefresh] = useState(AUTO_REFRESH_INTERVAL);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [debugPickLogging, setDebugPickLogging] = useState(() => (
+    import.meta.env.DEV && localStorage.getItem('debugPicks') === '1'
+  ));
   // v12.0: Default to EDGE_LEAN (community threshold >= MIN_FINAL_SCORE)
   const [confidenceFilter, setConfidenceFilter] = useState('edge_lean');
   const [sortByConfidence, setSortByConfidence] = useState(true);
@@ -857,6 +860,18 @@ const SmashSpotsPage = () => {
       setIsClearingCache(false);
     }
   }, [showToast]);
+
+  const toggleDebugPickLogging = useCallback(() => {
+    const next = !debugPickLogging;
+    setDebugPickLogging(next);
+    if (next) {
+      localStorage.setItem('debugPicks', '1');
+      showToast('Pick logging enabled (dev)', 'info');
+    } else {
+      localStorage.removeItem('debugPicks');
+      showToast('Pick logging disabled', 'info');
+    }
+  }, [debugPickLogging, showToast]);
 
   // Auto-refresh timer
   useEffect(() => {
@@ -1016,6 +1031,24 @@ const SmashSpotsPage = () => {
           >
             🧹 {isClearingCache ? 'Clearing...' : 'Clear Cache'}
           </button>
+          {import.meta.env.DEV && (
+            <button
+              onClick={toggleDebugPickLogging}
+              style={{
+                padding: '6px 12px',
+                backgroundColor: debugPickLogging ? '#00D4FF' : '#2a2a4a',
+                color: debugPickLogging ? '#000' : '#9CA3AF',
+                border: '1px solid #3b3b5a',
+                borderRadius: '6px',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                cursor: 'pointer'
+              }}
+              title="Log first pick object per tab"
+            >
+              🧪 Log Picks: {debugPickLogging ? 'On' : 'Off'}
+            </button>
+          )}
           <style>{`
             @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
           `}</style>

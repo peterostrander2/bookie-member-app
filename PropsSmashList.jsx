@@ -1,4 +1,4 @@
-import React, { useState, useEffect, memo, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, memo, useCallback, useMemo, useRef } from 'react';
 import api from './api';
 import { useToast } from './Toast';
 import { PlaceBetButton } from './BetslipModal';
@@ -692,7 +692,8 @@ const PropCard = memo(({ pick }) => {
   const marketLabel = pick.market_label || '—';
   const sideLabel = pick.side_label || '—';
   const lineValue = pick.line;
-  const lineLabel = lineValue !== undefined && lineValue !== null ? lineValue : '—';
+  const lineSigned = pick.line_signed || (lineValue !== undefined && lineValue !== null ? lineValue : '—');
+  const lineLabel = lineSigned;
   const oddsValue = pick.odds_american ?? pick.odds ?? pick.price;
   const oddsLabel = formatOdds(oddsValue);
   const unitsValue = pick.recommended_units ?? pick.units;
@@ -701,13 +702,11 @@ const PropCard = memo(({ pick }) => {
   let betDisplay = betString;
   if (!betDisplay) {
     if (pickType === 'player_prop') {
-      betDisplay = `${playerName} ${sideLabel} ${lineLabel} ${marketLabel} (${oddsLabel}) — ${unitsLabel}`;
+      betDisplay = `${playerName} ${marketLabel} ${sideLabel} ${lineLabel} (${oddsLabel}) — ${unitsLabel}`;
     } else if (pickType === 'total') {
       betDisplay = `${sideLabel} ${lineLabel} (${oddsLabel}) — ${unitsLabel}`;
     } else if (pickType === 'spread') {
-      const signedLine = lineValue !== undefined && lineValue !== null
-        ? (lineValue > 0 ? `+${lineValue}` : `${lineValue}`)
-        : '—';
+      const signedLine = lineSigned !== '—' ? lineSigned : '—';
       betDisplay = `${playerName} ${signedLine} (${oddsLabel}) — ${unitsLabel}`;
     } else if (pickType === 'moneyline') {
       betDisplay = `${playerName} ML (${oddsLabel}) — ${unitsLabel}`;
@@ -844,7 +843,7 @@ const PropCard = memo(({ pick }) => {
               fontWeight: 'bold',
               fontSize: tierConfig.size === 'large' ? '22px' : '18px'
             }}>
-              {playerName}
+              {`${playerName} — ${marketLabel} ${sideLabel} ${lineLabel}`}
             </span>
           </div>
           <div style={{
@@ -861,7 +860,7 @@ const PropCard = memo(({ pick }) => {
             fontSize: '13px',
             marginTop: '4px'
           }}>
-            {marketLabel}
+            {pick.matchup || pick.game || `${pick.away_team} @ ${pick.home_team}`} {pick.start_time_et ? `• ${pick.start_time_et}` : pick.start_time ? `• ${pick.start_time}` : ''}
           </div>
           <div style={{
             color: '#8B5CF6',
@@ -1324,7 +1323,8 @@ const PropsSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortBy
   useEffect(() => { fetchPropsPicks(); }, [sport]);
 
   useEffect(() => {
-    if (!didLogPickRef.current && picks.length > 0) {
+    const shouldLog = import.meta.env.DEV && localStorage.getItem('debugPicks') === '1';
+    if (!didLogPickRef.current && shouldLog && picks.length > 0) {
       didLogPickRef.current = true;
       console.info('[SmashSpots][Props] Render pick sample:', picks[0]);
       console.info('[SmashSpots][Props] bet_string present:', !!picks[0]?.bet_string);

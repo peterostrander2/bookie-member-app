@@ -210,8 +210,9 @@ export const api = {
       // Map backend 'line' to frontend 'point'
       point: item.point || item.line,
       line: item.line ?? item.point,
+      line_signed: item.line_signed || item.lineSigned,
       // Map backend 'odds' to frontend 'price'
-      price: item.price || item.odds || item.odds_american || -110,
+      price: item.price ?? item.odds ?? item.odds_american ?? null,
       odds_american: item.odds_american ?? item.odds ?? item.price,
       // Preserve other fields
       market: item.market,
