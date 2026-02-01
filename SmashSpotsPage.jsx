@@ -768,6 +768,7 @@ const SmashSpotsPage = () => {
   const refreshInFlightRef = useRef(false);
   const refreshBackoffUntilRef = useRef(0);
   const refreshErrorStreakRef = useRef(0);
+  const [isClearingCache, setIsClearingCache] = useState(false);
 
   // Manual refresh function with toast notifications for new picks
   const handleRefresh = useCallback(async () => {
@@ -836,6 +837,26 @@ const SmashSpotsPage = () => {
       setTimeout(() => setIsRefreshing(false), 600);
     }
   }, [sport, showToast]);
+
+  const handleClearCache = useCallback(async () => {
+    setIsClearingCache(true);
+    try {
+      if (navigator.serviceWorker?.getRegistrations) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map((reg) => reg.unregister()));
+      }
+      if (window.caches?.keys) {
+        const keys = await window.caches.keys();
+        await Promise.all(keys.map((key) => window.caches.delete(key)));
+      }
+      showToast('Service worker + cache cleared. Hard refresh now.', 'success');
+    } catch (err) {
+      console.error('Cache clear failed:', err);
+      showToast('Failed to clear cache. Try hard refresh.', 'error');
+    } finally {
+      setIsClearingCache(false);
+    }
+  }, [showToast]);
 
   // Auto-refresh timer
   useEffect(() => {
@@ -974,6 +995,26 @@ const SmashSpotsPage = () => {
               animation: isRefreshing ? 'spin 1s linear infinite' : 'none'
             }}>🔄</span>
             {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          </button>
+          <button
+            onClick={handleClearCache}
+            disabled={isClearingCache}
+            style={{
+              padding: '6px 12px',
+              backgroundColor: isClearingCache ? '#333' : '#4B5563',
+              color: isClearingCache ? '#666' : '#fff',
+              border: 'none',
+              borderRadius: '6px',
+              fontSize: '11px',
+              fontWeight: 'bold',
+              cursor: isClearingCache ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              transition: 'all 0.2s'
+            }}
+          >
+            🧹 {isClearingCache ? 'Clearing...' : 'Clear Cache'}
           </button>
           <style>{`
             @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
