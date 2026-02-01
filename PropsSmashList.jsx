@@ -824,7 +824,14 @@ const PropCard = memo(({ pick }) => {
             letterSpacing: '-0.5px',
             marginTop: '4px'
           }}>
-            {pick.selection || `${pick.side} ${pick.point || pick.line}`}
+            {pick.bet_string || `${pick.side || 'Play'} ${pick.line ?? pick.point ?? 'line TBD'}`}
+          </div>
+          <div style={{
+            color: '#9CA3AF',
+            fontSize: '13px',
+            marginTop: '4px'
+          }}>
+            {pick.market_label || pick.stat_type || 'Stat'}
           </div>
           <div style={{
             color: '#8B5CF6',
@@ -832,7 +839,7 @@ const PropCard = memo(({ pick }) => {
             fontWeight: '600',
             marginTop: '4px'
           }}>
-            {formatOdds(pick.odds || pick.price)}
+            {formatOdds(pick.odds_american ?? pick.odds ?? pick.price)} • {(pick.recommended_units ?? pick.units ?? 'units TBD')}u
           </div>
         </div>
         <div style={{ textAlign: 'right' }}>
@@ -1405,22 +1412,13 @@ const PropsSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortBy
       propPicks = filterCommunityPicks(propPicks, { requireTodayET: true });
 
       if (propPicks.length === 0) {
-        if (isFallbackSource) {
-          // Demo data also respects strict community threshold
-          const demoPicks = getDemoProps(sport).filter(isCommunityEligible);
-          setPicks(demoPicks);
-          setIsDemo(true);
-        } else {
-          setPicks([]);
-        }
+        setPicks([]);
       } else {
         setPicks(propPicks);
       }
     } catch (err) {
       console.error('Error fetching props picks:', err);
-      const demoPicks = getDemoProps(sport).filter(isCommunityEligible);
-      setPicks(demoPicks);
-      setIsDemo(true);
+      setPicks([]);
     } finally {
       setLoading(false);
     }

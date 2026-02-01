@@ -430,17 +430,27 @@ const PickCard = memo(({ pick, injuries = [] }) => {
   }, []);
 
   const getPickDisplay = useCallback(() => {
-    // v10.4: Use selection field if available
-    if (pick.selection) return pick.selection;
-    const market = pick.market;
-    if (market === 'spreads') {
-      const line = (pick.line || pick.point) > 0 ? `+${pick.line || pick.point}` : (pick.line || pick.point);
-      return `${pick.team} ${line}`;
+    const betString = pick.bet_string;
+    if (betString) return betString;
+
+    const selection = pick.selection || pick.team || pick.side || 'Pick';
+    const marketLabel = pick.market_label || getMarketLabel(pick.market);
+    const odds = pick.odds_american ?? pick.odds ?? pick.price;
+    const line = pick.line ?? pick.point;
+    const units = pick.recommended_units ?? pick.units;
+    const unitsLabel = units !== undefined && units !== null ? `${units}u` : 'units TBD';
+    const sideLabel = pick.side || '';
+    const pickType = (pick.pick_type || pick.market || '').toLowerCase();
+    const isMoneyline = pickType.includes('moneyline') || pickType === 'h2h';
+
+    if (isMoneyline) {
+      return `${selection} — Moneyline (${odds ?? 'odds TBD'}) — ${unitsLabel}`;
     }
-    if (market === 'totals') return `${pick.side} ${pick.line || pick.point}`;
-    if (market === 'h2h') return pick.team;
-    return pick.description || 'N/A';
-  }, [pick.selection, pick.market, pick.point, pick.line, pick.team, pick.side, pick.description]);
+
+    const lineLabel = line !== undefined && line !== null ? line : 'line TBD';
+    const sideText = sideLabel ? `${sideLabel} ` : '';
+    return `${selection} — ${marketLabel} ${sideText}${lineLabel} (${odds ?? 'odds TBD'}) — ${unitsLabel}`;
+  }, [pick.bet_string, pick.selection, pick.market_label, pick.market, pick.odds_american, pick.odds, pick.price, pick.line, pick.point, pick.recommended_units, pick.units, pick.side, pick.pick_type, pick.team, getMarketLabel]);
 
   // Card style varies by tier - TITANIUM and SmashSpot get special treatment
   const cardStyle = {
@@ -1130,24 +1140,13 @@ const GameSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortByC
       gamePicks = filterCommunityPicks(gamePicks, { requireTodayET: true });
 
       if (gamePicks.length === 0) {
-        if (isFallbackSource) {
-          // Demo data also respects strict community threshold
-          const demoPicks = getDemoGamePicks(sport).filter(isCommunityEligible);
-          setPicks(demoPicks);
-          setDailyEnergy(getDemoEnergy());
-          setIsDemo(true);
-        } else {
-          setPicks([]);
-        }
+        setPicks([]);
       } else {
         setPicks(gamePicks);
       }
     } catch (err) {
       console.error('Error fetching game picks:', err);
-      const demoPicks = getDemoGamePicks(sport).filter(isCommunityEligible);
-      setPicks(demoPicks);
-      setDailyEnergy(getDemoEnergy());
-      setIsDemo(true);
+      setPicks([]);
     } finally {
       setLoading(false);
     }

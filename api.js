@@ -209,10 +209,16 @@ export const api = {
       confidence: confidenceToPercent(item.confidence) || item.total_score * 10 || 70,
       // Map backend 'line' to frontend 'point'
       point: item.point || item.line,
+      line: item.line ?? item.point,
       // Map backend 'odds' to frontend 'price'
-      price: item.price || item.odds || -110,
+      price: item.price || item.odds || item.odds_american || -110,
+      odds_american: item.odds_american ?? item.odds ?? item.price,
       // Preserve other fields
       market: item.market,
+      market_label: item.market_label || item.marketLabel,
+      pick_type: item.pick_type || item.pickType,
+      bet_string: item.bet_string || item.betString,
+      recommended_units: item.recommended_units ?? item.units,
       team: item.team || item.home_team,
       home_team: item.home_team,
       away_team: item.away_team,
@@ -224,7 +230,8 @@ export const api = {
       // Props specific
       player_name: item.player_name || item.player,
       side: item.side,
-      stat_type: item.stat_type || item.market?.replace('player_', '')
+      stat_type: item.stat_type || item.market?.replace('player_', ''),
+      selection: item.selection || item.side || item.team || item.player_name || item.player || ''
     });
 
     // Helper to extract array from various response formats

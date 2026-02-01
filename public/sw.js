@@ -113,6 +113,7 @@ self.addEventListener('fetch', (event) => {
     url.includes('/live/') ||
     url.includes('/ops/') ||
     url.includes('/health') ||
+    url.includes('/internal/') ||
     url.includes('/esoteric/')
   ) {
     event.respondWith(fetch(request, { cache: 'no-store' }));
