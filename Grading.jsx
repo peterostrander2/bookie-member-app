@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import api from './api';
-import { useGamification } from './Gamification';
+import { useGamification, ACHIEVEMENTS } from './GamificationContext';
 import { useToast } from './Toast';
 
 const Grading = () => {
-  const { recordPick, checkAchievements, newAchievements, clearNewAchievement, ACHIEVEMENTS } = useGamification();
+  const { recordPick, checkAchievements, newAchievements, clearNewAchievement } = useGamification();
   const toast = useToast();
   const [tab, setTab] = useState('pending');
   const [picks, setPicks] = useState([]);

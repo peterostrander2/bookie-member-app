@@ -32,8 +32,9 @@ import ComplianceFooter from './ComplianceFooter';
 import { ToastProvider } from './Toast';
 import OnboardingWizard, { isOnboardingComplete } from './Onboarding';
 import { ThemeProvider, ThemeToggle, useTheme } from './ThemeContext';
-import { GamificationProvider, LevelBadge } from './Gamification';
+import { GamificationProvider, LevelBadge } from './GamificationContext';
 import { SignalNotificationProvider, SignalBell } from './SignalNotifications';
+import { trackPageView } from './analytics';
 import { BetSlipProvider, FloatingBetSlip } from './BetSlip';
 import ErrorBoundary from './ErrorBoundary';
 import { OfflineProvider, OfflineBanner, UpdateBanner } from './OfflineIndicator';
@@ -523,9 +524,7 @@ const AppContent = () => {
 
   // Track page views on route change
   useEffect(() => {
-    import('./analytics').then(({ trackPageView }) => {
-      trackPageView(location.pathname, document.title);
-    });
+    trackPageView(location.pathname, document.title);
   }, [location.pathname]);
 
   return (
