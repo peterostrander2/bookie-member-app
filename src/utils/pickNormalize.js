@@ -170,16 +170,17 @@ export function getTodayBoundariesET() {
  * Check if pick is for today in ET timezone
  * Returns true if game starts today ET, false otherwise
  */
-export function isTodayET(pick) {
+export function isTodayET(pick, { allowMissingTime = true } = {}) {
   const startTime = parseStartTime(pick);
 
-  // If no start time, we can't verify - exclude by default for safety
+  // If no start time, allow through by default to avoid hiding live picks
   if (!startTime) {
     if (process.env.NODE_ENV === 'development') {
       const matchup = pick.matchup || pick.game || `${pick.away_team} @ ${pick.home_team}` || 'Unknown';
-      console.warn(`[isTodayET] No start_time for pick: ${matchup} - excluding`);
+      const mode = allowMissingTime ? 'allowing' : 'excluding';
+      console.warn(`[isTodayET] No start_time for pick: ${matchup} - ${mode}`);
     }
-    return false;
+    return allowMissingTime;
   }
 
   const { start, end } = getTodayBoundariesET();
@@ -220,7 +221,7 @@ export function filterCommunityPicks(picks, options = {}) {
 
   // 2. Filter by today ET if required
   if (requireTodayET) {
-    filtered = filtered.filter(isTodayET);
+    filtered = filtered.filter((pick) => isTodayET(pick, { allowMissingTime: true }));
   }
 
   return filtered;
