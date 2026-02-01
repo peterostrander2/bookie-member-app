@@ -903,84 +903,6 @@ const PickCard = memo(({ pick, injuries = [] }) => {
 });
 PickCard.displayName = 'PickCard';
 
-// Demo game picks when API unavailable - v10.4 schema
-const getDemoGamePicks = (sport) => {
-  const demos = {
-    NBA: [
-      // TRUE SMASH SPOT
-      {
-        team: 'Lakers', market: 'spreads', side: 'Lakers', line: -3.5, point: -3.5, odds: -110, price: -110,
-        selection: 'Lakers -3.5', tier: TIERS.GOLD_STAR, final_score: 8.0, smash_spot: true, jarvis_active: true,
-        confluence_level: 'JARVIS_PERFECT', alignment_pct: 86.5,
-        scoring_breakdown: { research_score: 8.2, esoteric_score: 7.6 },
-        badges: ['SMASH_SPOT', 'SHARP_MONEY', 'JARVIS_TRIGGER'],
-        reasons: ['RESEARCH: Sharp Split +1.0', 'RESEARCH: Matchup History +0.5', 'ESOTERIC: Jarvis Trigger 201 +0.4', 'CONFLUENCE: JARVIS PERFECT +0.5'],
-        game: 'Warriors @ Lakers', home_team: 'Lakers', away_team: 'Warriors', bookmaker: 'DraftKings', sport: 'NBA', isDemo: true
-      },
-      // GOLD_STAR total
-      {
-        team: null, market: 'totals', side: 'Over', line: 224.5, point: 224.5, odds: -108, price: -108,
-        selection: 'Over 224.5', tier: TIERS.GOLD_STAR, final_score: 7.6, smash_spot: false, jarvis_active: false,
-        confluence_level: 'PERFECT', alignment_pct: 82.0,
-        scoring_breakdown: { research_score: 7.8, esoteric_score: 7.2 },
-        badges: ['REVERSE_LINE'],
-        reasons: ['RESEARCH: Pace matchup +0.8', 'RESEARCH: Line movement +0.4', 'CONFLUENCE: PERFECT +0.3'],
-        game: 'Bucks @ Celtics', home_team: 'Celtics', away_team: 'Bucks', bookmaker: 'FanDuel', sport: 'NBA', isDemo: true
-      },
-      // EDGE_LEAN moneyline
-      {
-        team: 'Nuggets', market: 'h2h', side: 'Nuggets', line: null, point: null, odds: -145, price: -145,
-        selection: 'Nuggets ML', tier: TIERS.EDGE_LEAN, final_score: 6.9, smash_spot: false, jarvis_active: true,
-        confluence_level: 'MODERATE', alignment_pct: 72.0,
-        scoring_breakdown: { research_score: 7.2, esoteric_score: 6.5 },
-        badges: ['JARVIS_TRIGGER', 'PRIME_TIME'],
-        reasons: ['RESEARCH: Home court +0.5', 'ESOTERIC: Jarvis 93 +0.3'],
-        game: 'Clippers @ Nuggets', home_team: 'Nuggets', away_team: 'Clippers', bookmaker: 'BetMGM', sport: 'NBA', isDemo: true
-      },
-    ],
-    NFL: [
-      {
-        team: 'Chiefs', market: 'spreads', side: 'Chiefs', line: -4.5, point: -4.5, odds: -110, price: -110,
-        selection: 'Chiefs -4.5', tier: TIERS.GOLD_STAR, final_score: 7.8, smash_spot: true, jarvis_active: true,
-        confluence_level: 'IMMORTAL', alignment_pct: 91.0,
-        scoring_breakdown: { research_score: 8.0, esoteric_score: 7.5 },
-        badges: ['SMASH_SPOT', 'SHARP_MONEY', 'PRIME_TIME', 'JARVIS_TRIGGER'],
-        reasons: ['RESEARCH: Sharp action +1.2', 'ESOTERIC: Jarvis 2178 Immortal +1.0', 'CONFLUENCE: IMMORTAL +0.8'],
-        game: 'Bills @ Chiefs', home_team: 'Chiefs', away_team: 'Bills', bookmaker: 'DraftKings', sport: 'NFL', isDemo: true
-      },
-    ],
-    MLB: [
-      {
-        team: 'Dodgers', market: 'h2h', side: 'Dodgers', line: null, point: null, odds: -165, price: -165,
-        selection: 'Dodgers ML', tier: TIERS.EDGE_LEAN, final_score: 6.7, smash_spot: false,
-        confluence_level: 'MODERATE', alignment_pct: 68.0,
-        scoring_breakdown: { research_score: 7.0, esoteric_score: 6.2 },
-        badges: [],
-        reasons: ['RESEARCH: Pitching matchup +0.6'],
-        game: 'Giants @ Dodgers', home_team: 'Dodgers', away_team: 'Giants', bookmaker: 'DraftKings', sport: 'MLB', isDemo: true
-      },
-    ],
-    NHL: [
-      {
-        team: 'Oilers', market: 'spreads', side: 'Oilers', line: -1.5, point: -1.5, odds: 125, price: 125,
-        selection: 'Oilers -1.5', tier: TIERS.EDGE_LEAN, final_score: 6.5, smash_spot: false,
-        confluence_level: 'MODERATE', alignment_pct: 65.0,
-        scoring_breakdown: { research_score: 6.8, esoteric_score: 6.0 },
-        badges: [],
-        reasons: ['RESEARCH: Recent form +0.5'],
-        game: 'Flames @ Oilers', home_team: 'Oilers', away_team: 'Flames', bookmaker: 'BetMGM', sport: 'NHL', isDemo: true
-      },
-    ]
-  };
-  return demos[sport] || demos.NBA;
-};
-
-const getDemoEnergy = () => ({
-  flow: 'YANG',
-  theme: 'Expansion Day - Favorites & Overs favored',
-  isDemo: true
-});
-
 // Injury indicator component
 const InjuryIndicator = memo(({ homeTeam, awayTeam, injuries }) => {
   if (!injuries || injuries.length === 0) return null;
@@ -1067,36 +989,12 @@ const InjuryIndicator = memo(({ homeTeam, awayTeam, injuries }) => {
 });
 InjuryIndicator.displayName = 'InjuryIndicator';
 
-// Demo injuries
-const getDemoInjuries = (sport) => {
-  const demos = {
-    NBA: [
-      { player_name: 'Anthony Davis', team: 'Lakers', status: 'Questionable', injury: 'Knee' },
-      { player_name: 'Jaylen Brown', team: 'Celtics', status: 'Out', injury: 'Ankle' },
-      { player_name: 'Jamal Murray', team: 'Nuggets', status: 'Probable', injury: 'Hamstring' },
-      { player_name: 'Devin Booker', team: 'Suns', status: 'Doubtful', injury: 'Groin' }
-    ],
-    NFL: [
-      { player_name: 'Travis Kelce', team: 'Chiefs', status: 'Questionable', injury: 'Knee' },
-      { player_name: 'Stefon Diggs', team: 'Bills', status: 'Out', injury: 'ACL' }
-    ],
-    MLB: [
-      { player_name: 'Mookie Betts', team: 'Dodgers', status: 'Day-to-Day', injury: 'Hip' }
-    ],
-    NHL: [
-      { player_name: 'Connor McDavid', team: 'Oilers', status: 'Probable', injury: 'Lower Body' }
-    ]
-  };
-  return demos[sport] || [];
-};
-
 const GameSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortByConfidence = true }) => {
   const toast = useToast();
   const [picks, setPicks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [dailyEnergy, setDailyEnergy] = useState(null);
-  const [isDemo, setIsDemo] = useState(false);
   const [injuries, setInjuries] = useState([]);
 
   // Filter and sort state
@@ -1108,25 +1006,18 @@ const GameSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortByC
   const fetchInjuries = async () => {
     try {
       const data = await api.getInjuries(sport);
-      if (data && data.injuries && data.injuries.length > 0) {
-        setInjuries(data.injuries);
-      } else {
-        setInjuries(getDemoInjuries(sport));
-      }
+      setInjuries(data?.injuries || []);
     } catch (err) {
       console.error('Error fetching injuries:', err);
-      setInjuries(getDemoInjuries(sport));
+      setInjuries([]);
     }
   };
 
   const fetchGamePicks = async () => {
     setLoading(true);
     setError(null);
-    setIsDemo(false);
     try {
       const data = await api.getBestBets(sport);
-      const source = (data?.source || '').toLowerCase();
-      const isFallbackSource = source.includes('fallback') || source.includes('demo') || data?._fallback === true;
       let gamePicks = [];
 
       // v10.4: Use response.picks (merged array) and filter for game picks (player is null)
@@ -1147,11 +1038,7 @@ const GameSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortByC
       // NO tier-based bypass - score is canonical
       gamePicks = filterCommunityPicks(gamePicks, { requireTodayET: true });
 
-      if (gamePicks.length === 0) {
-        setPicks([]);
-      } else {
-        setPicks(gamePicks);
-      }
+      setPicks(gamePicks.length === 0 ? [] : gamePicks);
     } catch (err) {
       console.error('Error fetching game picks:', err);
       setPicks([]);
@@ -1267,15 +1154,9 @@ const GameSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortByC
                 borderRadius: '10px', fontSize: '10px'
               }}>of {picks.length}</span>
             )}
-            {isDemo && (
-              <span style={{
-                backgroundColor: '#FFD70030', color: '#FFD700', padding: '2px 8px',
-                borderRadius: '10px', fontSize: '10px', fontWeight: 'bold'
-              }}>SAMPLE DATA</span>
-            )}
           </h3>
           <div style={{ color: '#6B7280', fontSize: '12px', marginTop: '4px' }}>
-            {isDemo ? 'Live picks refresh every 2 hours • Showing sample data' : 'Spreads, Totals & Moneylines'}
+            Spreads, Totals & Moneylines
           </div>
         </div>
         <button onClick={fetchGamePicks} style={{

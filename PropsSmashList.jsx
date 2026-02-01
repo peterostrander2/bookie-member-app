@@ -1300,101 +1300,11 @@ const PropCard = memo(({ pick }) => {
 });
 PropCard.displayName = 'PropCard';
 
-// Demo picks when API unavailable - v10.4 schema
-const getDemoProps = (sport) => {
-  const demos = {
-    NBA: [
-      // TRUE SMASH SPOT - highest conviction
-      {
-        player: 'LeBron James', player_name: 'LeBron James', market: 'player_points',
-        selection: 'LeBron James Over 25.5', side: 'Over', line: 25.5, point: 25.5, odds: -110, price: -110,
-        tier: TIERS.GOLD_STAR, final_score: 8.2, smash_spot: true, jarvis_active: true,
-        confluence_level: 'JARVIS_PERFECT', alignment_pct: 88.5,
-        scoring_breakdown: { research_score: 8.5, esoteric_score: 7.8, base_score: 6.2, pillar_boost: 1.5, confluence_boost: 0.5 },
-        badges: ['SMASH_SPOT', 'SHARP_MONEY', 'JARVIS_TRIGGER'],
-        reasons: ['RESEARCH: Sharp Split +1.2', 'RESEARCH: Prime Time Boost +0.3', 'ESOTERIC: Jarvis Trigger 201 +0.5', 'CONFLUENCE: JARVIS PERFECT +0.5'],
-        game: 'Lakers @ Warriors', home_team: 'Warriors', away_team: 'Lakers', bookmaker: 'DraftKings', sport: 'NBA', isDemo: true
-      },
-      // GOLD_STAR but not SmashSpot
-      {
-        player: 'Jayson Tatum', player_name: 'Jayson Tatum', market: 'player_points',
-        selection: 'Jayson Tatum Over 27.5', side: 'Over', line: 27.5, point: 27.5, odds: -115, price: -115,
-        tier: TIERS.GOLD_STAR, final_score: 7.8, smash_spot: false, jarvis_active: false,
-        confluence_level: 'PERFECT', alignment_pct: 82.0,
-        scoring_breakdown: { research_score: 8.1, esoteric_score: 7.2, base_score: 5.8 },
-        badges: ['SHARP_MONEY', 'REVERSE_LINE'],
-        reasons: ['RESEARCH: Sharp Split +1.0', 'RESEARCH: Rest Advantage +0.4', 'CONFLUENCE: PERFECT +0.3'],
-        game: 'Celtics @ Bucks', home_team: 'Bucks', away_team: 'Celtics', bookmaker: 'FanDuel', sport: 'NBA', isDemo: true
-      },
-      // EDGE_LEAN tier
-      {
-        player: 'Luka Doncic', player_name: 'Luka Doncic', market: 'player_assists',
-        selection: 'Luka Doncic Over 9.5 assists', side: 'Over', line: 9.5, point: 9.5, odds: -105, price: -105,
-        tier: TIERS.EDGE_LEAN, final_score: 6.8, smash_spot: false, jarvis_active: true,
-        confluence_level: 'MODERATE', alignment_pct: 68.0,
-        scoring_breakdown: { research_score: 7.2, esoteric_score: 6.1, base_score: 5.5 },
-        badges: ['JARVIS_TRIGGER'],
-        reasons: ['RESEARCH: Matchup History +0.6', 'ESOTERIC: Jarvis Trigger 33 +0.3'],
-        game: 'Mavericks @ Suns', home_team: 'Suns', away_team: 'Mavericks', bookmaker: 'BetMGM', sport: 'NBA', isDemo: true
-      },
-      // MONITOR tier
-      {
-        player: 'Nikola Jokic', player_name: 'Nikola Jokic', market: 'player_rebounds',
-        selection: 'Nikola Jokic Over 11.5 rebounds', side: 'Over', line: 11.5, point: 11.5, odds: -120, price: -120,
-        tier: TIERS.MONITOR, final_score: 5.9, smash_spot: false, jarvis_active: false,
-        confluence_level: 'DIVERGENT', alignment_pct: 52.0,
-        scoring_breakdown: { research_score: 6.5, esoteric_score: 5.0, base_score: 5.2 },
-        badges: [],
-        reasons: ['RESEARCH: Recent Form +0.4', 'ESOTERIC: Divergent signals -0.2'],
-        game: 'Nuggets @ Clippers', home_team: 'Clippers', away_team: 'Nuggets', bookmaker: 'Caesars', sport: 'NBA', isDemo: true
-      },
-    ],
-    NFL: [
-      {
-        player: 'Patrick Mahomes', player_name: 'Patrick Mahomes', market: 'player_pass_yards',
-        selection: 'Patrick Mahomes Over 285.5 yards', side: 'Over', line: 285.5, point: 285.5, odds: -115, price: -115,
-        tier: TIERS.GOLD_STAR, final_score: 7.6, smash_spot: false, jarvis_active: true,
-        confluence_level: 'JARVIS_PERFECT', alignment_pct: 85.0,
-        scoring_breakdown: { research_score: 7.8, esoteric_score: 7.2 },
-        badges: ['SHARP_MONEY', 'PRIME_TIME', 'JARVIS_TRIGGER'],
-        reasons: ['RESEARCH: Prime Time +0.5', 'ESOTERIC: Jarvis Trigger 93 +0.4'],
-        game: 'Chiefs @ Bills', home_team: 'Bills', away_team: 'Chiefs', bookmaker: 'DraftKings', sport: 'NFL', isDemo: true
-      },
-    ],
-    MLB: [
-      {
-        player: 'Shohei Ohtani', player_name: 'Shohei Ohtani', market: 'player_hits',
-        selection: 'Shohei Ohtani Over 1.5 hits', side: 'Over', line: 1.5, point: 1.5, odds: -120, price: -120,
-        tier: TIERS.EDGE_LEAN, final_score: 6.7, smash_spot: false,
-        confluence_level: 'MODERATE', alignment_pct: 65.0,
-        scoring_breakdown: { research_score: 7.0, esoteric_score: 6.2 },
-        badges: [],
-        reasons: ['RESEARCH: Hot Streak +0.6'],
-        game: 'Dodgers @ Giants', home_team: 'Giants', away_team: 'Dodgers', bookmaker: 'DraftKings', sport: 'MLB', isDemo: true
-      },
-    ],
-    NHL: [
-      {
-        player: 'Connor McDavid', player_name: 'Connor McDavid', market: 'player_points',
-        selection: 'Connor McDavid Over 1.5 points', side: 'Over', line: 1.5, point: 1.5, odds: -110, price: -110,
-        tier: TIERS.GOLD_STAR, final_score: 7.9, smash_spot: true, jarvis_active: true,
-        confluence_level: 'IMMORTAL', alignment_pct: 92.0,
-        scoring_breakdown: { research_score: 8.2, esoteric_score: 7.5 },
-        badges: ['SMASH_SPOT', 'JARVIS_TRIGGER'],
-        reasons: ['RESEARCH: Elite Form +0.8', 'ESOTERIC: Jarvis 2178 Immortal +1.0', 'CONFLUENCE: IMMORTAL +0.8'],
-        game: 'Oilers @ Flames', home_team: 'Flames', away_team: 'Oilers', bookmaker: 'BetMGM', sport: 'NHL', isDemo: true
-      },
-    ]
-  };
-  return demos[sport] || demos.NBA;
-};
-
 const PropsSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortByConfidence = true }) => {
   const toast = useToast();
   const [picks, setPicks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isDemo, setIsDemo] = useState(false);
 
   // Filter and sort state
   const [filters, setFilters] = useState({ tier: 'ALL', propType: 'ALL' });
@@ -1405,11 +1315,8 @@ const PropsSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortBy
   const fetchPropsPicks = async () => {
     setLoading(true);
     setError(null);
-    setIsDemo(false);
     try {
       const data = await api.getBestBets(sport);
-      const source = (data?.source || '').toLowerCase();
-      const isFallbackSource = source.includes('fallback') || source.includes('demo') || data?._fallback === true;
       let propPicks = [];
 
       // v10.4: Use response.picks (merged array) and filter for props (player not null)
@@ -1431,11 +1338,7 @@ const PropsSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortBy
       // NO tier-based bypass - score is canonical
       propPicks = filterCommunityPicks(propPicks, { requireTodayET: true });
 
-      if (propPicks.length === 0) {
-        setPicks([]);
-      } else {
-        setPicks(propPicks);
-      }
+      setPicks(propPicks.length === 0 ? [] : propPicks);
     } catch (err) {
       console.error('Error fetching props picks:', err);
       setPicks([]);
@@ -1548,15 +1451,9 @@ const PropsSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortBy
                 borderRadius: '10px', fontSize: '10px'
               }}>of {picks.length}</span>
             )}
-            {isDemo && (
-              <span style={{
-                backgroundColor: '#FFD70030', color: '#FFD700', padding: '2px 8px',
-                borderRadius: '10px', fontSize: '10px', fontWeight: 'bold'
-              }}>SAMPLE DATA</span>
-            )}
           </h3>
           <div style={{ color: '#6B7280', fontSize: '12px', marginTop: '4px' }}>
-            {isDemo ? 'Live picks refresh every 2 hours • Showing sample data' : 'Points, Rebounds, Assists & More'}
+            Points, Rebounds, Assists & More
           </div>
         </div>
         <button onClick={fetchPropsPicks} style={{
