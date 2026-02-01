@@ -1107,6 +1107,8 @@ const GameSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortByC
     setIsDemo(false);
     try {
       const data = await api.getBestBets(sport);
+      const source = (data?.source || '').toLowerCase();
+      const isFallbackSource = source.includes('fallback') || source.includes('demo') || data?._fallback === true;
       let gamePicks = [];
 
       // v10.4: Use response.picks (merged array) and filter for game picks (player is null)
@@ -1128,11 +1130,15 @@ const GameSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortByC
       gamePicks = filterCommunityPicks(gamePicks, { requireTodayET: true });
 
       if (gamePicks.length === 0) {
-        // Demo data also respects strict community threshold
-        const demoPicks = getDemoGamePicks(sport).filter(isCommunityEligible);
-        setPicks(demoPicks);
-        setDailyEnergy(getDemoEnergy());
-        setIsDemo(true);
+        if (isFallbackSource) {
+          // Demo data also respects strict community threshold
+          const demoPicks = getDemoGamePicks(sport).filter(isCommunityEligible);
+          setPicks(demoPicks);
+          setDailyEnergy(getDemoEnergy());
+          setIsDemo(true);
+        } else {
+          setPicks([]);
+        }
       } else {
         setPicks(gamePicks);
       }

@@ -1381,6 +1381,8 @@ const PropsSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortBy
     setIsDemo(false);
     try {
       const data = await api.getBestBets(sport);
+      const source = (data?.source || '').toLowerCase();
+      const isFallbackSource = source.includes('fallback') || source.includes('demo') || data?._fallback === true;
       let propPicks = [];
 
       // v10.4: Use response.picks (merged array) and filter for props (player not null)
@@ -1403,10 +1405,14 @@ const PropsSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortBy
       propPicks = filterCommunityPicks(propPicks, { requireTodayET: true });
 
       if (propPicks.length === 0) {
-        // Demo data also respects strict community threshold
-        const demoPicks = getDemoProps(sport).filter(isCommunityEligible);
-        setPicks(demoPicks);
-        setIsDemo(true);
+        if (isFallbackSource) {
+          // Demo data also respects strict community threshold
+          const demoPicks = getDemoProps(sport).filter(isCommunityEligible);
+          setPicks(demoPicks);
+          setIsDemo(true);
+        } else {
+          setPicks([]);
+        }
       } else {
         setPicks(propPicks);
       }
