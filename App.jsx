@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 
 // Lazy load route components for code splitting
@@ -217,6 +217,7 @@ const Navbar = ({ onOpenNotificationModal }) => {
   const location = useLocation();
   const [health, setHealth] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isClearingCache, setIsClearingCache] = useState(false);
 
   useEffect(() => {
     api.getHealth().then(setHealth).catch(() => setHealth({ status: 'offline' }));
@@ -226,6 +227,26 @@ const Navbar = ({ onOpenNotificationModal }) => {
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [location.pathname]);
+
+  const handleClearCache = useCallback(async () => {
+    setIsClearingCache(true);
+    try {
+      if (navigator.serviceWorker?.getRegistrations) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map((reg) => reg.unregister()));
+      }
+      if (window.caches?.keys) {
+        const keys = await window.caches.keys();
+        await Promise.all(keys.map((key) => window.caches.delete(key)));
+      }
+      alert('Cache cleared. Hard refresh now (Cmd+Shift+R).');
+    } catch (err) {
+      console.error('Cache clear failed:', err);
+      alert('Failed to clear cache. Try hard refresh.');
+    } finally {
+      setIsClearingCache(false);
+    }
+  }, []);
 
 
   return (
@@ -348,6 +369,27 @@ const Navbar = ({ onOpenNotificationModal }) => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <SmashAlertBell onOpenModal={onOpenNotificationModal} />
           <SignalBell />
+          <button
+            className="desktop-only"
+            onClick={handleClearCache}
+            disabled={isClearingCache}
+            style={{
+              padding: '6px 10px',
+              backgroundColor: isClearingCache ? '#333' : '#4B5563',
+              color: isClearingCache ? '#666' : '#fff',
+              border: 'none',
+              borderRadius: '6px',
+              fontSize: '11px',
+              fontWeight: 'bold',
+              cursor: isClearingCache ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+            title="Clear service worker + cache"
+          >
+            🧹 {isClearingCache ? 'Clearing...' : 'Clear Cache'}
+          </button>
           <Link
             to="/profile"
             style={{
@@ -530,6 +572,27 @@ const Navbar = ({ onOpenNotificationModal }) => {
           }}>
             👤 Profile & Settings
           </Link>
+          <button
+            onClick={handleClearCache}
+            disabled={isClearingCache}
+            style={{
+              padding: '12px 14px',
+              marginTop: '8px',
+              backgroundColor: '#4B5563',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              fontWeight: 'bold',
+              cursor: isClearingCache ? 'not-allowed' : 'pointer',
+              opacity: isClearingCache ? 0.6 : 1
+            }}
+          >
+            🧹 {isClearingCache ? 'Clearing Cache...' : 'Clear Cache'}
+          </button>
         </div>
       )}
 
