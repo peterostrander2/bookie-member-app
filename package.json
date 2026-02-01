@@ -8,6 +8,7 @@
     "build": "vite build",
     "build:analyze": "ANALYZE=true vite build",
     "preview": "vite preview",
+    "audit:final": "bash scripts/run_final_audit.sh",
     "start": "serve dist -s -l $PORT",
     "test": "vitest",
     "test:run": "vitest run",

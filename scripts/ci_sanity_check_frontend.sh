@@ -34,6 +34,14 @@ else
 fi
 echo ""
 
+echo "Session 7: Final audit (optional)..."
+if [ -f scripts/run_final_audit.sh ]; then
+  bash scripts/run_final_audit.sh || echo "⚠️ Final audit skipped or failed (non-blocking)"
+else
+  echo "⚠️ run_final_audit.sh not found (skipping)"
+fi
+echo ""
+
 echo "============================================"
 echo "✅ All frontend CI sessions passed"
 echo "============================================"
