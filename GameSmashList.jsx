@@ -430,35 +430,8 @@ const PickCard = memo(({ pick, injuries = [] }) => {
   }, []);
 
   const getPickDisplay = useCallback(() => {
-    const betString = typeof pick.bet_string === 'string' ? pick.bet_string.trim() : '';
-    if (betString) return betString;
-
-    const selection =
-      pick.selection ||
-      pick.team ||
-      pick.side ||
-      pick.pick ||
-      pick.recommendation ||
-      pick.matchup ||
-      'Pick';
-    const marketLabel = pick.market_label || getMarketLabel(pick.market);
-    const odds = pick.odds_american ?? pick.odds ?? pick.price;
-    const oddsLabel = odds !== undefined && odds !== null ? formatOdds(odds) : 'odds TBD';
-    const line = pick.line ?? pick.point;
-    const lineLabel = line !== undefined && line !== null ? line : 'line TBD';
-    const units = pick.recommended_units ?? pick.units;
-    const unitsLabel = units !== undefined && units !== null ? `${units}u` : 'units TBD';
-    const sideLabel = pick.side_label || pick.side || '';
-    const pickType = (pick.pick_type || pick.market || '').toLowerCase();
-    const isMoneyline = pickType.includes('moneyline') || pickType === 'h2h' || pickType === 'moneyline';
-
-    if (isMoneyline) {
-      return `${selection} — Moneyline (${oddsLabel}) — ${unitsLabel}`;
-    }
-
-    const sideText = sideLabel ? `${sideLabel} ` : '';
-    return `${selection} — ${marketLabel} ${sideText}${lineLabel} (${oddsLabel}) — ${unitsLabel}`;
-  }, [pick.bet_string, pick.selection, pick.market_label, pick.market, pick.odds_american, pick.odds, pick.price, pick.line, pick.point, pick.recommended_units, pick.units, pick.side, pick.side_label, pick.pick_type, pick.team, pick.pick, pick.recommendation, pick.matchup, getMarketLabel]);
+    return pick.bet_string;
+  }, [pick.bet_string]);
 
   // Card style varies by tier - TITANIUM and SmashSpot get special treatment
   const cardStyle = {

@@ -686,25 +686,17 @@ const PropCard = memo(({ pick }) => {
     return market?.toUpperCase()?.replace('player_', '') || 'PROP';
   }, []);
 
-  const betString = typeof pick.bet_string === 'string' ? pick.bet_string.trim() : '';
-  const playerName =
-    pick.selection ||
-    pick.player ||
-    pick.player_name ||
-    pick.description?.split(' ').slice(0, 2).join(' ') ||
-    'Player';
-  const marketLabel = pick.market_label || pick.stat_type || getMarketLabel(pick.market);
-  const sideLabel = pick.side_label || pick.side || pick.over_under || pick.direction || '';
-  const lineValue = pick.line ?? pick.point;
-  const lineLabel = lineValue !== undefined && lineValue !== null ? lineValue : 'line TBD';
-  const oddsValue = pick.odds_american ?? pick.odds ?? pick.price;
+  const betString = pick.bet_string;
+  const playerName = pick.selection;
+  const marketLabel = pick.market_label;
+  const sideLabel = pick.side_label;
+  const lineValue = pick.line;
+  const oddsValue = pick.odds_american;
+  const unitsValue = pick.recommended_units;
   const oddsLabel = formatOdds(oddsValue);
-  const unitsValue = pick.recommended_units ?? pick.units;
-  const unitsLabel = unitsValue !== undefined && unitsValue !== null ? `${unitsValue}u` : 'units TBD';
-  const statLine = sideLabel ? `${sideLabel} ${lineLabel}` : `${lineLabel}`;
-  const betDisplay = betString
-    ? betString
-    : `${marketLabel} ${statLine} (${oddsLabel}) — ${unitsLabel}`;
+  const unitsLabel = `${unitsValue}u`;
+  const statLine = `${sideLabel} ${lineValue}`;
+  const betDisplay = betString;
 
   // Card style varies by tier - TITANIUM and SmashSpot get special treatment
   const cardStyle = {
@@ -782,7 +774,7 @@ const PropCard = memo(({ pick }) => {
           backgroundColor: '#8B5CF620', color: '#8B5CF6',
           padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold',
           border: '1px solid #8B5CF640'
-        }}>{pick.market_label || getMarketLabel(pick.market)}</span>
+        }}>{marketLabel}</span>
         <span style={{ color: '#6B7280', fontSize: '12px', marginLeft: 'auto' }}>
           {pick.game || `${pick.away_team} @ ${pick.home_team}`}
         </span>
@@ -1245,11 +1237,11 @@ const PropCard = memo(({ pick }) => {
       <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', alignItems: 'center' }}>
         <ShareButton
           pick={{
-            player: pick.player || pick.player_name,
-            side: pick.side,
-            line: pick.line || pick.point,
-            stat_type: pick.market?.replace('player_', ''),
-            odds: pick.odds || pick.price,
+            player: pick.selection,
+            side: pick.side_label,
+            line: pick.line,
+            stat_type: pick.market_label,
+            odds: pick.odds_american,
             confidence: Math.round(finalScore * 10), // Convert 0-10 to 0-100 for share
             smash_spot: isSmashSpot,
             tier: tierConfig.label,
@@ -1260,15 +1252,15 @@ const PropCard = memo(({ pick }) => {
           pick={{
             id: pick.id || `${pick.player || pick.player_name}-${pick.market}`,
             game_id: pick.game_id || `${pick.home_team}-${pick.away_team}`,
-            player: pick.player || pick.player_name,
+            player: pick.selection,
             sport: pick.sport || 'NBA',
             home_team: pick.home_team,
             away_team: pick.away_team,
             bet_type: 'prop',
-            stat: pick.market?.replace('player_', ''),
-            side: pick.side,
-            line: pick.line || pick.point,
-            odds: pick.odds || pick.price || -110,
+            stat: pick.market_label,
+            side: pick.side_label,
+            line: pick.line,
+            odds: pick.odds_american,
             confidence: Math.round(finalScore * 10),
             tier: tierConfig.label,
             smash_spot: isSmashSpot,
@@ -1278,8 +1270,8 @@ const PropCard = memo(({ pick }) => {
         <PlaceBetButton
           bet={{
             sport: pick.sport, home_team: pick.home_team, away_team: pick.away_team,
-            bet_type: 'prop', player: pick.player || pick.player_name, prop_type: pick.market,
-            side: pick.side, line: pick.line || pick.point, odds: pick.odds || pick.price, book: pick.bookmaker
+            bet_type: 'prop', player: pick.selection, prop_type: pick.market_label,
+            side: pick.side_label, line: pick.line, odds: pick.odds_american, book: pick.bookmaker
           }}
           label={pick.bookmaker ? `Bet at ${pick.bookmaker}` : 'Compare Odds'}
         />
