@@ -1,5 +1,16 @@
 # CLAUDE.md - Bookie Member App
 
+## Sister Repositories
+
+| Repo | Purpose | URL |
+|------|---------|-----|
+| **This repo** | Frontend dashboard (React/Vite) | [bookie-member-app](https://github.com/peterostrander2/bookie-member-app) |
+| **Backend** | API server (Python/FastAPI) | [ai-betting-backend](https://github.com/peterostrander2/ai-betting-backend) |
+
+**Production API:** https://web-production-7b2a.up.railway.app
+
+---
+
 ## Overview
 Member dashboard for Bookie-o-em AI betting signals.
 
@@ -1227,4 +1238,88 @@ triggerSmashNotification({
 - Uses new v10.86-87 fields: `units`, `confidence_label`, `confidence_pct`
 - Falls back to score-based derivation for backward compatibility
 
+**Tests:** 91 tests passing
+
+---
+
+### Session: February 2026 (Build Fixes + Auth Hardening)
+
+**Completed in this session:**
+1. Fixed Vite build warnings about mixed static/dynamic imports
+2. Added production-only service worker registration
+3. Configured Vite with React deduplication (`resolve.dedupe`)
+4. Simplified usePreferences hook API
+5. Added API key checks to prevent polling without valid credentials
+6. Added fail-fast auth protection (stops polling on 401/403, shows banner)
+7. Added `safeJson` helper to prevent JSON parse crashes on non-JSON responses
+8. Added React Router v7 future flags (v7_startTransition, v7_relativeSplatPath)
+9. Added PWA mobile-web-app-capable meta tag
+10. Created `.env.local` with production API credentials
+
+**New files created:**
+- `GamificationContext.jsx` - Extracted context/provider/hooks from Gamification.jsx for code splitting
+- `.env.local` - Local environment configuration
+
+**Files modified:**
+- `App.jsx`:
+  - Static import for `trackPageView` from analytics (fixes mixed import warning)
+  - Import GamificationProvider from GamificationContext
+  - Added `AuthInvalidBanner` component for fail-fast auth display
+  - BrowserRouter with v7 future flags
+- `Gamification.jsx` - Now only contains page component, imports from GamificationContext
+- `Grading.jsx` - Updated import to use GamificationContext
+- `index.html`:
+  - Added `mobile-web-app-capable` meta tag
+  - Service worker registration now production-only (`import.meta.env.PROD`)
+- `vite.config.js` - Added `resolve.dedupe: ['react', 'react-dom']`
+- `usePreferences.js`:
+  - Shortened API: `prefs`, `updatePref`, `updatePrefs`, `reset`
+  - Added loading state
+  - Backward compatibility aliases maintained
+- `lib/api/client.js`:
+  - Added auth failure detection (`authInvalid`, `authListeners`)
+  - Added `isAuthInvalid()` and `onAuthInvalid()` exports
+  - Added `safeJson()` helper for safe JSON parsing
+  - `authFetch` now fails-fast on auth invalid, sets flag on 400/401/403
+- `api.js`:
+  - Replaced ALL `.json()` calls with `safeJson()` + fallback defaults
+  - Every method returns graceful defaults ([], {}, null) on failure
+- `SignalNotifications.jsx` - Added apiKey check + auth invalid subscription
+- `SystemHealthPanel.jsx` - Added apiKey check + auth invalid subscription
+- `SmashSpotsPage.jsx` - Added apiKey check + auth invalid subscription for auto-refresh
+
+**Key patterns implemented:**
+
+**Fail-fast auth protection:**
+```javascript
+// In lib/api/client.js
+let authInvalid = false;
+const authListeners = new Set();
+
+export const isAuthInvalid = () => authInvalid;
+export const onAuthInvalid = (callback) => {
+  authListeners.add(callback);
+  return () => authListeners.delete(callback);
+};
+
+// In polling components
+useEffect(() => {
+  if (!apiKey || isAuthInvalid()) return;
+  const unsubscribe = onAuthInvalid(() => clearInterval(interval));
+  return () => { clearInterval(interval); unsubscribe(); };
+}, []);
+```
+
+**Safe JSON parsing:**
+```javascript
+export const safeJson = async (response) => {
+  if (!response.ok) return null;
+  try {
+    const text = await response.text();
+    return text ? JSON.parse(text) : null;
+  } catch { return null; }
+};
+```
+
+**Build:** No warnings, clean output
 **Tests:** 91 tests passing
