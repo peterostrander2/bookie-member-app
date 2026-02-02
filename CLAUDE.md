@@ -1679,6 +1679,20 @@ const tier = score >= 7.5 ? 'GOLD_STAR' : 'EDGE_LEAN';
 - Test with edge cases: rank 1, rank 15, rank 30
 - Keep color logic consistent across all components
 
+### Lesson 6: Backend Contradiction Gate Bug (Feb 2026)
+**Problem:** NHL picks showed BOTH Over AND Under on same total (e.g., O 6.5 and U 6.5 both returned).
+
+**Root Cause:** Backend contradiction gate silently failed. When props list was empty, it returned `{}` instead of proper dict with `contradictions_detected` key, causing KeyError swallowed by fallback.
+
+**Impact:** Frontend displayed impossible picks (can't bet both sides).
+
+**Backend Fix:** Return proper dict structure: `{"contradictions_detected": 0, "picks_dropped": 0}`.
+
+**Frontend Lesson:**
+- If you see both Over AND Under on same line, it's a backend bug
+- Report immediately - contradiction gate should prevent this
+- Never try to "fix" this in frontend by filtering client-side
+
 ---
 
 ## ✅ VERIFICATION CHECKLIST (Before Deploy)
