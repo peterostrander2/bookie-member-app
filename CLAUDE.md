@@ -1359,3 +1359,438 @@ AI (15%) | Research (20%) | Esoteric (15%) | Jarvis (10%) | Context (30%)
 - Expandable "Context Details" section showing def_rank, pace, vacuum, officials
 
 **Build:** No warnings, clean output
+
+---
+
+## 🚨 MASTER INVARIANTS (NEVER VIOLATE) 🚨
+
+**READ THIS FIRST BEFORE TOUCHING SCORING OR DISPLAY CODE**
+
+---
+
+### INVARIANT 1: Never Recompute Backend Values
+
+**RULE:** Frontend MUST render `final_score`, `tier`, `titanium_triggered`, and `units` directly from API response. NEVER recompute these values.
+
+**Why:** Backend scoring formula is complex (5 engines + confluence + Jason Sim + hard gates). Frontend recomputation will ALWAYS be wrong.
+
+**DO:**
+```jsx
+// ✅ CORRECT - Use backend values directly
+<div>Score: {pick.final_score.toFixed(1)}</div>
+<div>Tier: {pick.tier}</div>
+{pick.titanium_triggered && <Badge>TITANIUM</Badge>}
+```
+
+**NEVER:**
+```jsx
+// ❌ WRONG - Recomputing score
+const score = (pick.ai_score * 0.15) + (pick.research_score * 0.20) + ...;
+
+// ❌ WRONG - Deriving tier from score
+const tier = score >= 7.5 ? 'GOLD_STAR' : 'EDGE_LEAN';
+```
+
+---
+
+### INVARIANT 2: 5-Engine Display (v17.3)
+
+**RULE:** All pick cards MUST display all 5 engine scores with correct weights.
+
+**Engine Weights (MUST match backend):**
+| Engine | Weight | Field | Tooltip |
+|--------|--------|-------|---------|
+| AI | 15% | `ai_score` | 8 AI models |
+| Research | 20% | `research_score` | Sharp money, line variance, public fade |
+| Esoteric | 15% | `esoteric_score` | Numerology, astro, fibonacci |
+| Jarvis | 10% | `jarvis_score` | Gematria triggers |
+| **Context** | **30%** | `context_score` | Defense rank, pace, injury vacuum |
+
+**Files that MUST show all 5 engines:**
+- `GameSmashList.jsx` (line ~662)
+- `PropsSmashList.jsx` (line ~925)
+
+**NEVER:** Display only 2 or 4 engines. Context is the LARGEST weighted engine (30%).
+
+---
+
+### INVARIANT 3: Titanium 3/5 Rule Display
+
+**RULE:** Titanium badge and legend MUST reference "3/5 engines" not "3/4 engines".
+
+**Backend Rule:** `titanium_triggered=true` only when >= 3 of 5 engines >= 8.0
+
+**Files that reference this:**
+- `SmashSpotsPage.jsx` line ~65 (comment)
+- `SmashSpotsPage.jsx` line ~86 (legend text)
+- `SmashSpotsPage.jsx` line ~466 (TITANIUM banner)
+
+**NEVER:** Say "3/4 engines" - this is outdated (v12.0). Current is v17.3 with 5 engines.
+
+---
+
+### INVARIANT 4: API Field Paths (Pick Contract v1)
+
+**RULE:** Use correct field paths from API response. Check top-level first, then scoring_breakdown.
+
+**Field Access Pattern:**
+```jsx
+// ✅ CORRECT - Nullish coalescing with fallback
+{(pick.ai_score ?? pick.scoring_breakdown?.ai_score)}
+{(pick.context_score ?? pick.scoring_breakdown?.context_score)}
+```
+
+**Required Top-Level Fields (v17.3):**
+```javascript
+{
+  // Identity
+  pick_id, sport, matchup, home_team, away_team,
+
+  // Timing
+  start_time_et, has_started, is_live,
+
+  // 5 Engine Scores (0-10)
+  ai_score, research_score, esoteric_score, jarvis_score, context_score,
+
+  // Final Score & Tier
+  final_score, tier, units, titanium_triggered,
+
+  // Bet Details
+  pick_type, selection, line, odds_american, book,
+
+  // v17.3 Boosts
+  harmonic_boost,    // 0 or 1.5
+  msrf_boost,        // 0, 0.25, 0.5, or 1.0
+
+  // v17.3 Context Layer
+  context_layer: {
+    def_rank,              // 1-30
+    pace,                  // ~94-106
+    vacuum,                // 0-1
+    officials_adjustment,  // ±0.5
+    park_adjustment        // MLB only
+  }
+}
+```
+
+---
+
+### INVARIANT 5: Badge Display Conditions
+
+**RULE:** Badges MUST only appear when their conditions are met.
+
+| Badge | Condition | Color | Field |
+|-------|-----------|-------|-------|
+| TITANIUM SMASH | `titanium_triggered === true` | Cyan #00FFFF | `pick.titanium_triggered` |
+| JARVIS | `jarvis_active === true` | Gold #FFD700 | `pick.jarvis_active` |
+| HARMONIC | `harmonic_boost > 0` | Purple #A855F7 | `pick.harmonic_boost` |
+| TURN DATE | `msrf_boost > 0` | Gold #EAB308 | `pick.msrf_boost` |
+
+**NEVER:** Hardcode badge visibility or derive from other fields.
+
+---
+
+### INVARIANT 6: Context Layer Expandable
+
+**RULE:** Context Details section only appears when context_layer has real data.
+
+**Condition:**
+```jsx
+{pick.context_layer && (pick.context_layer.def_rank || pick.context_layer.pace || pick.context_layer.vacuum > 0) && (
+  <details>...</details>
+)}
+```
+
+**Color Coding:**
+| Field | Green | Yellow | Red |
+|-------|-------|--------|-----|
+| def_rank | <= 10 | 11-19 | >= 20 |
+| pace | >= 102 | 99-101 | <= 98 |
+| vacuum | > 0 | - | - |
+| officials | > 0 | - | < 0 |
+
+---
+
+## 📋 FRONTEND-BACKEND CONTRACT (v17.3)
+
+### API Response Structure
+
+**Endpoint:** `GET /live/best-bets/{sport}`
+
+```json
+{
+  "sport": "NBA",
+  "date_et": "2026-02-02",
+  "game_picks": {
+    "count": 10,
+    "picks": [
+      {
+        "pick_id": "c39fd3f5b3ed",
+        "sport": "NBA",
+        "matchup": "Houston Rockets @ Indiana Pacers",
+        "home_team": "Indiana Pacers",
+        "away_team": "Houston Rockets",
+
+        "start_time_et": "7:10 PM ET",
+        "has_started": false,
+        "is_live": false,
+
+        "ai_score": 7.19,
+        "research_score": 4.5,
+        "esoteric_score": 4.8,
+        "jarvis_score": 5.0,
+        "context_score": 7.17,
+        "final_score": 9.65,
+
+        "tier": "EDGE_LEAN",
+        "titanium_triggered": false,
+        "units": 1.0,
+
+        "pick_type": "spread",
+        "selection": "Indiana Pacers",
+        "line": 6.5,
+        "odds_american": -104,
+        "book": "LowVig.ag",
+
+        "harmonic_boost": 0.0,
+        "msrf_boost": 0.0,
+
+        "context_layer": {
+          "def_rank": 4,
+          "pace": 101.0,
+          "vacuum": 0.0,
+          "officials_adjustment": 0.0,
+          "park_adjustment": 0.0
+        },
+
+        "signals_fired": ["Sharp Money Detection"],
+        "confidence_label": "HIGH"
+      }
+    ]
+  },
+  "props": {
+    "count": 0,
+    "picks": []
+  }
+}
+```
+
+### Field Availability by Version
+
+| Field | v12.0 | v17.1 | v17.3 |
+|-------|-------|-------|-------|
+| ai_score | ✅ | ✅ | ✅ |
+| research_score | ✅ | ✅ | ✅ |
+| esoteric_score | ✅ | ✅ | ✅ |
+| jarvis_score | ✅ | ✅ | ✅ |
+| context_score | ❌ | ✅ | ✅ |
+| context_layer | ❌ | ❌ | ✅ |
+| harmonic_boost | ❌ | ❌ | ✅ |
+| msrf_boost | ❌ | ❌ | ✅ |
+
+---
+
+## 📚 MASTER FILE INDEX
+
+### Core Display Components
+
+| File | Purpose | Key Lines |
+|------|---------|-----------|
+| `GameSmashList.jsx` | Game picks (spreads, totals, ML) | 662-740: Engine display, badges, context |
+| `PropsSmashList.jsx` | Player props display | 925-1020: Engine display, badges, context |
+| `SmashSpotsPage.jsx` | Container with tabs, tier legend | 65-89: Tier config, 460-470: TITANIUM banner |
+| `BetslipModal.jsx` | Click-to-bet sportsbook selection | Deep links, odds comparison |
+
+### API & Data
+
+| File | Purpose |
+|------|---------|
+| `api.js` | All API calls, auth headers, error handling |
+| `lib/api/client.js` | Base fetch client, auth failure detection |
+| `usePreferences.js` | User preferences hook (favorite sport, etc.) |
+
+### Signal Processing
+
+| File | Purpose |
+|------|---------|
+| `signalEngine.js` | Client-side gematria, moon phase, numerology |
+| `core/frontend_scoring_contract.js` | Tier thresholds, gate definitions |
+
+### Testing
+
+| File | Purpose |
+|------|---------|
+| `test/api.test.js` | API client tests (32 tests) |
+| `test/esoteric.test.js` | Signal engine tests (28 tests) |
+| `test/BetSlip.test.jsx` | Bet slip component tests |
+| `e2e/*.spec.js` | Playwright E2E tests |
+
+---
+
+## 🔴 LESSONS LEARNED (NEVER REPEAT)
+
+### Lesson 1: Missing Engine Display
+**Problem:** Frontend showed only 2 engines (Research, Esoteric) while backend provided 5.
+
+**Root Cause:** Code was written for v10.4 with 2 engines, never updated when backend added more.
+
+**Prevention:**
+- When backend adds new fields, IMMEDIATELY update frontend display
+- Check `docs/FRONTEND_INTEGRATION.md` in backend repo for field mapping
+- Grep for engine display code: `grep -n "research_score\|esoteric_score" *.jsx`
+
+### Lesson 2: Outdated Engine Count in Comments/Legends
+**Problem:** UI said "3/4 engines" when backend uses 5 engines.
+
+**Root Cause:** Comments and legend text weren't updated when Context engine was added.
+
+**Prevention:**
+- Search for engine count references: `grep -rn "3/4\|4 engine\|four engine" .`
+- Update ALL references when engine count changes
+- Keep comments in sync with actual implementation
+
+### Lesson 3: Field Path Mismatches
+**Problem:** Frontend checked `pick.scoring_breakdown?.research_score` but backend provided `pick.research_score` at top level.
+
+**Root Cause:** API response structure changed but frontend wasn't updated.
+
+**Prevention:**
+- Use nullish coalescing: `pick.field ?? pick.scoring_breakdown?.field`
+- Test with actual API response, not assumptions
+- Save API response to file and verify field paths: `curl ... | jq '.picks[0] | keys'`
+
+### Lesson 4: Badge Condition Errors
+**Problem:** Badges appeared when they shouldn't (or didn't appear when they should).
+
+**Root Cause:** Used wrong comparison operators or wrong field names.
+
+**Prevention:**
+- Document exact conditions in comments above badge code
+- Use strict comparisons: `> 0` not `!== 0` for boost fields
+- Test with picks that have both triggered and non-triggered states
+
+### Lesson 5: Color Code Inconsistency
+**Problem:** Context Details showed wrong colors for defense rank.
+
+**Root Cause:** Color logic was inverted (lower rank = better defense, but code showed red).
+
+**Prevention:**
+- Document color meaning in comments: `// Lower rank = better defense = green`
+- Test with edge cases: rank 1, rank 15, rank 30
+- Keep color logic consistent across all components
+
+---
+
+## ✅ VERIFICATION CHECKLIST (Before Deploy)
+
+### 1. Build Check
+```bash
+npm run build
+# Must complete with NO errors
+# Warnings are OK but review them
+```
+
+### 2. Test Suite
+```bash
+npm run test:run
+# All 91 tests must pass
+```
+
+### 3. API Field Verification
+```bash
+# Verify backend returns expected fields
+curl -s "https://web-production-7b2a.up.railway.app/live/best-bets/NBA" \
+  -H "X-API-Key: bookie-prod-2026-xK9mP2nQ7vR4" | \
+  jq '.game_picks.picks[0] | {
+    ai_score, research_score, esoteric_score, jarvis_score, context_score,
+    harmonic_boost, msrf_boost, context_layer
+  }'
+# All fields must be present and non-null
+```
+
+### 4. Visual Verification (Local Dev)
+```bash
+npm run dev
+# Open http://localhost:5173/smash-spots
+```
+
+Check:
+- [ ] All 5 engine scores display (AI, Research, Esoteric, Jarvis, Context)
+- [ ] Tooltips show correct weights on hover
+- [ ] Context Details expands and shows def_rank, pace, vacuum
+- [ ] JARVIS badge appears when `jarvis_active: true`
+- [ ] TITANIUM banner mentions "3/5 engines"
+- [ ] Tier legend shows correct thresholds
+
+### 5. All Sports Check
+```bash
+# Test all 5 sports return data
+for sport in NBA NHL NFL MLB NCAAB; do
+  echo "=== $sport ==="
+  curl -s "https://web-production-7b2a.up.railway.app/live/best-bets/$sport" \
+    -H "X-API-Key: bookie-prod-2026-xK9mP2nQ7vR4" | \
+    jq '{games: .game_picks.count, props: .props.count}'
+done
+```
+
+### 6. Engine Count Grep
+```bash
+# Verify no outdated "3/4" or "4 engine" references
+grep -rn "3/4\|4 engine\|four engine" --include="*.jsx" --include="*.js"
+# Should return EMPTY or only valid references
+```
+
+---
+
+## 🚫 NEVER DO THESE
+
+1. **NEVER** recompute `final_score`, `tier`, or `titanium_triggered` on frontend
+2. **NEVER** display fewer than 5 engines (AI, Research, Esoteric, Jarvis, Context)
+3. **NEVER** say "3/4 engines" or "4 engines" - it's 5 engines since v17.1
+4. **NEVER** hardcode tier thresholds - use backend values
+5. **NEVER** derive badge visibility from score - use explicit boolean fields
+6. **NEVER** assume field paths without checking actual API response
+7. **NEVER** skip the build check before committing
+8. **NEVER** push without verifying all 5 sports return data
+9. **NEVER** update engine display in one file without updating the other (GameSmashList + PropsSmashList)
+10. **NEVER** change color coding without documenting the meaning
+
+---
+
+## 🔧 QUICK REFERENCE
+
+### Engine Weights (v17.3)
+```
+AI:       15%  →  ai_score
+Research: 20%  →  research_score
+Esoteric: 15%  →  esoteric_score
+Jarvis:   10%  →  jarvis_score
+Context:  30%  →  context_score  ← LARGEST
+```
+
+### Tier Thresholds
+```
+TITANIUM_SMASH: final >= 8.0 AND 3/5 engines >= 8.0
+GOLD_STAR:      final >= 7.5 (+ hard gates)
+EDGE_LEAN:      final >= 6.5
+MONITOR:        final >= 5.5 (hidden)
+PASS:           final < 5.5 (hidden)
+```
+
+### Badge Colors
+```
+TITANIUM:  #00FFFF (Cyan)
+GOLD_STAR: #FFD700 (Gold)
+EDGE_LEAN: #10B981 (Green)
+JARVIS:    #FFD700 (Gold)
+HARMONIC:  #A855F7 (Purple)
+TURN DATE: #EAB308 (Gold)
+```
+
+### Context Layer Color Coding
+```
+def_rank:  <= 10 green, 11-19 yellow, >= 20 red (lower = better)
+pace:      >= 102 green, 99-101 neutral, <= 98 red (higher = faster)
+vacuum:    > 0 green (injury opportunity)
+officials: > 0 green (favorable), < 0 red (unfavorable)
+```
