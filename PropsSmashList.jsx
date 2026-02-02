@@ -922,18 +922,23 @@ const PropCard = memo(({ pick }) => {
         padding: '10px 12px',
         marginBottom: '10px'
       }}>
-        <div style={{ display: 'flex', gap: '12px' }}>
-          {/* v10.4: Show Research and Esoteric scores from scoring_breakdown */}
-          {pick.scoring_breakdown?.research_score !== undefined && (
-            <ScoreBadge score={pick.scoring_breakdown.research_score} maxScore={10} label="Research" tooltip="Score from statistical analysis and sharp signals" />
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          {/* v17.3: Show all 5 engine scores - AI (15%), Research (20%), Esoteric (15%), Jarvis (10%), Context (30%) */}
+          {(pick.ai_score ?? pick.scoring_breakdown?.ai_score) !== undefined && (
+            <ScoreBadge score={pick.ai_score ?? pick.scoring_breakdown?.ai_score} maxScore={10} label="AI" tooltip="8 AI models (15% weight)" />
           )}
-          {pick.scoring_breakdown?.esoteric_score !== undefined && (
-            <ScoreBadge score={pick.scoring_breakdown.esoteric_score} maxScore={10} label="Esoteric" tooltip="Score from JARVIS triggers and numerological patterns" />
+          {(pick.research_score ?? pick.scoring_breakdown?.research_score) !== undefined && (
+            <ScoreBadge score={pick.research_score ?? pick.scoring_breakdown?.research_score} maxScore={10} label="Research" tooltip="Sharp money, line variance, public fade (20% weight)" />
           )}
-          {/* Fallback to legacy scores if v10.4 breakdown not available */}
-          {!pick.scoring_breakdown && pick.ai_score !== undefined && <ScoreBadge score={pick.ai_score} maxScore={8} label="AI" tooltip={METRIC_TOOLTIPS.aiScore} />}
-          {!pick.scoring_breakdown && pick.pillar_score !== undefined && <ScoreBadge score={pick.pillar_score} maxScore={8} label="Pillars" tooltip={METRIC_TOOLTIPS.pillarsScore} />}
-          {!pick.scoring_breakdown && pick.total_score !== undefined && <ScoreBadge score={pick.total_score} maxScore={20} label="Total" tooltip={METRIC_TOOLTIPS.totalScore} />}
+          {(pick.esoteric_score ?? pick.scoring_breakdown?.esoteric_score) !== undefined && (
+            <ScoreBadge score={pick.esoteric_score ?? pick.scoring_breakdown?.esoteric_score} maxScore={10} label="Esoteric" tooltip="Numerology, astro, fibonacci (15% weight)" />
+          )}
+          {(pick.jarvis_score ?? pick.scoring_breakdown?.jarvis_score) !== undefined && (
+            <ScoreBadge score={pick.jarvis_score ?? pick.scoring_breakdown?.jarvis_score} maxScore={10} label="Jarvis" tooltip="Gematria triggers (10% weight)" />
+          )}
+          {(pick.context_score ?? pick.scoring_breakdown?.context_score) !== undefined && (
+            <ScoreBadge score={pick.context_score ?? pick.scoring_breakdown?.context_score} maxScore={10} label="Context" tooltip="Defense rank, pace, injury vacuum (30% weight)" />
+          )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           {pick.edge && (
@@ -960,9 +965,102 @@ const PropCard = memo(({ pick }) => {
               ⚡ JARVIS
             </div>
           )}
+          {/* v17.3: Harmonic Convergence - when Research AND Esoteric both >= 7.5 */}
+          {pick.harmonic_boost > 0 && (
+            <div style={{
+              backgroundColor: 'rgba(147, 51, 234, 0.2)',
+              padding: '4px 8px',
+              borderRadius: '4px',
+              fontSize: '10px',
+              color: '#A855F7',
+              fontWeight: 'bold',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}>
+              HARMONIC
+            </div>
+          )}
+          {/* v17.3: MSRF Turn Date Resonance */}
+          {pick.msrf_boost > 0 && (
+            <div style={{
+              backgroundColor: 'rgba(234, 179, 8, 0.2)',
+              padding: '4px 8px',
+              borderRadius: '4px',
+              fontSize: '10px',
+              color: '#EAB308',
+              fontWeight: 'bold',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}>
+              TURN DATE
+            </div>
+          )}
           <LineMovement pick={pick} />
         </div>
       </div>
+
+      {/* v17.3: Context Layer Details (expandable) */}
+      {pick.context_layer && (pick.context_layer.def_rank || pick.context_layer.pace || pick.context_layer.vacuum > 0) && (
+        <details style={{ marginBottom: '8px' }}>
+          <summary style={{
+            color: '#A855F7',
+            fontSize: '11px',
+            cursor: 'pointer',
+            padding: '4px 0',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px'
+          }}>
+            Context Details
+          </summary>
+          <div style={{
+            backgroundColor: '#0a0a14',
+            borderRadius: '6px',
+            padding: '8px 12px',
+            marginTop: '4px',
+            fontSize: '11px',
+            color: '#9CA3AF'
+          }}>
+            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+              {pick.context_layer.def_rank && (
+                <div>
+                  <span style={{ color: '#6B7280' }}>vs #</span>
+                  <span style={{ color: pick.context_layer.def_rank <= 10 ? '#10B981' : pick.context_layer.def_rank >= 20 ? '#EF4444' : '#F59E0B' }}>
+                    {pick.context_layer.def_rank}
+                  </span>
+                  <span style={{ color: '#6B7280' }}> Defense</span>
+                </div>
+              )}
+              {pick.context_layer.pace && (
+                <div>
+                  <span style={{ color: '#6B7280' }}>Pace: </span>
+                  <span style={{ color: pick.context_layer.pace >= 102 ? '#10B981' : pick.context_layer.pace <= 98 ? '#EF4444' : '#9CA3AF' }}>
+                    {pick.context_layer.pace.toFixed(1)}
+                  </span>
+                </div>
+              )}
+              {pick.context_layer.vacuum > 0 && (
+                <div>
+                  <span style={{ color: '#6B7280' }}>Vacuum: </span>
+                  <span style={{ color: '#10B981' }}>
+                    {(pick.context_layer.vacuum * 100).toFixed(0)}%
+                  </span>
+                </div>
+              )}
+              {pick.context_layer.officials_adjustment !== 0 && (
+                <div>
+                  <span style={{ color: '#6B7280' }}>Refs: </span>
+                  <span style={{ color: pick.context_layer.officials_adjustment > 0 ? '#10B981' : '#EF4444' }}>
+                    {pick.context_layer.officials_adjustment > 0 ? '+' : ''}{pick.context_layer.officials_adjustment.toFixed(2)}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        </details>
+      )}
 
       {/* TERTIARY: Key stats - only show if backend provides real data */}
       {hasKeyStats && (

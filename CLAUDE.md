@@ -81,7 +81,12 @@ Backend `tiering.py` is the single source of truth. Frontend uses backend fields
 **v12.0 Changes:**
 - TITANIUM requires both final_score ≥ 8.0 AND 3/4 engines ≥ 6.5 (meaningful contribution)
 - Community filter: Only picks ≥ 6.5 shown to community
-- Engine scores: ai_score, research_score, esoteric_score, jarvis_score (all 0-10)
+- Engine scores (5 engines, all 0-10):
+  - ai_score (15% weight) - 8 AI models
+  - research_score (20% weight) - Sharp money, line variance, public fade
+  - esoteric_score (15% weight) - Numerology, astro, fibonacci
+  - jarvis_score (10% weight) - Gematria triggers
+  - context_score (30% weight) - Defense rank, pace, injury vacuum (NEW v17.3)
 
 **Frontend behavior:**
 - Uses backend `pick.tier` and `pick.units` fields (source of truth)
@@ -1323,3 +1328,34 @@ export const safeJson = async (response) => {
 
 **Build:** No warnings, clean output
 **Tests:** 91 tests passing
+
+---
+
+### Session: February 2026 (v17.3 5-Engine Display)
+
+**Completed in this session:**
+1. Added all 5 engine scores to pick cards (AI, Research, Esoteric, Jarvis, Context)
+2. Added Harmonic Convergence badge (purple) when Research + Esoteric both >= 7.5
+3. Added MSRF Turn Date badge (gold) when turn date resonance detected
+4. Added Context Layer expandable details (defense rank, pace, vacuum, officials)
+5. Updated tier legend to reflect 3/5 engines for Titanium
+
+**Files modified:**
+- `GameSmashList.jsx` - Added 5 engine display, Harmonic/MSRF badges, Context details
+- `PropsSmashList.jsx` - Added 5 engine display, Harmonic/MSRF badges, Context details
+- `SmashSpotsPage.jsx` - Updated tier comments and legend for 5 engines
+- `CLAUDE.md` - Updated engine documentation
+
+**Engine Display:**
+```jsx
+// All 5 engines now shown with weights in tooltips
+AI (15%) | Research (20%) | Esoteric (15%) | Jarvis (10%) | Context (30%)
+```
+
+**New Visual Elements:**
+- Context score badge with "Defense rank, pace, injury vacuum" tooltip
+- Purple HARMONIC badge when `harmonic_boost > 0`
+- Gold TURN DATE badge when `msrf_boost > 0`
+- Expandable "Context Details" section showing def_rank, pace, vacuum, officials
+
+**Build:** No warnings, clean output
