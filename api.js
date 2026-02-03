@@ -113,6 +113,24 @@ export const api = {
     return safeJson(await apiFetch(`${API_BASE_URL}/scheduler/status`));
   },
 
+  // Daily learning lesson (authenticated)
+  async getDailyLesson(daysBack = 0) {
+    const url = `${API_BASE_URL}/live/grader/daily-lesson?days_back=${daysBack}`;
+    const resp = await authFetch(url);
+    let data = await safeJson(resp);
+
+    // Fallback to yesterday if today's lesson not ready yet
+    if (!data && daysBack === 0) {
+      const fallback = await authFetch(`${API_BASE_URL}/live/grader/daily-lesson?days_back=1`);
+      data = await safeJson(fallback);
+    }
+
+    if (!data) {
+      return { error: { status: resp.status } };
+    }
+    return data;
+  },
+
   // ============================================================================
   // CLICK-TO-BET / SPORTSBOOK INTEGRATION
   // ============================================================================

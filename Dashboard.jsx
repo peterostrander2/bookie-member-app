@@ -60,6 +60,9 @@ const Dashboard = () => {
   const [sharpAlert, setSharpAlert] = useState(null);
   const [significantInjuries, setSignificantInjuries] = useState([]);
   const [recentWins, setRecentWins] = useState([]);
+  const [dailyLesson, setDailyLesson] = useState(null);
+  const [dailyLessonLoading, setDailyLessonLoading] = useState(true);
+  const [dailyLessonError, setDailyLessonError] = useState(null);
 
   // Progressive disclosure state
   const [showGettingStarted, setShowGettingStarted] = useState(!hasVisitedBefore());
@@ -258,15 +261,24 @@ const Dashboard = () => {
   };
 
   const fetchData = async () => {
+    setDailyLessonLoading(true);
+    setDailyLessonError(null);
     try {
-      const [healthData, energyData, injuryData] = await Promise.all([
+      const [healthData, energyData, injuryData, lessonData] = await Promise.all([
         api.getHealth().catch(() => ({ status: 'offline' })),
         api.getTodayEnergy().catch(() => null),
-        api.getInjuries(activeSport).catch(() => null)
+        api.getInjuries(activeSport).catch(() => null),
+        api.getDailyLesson().catch(() => null)
       ]);
       setHealth(healthData);
       setTodayEnergy(energyData);
       setLastUpdated(new Date());
+      if (lessonData?.error) {
+        setDailyLesson(null);
+        setDailyLessonError(lessonData.error);
+      } else {
+        setDailyLesson(lessonData);
+      }
 
       // Process significant injuries (high impact only)
       if (injuryData && Array.isArray(injuryData)) {
@@ -291,6 +303,7 @@ const Dashboard = () => {
     } catch (err) {
       console.error(err);
     }
+    setDailyLessonLoading(false);
     setLoading(false);
   };
 
@@ -439,6 +452,51 @@ const Dashboard = () => {
             </div>
           </div>
         )}
+
+        {/* Daily Lesson */}
+        <div style={{
+          backgroundColor: '#111827',
+          borderRadius: '14px',
+          padding: '18px 20px',
+          marginBottom: '20px',
+          border: '1px solid #1f2937'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '20px' }}>🧠</span>
+              <div>
+                <div style={{ color: '#E5E7EB', fontWeight: 'bold', fontSize: '14px' }}>Daily Lesson</div>
+                <div style={{ color: '#9CA3AF', fontSize: '11px' }}>
+                  Auto-graded at 6:00 AM ET
+                </div>
+              </div>
+            </div>
+            {dailyLesson?.date_et && (
+              <div style={{ color: '#9CA3AF', fontSize: '11px' }}>{dailyLesson.date_et}</div>
+            )}
+          </div>
+
+          {dailyLessonLoading ? (
+            <div>
+              <Skeleton width="70%" height={14} style={{ marginBottom: '8px' }} />
+              <Skeleton width="60%" height={14} />
+            </div>
+          ) : dailyLesson?.bullets?.length ? (
+            <ul style={{ margin: 0, paddingLeft: '18px', color: '#D1D5DB', fontSize: '13px', lineHeight: 1.6 }}>
+              {dailyLesson.bullets.map((line, idx) => (
+                <li key={idx}>{line}</li>
+              ))}
+            </ul>
+          ) : dailyLessonError ? (
+            <div style={{ color: '#F59E0B', fontSize: '12px' }}>
+              Lesson not available yet. Check back after 6:00 AM ET.
+            </div>
+          ) : (
+            <div style={{ color: '#9CA3AF', fontSize: '12px' }}>
+              No lesson available yet. The learning loop will post after grading.
+            </div>
+          )}
+        </div>
 
         {/* Today's Top Pick CTA */}
         <div style={{
