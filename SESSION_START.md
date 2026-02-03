@@ -15,6 +15,18 @@ node scripts/validate_no_frontend_literals.mjs
 node scripts/validate_no_eval.mjs
 ```
 
+## Session Hygiene (Prevent Context Limits)
+
+**Commit frequently to avoid hitting Claude Code context limits:**
+```bash
+# Every 30-60 minutes during long sessions
+./scripts/checkpoint_commit.sh
+```
+
+When you see "Conversation compacted" warnings, checkpoint immediately.
+
+See `docs/SESSION_HYGIENE.md` for full guide.
+
 ## Common tasks
 
 - Fix API errors: ensure `VITE_API_BASE_URL` + `VITE_BOOKIE_API_KEY` are set.

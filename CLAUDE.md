@@ -1811,9 +1811,29 @@ officials: > 0 green (favorable), < 0 red (unfavorable)
 
 ---
 
+## Session Management
+
+**To prevent Claude Code context limit errors:**
+
+1. Checkpoint commit every 30-60 minutes:
+```bash
+   ./scripts/checkpoint_commit.sh
+```
+
+2. Use `/compact` in Claude Code when you see:
+   - "Conversation compacted" messages
+   - Slower responses
+   - Large repeated file reads
+
+3. Split large refactors across multiple sessions
+
+See `docs/SESSION_HYGIENE.md` for complete guide.
+
+---
+
 ## 🧠 DAILY LEARNING LOOP (Dashboard)
 
-**Invariant:** The dashboard must surface the backend’s daily lesson after the 6:00 AM ET audit.
+**Invariant:** The dashboard must surface the backend's daily lesson after the 6:00 AM ET audit.
 
 ### API Endpoint
 - `GET /live/grader/daily-lesson`
