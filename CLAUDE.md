@@ -1808,3 +1808,22 @@ pace:      >= 102 green, 99-101 neutral, <= 98 red (higher = faster)
 vacuum:    > 0 green (injury opportunity)
 officials: > 0 green (favorable), < 0 red (unfavorable)
 ```
+
+---
+
+## 🧠 DAILY LEARNING LOOP (Dashboard)
+
+**Invariant:** The dashboard must surface the backend’s daily lesson after the 6:00 AM ET audit.
+
+### API Endpoint
+- `GET /live/grader/daily-lesson`
+- `GET /live/grader/daily-lesson/latest`
+- `GET /live/grader/daily-lesson?days_back=1`
+
+### UI Behavior
+- Show lesson bullets when available.
+- Before 6 AM ET: show “not available yet” state.
+- If missing: show empty state (never crash).
+
+### Source of truth
+- Backend writes lessons to `/data/grader_data/audit_logs/lesson_YYYY-MM-DD.json`

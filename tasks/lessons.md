@@ -107,6 +107,19 @@ const data = await safeJson(response) || [];
 
 ---
 
+### 5. Daily Lesson Must Be Visible (Feb 2026)
+
+**The problem:**
+- Autograder learned daily, but the frontend didn’t surface a daily lesson to users.
+
+**The fix:**
+- Added a Daily Lesson card on the dashboard.
+- Pulls from `/live/grader/daily-lesson` (fallback to yesterday if today isn’t ready).
+
+**Lesson:** The learning loop is only complete if the user can see the daily lesson.
+
+---
+
 ## React/Vite Patterns
 
 ### Import Organization

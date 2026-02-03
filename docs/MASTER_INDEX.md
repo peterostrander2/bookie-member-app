@@ -118,6 +118,18 @@ npm test
 
 ---
 
+## Daily Learning Loop (Frontend)
+
+- **Dashboard card** pulls from: `GET /live/grader/daily-lesson`
+- Endpoint also supports:
+  - `/live/grader/daily-lesson/latest`
+  - `/live/grader/daily-lesson?days_back=1`
+- Expected behavior:
+  - Before 6 AM ET: show “not available yet”
+  - After 6 AM ET: show bullets for the day
+
+---
+
 ## Golden Command Sequence
 
 ```bash
