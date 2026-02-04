@@ -706,7 +706,7 @@ const PickCard = memo(({ pick, injuries = [] }) => {
               ⚡ JARVIS
             </div>
           )}
-          {/* v17.3: Harmonic Convergence - when Research AND Esoteric both >= 7.5 */}
+          {/* v17.3: Harmonic Convergence - when Research AND Esoteric both >= GOLD_STAR_THRESHOLD */}
           {pick.harmonic_boost > 0 && (
             <div style={{
               backgroundColor: 'rgba(147, 51, 234, 0.2)',

@@ -84,7 +84,7 @@ const TIER_CONFIG = {
 // v12.0 Tier display for legend (TITANIUM is visually dominant)
 // Only show tiers at community threshold
 const CONFIDENCE_TIERS = [
-  { label: 'TITANIUM', color: '#00FFFF', range: `≥${TITANIUM_THRESHOLD} + 3/5 engines ≥8.0`, tier: TIERS.TITANIUM_SMASH, prominent: true },
+  { label: 'TITANIUM', color: '#00FFFF', range: `≥${TITANIUM_THRESHOLD} + 3/5 engines ≥${TITANIUM_THRESHOLD}`, tier: TIERS.TITANIUM_SMASH, prominent: true },
   { label: 'GOLD STAR', color: '#FFD700', range: `≥${GOLD_STAR_THRESHOLD}`, tier: TIERS.GOLD_STAR },
   { label: 'EDGE LEAN', color: '#10B981', range: `≥${MIN_FINAL_SCORE}`, tier: TIERS.EDGE_LEAN }
 ];
