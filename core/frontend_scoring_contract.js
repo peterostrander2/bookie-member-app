@@ -6,10 +6,22 @@
  */
 
 export const ENGINE_WEIGHTS = {
-  ai: 0.25,
-  research: 0.30,
-  esoteric: 0.20,
-  jarvis: 0.15,
+  ai: 0.25,        // 25%
+  research: 0.35,  // 35% - LARGEST
+  esoteric: 0.20,  // 20%
+  jarvis: 0.20,    // 20%
+};
+
+// Context is NOT a weighted engine - it's a bounded modifier
+export const CONTEXT_MODIFIER_CAP = 0.35;  // ±0.35
+
+// Boost caps (for display/validation)
+export const BOOST_CAPS = {
+  confluence: 1.5,      // CONFLUENCE_BOOST_CAP
+  msrf: 1.0,           // MSRF_BOOST_CAP
+  jason_sim: 0.5,      // JASON_SIM_BOOST_CAP (can be negative)
+  serp: 0.5,           // SERP_BOOST_CAP_TOTAL
+  ensemble: 0.5,       // ENSEMBLE_ADJUSTMENT_STEP
 };
 
 export const MONITOR_THRESHOLD = 5.5;

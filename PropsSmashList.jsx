@@ -24,6 +24,10 @@ import {
   GOLD_STAR_GATES,
   TIERS
 } from './core/frontend_scoring_contract';
+import BoostBreakdownPanel from './components/BoostBreakdownPanel';
+import StatusBadgeRow from './components/StatusBadgeRow';
+import GlitchSignalsPanel from './components/GlitchSignalsPanel';
+import EsotericContributionsPanel from './components/EsotericContributionsPanel';
 
 // Helper to format time ago from ISO timestamp
 const formatTimeAgo = (isoTimestamp) => {
@@ -1001,6 +1005,9 @@ const PropCard = memo(({ pick }) => {
         </div>
       </div>
 
+      {/* v20.5: Status Badge Row - MSRF Level, SERP, Jason, ML badges */}
+      <StatusBadgeRow pick={pick} />
+
       {/* v17.3: Context Layer Details (expandable) */}
       {pick.context_layer && (pick.context_layer.def_rank || pick.context_layer.pace || pick.context_layer.vacuum > 0) && (
         <details style={{ marginBottom: '8px' }}>
@@ -1061,6 +1068,15 @@ const PropCard = memo(({ pick }) => {
           </div>
         </details>
       )}
+
+      {/* v20.5: Score Breakdown Panel - shows all boost fields */}
+      <BoostBreakdownPanel pick={pick} />
+
+      {/* v20.5: GLITCH Protocol Signals */}
+      <GlitchSignalsPanel pick={pick} />
+
+      {/* v20.5: Esoteric Contributions by category */}
+      <EsotericContributionsPanel pick={pick} />
 
       {/* TERTIARY: Key stats - only show if backend provides real data */}
       {hasKeyStats && (

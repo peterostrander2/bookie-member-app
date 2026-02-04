@@ -1,108 +1,146 @@
 # Handoff Document — Bookie Member App
 
-**Session:** January 2026
-**Branch:** `claude/review-claude-md-AbZ7i`
-**Status:** Ready for PR
+**Session:** February 2026
+**Status:** Completed - Build Fixes + Auth Hardening
 
 ---
 
 ## Summary
 
-This session upgraded the project to React 19, added AI/validation dependencies, and established React development best practices documentation.
+This session fixed Vite build warnings, added auth hardening to prevent console spam from failed requests, and improved JSON parsing safety across all API methods.
 
 ---
 
 ## What Changed
 
-### 1. React 19 Upgrade
+### 1. Fixed Mixed Static/Dynamic Import Warnings
 
-**Before:** React 18.3.1
-**After:** React 19.2.3
+**Problem:** Vite warned about mixing static and dynamic imports for `Gamification.jsx`
 
-```bash
-# Upgraded packages
-react: 18.3.1 → 19.2.3
-react-dom: 18.2.0 → 19.2.3
-@testing-library/react: 14.1.0 → 16.x
+**Solution:** Extracted context/provider/hooks to `GamificationContext.jsx`
+
+```
+Before: Gamification.jsx (page + context + hooks all in one file)
+After:  GamificationContext.jsx (context, provider, hooks)
+        Gamification.jsx (page component only)
 ```
 
-**Why:** Required for `@json-render/react` which has a peer dependency on React 19.
-
-**Verification:** All 91 tests pass.
+**Why:** React.lazy() can only code-split the page component if context is imported separately.
 
 ---
 
-### 2. New Dependencies
+### 2. Production-Only Service Worker
 
-| Package | Version | Purpose |
-|---------|---------|---------|
-| `react` | 19.2.3 | UI framework (upgraded) |
-| `react-dom` | 19.2.3 | React DOM renderer (upgraded) |
-| `zod` | 4.3.5 | Runtime schema validation |
-| `ai` | 6.0.39 | Vercel AI SDK for AI integrations |
-| `@json-render/core` | 0.2.0 | JSON-to-UI rendering engine |
-| `@json-render/react` | 0.2.0 | React bindings for json-render |
+**Before:** Service worker registered on all environments (caused dev issues)
+**After:** Only registers when `import.meta.env.PROD` is true
 
-**Install command used:**
-```bash
-npm install react@19 react-dom@19 @testing-library/react@latest
-npm install zod ai @json-render/core @json-render/react
+```html
+<!-- index.html -->
+<script type="module">
+  if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js');
+  }
+</script>
 ```
 
 ---
 
-### 3. React Best Practices Documentation
+### 3. Vite React Deduplication
 
-Created `.claude/REACT_GUIDELINES.md` with Vite + React specific guidelines:
+Added to `vite.config.js`:
+```javascript
+resolve: {
+  dedupe: ['react', 'react-dom'],
+},
+```
 
-**Key sections:**
-- Component boundaries (small, focused, local state preferred)
-- Data fetching (centralized, avoid useEffect chains)
-- Performance + bundle size (memoization, code splitting)
-- Rendering correctness (avoid derived state, unnecessary effects)
-- Vite-specific defaults (`import.meta.env`, dynamic imports)
-- Performance audit priority checklist
-
-**Why:** The original guidelines were Next.js-focused (Server Components, RSC). This project uses Vite + React, so a tailored version was needed.
+**Why:** Prevents multiple React instances when dependencies have React as peer dep.
 
 ---
 
-### 4. Vercel Agent Skills
+### 4. Fail-Fast Auth Protection
 
-Installed from `vercel-labs/agent-skills`:
+**Problem:** 403 errors flooding console when API key invalid/missing
 
+**Solution:** Added auth state tracking in `lib/api/client.js`:
+
+```javascript
+let authInvalid = false;
+const authListeners = new Set();
+
+export const isAuthInvalid = () => authInvalid;
+export const onAuthInvalid = (callback) => {
+  authListeners.add(callback);
+  return () => authListeners.delete(callback);
+};
+
+const setAuthInvalid = () => {
+  if (authInvalid) return;
+  authInvalid = true;
+  authListeners.forEach(cb => cb());
+};
 ```
-.claude/skills/
-├── react-best-practices/    # 45 rules across 8 categories
-│   ├── SKILL.md             # Quick reference
-│   ├── AGENTS.md            # Full compiled guide (65KB)
-│   └── rules/               # Individual rule files
-└── web-design-guidelines/   # Web design patterns
-```
 
-**Rule categories:**
-| Priority | Category | Impact | Applies to Vite? |
-|----------|----------|--------|------------------|
-| 1 | Eliminating Waterfalls | CRITICAL | ✅ Yes |
-| 2 | Bundle Size Optimization | CRITICAL | ✅ Yes |
-| 3 | Server-Side Performance | HIGH | ❌ Next.js only |
-| 4 | Client-Side Data Fetching | MEDIUM-HIGH | ✅ Yes |
-| 5 | Re-render Optimization | MEDIUM | ✅ Yes |
-| 6 | Rendering Performance | MEDIUM | ✅ Yes |
-| 7 | JavaScript Performance | LOW-MEDIUM | ✅ Yes |
-| 8 | Advanced Patterns | LOW | ✅ Yes |
+**Behavior:**
+- On 400/401/403 response, `authInvalid` flag is set
+- All polling components subscribe to `onAuthInvalid()`
+- When flag triggers, polling stops immediately
+- `AuthInvalidBanner` component shows user-facing message
 
 ---
 
-### 5. Updated CLAUDE.md
+### 5. Safe JSON Parsing
 
-Changes to the main project documentation:
+**Problem:** "Unexpected token <" errors when backend returns HTML error pages
 
-1. **Stack section** — Updated from React 18 to React 19
-2. **Key Dependencies table** — Added all new packages
-3. **React Best Practices section** — References the new guidelines
-4. **File Structure** — Added `.claude/` directory
-5. **Session History** — Documented this session
+**Solution:** Added `safeJson()` helper:
+
+```javascript
+export const safeJson = async (response) => {
+  if (!response.ok) return null;
+  try {
+    const text = await response.text();
+    return text ? JSON.parse(text) : null;
+  } catch { return null; }
+};
+```
+
+**Updated in `api.js`:**
+- ALL `.json()` calls replaced with `safeJson()` + fallback defaults
+- Every method returns graceful defaults: `[]`, `{}`, or `null`
+
+---
+
+### 6. React Router v7 Future Flags
+
+Added to `App.jsx` BrowserRouter:
+```javascript
+<BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+```
+
+**Why:** Prepares for React Router v7 migration, silences deprecation warnings.
+
+---
+
+### 7. PWA Enhancement
+
+Added to `index.html`:
+```html
+<meta name="mobile-web-app-capable" content="yes" />
+```
+
+---
+
+### 8. usePreferences Hook Simplification
+
+Shortened API:
+```javascript
+// Before
+const { preferences, updatePreference, updatePreferences, resetPreferences } = usePreferences();
+
+// After (backward compatible aliases kept)
+const { prefs, updatePref, updatePrefs, reset, loading } = usePreferences();
+```
 
 ---
 
@@ -110,9 +148,8 @@ Changes to the main project documentation:
 
 | File | Description |
 |------|-------------|
-| `.claude/REACT_GUIDELINES.md` | Vite + React best practices (77 lines) |
-| `.claude/skills/react-best-practices/*` | 45 Vercel React rules (54 files) |
-| `.claude/skills/web-design-guidelines/*` | Web design patterns |
+| `GamificationContext.jsx` | Context, provider, hooks extracted from Gamification.jsx |
+| `.env.local` | Local environment configuration |
 
 ---
 
@@ -120,107 +157,41 @@ Changes to the main project documentation:
 
 | File | Changes |
 |------|---------|
-| `package.json` | Added dependencies, updated React versions |
-| `package-lock.json` | Lock file updated |
-| `CLAUDE.md` | Stack, dependencies, file structure, session history |
-
----
-
-## Commits
-
-```
-1ed9fb6 Update CLAUDE.md with React 19 and new dependencies
-86e2c5b Upgrade to React 19 and add AI dependencies
-c13b57a Add Vite + React specific guidelines
-866a188 Add Vercel React best practices agent skills
-```
+| `App.jsx` | Static analytics import, AuthInvalidBanner, v7 future flags |
+| `Gamification.jsx` | Now page component only |
+| `Grading.jsx` | Import from GamificationContext |
+| `index.html` | Production-only SW, mobile-web-app-capable |
+| `vite.config.js` | resolve.dedupe for React |
+| `lib/api/client.js` | Auth state tracking, safeJson helper |
+| `api.js` | All methods use safeJson + fallback defaults |
+| `usePreferences.js` | Shortened API, loading state |
+| `SignalNotifications.jsx` | API key guard, auth subscription |
+| `SystemHealthPanel.jsx` | API key guard, auth subscription |
+| `SmashSpotsPage.jsx` | API key guard for auto-refresh |
+| `CLAUDE.md` | Session history documented |
 
 ---
 
 ## Testing
 
 ```bash
-npm run test:run
-# ✓ test/api.test.js (32 tests)
-# ✓ test/esoteric.test.js (28 tests)
-# ✓ test/BetSlip.test.jsx (11 tests)
-# ✓ test/ParlayBuilder.test.jsx (12 tests)
-# ✓ test/BetHistory.test.jsx (8 tests)
-#
-# Test Files  5 passed (5)
-#      Tests  91 passed (91)
+npm run dev
+# No build warnings ✓
+# Auth errors don't flood console ✓
+# JSON parse errors handled gracefully ✓
 ```
 
-**Note:** Some `act()` warnings appear but don't affect test results. These are React 19 strictness improvements.
+**Tests:** 91 tests passing
 
 ---
 
-## How to Use the New Packages
+## Environment Variables
 
-### Zod — Schema Validation
-```javascript
-import { z } from 'zod';
-
-const BetSchema = z.object({
-  player: z.string(),
-  line: z.number(),
-  odds: z.number(),
-  confidence: z.number().min(0).max(100),
-});
-
-// Validate API response
-const validated = BetSchema.parse(apiResponse);
+```bash
+# .env.local
+VITE_BOOKIE_API_KEY=bookie-prod-2026-xK9mP2nQ7vR4
+VITE_API_BASE_URL=https://web-production-7b2a.up.railway.app
 ```
-
-### Vercel AI SDK
-```javascript
-import { generateText } from 'ai';
-
-const result = await generateText({
-  model: openai('gpt-4'),
-  prompt: 'Analyze this betting matchup...',
-});
-```
-
-### JSON Render
-```javascript
-import { JsonRender } from '@json-render/react';
-
-const schema = {
-  type: 'card',
-  title: 'Pick of the Day',
-  children: [...]
-};
-
-<JsonRender schema={schema} />
-```
-
----
-
-## PR Checklist
-
-- [x] React 19 upgrade complete
-- [x] All 91 tests passing
-- [x] Dependencies installed and locked
-- [x] Documentation updated (CLAUDE.md)
-- [x] Best practices guidelines created
-- [x] Vercel skills installed
-- [x] All changes committed and pushed
-
----
-
-## Create PR
-
-https://github.com/peterostrander2/bookie-member-app/pull/new/claude/review-claude-md-AbZ7i
-
----
-
-## Next Steps (Optional)
-
-1. **Use Zod** — Add schema validation to API responses in `api.js`
-2. **Use AI SDK** — Build AI-powered features (chat, analysis)
-3. **Use JSON Render** — Dynamic UI from backend-driven schemas
-4. **Apply Vercel rules** — Run performance audit using `.claude/skills/react-best-practices/`
 
 ---
 
@@ -240,11 +211,43 @@ npm run build
 npm run build:analyze
 ```
 
-**Current versions:**
+---
+
+## Key Patterns Reference
+
+### Auth Guard Pattern (for polling components)
+```javascript
+const apiKey = import.meta.env.VITE_BOOKIE_API_KEY;
+
+useEffect(() => {
+  if (!apiKey || isAuthInvalid()) return;
+
+  const interval = setInterval(fetchData, 30000);
+  const unsubscribe = onAuthInvalid(() => clearInterval(interval));
+
+  return () => {
+    clearInterval(interval);
+    unsubscribe();
+  };
+}, []);
 ```
-react: 19.2.3
-zod: 4.3.5
-ai: 6.0.39
-@json-render/core: 0.2.0
-@json-render/react: 0.2.0
+
+### Safe JSON Pattern (for API methods)
+```javascript
+export const getSomeData = async () => {
+  const response = await authFetch(buildUrl('/endpoint'));
+  return await safeJson(response) || { default: 'value' };
+};
 ```
+
+---
+
+## Previous Session (January 2026)
+
+The previous session (`claude/review-claude-md-AbZ7i`) covered:
+- React 18 → React 19 upgrade
+- Vercel AI SDK, Zod, json-render dependencies
+- React best practices documentation
+- Vercel agent skills installation
+
+See `CLAUDE.md` Session History for full details.

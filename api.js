@@ -251,7 +251,28 @@ export const api = {
       player_name: item.player_name || item.player,
       side: item.side,
       stat_type: item.stat_type || item.market?.replace('player_', ''),
-      selection: item.selection || item.side || item.team || item.player_name || item.player || ''
+      selection: item.selection || item.side || item.team || item.player_name || item.player || '',
+
+      // v20.5: Pass through boost fields (Option A formula)
+      base_4_score: item.base_4_score,
+      context_modifier: item.context_modifier,
+      confluence_boost: item.confluence_boost ?? 0,
+      msrf_boost: item.msrf_boost ?? 0,
+      jason_sim_boost: item.jason_sim_boost ?? 0,
+      serp_boost: item.serp_boost ?? 0,
+      ensemble_adjustment: item.ensemble_adjustment ?? 0,
+      live_adjustment: item.live_adjustment ?? 0,
+
+      // v20.5: Pass through status fields
+      msrf_status: item.msrf_status,
+      serp_status: item.serp_status,
+      jason_status: item.jason_status,
+      msrf_metadata: item.msrf_metadata,
+      serp_shadow_mode: item.serp_shadow_mode ?? false,
+
+      // v20.5: Pass through signal dicts
+      glitch_signals: item.glitch_signals ?? {},
+      esoteric_contributions: item.esoteric_contributions ?? {},
     });
 
     // Helper to extract array from various response formats
