@@ -81,12 +81,12 @@ Backend `tiering.py` is the single source of truth. Frontend uses backend fields
 **v12.0 Changes:**
 - TITANIUM requires both final_score ≥ 8.0 AND 3/4 engines ≥ 6.5 (meaningful contribution)
 - Community filter: Only picks ≥ 6.5 shown to community
-- Engine scores (5 engines, all 0-10):
-  - ai_score (15% weight) - 8 AI models
-  - research_score (20% weight) - Sharp money, line variance, public fade
-  - esoteric_score (15% weight) - Numerology, astro, fibonacci
-  - jarvis_score (10% weight) - Gematria triggers
-  - context_score (30% weight) - Defense rank, pace, injury vacuum (NEW v17.3)
+- Engine scores (Option A: 4 weighted engines + context modifier, all 0-10):
+  - ai_score (25% weight) - 8 AI models
+  - research_score (35% weight) - Sharp money, line variance, public fade
+  - esoteric_score (20% weight) - Numerology, astro, fibonacci
+  - jarvis_score (20% weight) - Gematria triggers
+  - context_score (modifier ±0.35 cap) - Defense rank, pace, injury vacuum
 
 **Frontend behavior:**
 - Uses backend `pick.tier` and `pick.units` fields (source of truth)
@@ -1346,10 +1346,10 @@ export const safeJson = async (response) => {
 - `SmashSpotsPage.jsx` - Updated tier comments and legend for 5 engines
 - `CLAUDE.md` - Updated engine documentation
 
-**Engine Display:**
+**Engine Display (Option A):**
 ```jsx
-// All 5 engines now shown with weights in tooltips
-AI (15%) | Research (20%) | Esoteric (15%) | Jarvis (10%) | Context (30%)
+// 4 weighted engines + context modifier shown with tooltips
+AI (25%) | Research (35%) | Esoteric (20%) | Jarvis (20%) | Context (±0.35 modifier)
 ```
 
 **New Visual Elements:**
@@ -1393,24 +1393,24 @@ const tier = score >= 7.5 ? 'GOLD_STAR' : 'EDGE_LEAN';
 
 ---
 
-### INVARIANT 2: 5-Engine Display (v17.3)
+### INVARIANT 2: Option A Engine Display
 
-**RULE:** All pick cards MUST display all 5 engine scores with correct weights.
+**RULE:** All pick cards MUST display all 4 engine scores + context modifier with correct weights.
 
-**Engine Weights (MUST match backend):**
+**Engine Weights (Option A - MUST match backend scoring_contract.py):**
 | Engine | Weight | Field | Tooltip |
 |--------|--------|-------|---------|
-| AI | 15% | `ai_score` | 8 AI models |
-| Research | 20% | `research_score` | Sharp money, line variance, public fade |
-| Esoteric | 15% | `esoteric_score` | Numerology, astro, fibonacci |
-| Jarvis | 10% | `jarvis_score` | Gematria triggers |
-| **Context** | **30%** | `context_score` | Defense rank, pace, injury vacuum |
+| AI | 25% | `ai_score` | 8 AI models |
+| Research | 35% | `research_score` | Sharp money, line variance, public fade |
+| Esoteric | 20% | `esoteric_score` | Numerology, astro, fibonacci |
+| Jarvis | 20% | `jarvis_score` | Gematria triggers |
+| **Context** | **±0.35 cap** | `context_score` | Defense rank, pace, injury vacuum (modifier, not weighted) |
 
-**Files that MUST show all 5 engines:**
+**Files that MUST show all engines:**
 - `GameSmashList.jsx` (line ~662)
 - `PropsSmashList.jsx` (line ~925)
 
-**NEVER:** Display only 2 or 4 engines. Context is the LARGEST weighted engine (30%).
+**NEVER:** Display incorrect weights. Context is a bounded modifier (±0.35), NOT a 30% weighted engine.
 
 ---
 
@@ -1773,13 +1773,13 @@ grep -rn "3/4\|4 engine\|four engine" --include="*.jsx" --include="*.js"
 
 ## 🔧 QUICK REFERENCE
 
-### Engine Weights (v17.3)
+### Engine Weights (Option A)
 ```
-AI:       15%  →  ai_score
-Research: 20%  →  research_score
-Esoteric: 15%  →  esoteric_score
-Jarvis:   10%  →  jarvis_score
-Context:  30%  →  context_score  ← LARGEST
+AI:       25%      →  ai_score
+Research: 35%      →  research_score  ← LARGEST
+Esoteric: 20%      →  esoteric_score
+Jarvis:   20%      →  jarvis_score
+Context:  ±0.35    →  context_score   (modifier, not weighted)
 ```
 
 ### Tier Thresholds

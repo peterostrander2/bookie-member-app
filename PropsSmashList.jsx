@@ -923,21 +923,21 @@ const PropCard = memo(({ pick }) => {
         marginBottom: '10px'
       }}>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          {/* v17.3: Show all 5 engine scores - AI (15%), Research (20%), Esoteric (15%), Jarvis (10%), Context (30%) */}
+          {/* Option A: 4 weighted engines + context modifier. Weights: AI 25%, Research 35%, Esoteric 20%, Jarvis 20%, Context ±0.35 cap */}
           {(pick.ai_score ?? pick.scoring_breakdown?.ai_score) !== undefined && (
-            <ScoreBadge score={pick.ai_score ?? pick.scoring_breakdown?.ai_score} maxScore={10} label="AI" tooltip="8 AI models (15% weight)" />
+            <ScoreBadge score={pick.ai_score ?? pick.scoring_breakdown?.ai_score} maxScore={10} label="AI" tooltip="8 AI models (25% weight)" />
           )}
           {(pick.research_score ?? pick.scoring_breakdown?.research_score) !== undefined && (
-            <ScoreBadge score={pick.research_score ?? pick.scoring_breakdown?.research_score} maxScore={10} label="Research" tooltip="Sharp money, line variance, public fade (20% weight)" />
+            <ScoreBadge score={pick.research_score ?? pick.scoring_breakdown?.research_score} maxScore={10} label="Research" tooltip="Sharp money, line variance, public fade (35% weight)" />
           )}
           {(pick.esoteric_score ?? pick.scoring_breakdown?.esoteric_score) !== undefined && (
-            <ScoreBadge score={pick.esoteric_score ?? pick.scoring_breakdown?.esoteric_score} maxScore={10} label="Esoteric" tooltip="Numerology, astro, fibonacci (15% weight)" />
+            <ScoreBadge score={pick.esoteric_score ?? pick.scoring_breakdown?.esoteric_score} maxScore={10} label="Esoteric" tooltip="Numerology, astro, fibonacci (20% weight)" />
           )}
           {(pick.jarvis_score ?? pick.scoring_breakdown?.jarvis_score) !== undefined && (
-            <ScoreBadge score={pick.jarvis_score ?? pick.scoring_breakdown?.jarvis_score} maxScore={10} label="Jarvis" tooltip="Gematria triggers (10% weight)" />
+            <ScoreBadge score={pick.jarvis_score ?? pick.scoring_breakdown?.jarvis_score} maxScore={10} label="Jarvis" tooltip="Gematria triggers (20% weight)" />
           )}
           {(pick.context_score ?? pick.scoring_breakdown?.context_score) !== undefined && (
-            <ScoreBadge score={pick.context_score ?? pick.scoring_breakdown?.context_score} maxScore={10} label="Context" tooltip="Defense rank, pace, injury vacuum (30% weight)" />
+            <ScoreBadge score={pick.context_score ?? pick.scoring_breakdown?.context_score} maxScore={10} label="Context" tooltip="Defense rank, pace, injury vacuum (modifier ±0.35)" />
           )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
