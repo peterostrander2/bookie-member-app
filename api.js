@@ -137,20 +137,24 @@ export const api = {
 
   // Get list of supported sportsbooks with branding
   async getSportsbooks() {
-    const data = await safeJson(await authFetch(`${API_BASE_URL}/live/sportsbooks`));
-    if (!data) return { sportsbooks: [], active_count: 0 };
-    // Defensive: ensure expected fields exist
-    return {
-      sportsbooks: (data.sportsbooks || []).map(book => ({
-        id: book.key,
-        name: book.name,
-        color: book.color,
-        logo: book.logo,
-        web_url: book.web_url,
-        available: true
-      })),
-      active_count: data.active_count ?? (data.sportsbooks?.length || 0)
-    };
+    try {
+      const data = await safeJson(await authFetch(`${API_BASE_URL}/live/sportsbooks`));
+      if (!data) return { sportsbooks: [], active_count: 0 };
+      // Defensive: ensure expected fields exist
+      return {
+        sportsbooks: (data.sportsbooks || []).map(book => ({
+          id: book.key,
+          name: book.name,
+          color: book.color,
+          logo: book.logo,
+          web_url: book.web_url,
+          available: true
+        })),
+        active_count: data.active_count ?? (data.sportsbooks?.length || 0)
+      };
+    } catch {
+      return { sportsbooks: [], active_count: 0 };
+    }
   },
 
   // Generate betslip options across sportsbooks for a specific bet
@@ -383,12 +387,16 @@ export const api = {
 
   // Get today's energy (with defensive handling)
   async getTodayEnergy() {
-    const data = await safeJson(await apiFetch(`${API_BASE_URL}/esoteric/today-energy`));
-    return {
-      betting_outlook: data?.betting_outlook || 'NEUTRAL',
-      overall_energy: data?.overall_energy ?? 5.0,
-      ...data
-    };
+    try {
+      const data = await safeJson(await apiFetch(`${API_BASE_URL}/esoteric/today-energy`));
+      return {
+        betting_outlook: data?.betting_outlook || 'NEUTRAL',
+        overall_energy: data?.overall_energy ?? 5.0,
+        ...data
+      };
+    } catch {
+      return { betting_outlook: 'NEUTRAL', overall_energy: 5.0 };
+    }
   },
 
   // ============================================================================
@@ -396,12 +404,16 @@ export const api = {
   // ============================================================================
 
   async trackBet(betData) {
-    const res = await apiFetch(`${API_BASE_URL}/live/bets/track`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify(betData)
-    });
-    return safeJson(res);
+    try {
+      const res = await apiFetch(`${API_BASE_URL}/live/bets/track`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(betData)
+      });
+      return safeJson(res);
+    } catch {
+      return null;
+    }
   },
 
   async gradeBet(betId, outcome) {
@@ -414,8 +426,12 @@ export const api = {
   },
 
   async getBetHistory(userId) {
-    const url = userId ? `${API_BASE_URL}/live/bets/history?user_id=${userId}` : `${API_BASE_URL}/live/bets/history`;
-    return safeJson(await authFetch(url)) || { bets: [], stats: {} };
+    try {
+      const url = userId ? `${API_BASE_URL}/live/bets/history?user_id=${userId}` : `${API_BASE_URL}/live/bets/history`;
+      return safeJson(await authFetch(url)) || { bets: [], stats: {} };
+    } catch {
+      return { bets: [], stats: {} };
+    }
   },
 
   // ============================================================================
@@ -423,7 +439,11 @@ export const api = {
   // ============================================================================
 
   async getParlay(userId) {
-    return safeJson(await authFetch(`${API_BASE_URL}/live/parlay/${userId}`)) || { legs: [], combined_odds: null };
+    try {
+      return safeJson(await authFetch(`${API_BASE_URL}/live/parlay/${userId}`)) || { legs: [], combined_odds: null };
+    } catch {
+      return { legs: [], combined_odds: null };
+    }
   },
 
   async addParlayLeg(legData) {
@@ -462,8 +482,12 @@ export const api = {
   },
 
   async getParlayHistory(userId) {
-    const url = userId ? `${API_BASE_URL}/live/parlay/history?user_id=${userId}` : `${API_BASE_URL}/live/parlay/history`;
-    return safeJson(await authFetch(url)) || { parlays: [], stats: {} };
+    try {
+      const url = userId ? `${API_BASE_URL}/live/parlay/history?user_id=${userId}` : `${API_BASE_URL}/live/parlay/history`;
+      return safeJson(await authFetch(url)) || { parlays: [], stats: {} };
+    } catch {
+      return { parlays: [], stats: {} };
+    }
   },
 
   // ============================================================================
@@ -471,7 +495,11 @@ export const api = {
   // ============================================================================
 
   async getUserPreferences(userId) {
-    return safeJson(await authFetch(`${API_BASE_URL}/live/user/preferences/${userId}`)) || {};
+    try {
+      return safeJson(await authFetch(`${API_BASE_URL}/live/user/preferences/${userId}`)) || {};
+    } catch {
+      return {};
+    }
   },
 
   async setUserPreferences(userId, preferences) {

@@ -3,6 +3,28 @@ import { api } from '../api.js'
 
 const API_BASE_URL = 'https://web-production-7b2a.up.railway.app'
 
+/**
+ * Helper: create a proper mock Response object with ok, text(), clone()
+ * that matches what safeJson() and authFetch() expect.
+ */
+const mockResponse = (data, { ok = true, status = 200 } = {}) => {
+  const body = JSON.stringify(data)
+  return {
+    ok,
+    status,
+    json: () => Promise.resolve(data),
+    text: () => Promise.resolve(body),
+    clone() {
+      return {
+        ok: this.ok,
+        status: this.status,
+        json: () => Promise.resolve(data),
+        text: () => Promise.resolve(body),
+      }
+    },
+  }
+}
+
 describe('api', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -10,9 +32,7 @@ describe('api', () => {
 
   describe('Health endpoints', () => {
     it('getHealth fetches from correct endpoint', async () => {
-      fetch.mockResolvedValueOnce({
-        json: () => Promise.resolve({ status: 'healthy' })
-      })
+      fetch.mockResolvedValueOnce(mockResponse({ status: 'healthy' }))
 
       const result = await api.getHealth()
 
@@ -21,9 +41,7 @@ describe('api', () => {
     })
 
     it('getModelStatus fetches from correct endpoint', async () => {
-      fetch.mockResolvedValueOnce({
-        json: () => Promise.resolve({ models: ['LSTM', 'Ensemble'] })
-      })
+      fetch.mockResolvedValueOnce(mockResponse({ models: ['LSTM', 'Ensemble'] }))
 
       const result = await api.getModelStatus()
 
@@ -34,34 +52,30 @@ describe('api', () => {
 
   describe('Live Data endpoints (authenticated)', () => {
     it('getLiveGames includes auth header and uppercases sport', async () => {
-      fetch.mockResolvedValueOnce({
-        json: () => Promise.resolve({ games: [] })
-      })
+      fetch.mockResolvedValueOnce(mockResponse({ games: [] }))
 
       await api.getLiveGames('nba')
 
       expect(fetch).toHaveBeenCalledWith(
         `${API_BASE_URL}/live/games/NBA`,
-        { headers: { 'X-API-Key': 'test-api-key' } }
+        { headers: { 'X-API-Key': 'test-api-key' }, cache: 'no-store' }
       )
     })
 
     it('getSmashSpots returns formatted data with normalized picks', async () => {
-      fetch.mockResolvedValueOnce({
-        json: () => Promise.resolve({
-          sport: 'NBA',
-          source: 'jarvis_v7',
-          props: {
-            picks: [{ player_name: 'LeBron', confidence: 'SMASH', line: 25.5, odds: -110 }],
-            count: 1
-          },
-          game_picks: {
-            picks: [{ team: 'Lakers', confidence: 'HIGH', line: -5.5, odds: -110 }],
-            count: 1
-          },
-          timestamp: '2024-01-15T12:00:00Z'
-        })
-      })
+      fetch.mockResolvedValueOnce(mockResponse({
+        sport: 'NBA',
+        source: 'jarvis_v7',
+        props: {
+          picks: [{ player_name: 'LeBron', confidence: 'SMASH', line: 25.5, odds: -110 }],
+          count: 1
+        },
+        game_picks: {
+          picks: [{ team: 'Lakers', confidence: 'HIGH', line: -5.5, odds: -110 }],
+          count: 1
+        },
+        timestamp: '2024-01-15T12:00:00Z'
+      }))
 
       const result = await api.getSmashSpots('NBA')
 
@@ -87,9 +101,7 @@ describe('api', () => {
     })
 
     it('getBestBets is an alias for getSmashSpots', async () => {
-      fetch.mockResolvedValueOnce({
-        json: () => Promise.resolve({ sport: 'NBA', data: [] })
-      })
+      fetch.mockResolvedValueOnce(mockResponse({ sport: 'NBA', data: [] }))
 
       const result = await api.getBestBets('NBA')
 
@@ -97,41 +109,35 @@ describe('api', () => {
     })
 
     it('getSharpMoney fetches with auth', async () => {
-      fetch.mockResolvedValueOnce({
-        json: () => Promise.resolve({ sharp_plays: [] })
-      })
+      fetch.mockResolvedValueOnce(mockResponse({ sharp_plays: [] }))
 
       await api.getSharpMoney('NFL')
 
       expect(fetch).toHaveBeenCalledWith(
         `${API_BASE_URL}/live/sharp/NFL`,
-        { headers: { 'X-API-Key': 'test-api-key' } }
+        { headers: { 'X-API-Key': 'test-api-key' }, cache: 'no-store' }
       )
     })
 
     it('getSplits fetches with auth', async () => {
-      fetch.mockResolvedValueOnce({
-        json: () => Promise.resolve({ splits: [] })
-      })
+      fetch.mockResolvedValueOnce(mockResponse({ splits: [] }))
 
       await api.getSplits('MLB')
 
       expect(fetch).toHaveBeenCalledWith(
         `${API_BASE_URL}/live/splits/MLB`,
-        { headers: { 'X-API-Key': 'test-api-key' } }
+        { headers: { 'X-API-Key': 'test-api-key' }, cache: 'no-store' }
       )
     })
 
     it('getProps fetches with auth', async () => {
-      fetch.mockResolvedValueOnce({
-        json: () => Promise.resolve({ props: [] })
-      })
+      fetch.mockResolvedValueOnce(mockResponse({ props: [] }))
 
       await api.getProps('NHL')
 
       expect(fetch).toHaveBeenCalledWith(
         `${API_BASE_URL}/live/props/NHL`,
-        { headers: { 'X-API-Key': 'test-api-key' } }
+        { headers: { 'X-API-Key': 'test-api-key' }, cache: 'no-store' }
       )
     })
   })
@@ -149,7 +155,7 @@ describe('api', () => {
     })
 
     it('getTodayEnergy returns defaults on non-ok response', async () => {
-      fetch.mockResolvedValueOnce({ ok: false })
+      fetch.mockResolvedValueOnce(mockResponse(null, { ok: false, status: 500 }))
 
       const result = await api.getTodayEnergy()
 
@@ -160,10 +166,7 @@ describe('api', () => {
     })
 
     it('getTodayEnergy fills missing fields with defaults', async () => {
-      fetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ moon_phase: 'Full' })
-      })
+      fetch.mockResolvedValueOnce(mockResponse({ moon_phase: 'Full' }))
 
       const result = await api.getTodayEnergy()
 
@@ -181,7 +184,7 @@ describe('api', () => {
     })
 
     it('getSportsbooks returns empty array on non-ok response', async () => {
-      fetch.mockResolvedValueOnce({ ok: false })
+      fetch.mockResolvedValueOnce(mockResponse(null, { ok: false, status: 500 }))
 
       const result = await api.getSportsbooks()
 
@@ -189,15 +192,12 @@ describe('api', () => {
     })
 
     it('getSportsbooks transforms response correctly', async () => {
-      fetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({
-          sportsbooks: [
-            { key: 'dk', name: 'DraftKings', color: '#53D337', logo: 'dk.png', web_url: 'https://dk.com' }
-          ],
-          active_count: 1
-        })
-      })
+      fetch.mockResolvedValueOnce(mockResponse({
+        sportsbooks: [
+          { key: 'dk', name: 'DraftKings', color: '#53D337', logo: 'dk.png', web_url: 'https://dk.com' }
+        ],
+        active_count: 1
+      }))
 
       const result = await api.getSportsbooks()
 
@@ -216,10 +216,7 @@ describe('api', () => {
 
   describe('Bet Tracking endpoints', () => {
     it('trackBet sends POST with auth headers', async () => {
-      fetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ id: 'bet123', status: 'tracked' })
-      })
+      fetch.mockResolvedValueOnce(mockResponse({ id: 'bet123', status: 'tracked' }))
 
       const betData = {
         player: 'LeBron James',
@@ -254,10 +251,7 @@ describe('api', () => {
     })
 
     it('gradeBet sends POST with outcome', async () => {
-      fetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ id: 'bet123', outcome: 'WIN' })
-      })
+      fetch.mockResolvedValueOnce(mockResponse({ id: 'bet123', outcome: 'WIN' }))
 
       const result = await api.gradeBet('bet123', 'WIN')
 
@@ -276,7 +270,7 @@ describe('api', () => {
     })
 
     it('gradeBet returns null on error', async () => {
-      fetch.mockResolvedValueOnce({ ok: false })
+      fetch.mockResolvedValueOnce(mockResponse(null, { ok: false, status: 500 }))
 
       const result = await api.gradeBet('bet123', 'WIN')
 
@@ -292,32 +286,26 @@ describe('api', () => {
     })
 
     it('getBetHistory includes userId in query if provided', async () => {
-      fetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ bets: [], stats: {} })
-      })
+      fetch.mockResolvedValueOnce(mockResponse({ bets: [], stats: {} }))
 
       await api.getBetHistory('user123')
 
       expect(fetch).toHaveBeenCalledWith(
         `${API_BASE_URL}/live/bets/history?user_id=user123`,
-        { headers: { 'X-API-Key': 'test-api-key' } }
+        { headers: { 'X-API-Key': 'test-api-key' }, cache: 'no-store' }
       )
     })
   })
 
   describe('Parlay Builder endpoints', () => {
     it('getParlay fetches user parlay', async () => {
-      fetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ legs: [{ player: 'LeBron' }], combined_odds: 300 })
-      })
+      fetch.mockResolvedValueOnce(mockResponse({ legs: [{ player: 'LeBron' }], combined_odds: 300 }))
 
       const result = await api.getParlay('user123')
 
       expect(fetch).toHaveBeenCalledWith(
         `${API_BASE_URL}/live/parlay/user123`,
-        { headers: { 'X-API-Key': 'test-api-key' } }
+        { headers: { 'X-API-Key': 'test-api-key' }, cache: 'no-store' }
       )
       expect(result.legs).toHaveLength(1)
     })
@@ -331,10 +319,7 @@ describe('api', () => {
     })
 
     it('addParlayLeg sends POST request', async () => {
-      fetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ legs: [{ player: 'LeBron' }] })
-      })
+      fetch.mockResolvedValueOnce(mockResponse({ legs: [{ player: 'LeBron' }] }))
 
       const legData = { user_id: 'user123', player: 'LeBron', odds: -110 }
       await api.addParlayLeg(legData)
@@ -353,10 +338,7 @@ describe('api', () => {
     })
 
     it('calculateParlay sends legs and stake', async () => {
-      fetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ combined_odds: 500, potential_payout: 600 })
-      })
+      fetch.mockResolvedValueOnce(mockResponse({ combined_odds: 500, potential_payout: 600 }))
 
       const legs = [{ odds: -110 }, { odds: +150 }]
       const result = await api.calculateParlay(legs, 100)
@@ -376,10 +358,7 @@ describe('api', () => {
     })
 
     it('placeParlay sends parlay data', async () => {
-      fetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ id: 'parlay123', status: 'placed' })
-      })
+      fetch.mockResolvedValueOnce(mockResponse({ id: 'parlay123', status: 'placed' }))
 
       const parlayData = { user_id: 'user123', legs: [], stake: 100 }
       const result = await api.placeParlay(parlayData)
@@ -388,10 +367,7 @@ describe('api', () => {
     })
 
     it('clearParlay sends DELETE request', async () => {
-      fetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ success: true })
-      })
+      fetch.mockResolvedValueOnce(mockResponse({ success: true }))
 
       await api.clearParlay('user123')
 
@@ -418,16 +394,13 @@ describe('api', () => {
 
   describe('User Preferences endpoints', () => {
     it('getUserPreferences fetches user prefs', async () => {
-      fetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ theme: 'dark', favorite_sport: 'NBA' })
-      })
+      fetch.mockResolvedValueOnce(mockResponse({ theme: 'dark', favorite_sport: 'NBA' }))
 
       const result = await api.getUserPreferences('user123')
 
       expect(fetch).toHaveBeenCalledWith(
         `${API_BASE_URL}/live/user/preferences/user123`,
-        { headers: { 'X-API-Key': 'test-api-key' } }
+        { headers: { 'X-API-Key': 'test-api-key' }, cache: 'no-store' }
       )
       expect(result.theme).toBe('dark')
     })
@@ -441,10 +414,7 @@ describe('api', () => {
     })
 
     it('setUserPreferences sends POST request', async () => {
-      fetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ success: true })
-      })
+      fetch.mockResolvedValueOnce(mockResponse({ success: true }))
 
       const prefs = { theme: 'light', favorite_sport: 'NFL' }
       await api.setUserPreferences('user123', prefs)
@@ -465,25 +435,23 @@ describe('api', () => {
 
   describe('Click-to-Bet endpoints', () => {
     it('generateBetslip transforms response correctly', async () => {
-      fetch.mockResolvedValueOnce({
-        json: () => Promise.resolve({
-          game: 'Lakers vs Celtics',
-          bet_type: 'spread',
-          selection: 'Lakers',
-          best_odds: -105,
-          all_books: [
-            {
-              book_key: 'dk',
-              book_name: 'DraftKings',
-              book_color: '#53D337',
-              book_logo: 'dk.png',
-              odds: -110,
-              point: -5.5,
-              deep_link: { web: 'https://dk.com/bet' }
-            }
-          ]
-        })
-      })
+      fetch.mockResolvedValueOnce(mockResponse({
+        game: 'Lakers vs Celtics',
+        bet_type: 'spread',
+        selection: 'Lakers',
+        best_odds: -105,
+        all_books: [
+          {
+            book_key: 'dk',
+            book_name: 'DraftKings',
+            book_color: '#53D337',
+            book_logo: 'dk.png',
+            odds: -110,
+            point: -5.5,
+            deep_link: { web: 'https://dk.com/bet' }
+          }
+        ]
+      }))
 
       const result = await api.generateBetslip({
         game_id: 'game123',
@@ -499,15 +467,13 @@ describe('api', () => {
     })
 
     it('getLineShop includes gameId if provided', async () => {
-      fetch.mockResolvedValueOnce({
-        json: () => Promise.resolve({ lines: [] })
-      })
+      fetch.mockResolvedValueOnce(mockResponse({ lines: [] }))
 
       await api.getLineShop('NBA', 'game123')
 
       expect(fetch).toHaveBeenCalledWith(
         `${API_BASE_URL}/live/line-shop/NBA?game_id=game123`,
-        { headers: { 'X-API-Key': 'test-api-key' } }
+        { headers: { 'X-API-Key': 'test-api-key' }, cache: 'no-store' }
       )
     })
   })
