@@ -11,7 +11,16 @@ import { useToast } from './Toast';
 import { useBetSlip } from './BetSlip';
 import { ShareButton } from './ShareButton';
 
-const USER_ID = 'default_user'; // TODO: Replace with actual user auth
+// Generate or retrieve a persistent user ID for parlay tracking
+const getUserId = () => {
+  let id = localStorage.getItem('bookie_user_id');
+  if (!id) {
+    id = `user_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+    localStorage.setItem('bookie_user_id', id);
+  }
+  return id;
+};
+const USER_ID = getUserId();
 
 const ParlayBuilder = () => {
   const [legs, setLegs] = useState([]);

@@ -3,7 +3,7 @@
  * Tests for adding/removing picks, viewing slip, and parlay calculations
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 
 test.describe('Bet Slip', () => {
   test.beforeEach(async ({ page }) => {

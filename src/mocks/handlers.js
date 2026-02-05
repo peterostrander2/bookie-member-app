@@ -282,6 +282,25 @@ export const handlers = [
     return HttpResponse.json(mockTodayEnergy);
   }),
 
+  // Daily learning lesson
+  http.get(`${API_URL}/live/grader/daily-lesson`, () => {
+    return HttpResponse.json({
+      date_et: new Date().toISOString().split('T')[0],
+      total_graded: 8,
+      overall_hit_rate: 0.625,
+      best_sport: 'NBA',
+      worst_sport: 'NHL',
+      bullets: [
+        'NBA went 5-3 (62.5% hit rate). SMASH picks hit 3/3.',
+        'NHL underperformed — line movement signals missed 2 games.',
+        'Research engine weight adjusted +0.02 based on sharp money accuracy.'
+      ],
+      weights_adjusted: ['research_score +0.02'],
+      retrain_triggered: [],
+      source: 'mock'
+    });
+  }),
+
   // Esoteric edge
   http.get(`${API_URL}/live/esoteric-edge`, () => {
     return HttpResponse.json({

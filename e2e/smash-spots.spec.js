@@ -3,7 +3,7 @@
  * Tests for viewing picks, switching tabs, and interacting with pick cards
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 
 test.describe('Smash Spots', () => {
   test.beforeEach(async ({ page }) => {
@@ -93,12 +93,11 @@ test.describe('Smash Spots - Sport Selection', () => {
     await page.goto('/smash-spots');
     await page.waitForTimeout(1000);
 
-    // Find sport selector
-    const sportSelector = page.locator('select').first();
+    // Sport selector uses buttons (NBA, NFL, MLB, NHL)
+    const nflButton = page.getByRole('button', { name: /NFL/i });
 
-    if (await sportSelector.isVisible()) {
-      // Change to NFL
-      await sportSelector.selectOption('NFL');
+    if (await nflButton.isVisible()) {
+      await nflButton.click();
       await page.waitForTimeout(1000);
 
       // Page should still be functional

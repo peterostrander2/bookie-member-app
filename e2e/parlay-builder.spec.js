@@ -3,7 +3,7 @@
  * Tests for building parlays, calculating odds, and managing legs
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 
 test.describe('Parlay Builder', () => {
   test.beforeEach(async ({ page }) => {
@@ -14,9 +14,11 @@ test.describe('Parlay Builder', () => {
     await expect(page.getByText(/Parlay|Builder/i).first()).toBeVisible();
   });
 
-  test('should display sport selector', async ({ page }) => {
-    const sportSelector = page.locator('select, button:has-text("NBA")');
-    await expect(sportSelector.first()).toBeVisible();
+  test('should display builder and calculator', async ({ page }) => {
+    // Should show Parlay Calculator panel
+    await expect(page.getByText(/Parlay Calculator/i)).toBeVisible();
+    // Should show Builder tab
+    await expect(page.getByRole('button', { name: /Builder/i })).toBeVisible();
   });
 
   test('should show available games/picks to add', async ({ page }) => {

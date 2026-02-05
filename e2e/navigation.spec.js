@@ -3,7 +3,7 @@
  * Tests that all major routes load correctly
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 
 test.describe('Navigation', () => {
   test('should load homepage (Dashboard)', async ({ page }) => {
@@ -16,17 +16,17 @@ test.describe('Navigation', () => {
   test('should navigate to Smash Spots', async ({ page }) => {
     await page.goto('/smash-spots');
     // Should see tab navigation for Props/Games
-    await expect(page.getByText(/Player Props|Game Picks/i)).toBeVisible();
+    await expect(page.getByText(/Player Props|Game Picks/i).first()).toBeVisible();
   });
 
   test('should navigate to Parlay Builder', async ({ page }) => {
     await page.goto('/parlay');
-    await expect(page.getByText(/Parlay/i)).toBeVisible();
+    await expect(page.getByText(/Parlay/i).first()).toBeVisible();
   });
 
   test('should navigate to Bet History', async ({ page }) => {
     await page.goto('/history');
-    await expect(page.getByText(/History|Bet/i)).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Bet History/i })).toBeVisible({ timeout: 10000 });
   });
 
   test('should navigate to Esoteric', async ({ page }) => {
@@ -55,6 +55,6 @@ test.describe('Mobile Navigation', () => {
     await page.goto('/smash-spots');
     await expect(page.locator('body')).toBeVisible();
     // Content should be responsive
-    await expect(page.getByText(/Props|Games/i)).toBeVisible();
+    await expect(page.getByText(/Props|Games/i).first()).toBeVisible();
   });
 });
