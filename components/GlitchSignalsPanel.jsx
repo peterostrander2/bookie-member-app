@@ -3,13 +3,13 @@ import React from 'react';
 /**
  * GlitchSignalsPanel - Displays GLITCH protocol signals with progress bars
  *
- * Signals:
- * - Chrome Resonance: Player birthday chromatic match (0-1)
- * - Void Moon: Void-of-course penalty (0 = good, >0 = warning)
- * - Noosphere: Search trend velocity (0-1)
- * - Hurst: Line movement regime (H > 0.5 = TRENDING, H < 0.5 = MEAN-REVERTING)
- * - Kp-Index: Geomagnetic activity (< 5 = QUIET, >= 5 = STORM)
- * - Benford: First-digit distribution anomaly (0-1)
+ * Backend sends nested objects per signal. This component extracts the relevant
+ * numeric values from each signal's sub-fields:
+ * - void_moon: { is_void, confidence, void_start, void_end, moon_sign, ... }
+ * - noosphere: { velocity, direction, confidence, ... }
+ * - kp_index: { kp_value, score, storm_level, ... }
+ * - benford: { score, deviation, triggered, ... }
+ * - chrome_resonance / hurst: not currently sent by backend
  */
 
 const panelStyle = {
@@ -44,22 +44,21 @@ const progressBarContainer = {
 
 const valueStyle = {
   color: '#6B7280',
-  width: '50px',
+  width: '80px',
   textAlign: 'right',
   fontSize: '10px',
 };
 
 const SIGNAL_TOOLTIPS = {
-  chrome_resonance: 'Player birthday + game date chromatic interval',
   void_moon: 'Moon void-of-course (avoid new bets when active)',
   noosphere: 'Search trend velocity between teams',
-  hurst: 'Line regime - H > 0.5 means trending, H < 0.5 means mean-reverting',
   kp_index: 'Geomagnetic activity - Kp >= 5 indicates storm',
   benford: 'First-digit distribution anomaly in betting lines',
 };
 
 const ProgressBar = ({ value, max = 1, color = '#8B5CF6' }) => {
-  const pct = Math.min(100, Math.max(0, (value / max) * 100));
+  const safeVal = typeof value === 'number' ? value : 0;
+  const pct = Math.min(100, Math.max(0, (safeVal / max) * 100));
   return (
     <div style={progressBarContainer}>
       <div style={{
@@ -82,26 +81,6 @@ const GlitchSignalsPanel = ({ pick }) => {
   const hasSignals = Object.keys(signals).length > 0;
   if (!hasSignals) return null;
 
-  const getHurstLabel = (h) => {
-    if (h === undefined || h === null) return '—';
-    return h > 0.5 ? 'TRENDING' : 'MEAN-REVERT';
-  };
-
-  const getHurstColor = (h) => {
-    if (h === undefined || h === null) return '#6B7280';
-    return h > 0.5 ? '#10B981' : '#F59E0B';
-  };
-
-  const getKpLabel = (kp) => {
-    if (kp === undefined || kp === null) return '—';
-    return kp >= 5 ? 'STORM' : 'QUIET';
-  };
-
-  const getKpColor = (kp) => {
-    if (kp === undefined || kp === null) return '#6B7280';
-    return kp >= 5 ? '#EF4444' : '#10B981';
-  };
-
   return (
     <details style={{ marginTop: '8px' }}>
       <summary style={{
@@ -116,81 +95,87 @@ const GlitchSignalsPanel = ({ pick }) => {
         GLITCH Protocol
       </summary>
       <div style={panelStyle}>
-        {/* Chrome Resonance */}
-        {signals.chrome_resonance !== undefined && (
-          <div style={rowStyle} title={SIGNAL_TOOLTIPS.chrome_resonance}>
-            <span style={labelStyle}>Chrome:</span>
-            <ProgressBar value={signals.chrome_resonance} color="#8B5CF6" />
-            <span style={valueStyle}>{signals.chrome_resonance.toFixed(2)}</span>
-          </div>
-        )}
-
-        {/* Void Moon */}
-        {signals.void_moon !== undefined && (
+        {/* Void Moon - nested object with is_void, confidence, moon_sign, phase */}
+        {signals.void_moon != null && (
           <div style={rowStyle} title={SIGNAL_TOOLTIPS.void_moon}>
             <span style={labelStyle}>Void Moon:</span>
-            <ProgressBar
-              value={signals.void_moon}
-              color={signals.void_moon > 0 ? '#EF4444' : '#10B981'}
-            />
             <span style={{
               ...valueStyle,
-              color: signals.void_moon > 0 ? '#EF4444' : '#10B981'
-            }}>
-              {signals.void_moon.toFixed(2)}
-            </span>
-          </div>
-        )}
-
-        {/* Noosphere */}
-        {signals.noosphere !== undefined && (
-          <div style={rowStyle} title={SIGNAL_TOOLTIPS.noosphere}>
-            <span style={labelStyle}>Noosphere:</span>
-            <ProgressBar value={signals.noosphere} color="#00D4FF" />
-            <span style={valueStyle}>{signals.noosphere.toFixed(2)}</span>
-          </div>
-        )}
-
-        {/* Hurst - Text label instead of progress bar */}
-        {signals.hurst !== undefined && (
-          <div style={rowStyle} title={SIGNAL_TOOLTIPS.hurst}>
-            <span style={labelStyle}>Hurst (H={signals.hurst.toFixed(2)}):</span>
-            <span style={{
+              width: 'auto',
               flex: 1,
               textAlign: 'center',
-              color: getHurstColor(signals.hurst),
               fontWeight: 'bold',
-              fontSize: '10px',
+              color: signals.void_moon.is_void ? '#EF4444' : '#10B981',
             }}>
-              {getHurstLabel(signals.hurst)}
+              {signals.void_moon.is_void ? 'ACTIVE' : 'CLEAR'}
+              {signals.void_moon.moon_sign && (
+                <span style={{ fontWeight: 'normal', color: '#6B7280', marginLeft: '6px' }}>
+                  ({signals.void_moon.moon_sign} {signals.void_moon.phase || ''})
+                </span>
+              )}
             </span>
-            <span style={valueStyle} />
+            <span style={valueStyle}>
+              {signals.void_moon.is_void && signals.void_moon.void_end
+                ? `ends ${signals.void_moon.void_end}`
+                : ''}
+            </span>
           </div>
         )}
 
-        {/* Kp-Index - Text label */}
-        {signals.kp_index !== undefined && (
+        {/* Noosphere - nested object with velocity, direction, confidence */}
+        {signals.noosphere != null && (
+          <div style={rowStyle} title={SIGNAL_TOOLTIPS.noosphere}>
+            <span style={labelStyle}>Noosphere:</span>
+            {typeof signals.noosphere.velocity === 'number' ? (
+              <>
+                <ProgressBar value={signals.noosphere.velocity} color="#00D4FF" />
+                <span style={valueStyle}>
+                  {signals.noosphere.velocity.toFixed(2)} {signals.noosphere.direction || ''}
+                </span>
+              </>
+            ) : (
+              <span style={valueStyle}>
+                {signals.noosphere.direction || 'NEUTRAL'}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Kp-Index - nested object with kp_value, score, storm_level */}
+        {signals.kp_index != null && (
           <div style={rowStyle} title={SIGNAL_TOOLTIPS.kp_index}>
             <span style={labelStyle}>Kp-Index:</span>
             <span style={{
               flex: 1,
               textAlign: 'center',
-              color: getKpColor(signals.kp_index),
+              color: (signals.kp_index.kp_value ?? 0) >= 5 ? '#EF4444' : '#10B981',
               fontWeight: 'bold',
               fontSize: '10px',
             }}>
-              {signals.kp_index.toFixed(1)} {getKpLabel(signals.kp_index)}
+              {typeof signals.kp_index.kp_value === 'number'
+                ? signals.kp_index.kp_value.toFixed(1)
+                : '—'}{' '}
+              {signals.kp_index.storm_level || 'QUIET'}
             </span>
             <span style={valueStyle} />
           </div>
         )}
 
-        {/* Benford */}
-        {signals.benford !== undefined && (
+        {/* Benford - nested object with score, deviation, triggered */}
+        {signals.benford != null && (
           <div style={rowStyle} title={SIGNAL_TOOLTIPS.benford}>
             <span style={labelStyle}>Benford:</span>
-            <ProgressBar value={signals.benford} color="#F59E0B" />
-            <span style={valueStyle}>{signals.benford.toFixed(2)}</span>
+            {typeof signals.benford.score === 'number' ? (
+              <>
+                <ProgressBar value={signals.benford.score} color="#F59E0B" />
+                <span style={valueStyle}>
+                  {signals.benford.score.toFixed(2)}
+                  {signals.benford.triggered ? ' ANOMALY' : ''}
+                </span>
+              </>
+            ) : (
+              <span style={valueStyle}>—</span>
+            )}
           </div>
         )}
       </div>

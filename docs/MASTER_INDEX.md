@@ -87,7 +87,7 @@ Before touching code or docs: use this file to route yourself to the canonical s
 **What lives here:**
 - `ENGINE_WEIGHTS` - AI 25%, Research 35%, Esoteric 20%, Jarvis 20%
 - `CONTEXT_MODIFIER_CAP` - +-0.35
-- `BOOST_CAPS` - confluence 1.5, msrf 1.0, jason_sim 0.5, serp 0.5, ensemble 0.5
+- `BOOST_CAPS` - confluence 3.0, msrf 1.0, jason_sim 1.5, serp 0.55, ensemble 0.5, phase8 0.5, glitch 0.5, gematria 0.5, harmonic 0.5
 - `TITANIUM_THRESHOLD`, `GOLD_STAR_THRESHOLD`, `MIN_FINAL_SCORE`, `MONITOR_THRESHOLD`
 - `TITANIUM_RULE`, `GOLD_STAR_GATES`, `TIERS`, `TIER_COLORS`
 
@@ -110,7 +110,7 @@ Before touching code or docs: use this file to route yourself to the canonical s
 | Components | `App.jsx` | Routing, lazy loading |
 | Signals | `signalEngine.js` | Client calculations |
 | Storage | `storageUtils.js` | localStorage keys |
-| Lessons | `docs/LESSONS.md` | Historical mistakes and prevention (10 lessons) |
+| Lessons | `docs/LESSONS.md` | Historical mistakes and prevention (15 lessons) |
 | Test Mocks | `test/api.test.js` → `mockResponse()` | Canonical mock pattern for API tests |
 | Test Setup | `test/setup.js` | Global mocks, env stubs, rate limit bypass |
 
@@ -121,9 +121,9 @@ Before touching code or docs: use this file to route yourself to the canonical s
 | Component | File | Purpose |
 |-----------|------|---------|
 | BoostBreakdownPanel | `components/BoostBreakdownPanel.jsx` | Option A score breakdown (base_4 + 6 boosts = final) |
-| StatusBadgeRow | `components/StatusBadgeRow.jsx` | MSRF/SERP/Jason/ML status indicator badges |
-| GlitchSignalsPanel | `components/GlitchSignalsPanel.jsx` | GLITCH protocol signals with progress bars |
-| EsotericContributionsPanel | `components/EsotericContributionsPanel.jsx` | Esoteric contributions by category |
+| StatusBadgeRow | `components/StatusBadgeRow.jsx` | MSRF active/SERP/Jason/ML status badges |
+| GlitchSignalsPanel | `components/GlitchSignalsPanel.jsx` | GLITCH protocol (nested object extraction: void_moon, kp_index, noosphere, benford) |
+| EsotericContributionsPanel | `components/EsotericContributionsPanel.jsx` | Esoteric contributions by category (12 verified backend keys) |
 
 **Integration:** All 4 components appear in BOTH `GameSmashList.jsx` and `PropsSmashList.jsx`.
 
@@ -200,6 +200,11 @@ async getParlay(userId) {
 - Update GameSmashList without updating PropsSmashList (or vice versa)
 - Use bare `{ json: () => ... }` objects in test mocks (use `mockResponse()`)
 - Write API methods with `|| default` without try-catch for network errors
+- Call `.toFixed()` or numeric methods on backend fields without verifying they're numbers
+- Use `||` for field precedence in normalizePick (use `??` — nullish coalescing)
+- Build components against assumed data shapes without verifying against real API
+- Display per-pick data on pages using global endpoints (today-energy)
+- Guess field key names — always verify with `curl | jq 'keys'`
 
 ---
 
@@ -210,7 +215,7 @@ async getParlay(userId) {
 **Env vars (frontend):** `VITE_API_BASE_URL`, `VITE_BOOKIE_API_KEY`
 
 **Frontend MUST match backend (v20.5):**
-1. **Tiers:** TITANIUM (>=8.0, 3/5 engines >=8.0), GOLD_STAR (>=7.5, gates), EDGE_LEAN (>=6.5)
+1. **Tiers:** TITANIUM (>=8.0, 3/4 engines >=8.0, context excluded), GOLD_STAR (>=7.5, gates), EDGE_LEAN (>=6.5)
 2. **Never show picks:** with final_score < 6.5
 3. **Engine scores:** ai_score (25%), research_score (35%), esoteric_score (20%), jarvis_score (20%), context_score (+-0.35 modifier)
 4. **Boost fields:** confluence_boost, msrf_boost, jason_sim_boost, serp_boost, ensemble_adjustment

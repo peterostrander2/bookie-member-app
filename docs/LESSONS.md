@@ -14,13 +14,22 @@ node scripts/validate_frontend_contracts.mjs    # Hardcoded literals
 node scripts/validate_no_frontend_literals.mjs  # Literals in comments too
 node scripts/validate_no_eval.mjs               # No eval/Function
 
-# Stale reference check
-grep -rn "3/4\|4 engine\|four engine" --include="*.jsx" --include="*.js"
+# Stale TITANIUM reference check (should be 3/4, not 3/5)
+grep -rn "3/5" --include="*.jsx" --include="*.js" | grep -i "engine\|titanium"
 # ^ Should return EMPTY
 
 # Symmetric component check
 grep -n "import.*from.*components/" GameSmashList.jsx PropsSmashList.jsx
 # ^ Both files should import the same scoring components
+
+# Verify normalizePick uses ?? not || for field precedence
+grep -n "scoring_breakdown.*||" api.js
+# ^ Should return EMPTY (use ?? instead)
+
+# Verify component keys match backend (run against live API)
+# curl -s "https://web-production-7b2a.up.railway.app/live/best-bets/NBA" \
+#   -H "X-API-Key: bookie-prod-2026-xK9mP2nQ7vR4" | \
+#   jq '.game_picks.picks[0].esoteric_contributions | keys'
 ```
 
 ---
@@ -243,6 +252,167 @@ async getParlay(userId) {
 
 ---
 
+## Lesson 11: Backend Data Shape Mismatch (Nested Objects vs Flat Numbers)
+
+**When:** February 2026 (v20.5 bug investigation)
+**Problem:** GlitchSignalsPanel called `.toFixed()` on nested objects, crashing on every signal.
+**Root Cause:** Component assumed `glitch_signals.void_moon` was a number (e.g., `0.5`), but backend sends `{is_void: true, confidence: 0.69, void_start: "20:00 UTC"}`. Same for `kp_index` (`{kp_value: 2.7, level: "QUIET"}`), `noosphere` (`{velocity: 1.2}`), `benford` (`{score: 0.15}`).
+**Impact:** TypeError crash for any pick with GLITCH signals. Component was completely broken.
+
+**Fix Applied:** Complete rewrite of GlitchSignalsPanel to extract correct nested values:
+```javascript
+// WRONG: signals.void_moon.toFixed(2) — TypeError
+// CORRECT: signals.void_moon.is_void ? 'ACTIVE' : 'CLEAR'
+
+// WRONG: signals.kp_index.toFixed(1) — TypeError
+// CORRECT: signals.kp_index.kp_value?.toFixed(1)
+```
+
+Also removed dead signals that backend doesn't send: `chrome_resonance`, `hurst`.
+
+**Prevention:**
+- ALWAYS fetch real API data before building components
+- `curl ... | jq '.picks[0].glitch_signals'` to see actual structure
+- Never call numeric methods without verifying the value IS a number
+- See INVARIANT 12 in CLAUDE.md
+
+**Automated Gate:** None (requires real API verification before building components)
+
+---
+
+## Lesson 12: Contract Drift from Backend Reality
+
+**When:** February 2026 (v20.5 bug investigation)
+**Problem:** `frontend_scoring_contract.js` had wrong values:
+- `BOOST_CAPS.confluence`: 1.5 → actual 3.0 (2x wrong)
+- `BOOST_CAPS.jason_sim`: ±0.5 → actual -1.5 to +0.5 (3x wrong)
+- `BOOST_CAPS.serp`: 0.5 → actual 0.55
+- `TITANIUM_RULE.engineCount`: 5 → actual 4 (context excluded)
+- `TITANIUM_RULE.engineThreshold`: 6.5 → actual 8.0
+- Missing boost types: phase8, glitch, gematria, harmonic
+**Root Cause:** Contract values were copied from plan/documentation, never verified against live backend API data.
+**Impact:** BoostBreakdownPanel showed wrong caps, TITANIUM gating description was wrong.
+
+**Fix Applied:** Updated all values to match verified backend data:
+```javascript
+export const BOOST_CAPS = {
+  confluence: 3.0,  // was 1.5
+  jason_sim: 1.5,   // was 0.5, range -1.5 to +0.5
+  serp: 0.55,       // was 0.5
+  // ... added phase8, glitch, gematria, harmonic
+};
+
+export const TITANIUM_RULE = {
+  engineCount: 4,        // was 5 (context excluded)
+  engineThreshold: 8.0,  // was 6.5
+};
+```
+
+**Prevention:**
+- Verify contract values against LIVE backend data, not documentation
+- `curl ... | jq '.picks[] | {confluence_boost, jason_sim_boost, serp_boost} | to_entries[] | select(.value != 0)'`
+- If observed values exceed documented caps, the caps are wrong
+
+**Automated Gate:** None (manual verification required — add to pre-commit checklist when contract changes)
+
+---
+
+## Lesson 13: Wrong API Endpoint for Component Data
+
+**When:** February 2026 (v20.5 bug investigation)
+**Problem:** Esoteric.jsx tried to display:
+- GLITCH Protocol section (void_moon, kp_index, etc.)
+- Phase 8 indicators (mercury_retrograde, rivalry_intensity, streak_momentum, solar_flare)
+- Historical Accuracy section
+
+None of these fields exist on `/esoteric/today-energy`. They're per-pick fields from `/live/best-bets/{sport}`.
+
+**Root Cause:** Confused per-pick data with daily aggregate data. Built UI sections for data the endpoint doesn't provide.
+**Impact:** Sections rendered empty or crashed on undefined access.
+
+**Fix Applied:**
+- Removed GLITCH Protocol section (per-pick only)
+- Removed Phase 8 Indicators section (per-pick only)
+- Disabled Historical Accuracy section
+- Fixed void_moon path: `backendEnergy.void_moon` → `backendEnergy.void_of_course`
+
+**Prevention:**
+- Before building a UI section, `curl` the endpoint and verify the data exists
+- See INVARIANT 13 in CLAUDE.md for endpoint-to-data mapping
+- Per-pick data: `/live/best-bets/{sport}` → displayed in SmashList components
+- Daily global data: `/esoteric/today-energy` → displayed in Esoteric.jsx
+
+**Automated Gate:** None (requires understanding endpoint contracts)
+
+---
+
+## Lesson 14: normalizePick Precedence Bugs
+
+**When:** February 2026 (v20.5 bug investigation)
+**Problem:** Two field precedence bugs in `normalizePick()`:
+1. `ai_score` showed 0-8 sub-score instead of 0-10 engine score
+2. `confidence` showed inflated values from `total_score * 10`
+
+**Root Cause:**
+```javascript
+// BUG 1: || treats 0 as falsy, and ai_models (0-8) takes priority when non-zero
+ai_score: item.scoring_breakdown?.ai_models || item.ai_score  // WRONG
+
+// BUG 2: total_score is 0-10, not a percentage. total_score * 10 conflates scales
+confidence: confidenceToPercent(item.confidence) || item.total_score * 10 || 70  // WRONG
+```
+
+**Impact:** AI scores displayed at wrong scale (7.0 instead of 8.75). Confidence inflated.
+
+**Fix Applied:**
+```javascript
+ai_score: item.ai_score ?? item.scoring_breakdown?.ai_models  // ?? not ||
+confidence: confidenceToPercent(item.confidence) || item.confidence_score || 70
+```
+
+**Prevention:**
+- Use `??` for field precedence (only falls through on null/undefined, not on 0)
+- Prefer top-level fields over nested breakdown fields
+- Never use score multiplication for confidence — use backend's `confidence_score`
+- See INVARIANT 14 in CLAUDE.md
+
+**Automated Gate:** None (code review vigilance — `||` vs `??` is a semantic difference)
+
+---
+
+## Lesson 15: Component Key Name Mismatches
+
+**When:** February 2026 (v20.5 bug investigation)
+**Problem:** EsotericContributionsPanel had:
+- 7 dead keys: gematria, lunar, mercury, solar, fib_retracement, rivalry, streak
+- 4 missing keys: glitch, phase8, harmonic, msrf
+- 1 typo: `biorhythms` (plural) vs `biorhythm` (singular)
+
+**Root Cause:** Component keys were written from a plan document, never verified against actual `esoteric_contributions` dict from the backend API.
+**Impact:** 7 categories never matched backend data (always empty). 4 backend signals were invisible.
+
+**Fix Applied:** Complete rewrite of CATEGORIES to match verified backend keys:
+```javascript
+const CATEGORIES = {
+  numerology: { fields: [{ key: 'numerology' }, { key: 'daily_edge' }] },
+  astronomical: { fields: [{ key: 'astro' }, { key: 'phase8' }] },
+  mathematical: { fields: [{ key: 'fib_alignment' }, { key: 'gann' }, { key: 'vortex' }] },
+  signals: { fields: [{ key: 'glitch' }, { key: 'harmonic' }, { key: 'msrf' }] },
+  situational: { fields: [{ key: 'biorhythm' }, { key: 'founders_echo' }] },
+};
+```
+
+**Prevention:**
+- ALWAYS verify component field names against actual backend response
+- `curl ... | jq '.picks[0].esoteric_contributions | keys'`
+- Never use synonyms (lunar→phase8, gematria→harmonic)
+- Watch for singular/plural mismatches
+- See INVARIANT 15 in CLAUDE.md
+
+**Automated Gate:** None (requires real API verification)
+
+---
+
 ## Pattern: How New Lessons Get Added
 
 When you encounter a new mistake:
@@ -267,6 +437,8 @@ The goal: every mistake should be catchable automatically. If it can't be automa
 | Manual: grep | `grep -rn "3/4\|4 engine"` | Stale engine count references |
 | Manual: symmetric | `grep "import.*components/" Game* Props*` | Asymmetric component imports |
 | Manual: API verify | `curl ... \| jq '.picks[0] \| keys'` | Missing backend fields |
-| Invariants | CLAUDE.md MASTER INVARIANTS | 11 rules that must never be violated |
+| Invariants | CLAUDE.md MASTER INVARIANTS | 15 rules that must never be violated |
+| Manual: data shapes | `curl ... \| jq '.picks[0].glitch_signals'` | Nested objects mistaken for flat numbers |
+| Manual: field keys | `curl ... \| jq '.picks[0].esoteric_contributions \| keys'` | Component key mismatches |
 | Build | `npm run build` | Syntax errors, import failures |
 | Tests | `npm run test:run` | Regression failures, mock drift, network error handling |

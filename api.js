@@ -228,7 +228,7 @@ export const api = {
     const normalizePick = (item) => ({
       ...item,
       // Convert confidence string to percentage
-      confidence: confidenceToPercent(item.confidence) || item.total_score * 10 || 70,
+      confidence: confidenceToPercent(item.confidence) || item.confidence_score || 70,
       // Map backend 'line' to frontend 'point'
       point: item.point || item.line,
       line: item.line ?? item.point,
@@ -247,9 +247,10 @@ export const api = {
       home_team: item.home_team,
       away_team: item.away_team,
       sport: item.sport || sport.toUpperCase(),
-      // Scores for display
-      ai_score: item.scoring_breakdown?.ai_models || item.ai_score,
-      pillar_score: item.scoring_breakdown?.pillars || item.pillar_score,
+      // Scores for display — prefer top-level engine scores (0-10) over
+      // scoring_breakdown.ai_models (0-8 raw sub-score, different value)
+      ai_score: item.ai_score ?? item.scoring_breakdown?.ai_models,
+      pillar_score: item.pillar_score ?? item.scoring_breakdown?.pillars,
       total_score: item.total_score,
       // Props specific
       player_name: item.player_name || item.player,

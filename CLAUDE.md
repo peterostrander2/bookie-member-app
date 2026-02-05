@@ -72,14 +72,14 @@ Backend `tiering.py` is the single source of truth. Frontend uses backend fields
 
 | Condition | Tier | Units | Action | Color |
 |-----------|------|-------|--------|-------|
-| final≥8.0 + 3/5 engines≥8.0 | TITANIUM_SMASH | 2.5 | SMASH | #00FFFF (Cyan) |
+| final≥8.0 + 3/4 engines≥8.0 | TITANIUM_SMASH | 2.5 | SMASH | #00FFFF (Cyan) |
 | ≥7.5 | GOLD_STAR | 2.0 | SMASH | #FFD700 (Gold) |
 | ≥6.5 | EDGE_LEAN | 1.0 | PLAY | #10B981 (Green) |
 | ≥5.5 | MONITOR | 0.0 | WATCH | #F59E0B (Amber) |
 | <5.5 | PASS | 0.0 | SKIP | #6B7280 (Gray) |
 
 **v20.5 Scoring (Option A):**
-- TITANIUM requires both final_score ≥ 8.0 AND 3/5 engines ≥ 8.0
+- TITANIUM requires both final_score ≥ 8.0 AND 3/4 weighted engines ≥ 8.0 (context excluded)
 - Community filter: Only picks ≥ 6.5 shown to community
 - Engine scores (Option A: 4 weighted engines + context modifier, all 0-10):
   - ai_score (25% weight) - 8 AI models
@@ -88,8 +88,9 @@ Backend `tiering.py` is the single source of truth. Frontend uses backend fields
   - jarvis_score (20% weight) - Gematria triggers
   - context_score (modifier ±0.35 cap) - Defense rank, pace, injury vacuum
 - Boost fields (added to final after BASE_4):
-  - context_modifier (±0.35), confluence_boost (0-1.5), msrf_boost (0-1.0)
-  - jason_sim_boost (±0.5), serp_boost (0-0.5), ensemble_adjustment (±0.5)
+  - context_modifier (±0.35), confluence_boost (0-3.0), msrf_boost (0-1.0)
+  - jason_sim_boost (-1.5 to +0.5), serp_boost (0-0.55), ensemble_adjustment (±0.5)
+  - phase8 (0-0.5), glitch (0-0.5), gematria (0-0.5), harmonic (0-0.5)
 
 **Frontend behavior:**
 - Uses backend `pick.tier` and `pick.units` fields (source of truth)
@@ -482,9 +483,9 @@ Claude branches follow pattern: `claude/{feature-name}-{sessionId}`
 | OfflineIndicator | `OfflineIndicator.jsx` | Offline mode provider and UI |
 | PushNotifications | `PushNotifications.jsx` | Push notification system |
 | BoostBreakdownPanel | `components/BoostBreakdownPanel.jsx` | Option A score breakdown (all 6 boost fields) |
-| StatusBadgeRow | `components/StatusBadgeRow.jsx` | MSRF/SERP/Jason/ML status badges |
-| GlitchSignalsPanel | `components/GlitchSignalsPanel.jsx` | GLITCH protocol signals with progress bars |
-| EsotericContributionsPanel | `components/EsotericContributionsPanel.jsx` | Esoteric contributions grouped by category |
+| StatusBadgeRow | `components/StatusBadgeRow.jsx` | MSRF active/SERP/Jason/ML status badges |
+| GlitchSignalsPanel | `components/GlitchSignalsPanel.jsx` | GLITCH protocol signals (nested object extraction: void_moon, kp_index, noosphere, benford) |
+| EsotericContributionsPanel | `components/EsotericContributionsPanel.jsx` | Esoteric contributions grouped by category (12 verified backend keys) |
 
 ### Smash Spots Architecture
 ```
@@ -495,7 +496,7 @@ Claude branches follow pattern: `claude/{feature-name}-{sessionId}`
 Both tabs pull from `/live/best-bets/{sport}` endpoint.
 
 **Display Tiers (v20.5):**
-- TITANIUM SMASH (≥8.0 + 3/5 engines ≥8.0) - Cyan with glow
+- TITANIUM SMASH (≥8.0 + 3/4 engines ≥8.0, context excluded) - Cyan with glow
 - GOLD STAR (≥7.5) - Gold
 - EDGE LEAN (≥6.5) - Green
 - MONITOR (≥5.5) - Amber (hidden by default)
@@ -605,11 +606,10 @@ All endpoints implemented:
 25. Offline mode (service worker caching, offline banner, stale-while-revalidate)
 26. Push notifications (SMASH alerts, configurable preferences, bell icon)
 27. Option A boost breakdown panel (all 6 boost fields displayed)
-28. Status badges (MSRF level, SERP active/shadow, Jason block/boost, ML adjust)
-29. GLITCH protocol signals panel (chrome resonance, void moon, noosphere, hurst, kp-index, benford)
-30. Esoteric contributions panel (numerology, astronomical, mathematical, situational)
-31. Void Moon warning banner on Esoteric page
-32. Phase 8 esoteric indicators (Mercury Retrograde, Rivalry, Streak, Solar Flare)
+28. Status badges (MSRF active, SERP active/shadow, Jason block/boost, ML adjust)
+29. GLITCH protocol signals panel (void moon, noosphere, kp-index, benford — nested object extraction)
+30. Esoteric contributions panel (numerology, astronomical, mathematical, signals, situational)
+31. Void Moon warning banner on Esoteric page (uses void_of_course path from today-energy)
 
 ### Key Files to Review First
 1. `api.js` - All backend connections + auth helpers + rate limiting
@@ -1473,6 +1473,45 @@ async getParlay(userId) {
 
 ---
 
+### Session: February 2026 (16-Bug Investigation & Fix)
+
+**Completed in this session:**
+1. Investigated and fixed 16 bugs across 8 files in the v20.5 frontend-backend wiring
+2. Rewrote GlitchSignalsPanel to handle nested objects (not flat numbers)
+3. Fixed normalizePick ai_score precedence (`||` → `??`) and confidence fallback
+4. Updated frontend_scoring_contract.js BOOST_CAPS to match verified backend values
+5. Rewrote EsotericContributionsPanel with correct 12 backend keys (removed 7 dead, added 4 missing)
+6. Rewrote StatusBadgeRow to use `msrf_boost > 0` (removed dead `msrf_metadata.level`)
+7. Fixed React.memo comparisons in both SmashList files to include v20.5 fields
+8. Removed duplicate TURN DATE inline badges (consolidated in StatusBadgeRow)
+9. Fixed Esoteric.jsx: void_moon→void_of_course path, removed GLITCH/Phase 8 sections (per-pick only)
+10. Disabled Historical Accuracy section (data not available from today-energy endpoint)
+11. Fixed sample data detection heuristic in Esoteric.jsx
+12. Fixed `$` literal in TierLegend template string
+13. Added 5 new lessons (11-15), 4 new invariants (12-15), 5 new NEVER DO items (16-20)
+
+**Root Causes Identified:**
+- Components built against assumed/planned data shapes, never verified against actual API
+- Contract values copied from documentation, not verified against live backend
+- Per-pick data confused with global daily data (different endpoints)
+- `||` operator used for field precedence (treats 0 as falsy)
+- Component field key names guessed instead of verified
+
+**Files modified:**
+- `components/GlitchSignalsPanel.jsx` - Complete rewrite (nested objects)
+- `components/EsotericContributionsPanel.jsx` - Complete rewrite (correct 12 keys)
+- `components/StatusBadgeRow.jsx` - Complete rewrite (msrf_boost check)
+- `core/frontend_scoring_contract.js` - BOOST_CAPS, TITANIUM_RULE corrected
+- `api.js` - ai_score precedence fix, confidence fallback fix
+- `GameSmashList.jsx` - memo comparison, TURN DATE removal
+- `PropsSmashList.jsx` - memo comparison, TURN DATE removal, $ literal fix
+- `Esoteric.jsx` - void_of_course path, removed dead sections, sample detection
+
+**Build:** Clean, all validators pass
+**Tests:** 91/91 passing
+
+---
+
 ## 🚨 MASTER INVARIANTS (NEVER VIOLATE) 🚨
 
 **READ THIS FIRST BEFORE TOUCHING SCORING OR DISPLAY CODE**
@@ -1525,18 +1564,19 @@ const tier = score >= 7.5 ? 'GOLD_STAR' : 'EDGE_LEAN';
 
 ---
 
-### INVARIANT 3: Titanium 3/5 Rule Display
+### INVARIANT 3: Titanium 3/4 Rule Display
 
-**RULE:** Titanium badge and legend MUST reference "3/5 engines" not "3/4 engines".
+**RULE:** Titanium badge and legend MUST reference "3/4 engines" — meaning 3 of the 4 weighted engines (AI, Research, Esoteric, Jarvis). Context is a bounded modifier, NOT a counted engine for TITANIUM gating.
 
-**Backend Rule:** `titanium_triggered=true` only when >= 3 of 5 engines >= 8.0
+**Backend Rule:** `titanium_triggered=true` only when >= 3 of 4 weighted engines >= 8.0 AND final_score >= 8.0
 
 **Files that reference this:**
 - `SmashSpotsPage.jsx` line ~65 (comment)
 - `SmashSpotsPage.jsx` line ~86 (legend text)
 - `SmashSpotsPage.jsx` line ~466 (TITANIUM banner)
+- `core/frontend_scoring_contract.js` → `TITANIUM_RULE.engineCount = 4`
 
-**NEVER:** Say "3/4 engines" - this is outdated (v12.0). Current is v17.3 with 5 engines.
+**NEVER:** Say "3/5 engines" — Context is excluded from the engine count for TITANIUM gating.
 
 ---
 
@@ -1585,9 +1625,9 @@ const tier = score >= 7.5 ? 'GOLD_STAR' : 'EDGE_LEAN';
   // v20.5 Option A Boost Fields
   base_4_score,            // Weighted average of 4 engines
   context_modifier,        // ±0.35 bounded
-  confluence_boost,        // 0 to 1.5
-  jason_sim_boost,         // -0.5 to +0.5 (can be negative!)
-  serp_boost,              // 0 to 0.5
+  confluence_boost,        // 0 to 3.0
+  jason_sim_boost,         // -1.5 to +0.5 (can be negative!)
+  serp_boost,              // 0 to 0.55
   ensemble_adjustment,     // ±0.5
   live_adjustment,         // In-play adjustment
 
@@ -1595,12 +1635,22 @@ const tier = score >= 7.5 ? 'GOLD_STAR' : 'EDGE_LEAN';
   msrf_status,             // VALIDATED | CONFIGURED | DISABLED
   serp_status,             // VALIDATED | CONFIGURED | DISABLED
   jason_status,            // VALIDATED | CONFIGURED | DISABLED
-  msrf_metadata,           // { level, points, source }
+  msrf_metadata,           // { source, reason, dates_found } (NOT level!)
   serp_shadow_mode,        // true = SERP running but not affecting score
 
-  // v20.5 Signal Dicts
-  glitch_signals,          // { chrome_resonance, void_moon, noosphere, hurst, kp_index, benford }
-  esoteric_contributions,  // { numerology, astro, fib_alignment, lunar, mercury, ... }
+  // v20.5 Signal Dicts — NESTED OBJECTS, not flat numbers!
+  glitch_signals: {
+    void_moon: { is_void, confidence, void_start, void_end },
+    kp_index: { kp_value, level },
+    noosphere: { velocity, trending },
+    benford: { score, anomaly_detected },
+  },
+  esoteric_contributions: {
+    // Actual backend keys (verified Feb 2026):
+    numerology, astro, fib_alignment, vortex, daily_edge,
+    glitch, biorhythm, gann, founders_echo, phase8, harmonic, msrf
+    // NOT: gematria, lunar, mercury, solar, fib_retracement, rivalry, streak, biorhythms
+  },
 }
 ```
 
@@ -1615,13 +1665,14 @@ const tier = score >= 7.5 ? 'GOLD_STAR' : 'EDGE_LEAN';
 | TITANIUM SMASH | `titanium_triggered === true` | Cyan #00FFFF | `pick.titanium_triggered` |
 | JARVIS | `jarvis_active === true` | Gold #FFD700 | `pick.jarvis_active` |
 | HARMONIC | `harmonic_boost > 0` | Purple #A855F7 | `pick.harmonic_boost` |
-| TURN DATE | `msrf_boost > 0` | Gold #EAB308 | `pick.msrf_boost` |
-| MSRF LEVEL | `msrf_metadata?.level` exists | Gold #EAB308 | `pick.msrf_metadata` |
+| TURN DATE | `msrf_boost > 0` | Gold #EAB308 | `pick.msrf_boost` (shows +value) |
 | SERP ACTIVE | `serp_boost > 0 && !serp_shadow_mode` | Cyan #00D4FF | `pick.serp_boost` |
 | SERP SHADOW | `serp_shadow_mode === true` | Gray #6B7280 | `pick.serp_shadow_mode` |
 | JASON BLOCK | `jason_sim_boost < 0` | Red #EF4444 | `pick.jason_sim_boost` |
 | JASON BOOST | `jason_sim_boost > 0` | Green #10B981 | `pick.jason_sim_boost` |
 | ML ADJUST | `ensemble_adjustment !== 0` | Blue #3B82F6 | `pick.ensemble_adjustment` |
+
+**REMOVED (Feb 2026):** MSRF LEVEL badge (`msrf_metadata?.level`) — backend never sends `level` in msrf_metadata. Replaced by TURN DATE badge which checks `msrf_boost > 0`.
 
 **NEVER:** Hardcode badge visibility or derive from other fields.
 
@@ -1781,6 +1832,97 @@ async getParlay(userId) {
 
 ---
 
+### INVARIANT 12: Verify Data Shapes Against Actual API Responses
+
+**RULE:** Before building ANY display component, fetch real data from the backend and inspect the actual field structure. NEVER assume data shapes from documentation or plan files.
+
+**Why:** `glitch_signals` was assumed to contain flat numbers (e.g., `void_moon: 0.5`) but actually contains nested objects (e.g., `void_moon: { is_void: true, confidence: 0.69, void_start: "20:00 UTC" }`). This caused TypeError crashes.
+
+**Verification command:**
+```bash
+curl -s "https://web-production-7b2a.up.railway.app/live/best-bets/NBA" \
+  -H "X-API-Key: bookie-prod-2026-xK9mP2nQ7vR4" | \
+  jq '.game_picks.picks[0].glitch_signals'
+# Inspect ACTUAL structure before writing component code
+```
+
+**NEVER:** Write component code that calls `.toFixed()`, `.toString()`, or numeric operations on a field without first confirming it IS a number (not an object).
+
+---
+
+### INVARIANT 13: Endpoint-to-Data Mapping
+
+**RULE:** Know which API endpoint provides which data. Per-pick data (glitch_signals, esoteric_contributions) comes from `/live/best-bets/{sport}`. Global daily data (moon_phase, betting_outlook) comes from `/esoteric/today-energy`.
+
+**Data Source Map:**
+| Data | Endpoint | Scope |
+|------|----------|-------|
+| `glitch_signals` | `/live/best-bets/{sport}` | Per-pick |
+| `esoteric_contributions` | `/live/best-bets/{sport}` | Per-pick |
+| `msrf_boost`, `serp_boost`, etc. | `/live/best-bets/{sport}` | Per-pick |
+| `void_of_course` | `/esoteric/today-energy` | Daily global |
+| `betting_outlook`, `overall_energy` | `/esoteric/today-energy` | Daily global |
+| `moon_phase`, `life_path` | `/esoteric/today-energy` | Daily global |
+
+**NEVER:** Display per-pick fields (glitch_signals, mercury_retrograde, rivalry_intensity) on the Esoteric.jsx page — that data doesn't come from the today-energy endpoint.
+
+---
+
+### INVARIANT 14: normalizePick() Precedence Rules
+
+**RULE:** In `normalizePick()`, prefer top-level backend fields over nested `scoring_breakdown` fields. Use `??` (nullish coalescing), NEVER `||` (logical OR).
+
+**Why `||` is wrong:**
+```javascript
+// WRONG: ai_models (0-8 scale) overrides ai_score (0-10 scale) when non-zero
+ai_score: item.scoring_breakdown?.ai_models || item.ai_score
+
+// CORRECT: prefer top-level ai_score, fall back to sub-score only if null/undefined
+ai_score: item.ai_score ?? item.scoring_breakdown?.ai_models
+```
+
+**Also: confidence fallback:**
+```javascript
+// WRONG: total_score * 10 conflates 0-10 scoring with 0-100 percentage
+confidence: confidenceToPercent(item.confidence) || item.total_score * 10 || 70
+
+// CORRECT: use backend's confidence_score field (already 0-100)
+confidence: confidenceToPercent(item.confidence) || item.confidence_score || 70
+```
+
+**NEVER:** Use `||` for field precedence — it treats `0` as falsy and skips valid zero values.
+
+---
+
+### INVARIANT 15: Component Field Names Must Match Backend Keys Exactly
+
+**RULE:** When building components that read from backend data dicts (glitch_signals, esoteric_contributions, etc.), the field keys in the component MUST match the actual backend keys exactly. No guessing, no synonyms.
+
+**Verified backend `esoteric_contributions` keys (Feb 2026):**
+```
+numerology, astro, fib_alignment, vortex, daily_edge,
+glitch, biorhythm, gann, founders_echo, phase8, harmonic, msrf
+```
+
+**Dead keys that DON'T exist in backend:**
+```
+gematria, lunar, mercury, solar, fib_retracement, rivalry, streak, biorhythms (plural)
+```
+
+**Common mistakes:**
+- `biorhythms` (plural) vs `biorhythm` (singular) — backend uses singular
+- `lunar` vs `phase8` — backend combines lunar/mercury/solar into `phase8`
+- `gematria` — backend uses `harmonic` for this concept
+
+**Verification:**
+```bash
+curl -s "https://web-production-7b2a.up.railway.app/live/best-bets/NBA" \
+  -H "X-API-Key: bookie-prod-2026-xK9mP2nQ7vR4" | \
+  jq '.game_picks.picks[0].esoteric_contributions | keys'
+```
+
+---
+
 ## 📋 FRONTEND-BACKEND CONTRACT (v17.3)
 
 ### API Response Structure
@@ -1890,9 +2032,9 @@ async getParlay(userId) {
 | File | Purpose |
 |------|---------|
 | `components/BoostBreakdownPanel.jsx` | Option A score breakdown: base_4, context, confluence, msrf, jason_sim, serp, ensemble, live |
-| `components/StatusBadgeRow.jsx` | Status badges: MSRF level, SERP active/shadow, Jason block/boost, ML adjust |
-| `components/GlitchSignalsPanel.jsx` | GLITCH protocol: chrome resonance, void moon, noosphere, hurst, kp-index, benford |
-| `components/EsotericContributionsPanel.jsx` | Esoteric contributions by category: numerology, astronomical, mathematical, situational |
+| `components/StatusBadgeRow.jsx` | Status badges: MSRF active (+value), SERP active/shadow, Jason block/boost, ML adjust |
+| `components/GlitchSignalsPanel.jsx` | GLITCH protocol: void_moon (nested), kp_index (nested), noosphere (nested), benford (nested) |
+| `components/EsotericContributionsPanel.jsx` | Esoteric contributions by category: numerology, astronomical, mathematical, signals, situational (12 verified keys) |
 
 ### API & Data
 
@@ -2059,6 +2201,99 @@ async getParlay(userId) {
 
 ---
 
+### Lesson 11: Backend Data Shape Mismatch (Nested Objects vs Flat Numbers)
+**Problem:** GlitchSignalsPanel called `.toFixed()` on nested objects, crashing on every signal.
+**Root Cause:** Component assumed `glitch_signals.void_moon` was a number (0.5), but backend sends `{is_void: true, confidence: 0.69, void_start: "20:00 UTC"}`. Same for `kp_index` (`{kp_value: 2.7, level: "QUIET"}`).
+**Impact:** TypeError crashes for any pick with GLITCH signals.
+
+**Fix Applied:** Rewrote GlitchSignalsPanel to extract correct nested values:
+```javascript
+// WRONG: signals.void_moon.toFixed(2) — TypeError: object has no method toFixed
+// CORRECT: signals.void_moon.is_void ? 'ACTIVE' : 'CLEAR'
+```
+
+**Prevention:**
+- ALWAYS fetch real API data before building components (see INVARIANT 12)
+- Never call numeric methods on fields without verifying they ARE numbers
+- `curl ... | jq '.picks[0].glitch_signals'` to see actual structure
+
+**Automated Gate:** None (requires real API verification — see verification checklist)
+
+---
+
+### Lesson 12: Contract Drift from Backend Reality
+**Problem:** `frontend_scoring_contract.js` had wrong BOOST_CAPS and TITANIUM_RULE values:
+- confluence was 1.5 (actual: 3.0 — 2x over)
+- jason_sim was ±0.5 (actual: -1.5 to +0.5 — 3x over)
+- serp was 0.5 (actual: 0.55)
+- TITANIUM_RULE said 3/5 engines >= 6.5 (actual: 3/4 engines >= 8.0)
+- Missing boost types: phase8, glitch, gematria, harmonic
+
+**Root Cause:** Contract was written from documentation/plan, never verified against live backend data.
+
+**Prevention:**
+- When writing contract values, verify against live API data (not docs)
+- Check: `curl ... | jq '.picks[0] | {confluence_boost, jason_sim_boost, serp_boost}'`
+- Look for values that exceed documented caps — that means caps are wrong
+
+**Automated Gate:** None (requires manual verification against backend)
+
+---
+
+### Lesson 13: Wrong API Endpoint for Component Data
+**Problem:** Esoteric.jsx displayed GLITCH Protocol section, Phase 8 indicators (mercury_retrograde, rivalry_intensity, streak_momentum, solar_flare), and void_moon using wrong field paths. These fields don't exist on `/esoteric/today-energy`.
+
+**Root Cause:** Confused per-pick data (from `/live/best-bets/{sport}`) with daily aggregate data (from `/esoteric/today-energy`). Built UI sections for data the endpoint doesn't provide.
+
+**Fix Applied:** Removed GLITCH section, Phase 8 section, and Historical Accuracy section from Esoteric.jsx. Fixed void_moon path (`void_moon` → `void_of_course`).
+
+**Prevention:**
+- Before adding a UI section, verify the endpoint returns that data
+- See INVARIANT 13 for endpoint-to-data mapping
+- `curl ... | jq 'keys'` on the actual endpoint to see what's available
+
+**Automated Gate:** None (requires manual API verification)
+
+---
+
+### Lesson 14: normalizePick Precedence Bugs
+**Problem:** `ai_score` showed wrong value (0-8 sub-score instead of 0-10 engine score). Confidence showed inflated values from `total_score * 10`.
+
+**Root Cause:** `item.scoring_breakdown?.ai_models || item.ai_score` — `||` operator means non-zero `ai_models` (0-8 scale) overrides correct `ai_score` (0-10 scale). Also `total_score * 10` conflated 0-10 scoring with 0-100 percentage.
+
+**Fix Applied:**
+```javascript
+ai_score: item.ai_score ?? item.scoring_breakdown?.ai_models  // ?? not ||
+confidence: confidenceToPercent(item.confidence) || item.confidence_score || 70
+```
+
+**Prevention:**
+- Use `??` for field precedence, NEVER `||` (see INVARIANT 14)
+- Prefer top-level fields over nested breakdown fields
+- `total_score * 10` is NEVER correct for confidence — use `confidence_score`
+
+**Automated Gate:** None (requires code review vigilance)
+
+---
+
+### Lesson 15: Component Key Name Mismatches
+**Problem:** EsotericContributionsPanel had 7 dead keys that don't exist in backend data and was missing 4 keys that do exist. Also had typo: `biorhythms` (plural) vs `biorhythm` (singular).
+
+**Root Cause:** Component keys were written from a plan/spec, never verified against actual `esoteric_contributions` dict from the backend.
+
+**Dead keys removed:** gematria, lunar, mercury, solar, fib_retracement, rivalry, streak
+**Missing keys added:** glitch, phase8, harmonic, msrf
+**Typo fixed:** biorhythms → biorhythm
+
+**Prevention:**
+- ALWAYS verify component field names against actual backend response (see INVARIANT 15)
+- `curl ... | jq '.picks[0].esoteric_contributions | keys'`
+- Never use synonyms or assumed names — use the EXACT backend key
+
+**Automated Gate:** None (requires real API verification)
+
+---
+
 ## ✅ VERIFICATION CHECKLIST (Before Deploy)
 
 ### 1. Contract Validators (MANDATORY - run first)
@@ -2110,7 +2345,7 @@ Check:
 - [ ] GLITCH Protocol panel shows signals with progress bars
 - [ ] Esoteric Contributions panel shows grouped categories
 - [ ] JARVIS badge appears when `jarvis_active: true`
-- [ ] TITANIUM banner mentions "3/5 engines"
+- [ ] TITANIUM banner mentions "3/4 engines"
 - [ ] Tier legend shows correct thresholds (uses contract constants)
 - [ ] Negative jason_sim_boost shows in red
 
@@ -2127,8 +2362,23 @@ done
 ### 7. Stale Reference Grep
 ```bash
 # Verify no outdated references
-grep -rn "3/4\|4 engine\|four engine" --include="*.jsx" --include="*.js"
-# Should return EMPTY
+grep -rn "3/5\|5 engine\|five engine" --include="*.jsx" --include="*.js" | grep -i titanium
+# Should return EMPTY (TITANIUM is 3/4 engines, context excluded)
+```
+
+### 8. Data Shape Verification (NEW - prevents Lesson 11)
+```bash
+# Verify glitch_signals are nested objects, not flat numbers
+curl -s "https://web-production-7b2a.up.railway.app/live/best-bets/NBA" \
+  -H "X-API-Key: bookie-prod-2026-xK9mP2nQ7vR4" | \
+  jq '.game_picks.picks[0].glitch_signals | to_entries[] | {key, value_type: (.value | type)}'
+# Each value_type should be "object", not "number"
+
+# Verify esoteric_contributions keys match component
+curl -s "https://web-production-7b2a.up.railway.app/live/best-bets/NBA" \
+  -H "X-API-Key: bookie-prod-2026-xK9mP2nQ7vR4" | \
+  jq '.game_picks.picks[0].esoteric_contributions | keys'
+# Should show: astro, biorhythm, daily_edge, fib_alignment, founders_echo, gann, glitch, harmonic, msrf, numerology, phase8, vortex
 ```
 
 ---
@@ -2136,8 +2386,8 @@ grep -rn "3/4\|4 engine\|four engine" --include="*.jsx" --include="*.js"
 ## 🚫 NEVER DO THESE
 
 1. **NEVER** recompute `final_score`, `tier`, or `titanium_triggered` on frontend
-2. **NEVER** display fewer than 5 engines (AI, Research, Esoteric, Jarvis, Context)
-3. **NEVER** say "3/4 engines" or "4 engines" - it's 5 engines since v17.1
+2. **NEVER** display fewer than 5 scores (AI, Research, Esoteric, Jarvis, Context)
+3. **NEVER** say "3/5 engines" for TITANIUM — it's 3/4 weighted engines (context excluded)
 4. **NEVER** hardcode tier thresholds - import from `core/frontend_scoring_contract.js`
 5. **NEVER** hardcode scoring literals even in comments or template strings - use constant NAMES
 6. **NEVER** derive badge visibility from score - use explicit boolean fields
@@ -2150,6 +2400,11 @@ grep -rn "3/4\|4 engine\|four engine" --include="*.jsx" --include="*.js"
 13. **NEVER** skip `normalizePick()` when wiring new backend fields - it's the single gateway
 14. **NEVER** use bare `{ json: () => ... }` objects in test mocks - use `mockResponse()` helper
 15. **NEVER** write API methods with `|| default` without wrapping in try-catch for network errors
+16. **NEVER** call `.toFixed()` or numeric methods on backend fields without verifying they're numbers (not nested objects)
+17. **NEVER** use `||` for field precedence in normalizePick — use `??` (nullish coalescing)
+18. **NEVER** build components against assumed/planned data shapes — always verify against real API data first
+19. **NEVER** display per-pick data (glitch_signals, esoteric_contributions) on pages using global endpoints (today-energy)
+20. **NEVER** guess field key names — always verify with `curl | jq 'keys'` against actual backend response
 
 ---
 
@@ -2166,7 +2421,7 @@ Context:  ±0.35    →  context_score   (modifier, not weighted)
 
 ### Tier Thresholds
 ```
-TITANIUM_SMASH: final >= 8.0 AND 3/5 engines >= 8.0
+TITANIUM_SMASH: final >= 8.0 AND 3/4 engines >= 8.0 (context excluded)
 GOLD_STAR:      final >= 7.5 (+ hard gates)
 EDGE_LEAN:      final >= 6.5
 MONITOR:        final >= 5.5 (hidden)
@@ -2180,8 +2435,7 @@ GOLD_STAR:    #FFD700 (Gold)
 EDGE_LEAN:    #10B981 (Green)
 JARVIS:       #FFD700 (Gold)
 HARMONIC:     #A855F7 (Purple)
-TURN DATE:    #EAB308 (Gold)
-MSRF LEVEL:   #EAB308 (Gold)
+TURN DATE:    #EAB308 (Gold) — msrf_boost > 0
 SERP ACTIVE:  #00D4FF (Cyan)
 SERP SHADOW:  #6B7280 (Gray)
 JASON BLOCK:  #EF4444 (Red)

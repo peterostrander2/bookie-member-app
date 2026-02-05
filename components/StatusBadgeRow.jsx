@@ -3,8 +3,8 @@ import React from 'react';
 /**
  * StatusBadgeRow - Displays status indicator badges for pick signals
  *
- * Badge conditions:
- * - MSRF Level (gold): msrf_metadata?.level exists
+ * Badge conditions (verified against actual backend data Feb 2026):
+ * - MSRF Active (gold): msrf_boost > 0 (replaces inline TURN DATE badge)
  * - SERP Active (cyan): serp_boost > 0 && !serp_shadow_mode
  * - SERP Shadow (gray): serp_shadow_mode === true
  * - Jason Block (red): jason_sim_boost < 0
@@ -24,23 +24,17 @@ const badgeStyle = (bg, color) => ({
   gap: '4px',
 });
 
-const MSRF_LEVEL_LABELS = {
-  HIGH: 'HIGH RESONANCE',
-  MODERATE: 'MOD RESONANCE',
-  LOW: 'LOW RESONANCE',
-};
-
 const StatusBadgeRow = ({ pick }) => {
   if (!pick) return null;
 
   const badges = [];
 
-  // MSRF Level Badge (Gold)
-  if (pick.msrf_metadata?.level) {
-    const label = MSRF_LEVEL_LABELS[pick.msrf_metadata.level] || pick.msrf_metadata.level;
+  // MSRF Active Badge (Gold) — shown when msrf_boost > 0
+  // Backend sends msrf_status ("VALIDATED"|"NOT_RELEVANT"|etc) and msrf_boost (number)
+  if (pick.msrf_boost > 0) {
     badges.push(
-      <div key="msrf-level" style={badgeStyle('rgba(234, 179, 8, 0.2)', '#EAB308')}>
-        {label}
+      <div key="msrf-active" style={badgeStyle('rgba(234, 179, 8, 0.2)', '#EAB308')}>
+        TURN DATE +{pick.msrf_boost.toFixed(1)}
       </div>
     );
   }

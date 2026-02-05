@@ -3,10 +3,9 @@ import React from 'react';
 /**
  * EsotericContributionsPanel - Displays esoteric contributions grouped by category
  *
- * Categories:
- * - Numerology: life path, daily edge, gematria
- * - Astronomical: lunar, mercury, solar
- * - Mathematical: fibonacci, gann, vortex
+ * Backend sends esoteric_contributions with these keys:
+ *   numerology, astro, fib_alignment, vortex, daily_edge,
+ *   glitch, biorhythm, gann, founders_echo, phase8, harmonic, msrf
  */
 
 const panelStyle = {
@@ -54,40 +53,42 @@ const formatValue = (value) => {
   return `${sign}${num.toFixed(2)}`;
 };
 
-// Field mappings for each category
+// Field mappings matching actual backend esoteric_contributions keys
 const CATEGORIES = {
   numerology: {
     title: 'Numerology',
     fields: [
       { key: 'numerology', label: 'Life Path' },
       { key: 'daily_edge', label: 'Daily Edge' },
-      { key: 'gematria', label: 'Gematria' },
     ],
   },
   astronomical: {
     title: 'Astronomical',
     fields: [
-      { key: 'lunar', label: 'Lunar Phase' },
-      { key: 'mercury', label: 'Mercury' },
-      { key: 'solar', label: 'Solar Flare' },
       { key: 'astro', label: 'Astro' },
+      { key: 'phase8', label: 'Phase 8 (Lunar/Mercury/Solar)' },
     ],
   },
   mathematical: {
     title: 'Mathematical',
     fields: [
       { key: 'fib_alignment', label: 'Fibonacci' },
-      { key: 'fib_retracement', label: 'Fib Retrace' },
       { key: 'gann', label: 'Gann Square' },
       { key: 'vortex', label: 'Vortex' },
+    ],
+  },
+  signals: {
+    title: 'Signals',
+    fields: [
+      { key: 'glitch', label: 'GLITCH' },
+      { key: 'harmonic', label: 'Harmonic' },
+      { key: 'msrf', label: 'MSRF' },
     ],
   },
   situational: {
     title: 'Situational',
     fields: [
-      { key: 'rivalry', label: 'Rivalry' },
-      { key: 'streak', label: 'Streak' },
-      { key: 'biorhythms', label: 'Biorhythms' },
+      { key: 'biorhythm', label: 'Biorhythm' },
       { key: 'founders_echo', label: "Founder's Echo" },
     ],
   },

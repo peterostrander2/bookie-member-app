@@ -96,8 +96,8 @@ const Esoteric = () => {
           </p>
         </div>
 
-        {/* v20.5: VOID MOON WARNING */}
-        {backendEnergy?.void_moon?.is_void && (
+        {/* v20.5: VOID MOON WARNING — reads from today-energy void_of_course field */}
+        {backendEnergy?.void_of_course?.is_void && (
           <div style={{
             backgroundColor: 'rgba(239, 68, 68, 0.15)',
             border: '1px solid #EF4444',
@@ -113,9 +113,6 @@ const Esoteric = () => {
             </div>
             <p style={{ color: '#9CA3AF', fontSize: '13px', margin: '8px 0 0' }}>
               Traditional wisdom advises against initiating new bets during void-of-course.
-              {backendEnergy.void_moon.void_end && (
-                <span> Ends: {backendEnergy.void_moon.void_end}</span>
-              )}
             </p>
           </div>
         )}
@@ -134,8 +131,8 @@ const Esoteric = () => {
               <span style={{ color: '#6b7280', fontSize: '12px', fontWeight: 'normal' }}>
                 {dailyReading.date}
               </span>
-              {/* v20.5: Sample data indicator when using client-side estimates */}
-              {(backendEnergy?.source === 'sample' || backendEnergy?.is_sample) && (
+              {/* v20.5: Sample data indicator — show when backend returns default/fallback data */}
+              {(!backendEnergy || backendEnergy?.betting_outlook === 'NEUTRAL' && backendEnergy?.overall_energy === 5.0) && (
                 <span style={{ fontSize: '10px', color: '#F59E0B', marginLeft: '8px' }}>
                   (estimated)
                 </span>
@@ -283,220 +280,13 @@ const Esoteric = () => {
               </div>
             </div>
 
-            {/* v20.5: GLITCH Protocol Section */}
-            {backendEnergy?.glitch_signals && Object.keys(backendEnergy.glitch_signals).length > 0 && (
-              <div style={{
-                backgroundColor: '#12121f',
-                borderRadius: '12px',
-                padding: '20px',
-                marginBottom: '15px',
-                border: '1px solid #A855F740'
-              }}>
-                <h4 style={{ color: '#A855F7', fontSize: '14px', margin: '0 0 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  GLITCH Protocol
-                  <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: 'normal' }}>
-                    (Esoteric Signals)
-                  </span>
-                </h4>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-                  {/* Chrome Resonance */}
-                  {backendEnergy.glitch_signals.chrome_resonance !== undefined && (
-                    <div style={{ backgroundColor: '#0a0a0f', padding: '12px', borderRadius: '8px' }}>
-                      <div style={{ color: '#9ca3af', fontSize: '11px', marginBottom: '4px' }}>Chrome Resonance</div>
-                      <div style={{ color: '#8B5CF6', fontSize: '18px', fontWeight: 'bold' }}>
-                        {(backendEnergy.glitch_signals.chrome_resonance * 100).toFixed(0)}%
-                      </div>
-                      <div style={{
-                        height: '4px',
-                        backgroundColor: '#1a1a2e',
-                        borderRadius: '2px',
-                        marginTop: '6px',
-                        overflow: 'hidden'
-                      }}>
-                        <div style={{
-                          height: '100%',
-                          width: `${backendEnergy.glitch_signals.chrome_resonance * 100}%`,
-                          backgroundColor: '#8B5CF6',
-                          borderRadius: '2px'
-                        }} />
-                      </div>
-                    </div>
-                  )}
-                  {/* Noosphere */}
-                  {backendEnergy.glitch_signals.noosphere !== undefined && (
-                    <div style={{ backgroundColor: '#0a0a0f', padding: '12px', borderRadius: '8px' }}>
-                      <div style={{ color: '#9ca3af', fontSize: '11px', marginBottom: '4px' }}>Noosphere</div>
-                      <div style={{ color: '#00D4FF', fontSize: '18px', fontWeight: 'bold' }}>
-                        {(backendEnergy.glitch_signals.noosphere * 100).toFixed(0)}%
-                      </div>
-                      <div style={{
-                        height: '4px',
-                        backgroundColor: '#1a1a2e',
-                        borderRadius: '2px',
-                        marginTop: '6px',
-                        overflow: 'hidden'
-                      }}>
-                        <div style={{
-                          height: '100%',
-                          width: `${backendEnergy.glitch_signals.noosphere * 100}%`,
-                          backgroundColor: '#00D4FF',
-                          borderRadius: '2px'
-                        }} />
-                      </div>
-                    </div>
-                  )}
-                  {/* Hurst Exponent */}
-                  {backendEnergy.glitch_signals.hurst !== undefined && (
-                    <div style={{ backgroundColor: '#0a0a0f', padding: '12px', borderRadius: '8px' }}>
-                      <div style={{ color: '#9ca3af', fontSize: '11px', marginBottom: '4px' }}>Hurst Exponent</div>
-                      <div style={{
-                        color: backendEnergy.glitch_signals.hurst > 0.5 ? '#10B981' : '#F59E0B',
-                        fontSize: '18px',
-                        fontWeight: 'bold'
-                      }}>
-                        H={backendEnergy.glitch_signals.hurst.toFixed(2)}
-                      </div>
-                      <div style={{ color: '#6b7280', fontSize: '10px', marginTop: '4px' }}>
-                        {backendEnergy.glitch_signals.hurst > 0.5 ? 'TRENDING' : 'MEAN-REVERTING'}
-                      </div>
-                    </div>
-                  )}
-                  {/* Kp-Index */}
-                  {backendEnergy.glitch_signals.kp_index !== undefined && (
-                    <div style={{ backgroundColor: '#0a0a0f', padding: '12px', borderRadius: '8px' }}>
-                      <div style={{ color: '#9ca3af', fontSize: '11px', marginBottom: '4px' }}>Kp-Index</div>
-                      <div style={{
-                        color: backendEnergy.glitch_signals.kp_index >= 5 ? '#EF4444' : '#10B981',
-                        fontSize: '18px',
-                        fontWeight: 'bold'
-                      }}>
-                        {backendEnergy.glitch_signals.kp_index.toFixed(1)}
-                      </div>
-                      <div style={{ color: '#6b7280', fontSize: '10px', marginTop: '4px' }}>
-                        {backendEnergy.glitch_signals.kp_index >= 5 ? 'STORM' : 'QUIET'}
-                      </div>
-                    </div>
-                  )}
-                  {/* Benford */}
-                  {backendEnergy.glitch_signals.benford !== undefined && (
-                    <div style={{ backgroundColor: '#0a0a0f', padding: '12px', borderRadius: '8px' }}>
-                      <div style={{ color: '#9ca3af', fontSize: '11px', marginBottom: '4px' }}>Benford Anomaly</div>
-                      <div style={{ color: '#F59E0B', fontSize: '18px', fontWeight: 'bold' }}>
-                        {(backendEnergy.glitch_signals.benford * 100).toFixed(0)}%
-                      </div>
-                      <div style={{
-                        height: '4px',
-                        backgroundColor: '#1a1a2e',
-                        borderRadius: '2px',
-                        marginTop: '6px',
-                        overflow: 'hidden'
-                      }}>
-                        <div style={{
-                          height: '100%',
-                          width: `${backendEnergy.glitch_signals.benford * 100}%`,
-                          backgroundColor: '#F59E0B',
-                          borderRadius: '2px'
-                        }} />
-                      </div>
-                    </div>
-                  )}
-                  {/* Void Moon */}
-                  {backendEnergy.glitch_signals.void_moon !== undefined && (
-                    <div style={{ backgroundColor: '#0a0a0f', padding: '12px', borderRadius: '8px' }}>
-                      <div style={{ color: '#9ca3af', fontSize: '11px', marginBottom: '4px' }}>Void Moon</div>
-                      <div style={{
-                        color: backendEnergy.glitch_signals.void_moon > 0 ? '#EF4444' : '#10B981',
-                        fontSize: '18px',
-                        fontWeight: 'bold'
-                      }}>
-                        {backendEnergy.glitch_signals.void_moon > 0 ? 'ACTIVE' : 'CLEAR'}
-                      </div>
-                      <div style={{ color: '#6b7280', fontSize: '10px', marginTop: '4px' }}>
-                        {backendEnergy.glitch_signals.void_moon > 0 ? 'Caution advised' : 'Safe to proceed'}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
+            {/* v20.5: GLITCH signals are per-pick only (shown in GlitchSignalsPanel on pick cards) */}
 
-            {/* v20.5: Phase 8 Esoteric Indicators */}
-            <div style={{
-              backgroundColor: '#12121f',
-              borderRadius: '12px',
-              padding: '20px',
-              marginBottom: '15px',
-              border: '1px solid #FFD70040'
-            }}>
-              <h4 style={{ color: '#FFD700', fontSize: '14px', margin: '0 0 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                Phase 8 Indicators
-              </h4>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
-                {/* Mercury Retrograde */}
-                <div style={{
-                  backgroundColor: backendEnergy?.mercury_retrograde ? 'rgba(239, 68, 68, 0.1)' : '#0a0a0f',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  border: backendEnergy?.mercury_retrograde ? '1px solid #EF4444' : 'none'
-                }}>
-                  <div style={{ color: '#9ca3af', fontSize: '11px', marginBottom: '4px' }}>Mercury Retrograde</div>
-                  <div style={{
-                    color: backendEnergy?.mercury_retrograde ? '#EF4444' : '#10B981',
-                    fontSize: '16px',
-                    fontWeight: 'bold'
-                  }}>
-                    {backendEnergy?.mercury_retrograde ? 'ACTIVE' : 'Direct'}
-                  </div>
-                  {backendEnergy?.mercury_retrograde && (
-                    <div style={{ color: '#EF4444', fontSize: '10px', marginTop: '4px' }}>
-                      2026: Mar 14-Apr 7, Jul 17-Aug 11, Nov 9-29
-                    </div>
-                  )}
-                </div>
-                {/* Rivalry Intensity */}
-                {backendEnergy?.rivalry_intensity !== undefined && (
-                  <div style={{ backgroundColor: '#0a0a0f', padding: '12px', borderRadius: '8px' }}>
-                    <div style={{ color: '#9ca3af', fontSize: '11px', marginBottom: '4px' }}>Rivalry Intensity</div>
-                    <div style={{
-                      color: backendEnergy.rivalry_intensity > 0.7 ? '#EF4444' : backendEnergy.rivalry_intensity > 0.4 ? '#F59E0B' : '#10B981',
-                      fontSize: '16px',
-                      fontWeight: 'bold'
-                    }}>
-                      {backendEnergy.rivalry_intensity > 0.7 ? 'HIGH' : backendEnergy.rivalry_intensity > 0.4 ? 'MODERATE' : 'LOW'}
-                    </div>
-                  </div>
-                )}
-                {/* Streak Momentum */}
-                {backendEnergy?.streak_momentum !== undefined && (
-                  <div style={{ backgroundColor: '#0a0a0f', padding: '12px', borderRadius: '8px' }}>
-                    <div style={{ color: '#9ca3af', fontSize: '11px', marginBottom: '4px' }}>Streak Momentum</div>
-                    <div style={{
-                      color: backendEnergy.streak_momentum > 0 ? '#10B981' : backendEnergy.streak_momentum < 0 ? '#EF4444' : '#6B7280',
-                      fontSize: '16px',
-                      fontWeight: 'bold'
-                    }}>
-                      {backendEnergy.streak_momentum > 0 ? '+' : ''}{backendEnergy.streak_momentum.toFixed(2)}
-                    </div>
-                  </div>
-                )}
-                {/* Solar Flare Activity */}
-                {backendEnergy?.solar_flare !== undefined && (
-                  <div style={{ backgroundColor: '#0a0a0f', padding: '12px', borderRadius: '8px' }}>
-                    <div style={{ color: '#9ca3af', fontSize: '11px', marginBottom: '4px' }}>Solar Flare</div>
-                    <div style={{
-                      color: backendEnergy.solar_flare > 0.7 ? '#EF4444' : backendEnergy.solar_flare > 0.3 ? '#F59E0B' : '#10B981',
-                      fontSize: '16px',
-                      fontWeight: 'bold'
-                    }}>
-                      {backendEnergy.solar_flare > 0.7 ? 'HIGH' : backendEnergy.solar_flare > 0.3 ? 'ELEVATED' : 'QUIET'}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+            {/* v20.5: Phase 8 indicators — rivalry, streak, solar are per-pick only (shown on pick cards) */}
+            {/* Mercury Retrograde status is not yet available from today-energy endpoint */}
 
-            {/* Historical Accuracy Section - from backend */}
-            {backendEnergy?.signal_accuracy && (
+            {/* Historical Accuracy — not yet available from today-energy endpoint */}
+            {false && backendEnergy?.signal_accuracy && (
               <div style={{
                 backgroundColor: '#12121f',
                 borderRadius: '12px',
@@ -505,7 +295,7 @@ const Esoteric = () => {
                 border: '1px solid #00FF8840'
               }}>
                 <h4 style={{ color: '#00FF88', fontSize: '14px', margin: '0 0 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  📈 Historical Accuracy
+                  Historical Accuracy
                   <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: 'normal' }}>
                     (Last 30 days)
                   </span>

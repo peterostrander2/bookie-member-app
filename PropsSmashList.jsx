@@ -559,11 +559,11 @@ const TierLegend = memo(() => (
     </div>
     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
       <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#FFD700' }} />
-      <span style={{ color: '#FFD700', fontSize: '11px', fontWeight: 'bold' }}>GOLD STAR ≥${GOLD_STAR_THRESHOLD}</span>
+      <span style={{ color: '#FFD700', fontSize: '11px', fontWeight: 'bold' }}>GOLD STAR ≥{GOLD_STAR_THRESHOLD}</span>
     </div>
     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
       <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10B981' }} />
-      <span style={{ color: '#10B981', fontSize: '11px', fontWeight: 'bold' }}>EDGE LEAN ≥${MIN_FINAL_SCORE}</span>
+      <span style={{ color: '#10B981', fontSize: '11px', fontWeight: 'bold' }}>EDGE LEAN ≥{MIN_FINAL_SCORE}</span>
     </div>
   </div>
 ));
@@ -985,22 +985,7 @@ const PropCard = memo(({ pick }) => {
               HARMONIC
             </div>
           )}
-          {/* v17.3: MSRF Turn Date Resonance */}
-          {pick.msrf_boost > 0 && (
-            <div style={{
-              backgroundColor: 'rgba(234, 179, 8, 0.2)',
-              padding: '4px 8px',
-              borderRadius: '4px',
-              fontSize: '10px',
-              color: '#EAB308',
-              fontWeight: 'bold',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px'
-            }}>
-              TURN DATE
-            </div>
-          )}
+          {/* v20.5: MSRF badge moved to StatusBadgeRow */}
           <LineMovement pick={pick} />
         </div>
       </div>
@@ -1410,16 +1395,24 @@ const PropCard = memo(({ pick }) => {
     </div>
   );
 }, (prevProps, nextProps) => {
-  // Custom comparison - only re-render if pick data changed (v10.4 fields)
-  return prevProps.pick.player === nextProps.pick.player &&
-         prevProps.pick.player_name === nextProps.pick.player_name &&
-         prevProps.pick.final_score === nextProps.pick.final_score &&
-         prevProps.pick.confidence === nextProps.pick.confidence &&
-         prevProps.pick.odds === nextProps.pick.odds &&
-         prevProps.pick.price === nextProps.pick.price &&
-         prevProps.pick.line === nextProps.pick.line &&
-         prevProps.pick.point === nextProps.pick.point &&
-         prevProps.pick.smash_spot === nextProps.pick.smash_spot;
+  // Custom comparison - re-render if any displayed field changed
+  const p = prevProps.pick, n = nextProps.pick;
+  return p.player === n.player &&
+         p.player_name === n.player_name &&
+         p.final_score === n.final_score &&
+         p.confidence === n.confidence &&
+         p.odds === n.odds &&
+         p.price === n.price &&
+         p.line === n.line &&
+         p.point === n.point &&
+         p.smash_spot === n.smash_spot &&
+         p.tier === n.tier &&
+         p.msrf_boost === n.msrf_boost &&
+         p.serp_boost === n.serp_boost &&
+         p.jason_sim_boost === n.jason_sim_boost &&
+         p.ensemble_adjustment === n.ensemble_adjustment &&
+         p.glitch_signals === n.glitch_signals &&
+         p.esoteric_contributions === n.esoteric_contributions;
 });
 PropCard.displayName = 'PropCard';
 

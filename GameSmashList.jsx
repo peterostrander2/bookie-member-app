@@ -722,22 +722,7 @@ const PickCard = memo(({ pick, injuries = [] }) => {
               HARMONIC
             </div>
           )}
-          {/* v17.3: MSRF Turn Date Resonance */}
-          {pick.msrf_boost > 0 && (
-            <div style={{
-              backgroundColor: 'rgba(234, 179, 8, 0.2)',
-              padding: '4px 8px',
-              borderRadius: '4px',
-              fontSize: '10px',
-              color: '#EAB308',
-              fontWeight: 'bold',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px'
-            }}>
-              TURN DATE
-            </div>
-          )}
+          {/* v20.5: MSRF badge moved to StatusBadgeRow */}
         </div>
       </div>
 
@@ -1015,16 +1000,25 @@ const PickCard = memo(({ pick, injuries = [] }) => {
     </div>
   );
 }, (prevProps, nextProps) => {
-  // Custom comparison - only re-render if pick data changed (v10.4 fields)
-  return prevProps.pick.home_team === nextProps.pick.home_team &&
-         prevProps.pick.market === nextProps.pick.market &&
-         prevProps.pick.final_score === nextProps.pick.final_score &&
-         prevProps.pick.confidence === nextProps.pick.confidence &&
-         prevProps.pick.odds === nextProps.pick.odds &&
-         prevProps.pick.price === nextProps.pick.price &&
-         prevProps.pick.line === nextProps.pick.line &&
-         prevProps.pick.point === nextProps.pick.point &&
-         prevProps.pick.smash_spot === nextProps.pick.smash_spot;
+  // Custom comparison - re-render if any displayed field changed
+  const p = prevProps.pick, n = nextProps.pick;
+  return p.home_team === n.home_team &&
+         p.market === n.market &&
+         p.final_score === n.final_score &&
+         p.confidence === n.confidence &&
+         p.odds === n.odds &&
+         p.price === n.price &&
+         p.line === n.line &&
+         p.point === n.point &&
+         p.smash_spot === n.smash_spot &&
+         p.tier === n.tier &&
+         p.titanium_triggered === n.titanium_triggered &&
+         p.msrf_boost === n.msrf_boost &&
+         p.serp_boost === n.serp_boost &&
+         p.jason_sim_boost === n.jason_sim_boost &&
+         p.ensemble_adjustment === n.ensemble_adjustment &&
+         p.glitch_signals === n.glitch_signals &&
+         p.esoteric_contributions === n.esoteric_contributions;
 });
 PickCard.displayName = 'PickCard';
 

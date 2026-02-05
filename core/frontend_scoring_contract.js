@@ -1,7 +1,7 @@
 /**
  * FRONTEND SCORING CONTRACT - Single Source of Truth
  * Must match backend: ~/Desktop/ai-betting-backend-main/core/scoring_contract.py
- * 
+ *
  * Import these constants - NEVER hardcode them in components
  */
 
@@ -13,15 +13,19 @@ export const ENGINE_WEIGHTS = {
 };
 
 // Context is NOT a weighted engine - it's a bounded modifier
-export const CONTEXT_MODIFIER_CAP = 0.35;  // ±0.35
+export const CONTEXT_MODIFIER_CAP = 0.35;  // +-0.35
 
-// Boost caps (for display/validation)
+// Boost caps (for display/validation) — verified against live backend data Feb 2026
 export const BOOST_CAPS = {
-  confluence: 1.5,      // CONFLUENCE_BOOST_CAP
+  confluence: 3.0,      // CONFLUENCE_BOOST_CAP (backend sends up to 3.0)
   msrf: 1.0,           // MSRF_BOOST_CAP
-  jason_sim: 0.5,      // JASON_SIM_BOOST_CAP (can be negative)
-  serp: 0.5,           // SERP_BOOST_CAP_TOTAL
-  ensemble: 0.5,       // ENSEMBLE_ADJUSTMENT_STEP
+  jason_sim: 1.5,      // JASON_SIM_BOOST_CAP (can be negative, range -1.5 to +0.5)
+  serp: 0.55,          // SERP_BOOST_CAP_TOTAL (observed 0.54 from backend)
+  ensemble: 0.5,       // ENSEMBLE_ADJUSTMENT_CAP
+  phase8: 0.5,         // PHASE8_BOOST (lunar, mercury, rivalry, solar)
+  glitch: 0.5,         // GLITCH_ADJUSTMENT
+  gematria: 0.5,       // GEMATRIA_BOOST
+  harmonic: 0.5,       // HARMONIC_BOOST
 };
 
 export const MONITOR_THRESHOLD = 5.5;
@@ -29,10 +33,13 @@ export const MIN_FINAL_SCORE = 6.5;      // Community threshold
 export const GOLD_STAR_THRESHOLD = 7.5;
 export const TITANIUM_THRESHOLD = 8.0;
 
+// Titanium requires 3 of 4 weighted engines (ai, research, esoteric, jarvis) >= 8.0
+// Context is excluded from titanium engine count
 export const TITANIUM_RULE = {
   minEnginesGte: 3,
-  engineThreshold: 6.5,  // 3/5 engines must be >= this
-  threshold: 8.0,
+  engineCount: 4,       // ai, research, esoteric, jarvis (NOT context)
+  engineThreshold: 8.0, // each engine must be >= this
+  threshold: 8.0,       // final_score must also be >= this
 };
 
 export const GOLD_STAR_GATES = {
