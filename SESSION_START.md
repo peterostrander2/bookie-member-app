@@ -10,9 +10,13 @@ If you are opening a new session, read these in order:
 ## Fast checks (run first thing)
 
 ```bash
+# Contract validators
 node scripts/validate_frontend_contracts.mjs
 node scripts/validate_no_frontend_literals.mjs
 node scripts/validate_no_eval.mjs
+
+# E2E fixture integrity (should return EMPTY)
+grep -rn "from '@playwright/test'" e2e/*.spec.js
 ```
 
 ## Install pre-commit hook (if not installed)
@@ -40,6 +44,9 @@ See `docs/SESSION_HYGIENE.md` for full guide.
 - When wiring new backend fields: update `normalizePick()` in `api.js` FIRST.
 - Always update BOTH `GameSmashList.jsx` AND `PropsSmashList.jsx` symmetrically.
 - Run all 3 validators before every commit.
+- E2E tests: import from `./fixtures`, never from `@playwright/test`.
+- New localStorage-gated UI: add skip key to `e2e/fixtures.js`.
+- New E2E tests: use `.first()` on broad selectors, `getByRole`/`getByLabel` over `getByText`/`locator`.
 
 ## Common tasks
 

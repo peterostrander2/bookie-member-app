@@ -642,7 +642,7 @@ npm run test:coverage  # With coverage
 ```
 
 **Test files:** `test/*.test.js`, `test/*.test.jsx`
-- `api.test.js` - API client tests (32 tests)
+- `api.test.js` - API client tests (33 tests)
 - `esoteric.test.js` - Chrome Resonance, Vortex Math tests (28 tests)
 - `BetSlip.test.jsx` - Bet slip component tests
 - `BetHistory.test.jsx` - Bet history component tests
@@ -679,12 +679,21 @@ npm run test:e2e:ui     # Interactive UI mode
 npm run test:e2e:headed # Run in headed browser
 ```
 
+**CRITICAL:** All E2E spec files MUST import `test` and `expect` from `./fixtures`, never from `@playwright/test`.
+```javascript
+// CORRECT
+import { test, expect } from './fixtures';
+
+// WRONG - bypasses shared localStorage setup
+import { test, expect } from '@playwright/test';
+```
+
 **Test files:** `e2e/*.spec.js`
-- `navigation.spec.js` - Page navigation and routing
-- `smash-spots.spec.js` - Picks viewing, tab switching
-- `bet-slip.spec.js` - Bet slip interactions
-- `parlay-builder.spec.js` - Parlay building flow
-- `esoteric.spec.js` - Esoteric matchup analyzer
+- `navigation.spec.js` - Page navigation and routing (16 tests)
+- `smash-spots.spec.js` - Picks viewing, tab switching, v20.5 panels (24 tests)
+- `bet-slip.spec.js` - Bet slip interactions (18 tests)
+- `parlay-builder.spec.js` - Parlay building flow (16 tests)
+- `esoteric.spec.js` - Esoteric matchup analyzer, cosmic energy (32 tests)
 
 ### API Mocking (MSW)
 Mock handlers available in `src/mocks/handlers.js` for development:
@@ -700,7 +709,7 @@ Mock handlers available in `src/mocks/handlers.js` for development:
 Automated pipeline that runs on every push and PR:
 
 **Jobs:**
-1. **Test** - Runs 91 unit tests with Vitest
+1. **Test** - Runs 92 unit tests with Vitest
 2. **Build** - Compiles production bundle (only if tests pass)
 3. **Deploy** - Deploys to Railway (only on merge to main)
 
@@ -1512,6 +1521,76 @@ async getParlay(userId) {
 
 ---
 
+### Session: February 2026 (Esoteric Enhancements + E2E Tests)
+
+**Completed in this session:**
+1. Fixed `getTodayEnergy()` sample data detection — added `_is_fallback` flag
+2. Enhanced Esoteric page: daily energy overview, Schumann resonance card, void moon timing, JARVIS day badge, power numbers section
+3. Added 10 E2E tests for v20.5 panels (5 smash-spots, 5 esoteric)
+4. Updated MSW mock handler for today-energy endpoint with new fields
+
+**Files modified:**
+- `api.js` - `_is_fallback` flag in getTodayEnergy
+- `Esoteric.jsx` - 5 new conditional sections, dead code cleanup
+- `src/mocks/handlers.js` - schumann_reading, void_moon_periods, jarvis_day mock data
+- `e2e/smash-spots.spec.js` - 5 v20.5 panel tests
+- `e2e/esoteric.spec.js` - 5 v20.5 enhancement tests
+- `test/api.test.js` - Updated getTodayEnergy tests for `_is_fallback`
+
+**Build:** Clean, all validators pass
+**Tests:** 92/92 unit, 96/96 E2E (at time of commit)
+
+---
+
+### Session: February 2026 (E2E Stabilization + Community Beta Prep)
+
+**Completed in this session:**
+1. Fixed ALL E2E tests (0 → 106 passing) by creating shared Playwright fixture
+2. Fixed Parlay Builder hardcoded `default_user` — unique per-browser user IDs
+3. Verified Daily Learning Loop already wired in Dashboard (not missing as assumed)
+4. Added MSW mock handler for `/live/grader/daily-lesson`
+5. Added try-catch to `api.getDailyLesson()` per INVARIANT 11
+6. Fixed 5+ E2E selector issues across all spec files
+7. Added comprehensive documentation (5 new lessons, 4 new NEVER DO items, 1 new invariant)
+
+**Root cause of E2E failures:**
+- Onboarding wizard (`bookie_onboarding_complete` localStorage key) covered entire page
+- Playwright runs with clean localStorage → wizard always shows → blocks all interactions
+
+**New files created:**
+- `e2e/fixtures.js` - Shared Playwright fixture (onboarding skip via `addInitScript`)
+
+**Files modified:**
+- `ParlayBuilder.jsx` - `getUserId()` replacing hardcoded `default_user`
+- `api.js` - try-catch added to `getDailyLesson()`
+- `src/mocks/handlers.js` - daily-lesson mock handler added
+- `e2e/navigation.spec.js` - import fix, strict mode violations, heading selectors
+- `e2e/smash-spots.spec.js` - import fix, sport selector button vs select
+- `e2e/esoteric.spec.js` - import fix, input label selector, Vite HMR race handling
+- `e2e/bet-slip.spec.js` - import fix
+- `e2e/parlay-builder.spec.js` - import fix, test assertion updates
+
+**Key patterns established:**
+- `e2e/fixtures.js` → all E2E tests import from here (INVARIANT 16)
+- `page.waitForSelector('h1')` → verify React rendered (not raw Vite source)
+- `getByRole('heading')` > `getByText()` for page headings
+- `getByLabel()` > `locator('input')` for form inputs
+
+**Documentation updated:**
+- `docs/LESSONS.md` - Lessons 16-20 (E2E patterns)
+- `docs/RECOVERY.md` - Recovery entries 14-17 (E2E troubleshooting)
+- `docs/MASTER_INDEX.md` - Section E (E2E testing), Section F (adding new E2E tests)
+- `SESSION_START.md` - E2E fixture check, E2E selector rules
+- `COMMIT_CHECKLIST.md` - E2E test step, fixture integrity check
+- `ARCHITECTURE.md` - React 18→19, v20.5 tier system, test counts
+- `.claude/SMASHSPOTS_API.md` - Marked as superseded (v10.4 → v20.5)
+- `CLAUDE.md` - INVARIANT 16, NEVER DO 21-24, session history, test counts
+
+**Build:** Clean, all validators pass
+**Tests:** 92/92 unit, 106/106 E2E
+
+---
+
 ## 🚨 MASTER INVARIANTS (NEVER VIOLATE) 🚨
 
 **READ THIS FIRST BEFORE TOUCHING SCORING OR DISPLAY CODE**
@@ -1923,6 +2002,50 @@ curl -s "https://web-production-7b2a.up.railway.app/live/best-bets/NBA" \
 
 ---
 
+### INVARIANT 16: E2E Tests Must Use Shared Fixtures
+
+**RULE:** All E2E test spec files MUST import `test` and `expect` from `./fixtures`, never from `@playwright/test`. The shared fixture skips the onboarding wizard by setting localStorage before page scripts run.
+
+**Why:** Playwright runs with clean localStorage. Without the fixture, the onboarding wizard renders at z-index 10000 and intercepts all clicks, failing every test.
+
+**Fixture file:** `e2e/fixtures.js`
+```javascript
+import { test as base, expect } from '@playwright/test';
+export const test = base.extend({
+  page: async ({ page }, use) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('bookie_onboarding_complete', 'true');
+      localStorage.setItem('dashboard_visited', 'true');
+    });
+    await use(page);
+  },
+});
+export { expect };
+```
+
+**When adding new localStorage-gated UI:**
+1. Add the skip key to the `addInitScript` block in `e2e/fixtures.js`
+2. Re-run full E2E suite: `npm run test:e2e`
+
+**E2E Selector Best Practices:**
+- Use `getByRole('heading', { name: /.../ })` for page headings (not `getByText`)
+- Use `getByLabel(/.../)` for form inputs (not `locator('input')`)
+- Add `.first()` to broad `getByText()` selectors
+- Never use `waitForLoadState('networkidle')` on pages with API polling
+- To verify page rendered (not raw Vite source), check for `<h1>` element, not text content
+
+**Verification:**
+```bash
+# All specs must import from ./fixtures
+grep -rn "from '@playwright/test'" e2e/*.spec.js
+# Should return EMPTY
+
+# Full E2E suite (106 tests)
+npm run test:e2e
+```
+
+---
+
 ## 📋 FRONTEND-BACKEND CONTRACT (v17.3)
 
 ### API Response Structure
@@ -2310,10 +2433,21 @@ npm run build
 # Must complete with NO errors
 ```
 
-### 3. Test Suite
+### 3. Unit Test Suite
 ```bash
 npm run test:run
-# All tests must pass
+# All 92 tests must pass
+```
+
+### 3b. E2E Test Suite
+```bash
+# Requires dev server running on :5173
+npm run test:e2e
+# All 106 tests must pass
+
+# Fixture integrity check
+grep -rn "from '@playwright/test'" e2e/*.spec.js
+# Should return EMPTY — all must import from './fixtures'
 ```
 
 ### 4. API Field Verification
@@ -2405,6 +2539,10 @@ curl -s "https://web-production-7b2a.up.railway.app/live/best-bets/NBA" \
 18. **NEVER** build components against assumed/planned data shapes — always verify against real API data first
 19. **NEVER** display per-pick data (glitch_signals, esoteric_contributions) on pages using global endpoints (today-energy)
 20. **NEVER** guess field key names — always verify with `curl | jq 'keys'` against actual backend response
+21. **NEVER** import from `@playwright/test` in E2E spec files — import from `./fixtures` (shared fixture skips onboarding)
+22. **NEVER** add localStorage-gated UI (modals, wizards, banners) without adding the skip key to `e2e/fixtures.js`
+23. **NEVER** use `waitForLoadState('networkidle')` in E2E tests on pages with API polling (BetHistory, Dashboard, SmashSpots)
+24. **NEVER** use `getByText()` to verify a page rendered — raw Vite source code contains all string literals and will match
 
 ---
 

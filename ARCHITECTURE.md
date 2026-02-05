@@ -10,12 +10,14 @@ Bookie-o-em is an AI-powered sports betting analysis platform that combines mach
 
 | Layer | Technology |
 |-------|------------|
-| **Frontend** | React 18 + Vite |
+| **Frontend** | React 19 + Vite 5 |
 | **Backend** | FastAPI (Python) |
-| **Hosting** | Vercel (Frontend) + Railway (Backend) |
+| **Hosting** | Railway (Both) |
 | **Data APIs** | The Odds API, Playbook API |
-| **Auth** | Whop (Membership) |
+| **Auth** | X-API-Key header |
 | **Storage** | localStorage (Client), Railway DB (Server) |
+| **Testing** | Vitest (92 unit), Playwright (106 E2E) |
+| **Monitoring** | Sentry (errors), GA4 (analytics) |
 
 ---
 
@@ -72,49 +74,27 @@ Bookie-o-em is an AI-powered sports betting analysis platform that combines mach
 
 ### 1. Signal Engine (`signalEngine.js`)
 
-The brain of the system. Aggregates 17 signals into a single confidence score.
+Client-side signal calculations: Gematria (6 ciphers), JARVIS triggers, Moon phase, Life path numerology, Tesla 3-6-9, Chrome Resonance, Vortex Math.
 
-```javascript
-// Signal Categories
-DATA SIGNALS (Highest Impact):
-├── sharp_money (18)    // Professional bettor action
-├── line_value (15)     // Best odds vs market
-├── ml_value (14)       // Moneyline discrepancies
-└── market_lean (13)    // Juice/vig analysis
-
-ML/AI SIGNALS:
-├── key_spread (12)     // Key numbers (3, 7 in NFL)
-├── kelly_edge (12)     // Calculated edge metric
-├── ensemble (10)       // XGBoost + LightGBM + RF
-├── lstm_brain (10)     // Neural network trends
-├── injury_impact (10)  // Usage vacuum calculation
-├── rest_fatigue (8)    // Schedule/travel
-├── public_fade (8)     // Fade public money
-└── key_number (6)      // Live odds key levels
-
-ESOTERIC SIGNALS:
-├── numerology (4)      // Life path numbers
-├── moon_phase (3)      // Lunar cycle impact
-├── gematria (3)        // Team name numerology
-├── sacred_geometry (2) // Tesla 3-6-9, Fibonacci
-└── zodiac (2)          // Astrological elements
+**Backend Scoring (v20.5 — 5 engines, Option A):**
+```
+AI (25%)       →  ai_score       8 AI models ensemble
+Research (35%) →  research_score Sharp money, line variance, public fade
+Esoteric (20%) →  esoteric_score Numerology, astro, fibonacci
+Jarvis (20%)   →  jarvis_score   Gematria triggers
+Context (±0.35)→  context_score  Defense rank, pace, injury vacuum (modifier)
 ```
 
-**Sport Modifiers:**
-```javascript
-NFL: key_spread × 1.5, sharp_money × 1.2
-NBA: rest_fatigue × 1.4, injury_impact × 1.3
-MLB: sharp_money × 1.3
-NCAAB: public_fade × 1.5
-```
+**Tier Classification (v20.5):**
+| Tier | Condition | Units | Color |
+|------|-----------|-------|-------|
+| TITANIUM_SMASH | final ≥ 8.0 + 3/4 engines ≥ 8.0 | 2.5 | Cyan |
+| GOLD_STAR | ≥ 7.5 + hard gates | 2.0 | Gold |
+| EDGE_LEAN | ≥ 6.5 | 1.0 | Green |
+| MONITOR | ≥ 5.5 | 0.0 | Amber (hidden) |
+| PASS | < 5.5 | 0.0 | Gray (hidden) |
 
-**Tier Classification:**
-| Confidence | Tier | Expected WR |
-|------------|------|-------------|
-| 80%+ | GOLDEN_CONVERGENCE | 62-65% |
-| 70-79% | SUPER_SIGNAL | 58-62% |
-| 60-69% | HARMONIC_ALIGNMENT | 55-58% |
-| <60% | PARTIAL_ALIGNMENT | 52-55% |
+**Note:** Tiers are computed by the backend. Frontend uses `pick.tier` directly (INVARIANT 1).
 
 ---
 
@@ -456,5 +436,5 @@ npm run preview
 
 ---
 
-*Last Updated: January 2026*
-*Version: 1.0 (Phase 1-4 Complete)*
+*Last Updated: February 2026*
+*Version: v20.5 (5-engine scoring, Option A boost breakdown, full E2E coverage)*

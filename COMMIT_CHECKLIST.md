@@ -23,11 +23,11 @@ node scripts/validate_frontend_contracts.mjs
 ```
 - [ ] All validators pass (exit code 0)
 
-### 3. Run Tests
+### 3. Run Unit Tests
 ```bash
-npm test
+npm run test:run
 ```
-- [ ] All tests pass
+- [ ] All 92 unit tests pass
 
 ### 4. Build Check
 ```bash
@@ -35,7 +35,14 @@ npm run build
 ```
 - [ ] Build succeeds without errors
 
-### 5. Commit
+### 5. E2E Tests (if UI changed)
+```bash
+npm run test:e2e
+```
+- [ ] All 106 E2E tests pass (requires dev server on :5173)
+- [ ] E2E fixture check: `grep -rn "from '@playwright/test'" e2e/*.spec.js` returns EMPTY
+
+### 6. Commit
 ```bash
 git add -A
 git commit -m "type: description
@@ -53,17 +60,26 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 - ❌ Hardcode API URLs (use `lib/api/client.js`)
 - ❌ Call `fetch`/`axios`/`new Request` outside `lib/api/client.js`
 - ❌ Edit generated files manually (`docs/AUDIT_MAP.md`)
+- ❌ Import `@playwright/test` directly in E2E specs (use `./fixtures`)
+- ❌ Add localStorage-gated UI without updating `e2e/fixtures.js`
+- ❌ Use `waitForLoadState('networkidle')` on pages with API polling
 
 ---
 
 ## Quick Commands
 
 ```bash
-# Validate everything
-node scripts/validate_frontend_contracts.mjs && npm test && npm run build
+# Validate everything (unit tests + build)
+node scripts/validate_frontend_contracts.mjs && npm run test:run && npm run build
 
 # Full CI check
 ./scripts/ci_sanity_check_frontend.sh
+
+# E2E tests (requires dev server on :5173)
+npm run test:e2e
+
+# E2E fixture integrity
+grep -rn "from '@playwright/test'" e2e/*.spec.js  # Should return EMPTY
 
 # Regenerate audit map after endpoint changes
 node scripts/generate_audit_map.mjs

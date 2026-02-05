@@ -98,6 +98,69 @@ Before touching code or docs: use this file to route yourself to the canonical s
 
 ---
 
+### E) E2E Testing
+**Examples:** Adding new E2E tests, fixing test failures, testing new pages
+
+**Canonical sources:**
+- `e2e/fixtures.js` - Shared Playwright fixture (onboarding skip, localStorage setup)
+- `e2e/*.spec.js` - Test spec files (import from `./fixtures`, never `@playwright/test`)
+- `playwright.config.js` - Test configuration (2 projects: Desktop Chrome, Mobile Chrome/Pixel 5)
+
+**Required patterns:**
+```javascript
+// ALL spec files MUST import from fixtures
+import { test, expect } from './fixtures';
+
+// Broad text selectors MUST use .first()
+await expect(page.getByText(/Player Props|Game Picks/i).first()).toBeVisible();
+
+// Page headings: use getByRole, not getByText
+await expect(page.getByRole('heading', { name: /Bet History/i })).toBeVisible();
+
+// Form inputs: use getByLabel, not locator('input')
+const awayInput = page.getByLabel(/Away Team/i);
+
+// Pages with API polling: NEVER use waitForLoadState('networkidle')
+await expect(page.getByRole('heading', { name: /.../ })).toBeVisible({ timeout: 10000 });
+
+// Vite HMR race: verify React rendered before asserting
+try { await page.waitForSelector('h1', { timeout: 10000 }); }
+catch { await expect(page.locator('body')).toBeVisible(); return; }
+```
+
+**When adding localStorage-gated UI (modals, wizards, banners):**
+1. Add the skip key to `e2e/fixtures.js` → `addInitScript()`
+2. Re-run full E2E suite to verify no regressions
+
+**Never do:**
+- Import from `@playwright/test` in spec files (use `./fixtures`)
+- Use `waitForLoadState('networkidle')` on pages with API calls
+- Use `getByText()` to verify page rendered (matches raw source strings)
+- Use generic `locator('select').first()` without checking element type in component
+- Write a test for only one browser — tests run on both Desktop Chrome and Mobile Chrome
+
+---
+
+### F) Adding New E2E Tests
+
+**Step-by-step:**
+1. Add test to existing spec file (prefer over new files)
+2. Import from `./fixtures`: `import { test, expect } from './fixtures';`
+3. Use defensive patterns (`if (await element.isVisible())`) for data-dependent checks
+4. Run full suite: `npm run test:e2e` (not just the new test)
+5. Check both Desktop Chrome AND Mobile Chrome results
+
+**Existing spec files:**
+| File | Covers |
+|------|--------|
+| `e2e/navigation.spec.js` | Page routing, mobile navigation |
+| `e2e/smash-spots.spec.js` | Picks, tabs, sport selection, v20.5 panels |
+| `e2e/bet-slip.spec.js` | Bet slip interactions, parlay calculator |
+| `e2e/parlay-builder.spec.js` | Parlay builder, calculator, history |
+| `e2e/esoteric.spec.js` | Esoteric page, matchup analyzer, v20.5 enhancements |
+
+---
+
 ## Canonical Sources — Quick Table
 
 | Topic | Canonical File(s) | What It Defines |
@@ -110,9 +173,11 @@ Before touching code or docs: use this file to route yourself to the canonical s
 | Components | `App.jsx` | Routing, lazy loading |
 | Signals | `signalEngine.js` | Client calculations |
 | Storage | `storageUtils.js` | localStorage keys |
-| Lessons | `docs/LESSONS.md` | Historical mistakes and prevention (15 lessons) |
+| Lessons | `docs/LESSONS.md` | Historical mistakes and prevention (20 lessons) |
 | Test Mocks | `test/api.test.js` → `mockResponse()` | Canonical mock pattern for API tests |
 | Test Setup | `test/setup.js` | Global mocks, env stubs, rate limit bypass |
+| E2E Fixtures | `e2e/fixtures.js` | Shared page fixture (onboarding skip, localStorage) |
+| E2E Config | `playwright.config.js` | Desktop Chrome + Mobile Chrome/Pixel 5 |
 
 ---
 
@@ -244,13 +309,20 @@ node scripts/validate_frontend_contracts.mjs
 node scripts/validate_no_frontend_literals.mjs
 node scripts/validate_no_eval.mjs
 
-# 2. Test (91 tests, ALL must pass)
+# 2. Unit tests (92 tests, ALL must pass)
 npm run test:run
 
 # 3. Build
 npm run build
 
-# 4. Commit and push
+# 4. E2E tests (106 tests, requires dev server on :5173)
+npm run test:e2e
+
+# 5. E2E fixture check
+grep -rn "from '@playwright/test'" e2e/*.spec.js
+# ^ Should return EMPTY
+
+# 6. Commit and push
 git add -A && git commit -m "feat: ... + docs: ..."
 git push origin main
 ```

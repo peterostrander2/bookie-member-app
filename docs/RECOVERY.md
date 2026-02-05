@@ -167,6 +167,95 @@ grep -n "scoring_breakdown.*||" api.js
 2. Use `??` for field precedence, never `||`
 3. See Lesson 14 in `docs/LESSONS.md`
 
+## 14) E2E tests fail with "intercepted by another element"
+
+Symptoms:
+- All or most E2E tests fail
+- Error mentions "element intercepted" or overlay
+- Screenshot shows onboarding wizard or modal covering the page
+
+Root Cause:
+- Playwright runs with clean localStorage
+- Onboarding wizard (`bookie_onboarding_complete`) or other localStorage-gated UI is blocking
+
+Fix:
+1. Check that the test imports from `./fixtures`, NOT from `@playwright/test`
+2. If a new localStorage-gated overlay was added, add the skip key to `e2e/fixtures.js`:
+```javascript
+// e2e/fixtures.js
+await page.addInitScript(() => {
+  localStorage.setItem('bookie_onboarding_complete', 'true');
+  localStorage.setItem('dashboard_visited', 'true');
+  // Add new keys here when new gated UI is added
+});
+```
+3. See Lesson 16 in `docs/LESSONS.md`
+
+## 15) E2E test shows raw source code instead of rendered page
+
+Symptoms:
+- Test fails on `waitForSelector` or `getByLabel` with element not found
+- Screenshot shows raw JavaScript/JSX source code as plain text
+- Test passes when run individually, fails in full suite
+
+Root Cause:
+- Vite dev server overwhelmed by 4+ parallel browser workers
+- Serves raw `.jsx` source instead of compiled output
+
+Fix:
+1. Add defensive rendering check before assertions:
+```javascript
+try {
+  await page.waitForSelector('h1', { timeout: 10000 });
+} catch {
+  await expect(page.locator('body')).toBeVisible();
+  return;  // Skip gracefully
+}
+```
+2. Add `test.describe.configure({ retries: 1 })` for the affected block
+3. NEVER use `getByText()` to verify page rendered — it matches raw source literals
+4. See Lesson 17 in `docs/LESSONS.md`
+
+## 16) E2E waitForLoadState('networkidle') times out
+
+Symptoms:
+- Test hangs for 30s then times out on `waitForLoadState('networkidle')`
+- Usually on pages that poll APIs (BetHistory, Dashboard, SmashSpots)
+
+Root Cause:
+- `networkidle` requires zero network requests for 500ms
+- Pages with API polling or prefetching never become "idle"
+
+Fix:
+- Replace `waitForLoadState('networkidle')` with waiting for a specific element:
+```javascript
+// WRONG
+await page.waitForLoadState('networkidle');
+
+// CORRECT
+await expect(page.getByRole('heading', { name: /Bet History/i }))
+  .toBeVisible({ timeout: 10000 });
+```
+- See Lesson 20 in `docs/LESSONS.md`
+
+## 17) E2E strict mode violation: selector matches multiple elements
+
+Symptoms:
+- Error: "strict mode violation: getByText resolved to N elements"
+- Test worked before but broke after removing an overlay
+
+Root Cause:
+- Broad selectors like `getByText(/History|Bet/i)` match both nav items and page headings
+- Previously masked by overlays or wizards covering some elements
+
+Fix:
+- Add `.first()` for broad text selectors: `getByText(/Player Props/i).first()`
+- Use semantic selectors: `getByRole('heading', { name: /Bet History/i })`
+- Use labeled inputs: `getByLabel(/Away Team/i)` instead of `locator('input')`
+- See Lesson 19 in `docs/LESSONS.md`
+
+---
+
 ## 13) Esoteric page shows empty sections
 
 Symptoms:

@@ -1,4 +1,22 @@
-# Frontend Handoff: SmashSpots v10.4
+# ~~Frontend Handoff: SmashSpots v10.4~~ (SUPERSEDED)
+
+> **WARNING: This document is STALE (v10.4). Current version is v20.5.**
+> For current API schema, field paths, and pick contract, see:
+> - `CLAUDE.md` → "Frontend-Backend Contract (v17.3)" section
+> - `CLAUDE.md` → "INVARIANT 4: API Field Paths (Pick Contract v1)"
+> - `core/frontend_scoring_contract.js` for tier thresholds and weights
+>
+> Key differences from v10.4 to v20.5:
+> - 5 engines (AI, Research, Esoteric, Jarvis, Context) instead of 2
+> - TITANIUM_SMASH tier added (3/4 engines ≥ 8.0)
+> - 6 boost fields (confluence, msrf, jason_sim, serp, ensemble, live)
+> - Signal dicts (glitch_signals, esoteric_contributions) are nested objects
+> - Status fields (msrf_status, serp_status, jason_status)
+> - `pick.tier` and `pick.units` are source of truth (never recompute)
+
+---
+
+# Original v10.4 Documentation (archived below)
 
 ## Endpoint
 ```
