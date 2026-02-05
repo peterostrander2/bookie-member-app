@@ -157,8 +157,22 @@ const mockTodayEnergy = {
   tesla_alignment: 'STRONG',
   recommendation: 'Tesla alignment active. Trust underdogs today.',
   lucky_numbers: [6, 8, 15, 23],
-  jarvis_day: false,
-  power_numbers_active: ['Tesla 6']
+  jarvis_day: true,
+  power_numbers_active: ['Tesla 6'],
+  void_of_course: {
+    is_void: true,
+    void_start: '2026-02-04T14:30:00Z',
+    void_end: '2026-02-04T18:45:00Z',
+    warning: 'Avoid initiating new bets during void-of-course moon'
+  },
+  void_moon_periods: [
+    { start: '2026-02-04T14:30:00Z', end: '2026-02-04T18:45:00Z' }
+  ],
+  schumann_reading: {
+    frequency_hz: 7.95,
+    status: 'ELEVATED',
+    betting_impact: 'Heightened intuition'
+  }
 };
 
 const mockSportsbooks = [

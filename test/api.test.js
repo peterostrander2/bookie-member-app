@@ -143,36 +143,47 @@ describe('api', () => {
   })
 
   describe('Defensive handling', () => {
-    it('getTodayEnergy returns defaults on error', async () => {
+    it('getTodayEnergy returns defaults with _is_fallback on error', async () => {
       fetch.mockRejectedValueOnce(new Error('Network error'))
 
       const result = await api.getTodayEnergy()
 
       expect(result).toEqual({
         betting_outlook: 'NEUTRAL',
-        overall_energy: 5.0
+        overall_energy: 5.0,
+        _is_fallback: true
       })
     })
 
-    it('getTodayEnergy returns defaults on non-ok response', async () => {
+    it('getTodayEnergy returns defaults with _is_fallback on non-ok response', async () => {
       fetch.mockResolvedValueOnce(mockResponse(null, { ok: false, status: 500 }))
 
       const result = await api.getTodayEnergy()
 
       expect(result).toEqual({
         betting_outlook: 'NEUTRAL',
-        overall_energy: 5.0
+        overall_energy: 5.0,
+        _is_fallback: true
       })
     })
 
-    it('getTodayEnergy fills missing fields with defaults', async () => {
-      fetch.mockResolvedValueOnce(mockResponse({ moon_phase: 'Full' }))
+    it('getTodayEnergy passes through backend fields without premature defaults', async () => {
+      fetch.mockResolvedValueOnce(mockResponse({ moon_phase: 'Full', betting_outlook: 'BULLISH', overall_energy: 8.2 }))
 
       const result = await api.getTodayEnergy()
 
-      expect(result.betting_outlook).toBe('NEUTRAL')
-      expect(result.overall_energy).toBe(5.0)
+      expect(result._is_fallback).toBe(false)
+      expect(result.betting_outlook).toBe('BULLISH')
+      expect(result.overall_energy).toBe(8.2)
       expect(result.moon_phase).toBe('Full')
+    })
+
+    it('getTodayEnergy returns _is_fallback false on successful response', async () => {
+      fetch.mockResolvedValueOnce(mockResponse({ betting_outlook: 'NEUTRAL', overall_energy: 5.0 }))
+
+      const result = await api.getTodayEnergy()
+
+      expect(result._is_fallback).toBe(false)
     })
 
     it('getSportsbooks returns empty array on error', async () => {

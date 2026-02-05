@@ -94,6 +94,21 @@ const Esoteric = () => {
           <p style={{ color: '#6b7280', margin: 0, fontSize: '14px' }}>
             Gematria • Numerology • Sacred Geometry • Cosmic Alignment
           </p>
+          {backendEnergy?.jarvis_day === true && (
+            <span style={{
+              backgroundColor: '#FFD70020',
+              color: '#FFD700',
+              padding: '4px 12px',
+              borderRadius: '12px',
+              fontSize: '11px',
+              fontWeight: 'bold',
+              border: '1px solid #FFD70050',
+              marginLeft: '12px',
+              whiteSpace: 'nowrap'
+            }}>
+              JARVIS DAY ACTIVE
+            </span>
+          )}
         </div>
 
         {/* v20.5: VOID MOON WARNING — reads from today-energy void_of_course field */}
@@ -114,6 +129,84 @@ const Esoteric = () => {
             <p style={{ color: '#9CA3AF', fontSize: '13px', margin: '8px 0 0' }}>
               Traditional wisdom advises against initiating new bets during void-of-course.
             </p>
+            {backendEnergy?.void_moon_periods?.length > 0 && (
+              <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <div style={{ color: '#EF4444', fontSize: '12px', fontWeight: 'bold' }}>Void Moon Windows:</div>
+                {backendEnergy.void_moon_periods.map((period, i) => {
+                  const startTime = new Date(period.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' });
+                  const endTime = new Date(period.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' });
+                  return (
+                    <div key={i} style={{
+                      backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                      padding: '6px 12px',
+                      borderRadius: '6px',
+                      color: '#FCA5A5',
+                      fontSize: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}>
+                      <span style={{ color: '#EF4444' }}>-</span>
+                      {startTime} — {endTime}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* DAILY ENERGY OVERVIEW — only when backend provides real data */}
+        {backendEnergy?.betting_outlook && !backendEnergy._is_fallback && (
+          <div style={{
+            backgroundColor: '#12121f',
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            border: '1px solid #333'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{
+                  fontSize: '36px',
+                  fontWeight: 'bold',
+                  color: (backendEnergy.overall_energy ?? 5) >= 7 ? '#00FF88'
+                       : (backendEnergy.overall_energy ?? 5) >= 5 ? '#F59E0B'
+                       : '#EF4444'
+                }}>
+                  {(backendEnergy.overall_energy ?? 5).toFixed(1)}
+                </div>
+                <div style={{ color: '#6b7280', fontSize: '11px' }}>/10 Energy</div>
+              </div>
+              <div>
+                <div style={{ color: '#fff', fontSize: '14px', fontWeight: '500', marginBottom: '4px' }}>
+                  Daily Energy Overview
+                </div>
+                <div style={{ color: '#9ca3af', fontSize: '12px' }}>
+                  {backendEnergy.day_energy ? `Theme: ${backendEnergy.day_energy}` : 'Today\'s cosmic energy reading'}
+                </div>
+              </div>
+            </div>
+            <span style={{
+              padding: '6px 16px',
+              borderRadius: '20px',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              backgroundColor: backendEnergy.betting_outlook === 'BULLISH' ? '#10B98120'
+                             : backendEnergy.betting_outlook === 'NEUTRAL' ? '#F59E0B20'
+                             : '#EF444420',
+              color: backendEnergy.betting_outlook === 'BULLISH' ? '#10B981'
+                   : backendEnergy.betting_outlook === 'NEUTRAL' ? '#F59E0B'
+                   : '#EF4444',
+              border: `1px solid ${backendEnergy.betting_outlook === 'BULLISH' ? '#10B98150'
+                                 : backendEnergy.betting_outlook === 'NEUTRAL' ? '#F59E0B50'
+                                 : '#EF444450'}`
+            }}>
+              {backendEnergy.betting_outlook}
+            </span>
           </div>
         )}
 
@@ -131,15 +224,15 @@ const Esoteric = () => {
               <span style={{ color: '#6b7280', fontSize: '12px', fontWeight: 'normal' }}>
                 {dailyReading.date}
               </span>
-              {/* v20.5: Sample data indicator — show when backend returns default/fallback data */}
-              {(!backendEnergy || backendEnergy?.betting_outlook === 'NEUTRAL' && backendEnergy?.overall_energy === 5.0) && (
+              {/* v20.5: Sample data indicator — show when backend returns fallback data */}
+              {backendEnergy?._is_fallback && (
                 <span style={{ fontSize: '10px', color: '#F59E0B', marginLeft: '8px' }}>
-                  (estimated)
+                  (offline)
                 </span>
               )}
             </h2>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '15px', marginBottom: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '15px', marginBottom: '20px' }}>
               {/* Moon Phase */}
               <div style={{
                 backgroundColor: '#12121f',
@@ -261,6 +354,48 @@ const Esoteric = () => {
                   {dailyReading.teslaAlignment === 'STRONG' ? '⚡ Active!' : 'Moderate'}
                 </div>
               </div>
+
+              {/* Schumann Resonance — only when backend provides data */}
+              {backendEnergy?.schumann_reading && (
+                <div style={{
+                  backgroundColor: '#12121f',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  textAlign: 'center'
+                }}>
+                  <div style={{
+                    fontSize: '28px',
+                    fontWeight: 'bold',
+                    color: backendEnergy.schumann_reading.status === 'ELEVATED' ? '#F59E0B'
+                         : backendEnergy.schumann_reading.status === 'SUPPRESSED' ? '#EF4444'
+                         : '#10B981',
+                    marginBottom: '8px'
+                  }}>
+                    {backendEnergy.schumann_reading.frequency_hz} Hz
+                  </div>
+                  <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '14px', marginBottom: '4px' }}>
+                    Schumann Resonance
+                  </div>
+                  <div style={{ color: '#9ca3af', fontSize: '12px', marginBottom: '4px' }}>
+                    {(backendEnergy.schumann_reading.frequency_hz - 7.83) >= 0 ? '+' : ''}
+                    {(backendEnergy.schumann_reading.frequency_hz - 7.83).toFixed(2)} Hz from baseline
+                  </div>
+                  <span style={{
+                    fontSize: '10px',
+                    fontWeight: 'bold',
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    backgroundColor: backendEnergy.schumann_reading.status === 'ELEVATED' ? '#F59E0B20'
+                                   : backendEnergy.schumann_reading.status === 'SUPPRESSED' ? '#EF444420'
+                                   : '#10B98120',
+                    color: backendEnergy.schumann_reading.status === 'ELEVATED' ? '#F59E0B'
+                         : backendEnergy.schumann_reading.status === 'SUPPRESSED' ? '#EF4444'
+                         : '#10B981'
+                  }}>
+                    {backendEnergy.schumann_reading.status}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Daily Insights */}
@@ -280,61 +415,7 @@ const Esoteric = () => {
               </div>
             </div>
 
-            {/* v20.5: GLITCH signals are per-pick only (shown in GlitchSignalsPanel on pick cards) */}
-
-            {/* v20.5: Phase 8 indicators — rivalry, streak, solar are per-pick only (shown on pick cards) */}
-            {/* Mercury Retrograde status is not yet available from today-energy endpoint */}
-
-            {/* Historical Accuracy — not yet available from today-energy endpoint */}
-            {false && backendEnergy?.signal_accuracy && (
-              <div style={{
-                backgroundColor: '#12121f',
-                borderRadius: '12px',
-                padding: '20px',
-                marginBottom: '15px',
-                border: '1px solid #00FF8840'
-              }}>
-                <h4 style={{ color: '#00FF88', fontSize: '14px', margin: '0 0 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  Historical Accuracy
-                  <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: 'normal' }}>
-                    (Last 30 days)
-                  </span>
-                </h4>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
-                  {Object.entries(backendEnergy.signal_accuracy).map(([signal, data]) => (
-                    <div key={signal} style={{
-                      backgroundColor: '#0a0a0f',
-                      padding: '12px',
-                      borderRadius: '8px',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center'
-                    }}>
-                      <div>
-                        <div style={{ color: '#fff', fontSize: '13px', fontWeight: '500', textTransform: 'capitalize' }}>
-                          {signal.replace(/_/g, ' ')}
-                        </div>
-                        <div style={{ color: '#6b7280', fontSize: '11px' }}>
-                          {data.description || `When ${signal} is active`}
-                        </div>
-                      </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{
-                          color: data.edge > 0 ? '#00FF88' : data.edge < 0 ? '#FF4444' : '#9ca3af',
-                          fontSize: '16px',
-                          fontWeight: 'bold'
-                        }}>
-                          {data.edge > 0 ? '+' : ''}{data.edge?.toFixed(1) || '0.0'}%
-                        </div>
-                        <div style={{ color: '#6b7280', fontSize: '10px' }}>
-                          {data.win_rate?.toFixed(0) || 50}% win ({data.sample_size || 0})
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* v20.5: GLITCH, Phase 8, Mercury, and Historical Accuracy are per-pick or not available from today-energy */}
 
             {/* Natural Bias & Recommendation */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
@@ -379,6 +460,27 @@ const Esoteric = () => {
                 </span>
               ))}
             </div>
+
+            {/* Power Numbers Active — only when backend provides data */}
+            {backendEnergy?.power_numbers_active?.length > 0 && (
+              <div style={{ marginTop: '12px', textAlign: 'center' }}>
+                <span style={{ color: '#6b7280', fontSize: '12px' }}>Power Numbers Active: </span>
+                {backendEnergy.power_numbers_active.map((num, i) => (
+                  <span key={i} style={{
+                    backgroundColor: '#FFD70020',
+                    color: '#FFD700',
+                    padding: '4px 10px',
+                    borderRadius: '6px',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    marginLeft: '8px',
+                    border: '1px solid #FFD70040'
+                  }}>
+                    {num}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

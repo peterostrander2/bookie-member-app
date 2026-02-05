@@ -390,13 +390,12 @@ export const api = {
   async getTodayEnergy() {
     try {
       const data = await safeJson(await apiFetch(`${API_BASE_URL}/esoteric/today-energy`));
-      return {
-        betting_outlook: data?.betting_outlook || 'NEUTRAL',
-        overall_energy: data?.overall_energy ?? 5.0,
-        ...data
-      };
+      if (!data) {
+        return { betting_outlook: 'NEUTRAL', overall_energy: 5.0, _is_fallback: true };
+      }
+      return { _is_fallback: false, ...data };
     } catch {
-      return { betting_outlook: 'NEUTRAL', overall_energy: 5.0 };
+      return { betting_outlook: 'NEUTRAL', overall_energy: 5.0, _is_fallback: true };
     }
   },
 

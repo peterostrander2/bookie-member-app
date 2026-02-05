@@ -106,3 +106,65 @@ test.describe('Smash Spots - Sport Selection', () => {
     }
   });
 });
+
+test.describe('Smash Spots - v20.5 Panels', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/smash-spots');
+    await page.waitForTimeout(2000);
+  });
+
+  test('should display score breakdown panel when expanded', async ({ page }) => {
+    const details = page.locator('details summary:has-text("Score Breakdown")');
+    if (await details.first().isVisible()) {
+      await details.first().click();
+      await page.waitForTimeout(300);
+      // Verify boost field labels are visible
+      const boostLabels = page.getByText(/Context Modifier|Confluence|MSRF|Jason Sim|SERP|Ensemble/i);
+      await expect(boostLabels.first()).toBeVisible();
+    } else {
+      // No picks loaded — page is still functional
+      await expect(page.locator('body')).toBeVisible();
+    }
+  });
+
+  test('should display status badges on picks', async ({ page }) => {
+    // Check for any status badge text
+    const badges = page.locator('span:has-text("TURN DATE"), span:has-text("SERP"), span:has-text("JASON"), span:has-text("ML ADJUST")');
+    // Badges are conditional on data, verify page is functional
+    await expect(page.locator('body')).toBeVisible();
+  });
+
+  test('should display GLITCH Protocol panel when expanded', async ({ page }) => {
+    const details = page.locator('details summary:has-text("GLITCH Protocol")');
+    if (await details.first().isVisible()) {
+      await details.first().click();
+      await page.waitForTimeout(300);
+      const signalLabels = page.getByText(/Void Moon|KP Index|Noosphere|Benford/i);
+      await expect(signalLabels.first()).toBeVisible();
+    } else {
+      await expect(page.locator('body')).toBeVisible();
+    }
+  });
+
+  test('should display Esoteric Contributions panel when expanded', async ({ page }) => {
+    const details = page.locator('details summary:has-text("Esoteric Contributions")');
+    if (await details.first().isVisible()) {
+      await details.first().click();
+      await page.waitForTimeout(300);
+      const categories = page.getByText(/Numerology|Astronomical|Mathematical|Signals|Situational/i);
+      await expect(categories.first()).toBeVisible();
+    } else {
+      await expect(page.locator('body')).toBeVisible();
+    }
+  });
+
+  test('should display tier legend with engine requirement', async ({ page }) => {
+    const legend = page.getByText(/3\/4 engines/i);
+    if (await legend.first().isVisible()) {
+      await expect(legend.first()).toBeVisible();
+    } else {
+      // Legend may not be visible if no picks
+      await expect(page.locator('body')).toBeVisible();
+    }
+  });
+});

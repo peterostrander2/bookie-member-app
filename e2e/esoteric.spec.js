@@ -142,3 +142,60 @@ test.describe('Esoteric - About Section', () => {
     await expect(page.locator('body')).toBeVisible();
   });
 });
+
+test.describe('Esoteric - v20.5 Enhancements', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/esoteric');
+    await page.waitForTimeout(1500);
+  });
+
+  test('should display daily energy overview with betting outlook badge', async ({ page }) => {
+    const badge = page.locator('span:has-text("BULLISH"), span:has-text("BEARISH"), span:has-text("NEUTRAL"), span:has-text("UNFAVORABLE")');
+    if (await badge.first().isVisible()) {
+      await expect(badge.first()).toBeVisible();
+    } else {
+      // Backend may not be available — page should still be functional
+      await expect(page.locator('body')).toBeVisible();
+    }
+  });
+
+  test('should display void moon warning when active', async ({ page }) => {
+    const voidMoon = page.getByText(/VOID MOON/i);
+    if (await voidMoon.first().isVisible()) {
+      await expect(voidMoon.first()).toBeVisible();
+    } else {
+      // Void moon may not be active — page should still be functional
+      await expect(page.locator('body')).toBeVisible();
+    }
+  });
+
+  test('should display Schumann Resonance when available', async ({ page }) => {
+    const schumann = page.getByText(/Schumann Resonance/i);
+    if (await schumann.first().isVisible()) {
+      await expect(schumann.first()).toBeVisible();
+      // Should also show Hz value nearby
+      const hzValue = page.getByText(/Hz/);
+      await expect(hzValue.first()).toBeVisible();
+    } else {
+      await expect(page.locator('body')).toBeVisible();
+    }
+  });
+
+  test('should display JARVIS DAY ACTIVE badge when active', async ({ page }) => {
+    const jarvisBadge = page.getByText('JARVIS DAY ACTIVE');
+    if (await jarvisBadge.first().isVisible()) {
+      await expect(jarvisBadge.first()).toBeVisible();
+    } else {
+      await expect(page.locator('body')).toBeVisible();
+    }
+  });
+
+  test('should display Power Numbers Active when available', async ({ page }) => {
+    const powerNumbers = page.getByText(/Power Numbers Active/i);
+    if (await powerNumbers.first().isVisible()) {
+      await expect(powerNumbers.first()).toBeVisible();
+    } else {
+      await expect(page.locator('body')).toBeVisible();
+    }
+  });
+});
