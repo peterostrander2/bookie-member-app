@@ -2143,6 +2143,23 @@ const isNegative = ['BEARISH', 'UNFAVORABLE'].includes(outlook);
 
 ---
 
+### INVARIANT 19: API Method → Backend Endpoint Verification
+
+**RULE:** Every `api.js` method MUST have a corresponding endpoint in the backend `live_data_router.py`. Before adding a new `api.js` method, verify the backend route exists by checking the router file or testing with curl.
+
+**Why this exists:** Lesson 16 — `getGradedPicks()` called `GET /live/picks/graded` which didn't exist. The frontend silently fell back to MOCK_PICKS, hiding the broken connection for weeks.
+
+**Checklist for new API methods:**
+1. Find the `@router.get` or `@router.post` decorator in `live_data_router.py`
+2. Verify the HTTP method (GET vs POST) matches
+3. Verify the path matches exactly (e.g., `/picks/graded` not `/picks/grade`)
+4. Test with curl before writing frontend code: `curl -H "X-API-Key: KEY" URL/live/picks/graded`
+5. Ensure try-catch wrapping with appropriate defaults (Invariant 11)
+
+**NEVER:** Add an `api.js` method without confirming the backend endpoint exists. NEVER use mock/fallback data that looks real — use empty state or error banners for failed connections.
+
+---
+
 ## 📋 FRONTEND-BACKEND CONTRACT (v17.3)
 
 ### API Response Structure
@@ -2522,6 +2539,32 @@ confidence: confidenceToPercent(item.confidence) || item.confidence_score || 70
 - Never use synonyms or assumed names — use the EXACT backend key
 
 **Automated Gate:** None (requires real API verification)
+
+---
+
+### Lesson 16: Grading Page Calling Non-Existent Backend Endpoint (Feb 2026)
+**Problem:** `Grading.jsx` called `api.getGradedPicks()` which hit `GET /live/picks/graded` — an endpoint that didn't exist in the backend. The frontend silently fell back to `MOCK_PICKS`, displaying fake data as if it were real. Users saw realistic-looking picks with fake results, never knowing the backend connection was broken.
+
+**Root Cause:** Three compounding issues:
+1. `api.js` had `getGradedPicks()` calling a non-existent endpoint (never verified against `live_data_router.py`)
+2. `Grading.jsx` had a `MOCK_PICKS` fallback that activated on any error — including 404 from the missing endpoint
+3. The mock data was realistic enough (player names, stats, results) that the broken connection was invisible
+
+**Fix Applied:**
+- Added `GET /picks/graded` endpoint to backend `live_data_router.py`
+- Removed `MOCK_PICKS` from `Grading.jsx` — shows empty state on no data
+- Fixed `fetchPicks` to only run on mount (not on tab change — same data, just filtered)
+- Used `pick.pick_id || pick.id` for grade API calls
+- Added try-catch to `api.getGradedPicks()` (Invariant 11)
+- Improved pick rendering for game picks (spread/moneyline) not just props
+
+**Prevention:**
+- NEVER add `api.js` methods without verifying the backend endpoint exists in `live_data_router.py`
+- NEVER use realistic mock data as fallbacks — show empty state or error banner instead
+- When a page shows data but the feature "isn't working," check the network tab for 404s first
+- Add endpoint existence checks to pre-commit CI
+
+**Automated Gate:** Frontend CI `verify-backend.sh` checks health/energy (should be extended to validate all api.js endpoints)
 
 ---
 
