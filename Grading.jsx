@@ -12,19 +12,15 @@ const Grading = () => {
 
   useEffect(() => {
     fetchPicks();
-  }, [tab]);
+  }, []);
 
   const fetchPicks = async () => {
     setLoading(true);
     try {
       const data = await api.getGradedPicks();
-      if (data.picks) {
-        setPicks(data.picks);
-      } else {
-        setPicks(MOCK_PICKS);
-      }
-    } catch (err) {
-      setPicks(MOCK_PICKS);
+      setPicks(data.picks || []);
+    } catch {
+      setPicks([]);
     }
     setLoading(false);
   };
@@ -185,20 +181,25 @@ const Grading = () => {
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
                     <span style={{ color: '#fff', fontWeight: 'bold', fontSize: '16px' }}>{pick.player}</span>
-                    <span style={{
-                      backgroundColor: pick.recommendation?.includes('OVER') ? '#00FF8830' : '#FF444430',
-                      color: pick.recommendation?.includes('OVER') ? '#00FF88' : '#FF4444',
-                      padding: '3px 8px',
-                      borderRadius: '4px',
-                      fontSize: '11px',
-                      fontWeight: 'bold'
-                    }}>
-                      {pick.recommendation?.includes('OVER') ? 'OVER' : 'UNDER'} {pick.line}
-                    </span>
-                    <span style={{ color: '#9ca3af', fontSize: '13px' }}>{pick.stat}</span>
+                    {pick.recommendation && (
+                      <span style={{
+                        backgroundColor: pick.recommendation.includes('OVER') ? '#00FF8830' : pick.recommendation.includes('UNDER') ? '#FF444430' : '#00D4FF30',
+                        color: pick.recommendation.includes('OVER') ? '#00FF88' : pick.recommendation.includes('UNDER') ? '#FF4444' : '#00D4FF',
+                        padding: '3px 8px',
+                        borderRadius: '4px',
+                        fontSize: '11px',
+                        fontWeight: 'bold'
+                      }}>
+                        {pick.recommendation} {pick.line != null ? pick.line : ''}
+                      </span>
+                    )}
+                    {pick.stat && <span style={{ color: '#9ca3af', fontSize: '13px' }}>{pick.stat}</span>}
+                    {pick.sport && <span style={{ color: '#6b728099', fontSize: '11px', textTransform: 'uppercase' }}>{pick.sport}</span>}
                   </div>
                   <div style={{ color: '#6b7280', fontSize: '13px' }}>
-                    {pick.team} vs {pick.opponent} • Projection: {pick.projection} • Edge: {pick.edge > 0 ? '+' : ''}{pick.edge}
+                    {pick.matchup || (pick.team && pick.opponent ? `${pick.team} vs ${pick.opponent}` : pick.team || '')}
+                    {pick.final_score != null && ` • Score: ${pick.final_score}`}
+                    {pick.tier && pick.tier !== 'STANDARD' && ` • ${pick.tier}`}
                   </div>
                 </div>
                 
@@ -211,12 +212,12 @@ const Grading = () => {
                     fontWeight: 'bold',
                     fontSize: '14px'
                   }}>
-                    {pick.result} ({pick.actual})
+                    {pick.result}{pick.actual != null ? ` (${pick.actual})` : ''}
                   </div>
                 ) : (
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button
-                      onClick={() => gradePick(pick.id, 'WIN', pick)}
+                      onClick={() => gradePick(pick.pick_id || pick.id, 'WIN', pick)}
                       style={{
                         padding: '8px 16px',
                         backgroundColor: '#00FF8830',
@@ -231,7 +232,7 @@ const Grading = () => {
                       WIN
                     </button>
                     <button
-                      onClick={() => gradePick(pick.id, 'LOSS', pick)}
+                      onClick={() => gradePick(pick.pick_id || pick.id, 'LOSS', pick)}
                       style={{
                         padding: '8px 16px',
                         backgroundColor: '#FF444430',
@@ -246,7 +247,7 @@ const Grading = () => {
                       LOSS
                     </button>
                     <button
-                      onClick={() => gradePick(pick.id, 'PUSH', pick)}
+                      onClick={() => gradePick(pick.pick_id || pick.id, 'PUSH', pick)}
                       style={{
                         padding: '8px 16px',
                         backgroundColor: '#FFD70030',
@@ -270,13 +271,5 @@ const Grading = () => {
     </div>
   );
 };
-
-const MOCK_PICKS = [
-  { id: 1, player: 'Jerami Grant', team: 'Portland', opponent: 'Utah', stat: 'points', line: 21.5, projection: 25, edge: 3.5, recommendation: 'OVER', graded: true, result: 'WIN', actual: 28 },
-  { id: 2, player: 'Collin Sexton', team: 'Utah', opponent: 'Portland', stat: 'points', line: 17.5, projection: 20.1, edge: 2.6, recommendation: 'OVER', graded: true, result: 'WIN', actual: 22 },
-  { id: 3, player: 'Devin Booker', team: 'Phoenix', opponent: 'Houston', stat: 'points', line: 27.5, projection: 25.5, edge: -2, recommendation: 'UNDER', graded: true, result: 'LOSS', actual: 31 },
-  { id: 4, player: 'LeBron James', team: 'Lakers', opponent: 'Celtics', stat: 'points', line: 25.5, projection: 28, edge: 2.5, recommendation: 'OVER', graded: false },
-  { id: 5, player: 'Jayson Tatum', team: 'Celtics', opponent: 'Lakers', stat: 'rebounds', line: 8.5, projection: 7.2, edge: -1.3, recommendation: 'UNDER', graded: false }
-];
 
 export default Grading;

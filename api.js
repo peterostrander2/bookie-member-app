@@ -545,7 +545,11 @@ export const api = {
   // ============================================================================
 
   async getGradedPicks() {
-    return safeJson(await authFetch(`${API_BASE_URL}/live/picks/graded`)) || { picks: [] };
+    try {
+      return safeJson(await authFetch(`${API_BASE_URL}/live/picks/graded`)) || { picks: [] };
+    } catch {
+      return { picks: [] };
+    }
   },
 
   async gradePick(data) {
