@@ -648,6 +648,30 @@ npm run test:coverage  # With coverage
 - `BetHistory.test.jsx` - Bet history component tests
 - `ParlayBuilder.test.jsx` - Parlay builder tests
 
+### Test Mock Pattern (IMPORTANT)
+API tests use a `mockResponse()` helper that creates proper Response-like objects.
+**All mock responses MUST include** `ok`, `status`, `text()`, and `clone()` to match
+what `safeJson()` and `authFetch()` expect.
+
+```javascript
+// CORRECT - use mockResponse helper
+fetch.mockResolvedValueOnce(mockResponse({ status: 'healthy' }))
+fetch.mockResolvedValueOnce(mockResponse(null, { ok: false, status: 500 }))
+
+// WRONG - bare object missing text(), clone()
+fetch.mockResolvedValueOnce({ json: () => Promise.resolve({}) })  // Will break safeJson
+fetch.mockResolvedValueOnce({ ok: false })                         // Will break authFetch
+```
+
+**Auth endpoint assertions MUST include `cache: 'no-store'`:**
+```javascript
+// CORRECT
+expect(fetch).toHaveBeenCalledWith(url, { headers: {...}, cache: 'no-store' })
+
+// WRONG - missing cache
+expect(fetch).toHaveBeenCalledWith(url, { headers: {...} })
+```
+
 ### E2E Tests (Playwright)
 ```bash
 npm run test:e2e        # Run all E2E tests
@@ -1417,6 +1441,38 @@ FINAL = min(10, BASE_4 + context_modifier + confluence_boost + msrf_boost
 
 ---
 
+### Session: February 2026 (Test Infrastructure Fix)
+
+**Completed in this session:**
+1. Fixed all 27 failing tests in `api.test.js` (test mocks didn't match `safeJson`/`authFetch` implementation)
+2. Created `mockResponse()` helper for proper Response-like mock objects with `ok`, `text()`, `clone()`
+3. Updated all auth endpoint assertions to include `cache: 'no-store'`
+4. Added try-catch network error handling to 7 API methods that should return graceful defaults
+
+**Files modified:**
+- `api.js` - Added try-catch to getTodayEnergy, getSportsbooks, trackBet, getBetHistory, getParlay, getParlayHistory, getUserPreferences
+- `test/api.test.js` - Added mockResponse helper, fixed all 32 test mocks and assertions
+
+**Key pattern established:**
+
+**Network error handling (api.js):**
+```javascript
+// Methods that return defaults MUST catch network errors
+async getParlay(userId) {
+  try {
+    return safeJson(await authFetch(url)) || { legs: [], combined_odds: null };
+  } catch {
+    return { legs: [], combined_odds: null };
+  }
+},
+```
+
+**Tests:** 91/91 passing (0 failures)
+**Build:** Clean, 1.62s
+**Validators:** All 3 pass
+
+---
+
 ## 🚨 MASTER INVARIANTS (NEVER VIOLATE) 🚨
 
 **READ THIS FIRST BEFORE TOUCHING SCORING OR DISPLAY CODE**
@@ -1664,6 +1720,67 @@ glitch_signals, esoteric_contributions
 
 ---
 
+### INVARIANT 10: Test Mocks Must Match Implementation
+
+**RULE:** API test mocks MUST provide proper Response-like objects that match what `safeJson()` and `authFetch()` actually call. Test assertions for auth endpoints MUST include `cache: 'no-store'`.
+
+**Required mock shape:**
+```javascript
+const mockResponse = (data, { ok = true, status = 200 } = {}) => ({
+  ok,
+  status,
+  json: () => Promise.resolve(data),
+  text: () => Promise.resolve(JSON.stringify(data)),
+  clone() { return { ...this, text: () => Promise.resolve(JSON.stringify(data)) }; },
+});
+```
+
+**Why this matters:**
+- `safeJson()` calls `response.text()`, not `response.json()` — mocks without `text()` silently return `null`
+- `authFetch()` calls `response.clone().text()` for error logging — mocks without `clone()` throw
+- `authFetch()` adds `cache: 'no-store'` — assertions without it fail
+
+**NEVER:**
+```javascript
+// Missing text(), clone() — safeJson returns null, authFetch throws
+fetch.mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(data) })
+
+// Missing cache: 'no-store' — assertion fails for auth endpoints
+expect(fetch).toHaveBeenCalledWith(url, { headers: { 'X-API-Key': '...' } })
+```
+
+---
+
+### INVARIANT 11: API Methods Must Handle Network Errors
+
+**RULE:** All API methods that return default/fallback values on non-ok responses MUST also catch network errors (fetch rejections) and return the same defaults.
+
+**Pattern:**
+```javascript
+async getParlay(userId) {
+  try {
+    return safeJson(await authFetch(url)) || { legs: [], combined_odds: null };
+  } catch {
+    return { legs: [], combined_odds: null };
+  }
+},
+```
+
+**Why:** `safeJson` only handles non-ok responses (returns null). But if `fetch` itself rejects (network error, DNS failure), the error propagates past the `|| default` fallback and crashes.
+
+**Methods with try-catch (v20.5):**
+- `getTodayEnergy` → `{ betting_outlook: 'NEUTRAL', overall_energy: 5.0 }`
+- `getSportsbooks` → `{ sportsbooks: [], active_count: 0 }`
+- `trackBet` → `null`
+- `getBetHistory` → `{ bets: [], stats: {} }`
+- `getParlay` → `{ legs: [], combined_odds: null }`
+- `getParlayHistory` → `{ parlays: [], stats: {} }`
+- `getUserPreferences` → `{}`
+
+**When adding new API methods:** If it has `|| default` at the end, wrap in try-catch.
+
+---
+
 ## 📋 FRONTEND-BACKEND CONTRACT (v17.3)
 
 ### API Response Structure
@@ -1905,6 +2022,41 @@ glitch_signals, esoteric_contributions
 - Then integrate into both GameSmashList.jsx AND PropsSmashList.jsx
 - Verify with: `curl ... | jq '.game_picks.picks[0] | keys'` then check normalizePick passes each key
 
+### Lesson 9: Test Mocks Drifted From Implementation (Feb 2026)
+**Problem:** 27 of 32 api.test.js tests failed. Test mocks used bare objects `{ json: () => ... }` that didn't match what `safeJson()` and `authFetch()` actually call.
+
+**Root Cause:** When `lib/api/client.js` was introduced with `safeJson()` (uses `response.text()` not `.json()`) and `authFetch()` (uses `response.clone().text()` for error logging, adds `cache: 'no-store'`), the test mocks were never updated.
+
+**Impact:** Tests silently passed for months via catch blocks masking the failures, then broke when assertions checked return values. 27 tests reported passing that weren't actually testing the right behavior.
+
+**Fix Applied:**
+1. Created `mockResponse()` helper with `ok`, `text()`, `clone()`, `status`
+2. Updated all 32 test mocks to use it
+3. Updated auth endpoint assertions to include `cache: 'no-store'`
+
+**Prevention:**
+- When changing API client internals (`safeJson`, `authFetch`, `apiFetch`), ALWAYS run `npm run test:run` and check for failures
+- Use the `mockResponse()` helper for ALL new test mocks — never bare objects
+- Auth endpoint assertions MUST include `cache: 'no-store'`
+
+**Automated Gate:** `npm run test:run` — 91 tests must pass before commit.
+
+### Lesson 10: API Methods Missing Network Error Handling (Feb 2026)
+**Problem:** API methods like `getTodayEnergy`, `getSportsbooks`, `getParlay` etc. had `|| default` fallbacks for non-ok responses, but didn't catch network errors (fetch rejections). Network failures crashed instead of returning defaults.
+
+**Root Cause:** `safeJson()` handles `response.ok === false` → returns null → `|| default` works. But `fetch` rejections throw BEFORE `safeJson()` runs, skipping the `|| default` entirely.
+
+**Impact:** Any network error (DNS failure, timeout, offline) crashed the component instead of showing empty/default state.
+
+**Fix Applied:** Added try-catch to 7 API methods that should return graceful defaults.
+
+**Prevention:**
+- When writing API methods with `|| default` pattern, ALWAYS wrap in try-catch
+- The catch block should return the same default as the `||` fallback
+- Test with `fetch.mockRejectedValueOnce(new Error('Network error'))` to verify
+
+**Automated Gate:** Test suite includes error tests for each method.
+
 ---
 
 ## ✅ VERIFICATION CHECKLIST (Before Deploy)
@@ -1996,6 +2148,8 @@ grep -rn "3/4\|4 engine\|four engine" --include="*.jsx" --include="*.js"
 11. **NEVER** change color coding without documenting the meaning
 12. **NEVER** add backend fields to components without first updating `normalizePick()` in api.js
 13. **NEVER** skip `normalizePick()` when wiring new backend fields - it's the single gateway
+14. **NEVER** use bare `{ json: () => ... }` objects in test mocks - use `mockResponse()` helper
+15. **NEVER** write API methods with `|| default` without wrapping in try-catch for network errors
 
 ---
 

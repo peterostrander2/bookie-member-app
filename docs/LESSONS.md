@@ -183,6 +183,66 @@ grep -A 50 "normalizePick" api.js | grep -c "item\."
 
 ---
 
+## Lesson 9: Test Mocks Drifted From Implementation
+
+**When:** February 2026
+**Problem:** 27 of 32 api.test.js tests failed. Test mocks used bare `{ json: () => ... }` objects that didn't match `safeJson()` (calls `response.text()`) or `authFetch()` (calls `response.clone().text()`, adds `cache: 'no-store'`).
+**Root Cause:** When `lib/api/client.js` centralized API handling, test mocks were never updated to match the new response contract.
+**Impact:** Tests silently returned null via catch blocks, then broke when assertions checked return values.
+
+**Fix Applied:**
+```javascript
+// Created mockResponse() helper in test/api.test.js
+const mockResponse = (data, { ok = true, status = 200 } = {}) => ({
+  ok, status,
+  json: () => Promise.resolve(data),
+  text: () => Promise.resolve(JSON.stringify(data)),
+  clone() { return { ok: this.ok, status: this.status, text: () => Promise.resolve(JSON.stringify(data)) }; },
+});
+
+// All auth endpoint assertions updated:
+expect(fetch).toHaveBeenCalledWith(url, { headers: {...}, cache: 'no-store' })
+```
+
+**Prevention:**
+- When changing `safeJson`, `authFetch`, or `apiFetch`, ALWAYS run `npm run test:run`
+- Use `mockResponse()` helper for ALL new test mocks — never bare objects
+- Auth endpoint assertions MUST include `cache: 'no-store'`
+
+**Automated Gate:** `npm run test:run` — 91 tests must all pass.
+
+---
+
+## Lesson 10: API Methods Missing Network Error Handling
+
+**When:** February 2026
+**Problem:** API methods had `|| default` fallbacks for non-ok responses but didn't catch `fetch` rejections. Network errors crashed instead of returning defaults.
+**Root Cause:** `safeJson()` only handles `response.ok === false` → returns null → `|| default` works. But `fetch` rejections throw BEFORE `safeJson()` runs, bypassing the fallback.
+**Impact:** Any network error (offline, timeout, DNS failure) crashed the UI component.
+
+**Fix Applied:**
+```javascript
+// Added try-catch to 7 methods:
+async getParlay(userId) {
+  try {
+    return safeJson(await authFetch(url)) || { legs: [], combined_odds: null };
+  } catch {
+    return { legs: [], combined_odds: null };
+  }
+},
+```
+
+**Methods fixed:** getTodayEnergy, getSportsbooks, trackBet, getBetHistory, getParlay, getParlayHistory, getUserPreferences
+
+**Prevention:**
+- When writing API methods with `|| default`, ALWAYS wrap in try-catch
+- The catch block must return the same default as the `||` fallback
+- Test with: `fetch.mockRejectedValueOnce(new Error('Network error'))`
+
+**Automated Gate:** Test suite includes network error tests for each method.
+
+---
+
 ## Pattern: How New Lessons Get Added
 
 When you encounter a new mistake:
@@ -207,6 +267,6 @@ The goal: every mistake should be catchable automatically. If it can't be automa
 | Manual: grep | `grep -rn "3/4\|4 engine"` | Stale engine count references |
 | Manual: symmetric | `grep "import.*components/" Game* Props*` | Asymmetric component imports |
 | Manual: API verify | `curl ... \| jq '.picks[0] \| keys'` | Missing backend fields |
-| Invariants | CLAUDE.md MASTER INVARIANTS | 9 rules that must never be violated |
+| Invariants | CLAUDE.md MASTER INVARIANTS | 11 rules that must never be violated |
 | Build | `npm run build` | Syntax errors, import failures |
-| Tests | `npm run test:run` | Regression failures |
+| Tests | `npm run test:run` | Regression failures, mock drift, network error handling |

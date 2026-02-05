@@ -77,3 +77,28 @@ Fix:
 grep -rn "3/4\|4 engine\|four engine" --include="*.jsx" --include="*.js"
 # Fix any matches
 ```
+
+## 9) API test failures after changing client.js or api.js
+
+Symptoms:
+- `response.clone is not a function`
+- `response.text is not a function`
+- `expected null to deeply equal { ... }`
+- `cache: "no-store"` mismatch in assertions
+- Network error tests throw instead of returning defaults
+
+Root Cause:
+- Test mocks don't match what `safeJson()` (calls `text()`) or `authFetch()` (calls `clone().text()`, adds `cache: 'no-store'`) expect
+- API methods missing try-catch for network errors
+
+Fix:
+1. Use `mockResponse()` helper for ALL test mocks (defined in `test/api.test.js`)
+2. Add `cache: 'no-store'` to auth endpoint assertions
+3. Wrap API methods with `|| default` in try-catch
+4. See Lessons 9 and 10 in `docs/LESSONS.md`
+
+```bash
+# Run tests to verify
+npm run test:run
+# All 91 tests must pass
+```

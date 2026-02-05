@@ -110,7 +110,9 @@ Before touching code or docs: use this file to route yourself to the canonical s
 | Components | `App.jsx` | Routing, lazy loading |
 | Signals | `signalEngine.js` | Client calculations |
 | Storage | `storageUtils.js` | localStorage keys |
-| Lessons | `docs/LESSONS.md` | Historical mistakes and prevention |
+| Lessons | `docs/LESSONS.md` | Historical mistakes and prevention (10 lessons) |
+| Test Mocks | `test/api.test.js` → `mockResponse()` | Canonical mock pattern for API tests |
+| Test Setup | `test/setup.js` | Global mocks, env stubs, rate limit bypass |
 
 ---
 
@@ -154,6 +156,38 @@ npm run build
 
 ---
 
+## Testing Patterns
+
+### API Test Mock Pattern
+**All API test mocks MUST use the `mockResponse()` helper** in `test/api.test.js`:
+```javascript
+mockResponse(data)                                    // ok: true, status: 200
+mockResponse(null, { ok: false, status: 500 })       // error response
+```
+
+**Why:** `safeJson()` calls `response.text()` (not `.json()`), `authFetch()` calls `response.clone().text()` for error logging.
+
+**Auth endpoint assertions MUST include `cache: 'no-store'`:**
+```javascript
+{ headers: { 'X-API-Key': 'test-api-key' }, cache: 'no-store' }
+```
+
+### API Error Handling Pattern
+**Methods with `|| default` MUST be wrapped in try-catch:**
+```javascript
+async getParlay(userId) {
+  try {
+    return safeJson(await authFetch(url)) || { legs: [], combined_odds: null };
+  } catch {
+    return { legs: [], combined_odds: null };
+  }
+},
+```
+
+**Why:** `|| default` only works when `safeJson` returns null (non-ok response). Network errors throw before `safeJson` runs.
+
+---
+
 ## Hard Bans
 
 - Hardcode tier thresholds (6.5, 7.5, 8.0) anywhere — even in comments
@@ -164,6 +198,8 @@ npm run build
 - Edit generated files (`docs/AUDIT_MAP.md`)
 - Add backend fields to components without updating `normalizePick()` first
 - Update GameSmashList without updating PropsSmashList (or vice versa)
+- Use bare `{ json: () => ... }` objects in test mocks (use `mockResponse()`)
+- Write API methods with `|| default` without try-catch for network errors
 
 ---
 
@@ -203,11 +239,19 @@ node scripts/validate_frontend_contracts.mjs
 node scripts/validate_no_frontend_literals.mjs
 node scripts/validate_no_eval.mjs
 
-# 2. Test and build
+# 2. Test (91 tests, ALL must pass)
 npm run test:run
+
+# 3. Build
 npm run build
 
-# 3. Commit and push
+# 4. Commit and push
 git add -A && git commit -m "feat: ... + docs: ..."
 git push origin main
 ```
+
+**If tests fail after changing api.js or lib/api/client.js:**
+1. Check that test mocks use `mockResponse()` helper
+2. Check that auth endpoint assertions include `cache: 'no-store'`
+3. Check that API methods with `|| default` have try-catch
+4. See Lessons 9 and 10 in `docs/LESSONS.md`
