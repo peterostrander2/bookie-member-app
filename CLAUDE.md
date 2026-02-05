@@ -67,19 +67,19 @@ Display these scoring components to users:
 - **JARVIS Triggers** (max 4 pts) - Gematria signals
 - **Esoteric Edge** - Numerology, moon phase, daily energy
 
-### Tier System (v12.0)
+### Tier System (v20.5)
 Backend `tiering.py` is the single source of truth. Frontend uses backend fields.
 
 | Condition | Tier | Units | Action | Color |
 |-----------|------|-------|--------|-------|
-| final≥8.0 + 3/4 engines≥6.5 | TITANIUM_SMASH | 2.5 | SMASH | #00FFFF (Cyan) |
+| final≥8.0 + 3/5 engines≥8.0 | TITANIUM_SMASH | 2.5 | SMASH | #00FFFF (Cyan) |
 | ≥7.5 | GOLD_STAR | 2.0 | SMASH | #FFD700 (Gold) |
 | ≥6.5 | EDGE_LEAN | 1.0 | PLAY | #10B981 (Green) |
 | ≥5.5 | MONITOR | 0.0 | WATCH | #F59E0B (Amber) |
 | <5.5 | PASS | 0.0 | SKIP | #6B7280 (Gray) |
 
-**v12.0 Changes:**
-- TITANIUM requires both final_score ≥ 8.0 AND 3/4 engines ≥ 6.5 (meaningful contribution)
+**v20.5 Scoring (Option A):**
+- TITANIUM requires both final_score ≥ 8.0 AND 3/5 engines ≥ 8.0
 - Community filter: Only picks ≥ 6.5 shown to community
 - Engine scores (Option A: 4 weighted engines + context modifier, all 0-10):
   - ai_score (25% weight) - 8 AI models
@@ -87,6 +87,9 @@ Backend `tiering.py` is the single source of truth. Frontend uses backend fields
   - esoteric_score (20% weight) - Numerology, astro, fibonacci
   - jarvis_score (20% weight) - Gematria triggers
   - context_score (modifier ±0.35 cap) - Defense rank, pace, injury vacuum
+- Boost fields (added to final after BASE_4):
+  - context_modifier (±0.35), confluence_boost (0-1.5), msrf_boost (0-1.0)
+  - jason_sim_boost (±0.5), serp_boost (0-0.5), ensemble_adjustment (±0.5)
 
 **Frontend behavior:**
 - Uses backend `pick.tier` and `pick.units` fields (source of truth)
@@ -478,6 +481,10 @@ Claude branches follow pattern: `claude/{feature-name}-{sessionId}`
 | HistoricalCharts | `HistoricalCharts.jsx` | Performance analytics over time |
 | OfflineIndicator | `OfflineIndicator.jsx` | Offline mode provider and UI |
 | PushNotifications | `PushNotifications.jsx` | Push notification system |
+| BoostBreakdownPanel | `components/BoostBreakdownPanel.jsx` | Option A score breakdown (all 6 boost fields) |
+| StatusBadgeRow | `components/StatusBadgeRow.jsx` | MSRF/SERP/Jason/ML status badges |
+| GlitchSignalsPanel | `components/GlitchSignalsPanel.jsx` | GLITCH protocol signals with progress bars |
+| EsotericContributionsPanel | `components/EsotericContributionsPanel.jsx` | Esoteric contributions grouped by category |
 
 ### Smash Spots Architecture
 ```
@@ -487,12 +494,12 @@ Claude branches follow pattern: `claude/{feature-name}-{sessionId}`
 ```
 Both tabs pull from `/live/best-bets/{sport}` endpoint.
 
-**Display Tiers (v10.87):**
-- TITANIUM SMASH (≥9.0) - Cyan with glow
+**Display Tiers (v20.5):**
+- TITANIUM SMASH (≥8.0 + 3/5 engines ≥8.0) - Cyan with glow
 - GOLD STAR (≥7.5) - Gold
 - EDGE LEAN (≥6.5) - Green
-- MONITOR (≥5.5) - Amber
-- PASS (<5.5) - Gray (filtered out by default)
+- MONITOR (≥5.5) - Amber (hidden by default)
+- PASS (<5.5) - Gray (hidden by default)
 
 ### UI/UX Components (Completed)
 | Component | File | Description |
@@ -597,6 +604,12 @@ All endpoints implemented:
 24. Historical performance charts (cumulative P/L, rolling win rate, sport breakdown)
 25. Offline mode (service worker caching, offline banner, stale-while-revalidate)
 26. Push notifications (SMASH alerts, configurable preferences, bell icon)
+27. Option A boost breakdown panel (all 6 boost fields displayed)
+28. Status badges (MSRF level, SERP active/shadow, Jason block/boost, ML adjust)
+29. GLITCH protocol signals panel (chrome resonance, void moon, noosphere, hurst, kp-index, benford)
+30. Esoteric contributions panel (numerology, astronomical, mathematical, situational)
+31. Void Moon warning banner on Esoteric page
+32. Phase 8 esoteric indicators (Mercury Retrograde, Rivalry, Streak, Solar Flare)
 
 ### Key Files to Review First
 1. `api.js` - All backend connections + auth helpers + rate limiting
@@ -1362,6 +1375,48 @@ AI (25%) | Research (35%) | Esoteric (20%) | Jarvis (20%) | Context (±0.35 modi
 
 ---
 
+### Session: February 2026 (v20.5 Backend Wiring)
+
+**Completed in this session:**
+1. Fixed `frontend_scoring_contract.js` engine weights (research 0.30→0.35, jarvis 0.15→0.20)
+2. Added CONTEXT_MODIFIER_CAP and BOOST_CAPS constants to contract
+3. Updated `normalizePick()` in api.js to pass through all boost/status/signal fields
+4. Created `components/BoostBreakdownPanel.jsx` - Option A score breakdown
+5. Created `components/StatusBadgeRow.jsx` - MSRF/SERP/Jason/ML status badges
+6. Created `components/GlitchSignalsPanel.jsx` - GLITCH protocol with progress bars
+7. Created `components/EsotericContributionsPanel.jsx` - Esoteric by category
+8. Integrated all 4 new panels into GameSmashList.jsx and PropsSmashList.jsx
+9. Added Void Moon warning, GLITCH section, Phase 8 indicators to Esoteric.jsx
+10. Fixed hardcoded scoring literals in comments/strings (Lesson 7)
+
+**New files created:**
+- `components/BoostBreakdownPanel.jsx`
+- `components/StatusBadgeRow.jsx`
+- `components/GlitchSignalsPanel.jsx`
+- `components/EsotericContributionsPanel.jsx`
+
+**Files modified:**
+- `core/frontend_scoring_contract.js` - Fixed weights, added boost caps
+- `api.js` - Updated normalizePick() with all v20.5 fields
+- `GameSmashList.jsx` - Imported and integrated 4 new panels
+- `PropsSmashList.jsx` - Imported and integrated 4 new panels
+- `SmashSpotsPage.jsx` - Fixed hardcoded literal in TITANIUM legend
+- `Esoteric.jsx` - Added Void Moon, GLITCH, Phase 8 sections
+
+**Key patterns implemented:**
+
+**Option A Formula (displayed in BoostBreakdownPanel):**
+```
+BASE_4 = AI(0.25) + Research(0.35) + Esoteric(0.20) + Jarvis(0.20)
+FINAL = min(10, BASE_4 + context_modifier + confluence_boost + msrf_boost
+             + jason_sim_boost + serp_boost + ensemble_adjustment)
+```
+
+**Build:** Clean, 1.65s
+**Validators:** All 3 pass
+
+---
+
 ## 🚨 MASTER INVARIANTS (NEVER VIOLATE) 🚨
 
 **READ THIS FIRST BEFORE TOUCHING SCORING OR DISPLAY CODE**
@@ -1440,7 +1495,7 @@ const tier = score >= 7.5 ? 'GOLD_STAR' : 'EDGE_LEAN';
 {(pick.context_score ?? pick.scoring_breakdown?.context_score)}
 ```
 
-**Required Top-Level Fields (v17.3):**
+**Required Top-Level Fields (v20.5):**
 ```javascript
 {
   // Identity
@@ -1469,7 +1524,27 @@ const tier = score >= 7.5 ? 'GOLD_STAR' : 'EDGE_LEAN';
     vacuum,                // 0-1
     officials_adjustment,  // ±0.5
     park_adjustment        // MLB only
-  }
+  },
+
+  // v20.5 Option A Boost Fields
+  base_4_score,            // Weighted average of 4 engines
+  context_modifier,        // ±0.35 bounded
+  confluence_boost,        // 0 to 1.5
+  jason_sim_boost,         // -0.5 to +0.5 (can be negative!)
+  serp_boost,              // 0 to 0.5
+  ensemble_adjustment,     // ±0.5
+  live_adjustment,         // In-play adjustment
+
+  // v20.5 Status Fields
+  msrf_status,             // VALIDATED | CONFIGURED | DISABLED
+  serp_status,             // VALIDATED | CONFIGURED | DISABLED
+  jason_status,            // VALIDATED | CONFIGURED | DISABLED
+  msrf_metadata,           // { level, points, source }
+  serp_shadow_mode,        // true = SERP running but not affecting score
+
+  // v20.5 Signal Dicts
+  glitch_signals,          // { chrome_resonance, void_moon, noosphere, hurst, kp_index, benford }
+  esoteric_contributions,  // { numerology, astro, fib_alignment, lunar, mercury, ... }
 }
 ```
 
@@ -1485,6 +1560,12 @@ const tier = score >= 7.5 ? 'GOLD_STAR' : 'EDGE_LEAN';
 | JARVIS | `jarvis_active === true` | Gold #FFD700 | `pick.jarvis_active` |
 | HARMONIC | `harmonic_boost > 0` | Purple #A855F7 | `pick.harmonic_boost` |
 | TURN DATE | `msrf_boost > 0` | Gold #EAB308 | `pick.msrf_boost` |
+| MSRF LEVEL | `msrf_metadata?.level` exists | Gold #EAB308 | `pick.msrf_metadata` |
+| SERP ACTIVE | `serp_boost > 0 && !serp_shadow_mode` | Cyan #00D4FF | `pick.serp_boost` |
+| SERP SHADOW | `serp_shadow_mode === true` | Gray #6B7280 | `pick.serp_shadow_mode` |
+| JASON BLOCK | `jason_sim_boost < 0` | Red #EF4444 | `pick.jason_sim_boost` |
+| JASON BOOST | `jason_sim_boost > 0` | Green #10B981 | `pick.jason_sim_boost` |
+| ML ADJUST | `ensemble_adjustment !== 0` | Blue #3B82F6 | `pick.ensemble_adjustment` |
 
 **NEVER:** Hardcode badge visibility or derive from other fields.
 
@@ -1508,6 +1589,78 @@ const tier = score >= 7.5 ? 'GOLD_STAR' : 'EDGE_LEAN';
 | pace | >= 102 | 99-101 | <= 98 |
 | vacuum | > 0 | - | - |
 | officials | > 0 | - | < 0 |
+
+---
+
+### INVARIANT 7: Zero Hardcoded Scoring Literals
+
+**RULE:** ALL scoring thresholds, weights, and caps MUST be imported from `core/frontend_scoring_contract.js`. NEVER use raw numbers in components, comments, or template strings.
+
+**Automated Enforcement:**
+```bash
+node scripts/validate_frontend_contracts.mjs   # Catches hardcoded literals in code
+node scripts/validate_no_frontend_literals.mjs  # Catches literals in comments/strings too
+```
+
+**What this catches:**
+- Hardcoded `7.5`, `8.0`, `6.5`, `5.5` in JSX, comments, or template strings
+- Direct `fetch`/`axios` calls outside `lib/api/client.js`
+- Missing imports from the contract file
+
+**DO:**
+```jsx
+import { GOLD_STAR_THRESHOLD, TITANIUM_THRESHOLD } from './core/frontend_scoring_contract';
+// Comment: Harmonic triggers when both >= GOLD_STAR_THRESHOLD
+const range = `≥${TITANIUM_THRESHOLD} + 3/5 engines ≥${TITANIUM_THRESHOLD}`;
+```
+
+**NEVER:**
+```jsx
+// ❌ Even in comments: "when Research AND Esoteric both >= 7.5"
+// ❌ In strings: `≥${TITANIUM_THRESHOLD} + 3/5 engines ≥8.0`
+```
+
+**Prevention:** Run validators before every commit. See `docs/LESSONS.md` for full history.
+
+---
+
+### INVARIANT 8: Symmetric Component Updates
+
+**RULE:** GameSmashList.jsx and PropsSmashList.jsx MUST always have the same scoring display components. If you add/remove/change a panel in one, you MUST do the same in the other.
+
+**Components that MUST appear in BOTH files:**
+- Engine score display (AI, Research, Esoteric, Jarvis, Context)
+- StatusBadgeRow
+- BoostBreakdownPanel
+- GlitchSignalsPanel
+- EsotericContributionsPanel
+
+**Verification:**
+```bash
+# Both files should import the same scoring components
+grep -n "import.*from.*components/" GameSmashList.jsx PropsSmashList.jsx
+```
+
+---
+
+### INVARIANT 9: normalizePick() Passthrough
+
+**RULE:** When backend adds new fields, `normalizePick()` in `api.js` MUST be updated to pass them through. The normalizer is the single gateway for all pick data.
+
+**Current passthrough fields (v20.5):**
+```javascript
+// Boost fields
+base_4_score, context_modifier, confluence_boost, msrf_boost,
+jason_sim_boost, serp_boost, ensemble_adjustment, live_adjustment
+
+// Status fields
+msrf_status, serp_status, jason_status, msrf_metadata, serp_shadow_mode
+
+// Signal dicts
+glitch_signals, esoteric_contributions
+```
+
+**If a field shows as `undefined` in a component, check normalizePick() FIRST.**
 
 ---
 
@@ -1577,16 +1730,30 @@ const tier = score >= 7.5 ? 'GOLD_STAR' : 'EDGE_LEAN';
 
 ### Field Availability by Version
 
-| Field | v12.0 | v17.1 | v17.3 |
+| Field | v12.0 | v17.3 | v20.5 |
 |-------|-------|-------|-------|
 | ai_score | ✅ | ✅ | ✅ |
 | research_score | ✅ | ✅ | ✅ |
 | esoteric_score | ✅ | ✅ | ✅ |
 | jarvis_score | ✅ | ✅ | ✅ |
 | context_score | ❌ | ✅ | ✅ |
-| context_layer | ❌ | ❌ | ✅ |
-| harmonic_boost | ❌ | ❌ | ✅ |
-| msrf_boost | ❌ | ❌ | ✅ |
+| context_layer | ❌ | ✅ | ✅ |
+| harmonic_boost | ❌ | ✅ | ✅ |
+| msrf_boost | ❌ | ✅ | ✅ |
+| base_4_score | ❌ | ❌ | ✅ |
+| context_modifier | ❌ | ❌ | ✅ |
+| confluence_boost | ❌ | ❌ | ✅ |
+| jason_sim_boost | ❌ | ❌ | ✅ |
+| serp_boost | ❌ | ❌ | ✅ |
+| ensemble_adjustment | ❌ | ❌ | ✅ |
+| live_adjustment | ❌ | ❌ | ✅ |
+| msrf_status | ❌ | ❌ | ✅ |
+| serp_status | ❌ | ❌ | ✅ |
+| jason_status | ❌ | ❌ | ✅ |
+| msrf_metadata | ❌ | ❌ | ✅ |
+| serp_shadow_mode | ❌ | ❌ | ✅ |
+| glitch_signals | ❌ | ❌ | ✅ |
+| esoteric_contributions | ❌ | ❌ | ✅ |
 
 ---
 
@@ -1596,25 +1763,42 @@ const tier = score >= 7.5 ? 'GOLD_STAR' : 'EDGE_LEAN';
 
 | File | Purpose | Key Lines |
 |------|---------|-----------|
-| `GameSmashList.jsx` | Game picks (spreads, totals, ML) | 662-740: Engine display, badges, context |
-| `PropsSmashList.jsx` | Player props display | 925-1020: Engine display, badges, context |
+| `GameSmashList.jsx` | Game picks (spreads, totals, ML) | 662-740: Engine display, badges, context, boost panels |
+| `PropsSmashList.jsx` | Player props display | 925-1020: Engine display, badges, context, boost panels |
 | `SmashSpotsPage.jsx` | Container with tabs, tier legend | 65-89: Tier config, 460-470: TITANIUM banner |
 | `BetslipModal.jsx` | Click-to-bet sportsbook selection | Deep links, odds comparison |
+
+### Score Breakdown Components (v20.5)
+
+| File | Purpose |
+|------|---------|
+| `components/BoostBreakdownPanel.jsx` | Option A score breakdown: base_4, context, confluence, msrf, jason_sim, serp, ensemble, live |
+| `components/StatusBadgeRow.jsx` | Status badges: MSRF level, SERP active/shadow, Jason block/boost, ML adjust |
+| `components/GlitchSignalsPanel.jsx` | GLITCH protocol: chrome resonance, void moon, noosphere, hurst, kp-index, benford |
+| `components/EsotericContributionsPanel.jsx` | Esoteric contributions by category: numerology, astronomical, mathematical, situational |
 
 ### API & Data
 
 | File | Purpose |
 |------|---------|
-| `api.js` | All API calls, auth headers, error handling |
+| `api.js` | All API calls, auth headers, error handling, `normalizePick()` passes through all boost/status/signal fields |
 | `lib/api/client.js` | Base fetch client, auth failure detection |
 | `usePreferences.js` | User preferences hook (favorite sport, etc.) |
+
+### Contract & Validation
+
+| File | Purpose |
+|------|---------|
+| `core/frontend_scoring_contract.js` | Tier thresholds, engine weights, boost caps (SINGLE SOURCE OF TRUTH) |
+| `scripts/validate_frontend_contracts.mjs` | Catches hardcoded literals, direct fetch calls, missing imports |
+| `scripts/validate_no_frontend_literals.mjs` | Catches scoring thresholds outside contract |
+| `scripts/validate_no_eval.mjs` | Prevents eval/new Function usage |
 
 ### Signal Processing
 
 | File | Purpose |
 |------|---------|
 | `signalEngine.js` | Client-side gematria, moon phase, numerology |
-| `core/frontend_scoring_contract.js` | Tier thresholds, gate definitions |
 
 ### Testing
 
@@ -1693,36 +1877,73 @@ const tier = score >= 7.5 ? 'GOLD_STAR' : 'EDGE_LEAN';
 - Report immediately - contradiction gate should prevent this
 - Never try to "fix" this in frontend by filtering client-side
 
+### Lesson 7: Hardcoded Literals in Comments and Strings (Feb 2026)
+**Problem:** Validator caught `7.5` in JSX comments and `8.0` in template strings, even though code logic used the contract constants correctly.
+
+**Root Cause:** Comments like `{/* >= 7.5 */}` and template strings like `` `≥8.0` `` contained raw literals that drifted when thresholds changed.
+
+**Impact:** If thresholds change, comments/strings would show stale values, misleading future developers.
+
+**Prevention:**
+- Reference constant NAMES in comments: `{/* >= GOLD_STAR_THRESHOLD */}`
+- Use template interpolation in strings: `` `≥${TITANIUM_THRESHOLD}` ``
+- Run `node scripts/validate_no_frontend_literals.mjs` which catches literals even in comments
+- The validator is the last line of defense; write correct code first
+
+**Automated Gate:** `validate_frontend_contracts.mjs` and `validate_no_frontend_literals.mjs` both check for this pattern.
+
+### Lesson 8: Missing Backend Fields Not Wired to Frontend (Feb 2026)
+**Problem:** Backend v20.5 sent 6 boost fields, GLITCH signals, esoteric contributions, and status indicators. Frontend displayed none of them (only badge icons for 2 boosts).
+
+**Root Cause:** `normalizePick()` in api.js didn't pass through the new fields. Even if components existed, the data was being stripped at the API normalization layer.
+
+**Impact:** Users couldn't see the full scoring breakdown, status indicators, or esoteric signal details.
+
+**Prevention:**
+- When backend adds fields, update `normalizePick()` in api.js FIRST
+- Then create display components
+- Then integrate into both GameSmashList.jsx AND PropsSmashList.jsx
+- Verify with: `curl ... | jq '.game_picks.picks[0] | keys'` then check normalizePick passes each key
+
 ---
 
 ## ✅ VERIFICATION CHECKLIST (Before Deploy)
 
-### 1. Build Check
+### 1. Contract Validators (MANDATORY - run first)
+```bash
+node scripts/validate_frontend_contracts.mjs
+node scripts/validate_no_frontend_literals.mjs
+node scripts/validate_no_eval.mjs
+# ALL must pass with zero errors
+```
+
+### 2. Build Check
 ```bash
 npm run build
 # Must complete with NO errors
-# Warnings are OK but review them
 ```
 
-### 2. Test Suite
+### 3. Test Suite
 ```bash
 npm run test:run
-# All 91 tests must pass
+# All tests must pass
 ```
 
-### 3. API Field Verification
+### 4. API Field Verification
 ```bash
-# Verify backend returns expected fields
+# Verify backend returns all expected fields
 curl -s "https://web-production-7b2a.up.railway.app/live/best-bets/NBA" \
   -H "X-API-Key: bookie-prod-2026-xK9mP2nQ7vR4" | \
   jq '.game_picks.picks[0] | {
     ai_score, research_score, esoteric_score, jarvis_score, context_score,
-    harmonic_boost, msrf_boost, context_layer
+    harmonic_boost, msrf_boost, context_layer,
+    base_4_score, context_modifier, confluence_boost,
+    jason_sim_boost, serp_boost, ensemble_adjustment,
+    msrf_status, serp_status, glitch_signals, esoteric_contributions
   }'
-# All fields must be present and non-null
 ```
 
-### 4. Visual Verification (Local Dev)
+### 5. Visual Verification (Local Dev)
 ```bash
 npm run dev
 # Open http://localhost:5173/smash-spots
@@ -1732,13 +1953,17 @@ Check:
 - [ ] All 5 engine scores display (AI, Research, Esoteric, Jarvis, Context)
 - [ ] Tooltips show correct weights on hover
 - [ ] Context Details expands and shows def_rank, pace, vacuum
+- [ ] Boost Breakdown panel shows all 6 boosts with correct signs
+- [ ] Status badges appear when conditions met (MSRF, SERP, Jason, ML)
+- [ ] GLITCH Protocol panel shows signals with progress bars
+- [ ] Esoteric Contributions panel shows grouped categories
 - [ ] JARVIS badge appears when `jarvis_active: true`
 - [ ] TITANIUM banner mentions "3/5 engines"
-- [ ] Tier legend shows correct thresholds
+- [ ] Tier legend shows correct thresholds (uses contract constants)
+- [ ] Negative jason_sim_boost shows in red
 
-### 5. All Sports Check
+### 6. All Sports Check
 ```bash
-# Test all 5 sports return data
 for sport in NBA NHL NFL MLB NCAAB; do
   echo "=== $sport ==="
   curl -s "https://web-production-7b2a.up.railway.app/live/best-bets/$sport" \
@@ -1747,11 +1972,11 @@ for sport in NBA NHL NFL MLB NCAAB; do
 done
 ```
 
-### 6. Engine Count Grep
+### 7. Stale Reference Grep
 ```bash
-# Verify no outdated "3/4" or "4 engine" references
+# Verify no outdated references
 grep -rn "3/4\|4 engine\|four engine" --include="*.jsx" --include="*.js"
-# Should return EMPTY or only valid references
+# Should return EMPTY
 ```
 
 ---
@@ -1761,13 +1986,16 @@ grep -rn "3/4\|4 engine\|four engine" --include="*.jsx" --include="*.js"
 1. **NEVER** recompute `final_score`, `tier`, or `titanium_triggered` on frontend
 2. **NEVER** display fewer than 5 engines (AI, Research, Esoteric, Jarvis, Context)
 3. **NEVER** say "3/4 engines" or "4 engines" - it's 5 engines since v17.1
-4. **NEVER** hardcode tier thresholds - use backend values
-5. **NEVER** derive badge visibility from score - use explicit boolean fields
-6. **NEVER** assume field paths without checking actual API response
-7. **NEVER** skip the build check before committing
-8. **NEVER** push without verifying all 5 sports return data
-9. **NEVER** update engine display in one file without updating the other (GameSmashList + PropsSmashList)
-10. **NEVER** change color coding without documenting the meaning
+4. **NEVER** hardcode tier thresholds - import from `core/frontend_scoring_contract.js`
+5. **NEVER** hardcode scoring literals even in comments or template strings - use constant NAMES
+6. **NEVER** derive badge visibility from score - use explicit boolean fields
+7. **NEVER** assume field paths without checking actual API response
+8. **NEVER** skip contract validators before committing
+9. **NEVER** push without verifying all 5 sports return data
+10. **NEVER** update engine display in one file without updating the other (GameSmashList + PropsSmashList)
+11. **NEVER** change color coding without documenting the meaning
+12. **NEVER** add backend fields to components without first updating `normalizePick()` in api.js
+13. **NEVER** skip `normalizePick()` when wiring new backend fields - it's the single gateway
 
 ---
 
@@ -1793,12 +2021,18 @@ PASS:           final < 5.5 (hidden)
 
 ### Badge Colors
 ```
-TITANIUM:  #00FFFF (Cyan)
-GOLD_STAR: #FFD700 (Gold)
-EDGE_LEAN: #10B981 (Green)
-JARVIS:    #FFD700 (Gold)
-HARMONIC:  #A855F7 (Purple)
-TURN DATE: #EAB308 (Gold)
+TITANIUM:     #00FFFF (Cyan)
+GOLD_STAR:    #FFD700 (Gold)
+EDGE_LEAN:    #10B981 (Green)
+JARVIS:       #FFD700 (Gold)
+HARMONIC:     #A855F7 (Purple)
+TURN DATE:    #EAB308 (Gold)
+MSRF LEVEL:   #EAB308 (Gold)
+SERP ACTIVE:  #00D4FF (Cyan)
+SERP SHADOW:  #6B7280 (Gray)
+JASON BLOCK:  #EF4444 (Red)
+JASON BOOST:  #10B981 (Green)
+ML ADJUST:    #3B82F6 (Blue)
 ```
 
 ### Context Layer Color Coding

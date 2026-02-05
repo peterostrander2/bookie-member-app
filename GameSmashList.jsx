@@ -264,7 +264,7 @@ const TierBadge = memo(({ confidence, showWinRate = false }) => {
 });
 TierBadge.displayName = 'TierBadge';
 
-// v12.1 Tier Legend (TITANIUM requires score≥TITANIUM_THRESHOLD + 3/4 engines, backend-verified)
+// v20.5 Tier Legend (TITANIUM requires score>=TITANIUM_THRESHOLD + 3/5 engines, backend-verified)
 const TierLegend = memo(() => (
   <div style={{
     display: 'flex', gap: '12px', marginBottom: '12px', flexWrap: 'wrap',

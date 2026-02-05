@@ -31,7 +31,7 @@ export const TITANIUM_THRESHOLD = 8.0;
 
 export const TITANIUM_RULE = {
   minEnginesGte: 3,
-  engineThreshold: 6.5,  // 3/4 engines must be >= this
+  engineThreshold: 6.5,  // 3/5 engines must be >= this
   threshold: 8.0,
 };
 

@@ -543,7 +543,7 @@ const FilterControls = memo(({ filters, setFilters, sortBy, setSortBy }) => {
 });
 FilterControls.displayName = 'FilterControls';
 
-// v12.1 Tier Legend (TITANIUM requires score≥8.0 + 3/4 engines≥6.5, backend-verified)
+// v20.5 Tier Legend (TITANIUM requires score>=TITANIUM_THRESHOLD + 3/5 engines, backend-verified)
 const TierLegend = memo(() => (
   <div style={{
     display: 'flex', gap: '12px', marginBottom: '12px', flexWrap: 'wrap',

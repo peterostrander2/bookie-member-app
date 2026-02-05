@@ -2,9 +2,18 @@
 set -euo pipefail
 
 # Quick checkpoint commit to free up Claude Code context
+# Runs contract validators first to prevent bad commits
 
 TIMESTAMP=$(date +"%Y-%m-%d %H:%M")
 
+echo "Running contract validators..."
+
+# Run validators (fast, mandatory)
+node scripts/validate_frontend_contracts.mjs || { echo "BLOCKED: Fix contract violations first"; exit 1; }
+node scripts/validate_no_frontend_literals.mjs || { echo "BLOCKED: Fix hardcoded literals first"; exit 1; }
+node scripts/validate_no_eval.mjs || { echo "BLOCKED: Fix eval usage first"; exit 1; }
+
+echo ""
 echo "Creating checkpoint commit..."
 
 # Stage all changes
