@@ -16,7 +16,7 @@ Bookie-o-em is an AI-powered sports betting analysis platform that combines mach
 | **Data APIs** | The Odds API, Playbook API |
 | **Auth** | X-API-Key header |
 | **Storage** | localStorage (Client), Railway DB (Server) |
-| **Testing** | Vitest (92 unit), Playwright (106 E2E) |
+| **Testing** | Vitest (210 unit, 14 files), Playwright (~150 E2E, 8 specs) |
 | **Monitoring** | Sentry (errors), GA4 (analytics) |
 
 ---
@@ -239,6 +239,13 @@ No Alignment (⚠️): Mixed signals
 | `/esoteric` | Esoteric | Gematria/numerology tools |
 | `/signals` | Signals | View all 17 signals |
 | `/grading` | Grading | Grade picks |
+| `/splits` | Splits | Betting splits |
+| `/props` | Props | Player props |
+| `/leaderboard` | Leaderboard | Community rankings |
+| `/history` | BetHistory | Bet tracking and grading |
+| `/parlay` | ParlayBuilder | Multi-leg parlay builder |
+| `/analytics` | HistoricalCharts | Performance analytics |
+| `/achievements` | Gamification | XP/badges system |
 | `/profile` | Profile | User settings |
 | `/admin` | AdminCockpit | Admin tools |
 
@@ -416,7 +423,44 @@ bookie-member-app/
 ├── Splits.jsx                 # Betting splits
 ├── Profile.jsx                # User profile
 ├── AdminCockpit.jsx           # Admin tools
-└── ComplianceFooter.jsx       # Legal disclaimer
+├── ComplianceFooter.jsx       # Legal disclaimer
+│
+├── # v20.5 Score Components
+├── components/
+│   ├── BoostBreakdownPanel.jsx    # Option A score breakdown
+│   ├── StatusBadgeRow.jsx         # MSRF/SERP/Jason/ML badges
+│   ├── GlitchSignalsPanel.jsx     # GLITCH protocol signals
+│   └── EsotericContributionsPanel.jsx  # Esoteric by category
+│
+├── # Tests (210 unit tests)
+├── test/
+│   ├── setup.js                   # Vitest config + mocks
+│   ├── api.test.js                # API client (33 tests)
+│   ├── esoteric.test.js           # Chrome Resonance, Vortex Math (28 tests)
+│   ├── kellyCalculator.test.js    # Kelly Criterion (34 tests)
+│   ├── correlationDetector.test.js # Correlation analysis (16 tests)
+│   ├── clvTracker.test.js         # CLV tracking (20 tests)
+│   ├── pickExplainer.test.js      # Pick explanations (10 tests)
+│   ├── signalEngine.test.js       # Gematria, JARVIS (22 tests)
+│   ├── BoostBreakdownPanel.test.jsx   # (4 tests)
+│   ├── StatusBadgeRow.test.jsx        # (4 tests)
+│   ├── GlitchSignalsPanel.test.jsx    # (4 tests)
+│   ├── EsotericContributionsPanel.test.jsx # (4 tests)
+│   ├── BetSlip.test.jsx           # Bet slip component
+│   ├── BetHistory.test.jsx        # Bet history component
+│   └── ParlayBuilder.test.jsx     # Parlay builder
+│
+├── # E2E Tests (~150 tests, 100% route coverage)
+└── e2e/
+    ├── fixtures.js                # Shared fixture (onboarding skip)
+    ├── navigation.spec.js         # Page routing (16 tests)
+    ├── smash-spots.spec.js        # Picks, v20.5 panels (24 tests)
+    ├── bet-slip.spec.js           # Bet slip (18 tests)
+    ├── parlay-builder.spec.js     # Parlay builder (16 tests)
+    ├── esoteric.spec.js           # Esoteric page (32 tests)
+    ├── sharp-odds-injuries.spec.js # Sharp, odds, injuries (16 tests)
+    ├── analytics-profile-bankroll.spec.js # Analytics, profile, bankroll (16 tests)
+    └── remaining-pages.spec.js    # All remaining routes (12 tests)
 ```
 
 ---

@@ -181,7 +181,7 @@ npm run dev
 # JSON parse errors handled gracefully ✓
 ```
 
-**Tests:** 91 tests passing
+**Tests:** 210 unit tests passing (14 files), ~150 E2E tests (8 spec files, 100% route coverage)
 
 ---
 

@@ -158,6 +158,9 @@ catch { await expect(page.locator('body')).toBeVisible(); return; }
 | `e2e/bet-slip.spec.js` | Bet slip interactions, parlay calculator |
 | `e2e/parlay-builder.spec.js` | Parlay builder, calculator, history |
 | `e2e/esoteric.spec.js` | Esoteric page, matchup analyzer, v20.5 enhancements |
+| `e2e/sharp-odds-injuries.spec.js` | Sharp alerts, best odds, injury vacuum, cross-page navigation |
+| `e2e/analytics-profile-bankroll.spec.js` | Analytics, profile, bankroll, performance, props |
+| `e2e/remaining-pages.spec.js` | Smoke tests for all remaining routes (100% coverage) |
 
 ---
 
@@ -173,7 +176,7 @@ catch { await expect(page.locator('body')).toBeVisible(); return; }
 | Components | `App.jsx` | Routing, lazy loading |
 | Signals | `signalEngine.js` | Client calculations |
 | Storage | `storageUtils.js` | localStorage keys |
-| Lessons | `docs/LESSONS.md` | Historical mistakes and prevention (20 lessons) |
+| Lessons | `docs/LESSONS.md` | Historical mistakes and prevention (22 lessons) |
 | Test Mocks | `test/api.test.js` → `mockResponse()` | Canonical mock pattern for API tests |
 | Test Setup | `test/setup.js` | Global mocks, env stubs, rate limit bypass |
 | E2E Fixtures | `e2e/fixtures.js` | Shared page fixture (onboarding skip, localStorage) |
@@ -270,6 +273,9 @@ async getParlay(userId) {
 - Build components against assumed data shapes without verifying against real API
 - Display per-pick data on pages using global endpoints (today-energy)
 - Guess field key names — always verify with `curl | jq 'keys'`
+- Hardcode enum validation arrays without checking actual backend values (enums expand)
+- Ship a new core logic module without corresponding unit tests
+- Add a new route without at least a smoke E2E test
 
 ---
 
@@ -309,13 +315,13 @@ node scripts/validate_frontend_contracts.mjs
 node scripts/validate_no_frontend_literals.mjs
 node scripts/validate_no_eval.mjs
 
-# 2. Unit tests (92 tests, ALL must pass)
+# 2. Unit tests (210 tests, ALL must pass)
 npm run test:run
 
 # 3. Build
 npm run build
 
-# 4. E2E tests (106 tests, requires dev server on :5173)
+# 4. E2E tests (~150 tests across 8 specs, requires dev server on :5173)
 npm run test:e2e
 
 # 5. E2E fixture check

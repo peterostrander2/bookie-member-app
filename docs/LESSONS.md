@@ -1,8 +1,9 @@
-# LESSONS LEARNED — Frontend
+# LESSONS LEARNED — Frontend (22 Lessons)
 
 Every lesson here was learned the hard way. Each one has an automated prevention mechanism.
 
 **Rule:** Before starting work, skim this file. Before committing, run the validators.
+**Philosophy:** Every mistake becomes a prevention gate. If it happened once, it should be impossible to happen again.
 
 ---
 
@@ -225,7 +226,7 @@ expect(fetch).toHaveBeenCalledWith(url, { headers: {...}, cache: 'no-store' })
 - Use `mockResponse()` helper for ALL new test mocks — never bare objects
 - Auth endpoint assertions MUST include `cache: 'no-store'`
 
-**Automated Gate:** `npm run test:run` — 91 tests must all pass.
+**Automated Gate:** `npm run test:run` — 210 tests must all pass.
 
 ---
 
@@ -574,6 +575,57 @@ await expect(page.getByRole('heading', { name: /Bet History/i })).toBeVisible({ 
 
 ---
 
+## Lesson 21: Backend Enum Expansion Not Reflected in Frontend Validator
+
+**When:** February 2026 (Test Expansion session)
+**Problem:** Backend added `UNFAVORABLE` to the `betting_outlook` enum, but `scripts/verify-backend.js` only had `['BULLISH', 'NEUTRAL', 'BEARISH']` in `validOutlooks`. Validator flagged valid live data as invalid. Esoteric.jsx display fell through to default styling with no visual distinction for UNFAVORABLE.
+**Root Cause:** Enum arrays were written once and never verified against evolving backend responses. No process to check for new enum values when backend deploys.
+**Impact:** Valid backend data flagged as errors. UNFAVORABLE outlook displayed identically to NEUTRAL (no red styling).
+
+**Fix Applied:**
+1. Added `'UNFAVORABLE'` to `validOutlooks` array in `scripts/verify-backend.js`
+2. Updated Esoteric.jsx to group BEARISH + UNFAVORABLE using `['BEARISH', 'UNFAVORABLE'].includes()`
+
+**Prevention:**
+- When backend adds enum values, grep for ALL arrays validating that enum:
+  ```bash
+  grep -rn "BULLISH\|NEUTRAL\|BEARISH\|validOutlooks" --include="*.js" --include="*.jsx"
+  ```
+- Display code should use `.includes()` grouping for semantic equivalents, not individual ternaries
+- Default/fallback styling should be visually distinct (amber/warning), not invisible
+- See INVARIANT 17 in CLAUDE.md
+
+**Automated Gate:** `node scripts/verify-backend.js` — validates enum values against live API.
+
+---
+
+## Lesson 22: Untested Core Logic Silently Breaks
+
+**When:** February 2026 (Test Expansion session)
+**Problem:** Core logic modules (kellyCalculator.js, correlationDetector.js, clvTracker.js, pickExplainer.js, signalEngine.js gematria/JARVIS, v20.5 display components) had zero unit tests. Bugs in these modules could only be discovered through manual testing or user reports.
+**Root Cause:** Test coverage wasn't treated as a shipping requirement. Modules were built and deployed without tests, creating invisible risk.
+**Impact:** No regression detection for 6 core modules and 4 display components.
+
+**Fix Applied:**
+- Added 118 new unit tests across 9 new test files (92 → 210 total)
+- Added 44 new E2E tests across 3 new spec files (100% route coverage)
+- Every core logic module now has comprehensive test coverage
+
+**Prevention:**
+- INVARIANT 18 in CLAUDE.md: New modules MUST ship with tests
+- New routes MUST have smoke E2E tests
+- Check test file exists for every core `.js` module:
+  ```bash
+  # Every core module should have a corresponding test file
+  for f in signalEngine clvTracker kellyCalculator correlationDetector pickExplainer; do
+    ls test/$f.test.js 2>/dev/null || echo "MISSING: test/$f.test.js"
+  done
+  ```
+
+**Automated Gate:** `npm run test:run` — 210 tests must pass. If a new module has no tests, this gate won't catch regressions in it.
+
+---
+
 ## Pattern: How New Lessons Get Added
 
 When you encounter a new mistake:
@@ -598,11 +650,13 @@ The goal: every mistake should be catchable automatically. If it can't be automa
 | Manual: grep | `grep -rn "3/4\|4 engine"` | Stale engine count references |
 | Manual: symmetric | `grep "import.*components/" Game* Props*` | Asymmetric component imports |
 | Manual: API verify | `curl ... \| jq '.picks[0] \| keys'` | Missing backend fields |
-| Invariants | CLAUDE.md MASTER INVARIANTS | 16 rules that must never be violated |
+| Invariants | CLAUDE.md MASTER INVARIANTS | 18 rules that must never be violated |
 | Manual: data shapes | `curl ... \| jq '.picks[0].glitch_signals'` | Nested objects mistaken for flat numbers |
 | Manual: field keys | `curl ... \| jq '.picks[0].esoteric_contributions \| keys'` | Component key mismatches |
+| Manual: enum check | `grep -rn "validOutlooks\|validTiers"` | Enum arrays missing new backend values |
 | Build | `npm run build` | Syntax errors, import failures |
-| Unit Tests | `npm run test:run` | Regression failures, mock drift, network error handling |
-| E2E Tests | `npm run test:e2e` | Navigation failures, element interception, selector ambiguity |
+| Unit Tests | `npm run test:run` (210 tests) | Regression failures, mock drift, network error handling |
+| E2E Tests | `npm run test:e2e` (~150 tests) | Navigation failures, element interception, selector ambiguity |
 | E2E: fixtures | `grep "from '@playwright/test'" e2e/*.spec.js` | Missing onboarding skip (should return EMPTY) |
 | E2E: selectors | Playwright strict mode | Ambiguous selectors matching multiple elements |
+| Test coverage | `ls test/*.test.* e2e/*.spec.js` | Every core module has tests, every route has E2E |

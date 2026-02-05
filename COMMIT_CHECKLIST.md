@@ -27,7 +27,7 @@ node scripts/validate_frontend_contracts.mjs
 ```bash
 npm run test:run
 ```
-- [ ] All 92 unit tests pass
+- [ ] All 210 unit tests pass
 
 ### 4. Build Check
 ```bash
@@ -39,7 +39,7 @@ npm run build
 ```bash
 npm run test:e2e
 ```
-- [ ] All 106 E2E tests pass (requires dev server on :5173)
+- [ ] All ~150 E2E tests pass (requires dev server on :5173)
 - [ ] E2E fixture check: `grep -rn "from '@playwright/test'" e2e/*.spec.js` returns EMPTY
 
 ### 6. Commit
@@ -63,6 +63,9 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 - ❌ Import `@playwright/test` directly in E2E specs (use `./fixtures`)
 - ❌ Add localStorage-gated UI without updating `e2e/fixtures.js`
 - ❌ Use `waitForLoadState('networkidle')` on pages with API polling
+- ❌ Ship new core logic modules without unit tests
+- ❌ Add new routes without E2E smoke tests
+- ❌ Hardcode enum validation arrays — always check for backend enum expansion
 
 ---
 

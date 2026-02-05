@@ -47,6 +47,16 @@ See `docs/SESSION_HYGIENE.md` for full guide.
 - E2E tests: import from `./fixtures`, never from `@playwright/test`.
 - New localStorage-gated UI: add skip key to `e2e/fixtures.js`.
 - New E2E tests: use `.first()` on broad selectors, `getByRole`/`getByLabel` over `getByText`/`locator`.
+- New core modules MUST ship with unit tests (see INVARIANT 18).
+- New routes MUST have E2E smoke tests in the appropriate spec file.
+- Enum validation arrays must include ALL values backend sends (see INVARIANT 17).
+
+## Test Coverage (as of Feb 2026)
+
+- **210 unit tests** across 14 files — all core logic modules covered
+- **~150 E2E tests** across 8 spec files — 100% route coverage (23/23 routes)
+- Run unit tests: `npm run test:run`
+- Run E2E tests: `npm run test:e2e` (requires dev server on :5173)
 
 ## Common tasks
 

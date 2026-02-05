@@ -329,7 +329,7 @@ npm install
 # Development server (port 5173)
 npm run dev
 
-# Run tests (91 tests)
+# Run tests (210 tests across 14 files)
 npm run test
 
 # Build for production
@@ -591,7 +591,7 @@ All endpoints implemented:
 10. Two-category Smash Spots (Props + Games tabs)
 11. Bet History page with WIN/LOSS/PUSH tracking
 12. Parlay Builder with odds calculator and history
-13. Testing infrastructure (91 unit tests, E2E with Playwright)
+13. Testing infrastructure (210 unit tests across 14 files, 150 E2E tests across 8 specs)
 14. CI/CD pipeline (GitHub Actions → Railway)
 15. Code splitting (22 lazy-loaded routes)
 16. Error monitoring (Sentry integration)
@@ -641,12 +641,21 @@ npm run test:run    # Single run
 npm run test:coverage  # With coverage
 ```
 
-**Test files:** `test/*.test.js`, `test/*.test.jsx`
+**Test files:** `test/*.test.js`, `test/*.test.jsx` (14 files, 210 tests)
 - `api.test.js` - API client tests (33 tests)
 - `esoteric.test.js` - Chrome Resonance, Vortex Math tests (28 tests)
+- `kellyCalculator.test.js` - Kelly Criterion, odds conversion, bankroll sizing (34 tests)
+- `correlationDetector.test.js` - Pick correlation, diversification scoring (16 tests)
+- `clvTracker.test.js` - CLV tracking, closing lines, grading, statistics (20 tests)
+- `pickExplainer.test.js` - Pick explanations, headlines, signal mapping (10 tests)
+- `signalEngine.test.js` - Gematria ciphers, JARVIS triggers, daily readings (22 tests)
 - `BetSlip.test.jsx` - Bet slip component tests
 - `BetHistory.test.jsx` - Bet history component tests
 - `ParlayBuilder.test.jsx` - Parlay builder tests
+- `BoostBreakdownPanel.test.jsx` - Boost breakdown display (4 tests)
+- `StatusBadgeRow.test.jsx` - Status badge rendering (4 tests)
+- `GlitchSignalsPanel.test.jsx` - GLITCH protocol signals (4 tests)
+- `EsotericContributionsPanel.test.jsx` - Esoteric contributions display (4 tests)
 
 ### Test Mock Pattern (IMPORTANT)
 API tests use a `mockResponse()` helper that creates proper Response-like objects.
@@ -688,12 +697,15 @@ import { test, expect } from './fixtures';
 import { test, expect } from '@playwright/test';
 ```
 
-**Test files:** `e2e/*.spec.js`
+**Test files:** `e2e/*.spec.js` (8 files, ~150 tests, 100% route coverage)
 - `navigation.spec.js` - Page navigation and routing (16 tests)
 - `smash-spots.spec.js` - Picks viewing, tab switching, v20.5 panels (24 tests)
 - `bet-slip.spec.js` - Bet slip interactions (18 tests)
 - `parlay-builder.spec.js` - Parlay building flow (16 tests)
 - `esoteric.spec.js` - Esoteric matchup analyzer, cosmic energy (32 tests)
+- `sharp-odds-injuries.spec.js` - Sharp alerts, best odds, injury vacuum, cross-page nav (16 tests)
+- `analytics-profile-bankroll.spec.js` - Analytics, profile, bankroll, performance, props (16 tests)
+- `remaining-pages.spec.js` - Smoke tests for all remaining routes (12 tests)
 
 ### API Mocking (MSW)
 Mock handlers available in `src/mocks/handlers.js` for development:
@@ -709,7 +721,7 @@ Mock handlers available in `src/mocks/handlers.js` for development:
 Automated pipeline that runs on every push and PR:
 
 **Jobs:**
-1. **Test** - Runs 92 unit tests with Vitest
+1. **Test** - Runs 210 unit tests with Vitest
 2. **Build** - Compiles production bundle (only if tests pass)
 3. **Deploy** - Deploys to Railway (only on merge to main)
 
@@ -1591,6 +1603,41 @@ async getParlay(userId) {
 
 ---
 
+### Session: February 2026 (Test Expansion + UNFAVORABLE Bug Fix)
+
+**Completed in this session:**
+1. Fixed UNFAVORABLE betting_outlook enum — backend sends `UNFAVORABLE` but validator and Esoteric.jsx only recognized BULLISH/NEUTRAL/BEARISH
+2. Added 118 new unit tests across 9 new test files (92 → 210 total)
+3. Added 44 new E2E tests across 3 new spec files (106 → ~150 total)
+4. Achieved 100% route coverage in E2E tests (all 23 routes covered)
+
+**Bug fix:**
+- `scripts/verify-backend.js` — Added `'UNFAVORABLE'` to validOutlooks array
+- `Esoteric.jsx` — Grouped BEARISH + UNFAVORABLE as negative outlooks using `['BEARISH', 'UNFAVORABLE'].includes()`
+
+**New unit test files created:**
+- `test/kellyCalculator.test.js` — 34 tests (odds conversion, Kelly fraction, bankroll sizing, bet tracking)
+- `test/correlationDetector.test.js` — 16 tests (correlation analysis, adjusted sizing, pick correlation)
+- `test/clvTracker.test.js` — 20 tests (pick CRUD, closing lines, grading, statistics)
+- `test/pickExplainer.test.js` — 10 tests (headline generation, signal filtering, risk factors)
+- `test/signalEngine.test.js` — 22 tests (gematria ciphers, JARVIS triggers, daily readings, cosmic confluence)
+- `test/BoostBreakdownPanel.test.jsx` — 4 tests (null pick, boost fields, negative jason)
+- `test/StatusBadgeRow.test.jsx` — 4 tests (null pick, TURN DATE badge, JASON BLOCK badge)
+- `test/GlitchSignalsPanel.test.jsx` — 4 tests (void moon active/clear, kp-index value)
+- `test/EsotericContributionsPanel.test.jsx` — 4 tests (grouped categories, color coding)
+
+**New E2E spec files created:**
+- `e2e/sharp-odds-injuries.spec.js` — 16 tests (/sharp, /odds, /injuries, cross-page nav)
+- `e2e/analytics-profile-bankroll.spec.js` — 16 tests (/analytics, /profile, /bankroll, /performance, /props)
+- `e2e/remaining-pages.spec.js` — 12 tests (9 page load smoke tests + 3 interaction tests)
+
+**Key lesson (Lesson 21):** Backend enum values can expand without frontend notice. Always validate enum arrays include ALL values the backend sends, not just the documented ones.
+
+**Build:** Clean, all validators pass
+**Tests:** 210/210 unit, ~150 E2E (8 spec files)
+
+---
+
 ## 🚨 MASTER INVARIANTS (NEVER VIOLATE) 🚨
 
 **READ THIS FIRST BEFORE TOUCHING SCORING OR DISPLAY CODE**
@@ -2040,9 +2087,59 @@ export { expect };
 grep -rn "from '@playwright/test'" e2e/*.spec.js
 # Should return EMPTY
 
-# Full E2E suite (106 tests)
+# Full E2E suite (~150 tests across 8 spec files)
 npm run test:e2e
 ```
+
+---
+
+### INVARIANT 17: Enum Arrays Must Match Backend Reality
+
+**RULE:** All frontend enum validation arrays (valid outlooks, valid tiers, valid statuses) MUST include every value the backend can send, including newly added values. When the backend expands an enum, the frontend validator and display code must be updated immediately.
+
+**Why:** Backend added `UNFAVORABLE` to `betting_outlook` but frontend only recognized BULLISH/NEUTRAL/BEARISH. The validator flagged live data as invalid, and display code fell through to default styling with no visual distinction.
+
+**Pattern:**
+```javascript
+// WRONG: Closed enum that can't handle new values
+const validOutlooks = ['BULLISH', 'NEUTRAL', 'BEARISH'];
+
+// CORRECT: Include all known backend values
+const validOutlooks = ['BULLISH', 'NEUTRAL', 'BEARISH', 'UNFAVORABLE'];
+
+// DISPLAY: Group semantically similar values
+const isNegative = ['BEARISH', 'UNFAVORABLE'].includes(outlook);
+```
+
+**Prevention:**
+- When backend adds enum values, update ALL places that validate or switch on that enum
+- Grep for the enum field name across the codebase: `grep -rn "betting_outlook\|validOutlooks" --include="*.js" --include="*.jsx"`
+- Default/fallback styling should be visually distinct (amber/warning), never invisible
+
+**Automated Gate:** `node scripts/verify-backend.js` validates known enums against live API.
+
+---
+
+### INVARIANT 18: Test Coverage Gate
+
+**RULE:** New core logic files (calculators, trackers, engines) MUST have corresponding unit tests before being considered complete. New routes MUST have at least a smoke E2E test.
+
+**Current coverage:**
+- 14 unit test files covering all core logic modules
+- 8 E2E spec files covering all 23 routes (100% route coverage)
+
+**When adding new modules:**
+1. Create the module
+2. Create `test/<module>.test.js` with tests for all exported functions
+3. If it's a new route, add a smoke test to the appropriate E2E spec file
+4. Verify: `npm run test:run` shows the new tests pass
+
+**When adding new routes:**
+1. Add the route to `App.jsx`
+2. Add a smoke test to `e2e/remaining-pages.spec.js` (or appropriate spec)
+3. Verify: all E2E specs still import from `./fixtures`
+
+**NEVER:** Ship a new core module without tests. The test expansion from 92→210 tests exists precisely because untested code silently broke.
 
 ---
 
@@ -2182,14 +2279,25 @@ npm run test:e2e
 |------|---------|
 | `signalEngine.js` | Client-side gematria, moon phase, numerology |
 
-### Testing
+### Testing (14 unit test files, 210 tests + 8 E2E spec files, ~150 tests)
 
 | File | Purpose |
 |------|---------|
-| `test/api.test.js` | API client tests (32 tests) |
-| `test/esoteric.test.js` | Signal engine tests (28 tests) |
+| `test/api.test.js` | API client tests (33 tests) |
+| `test/esoteric.test.js` | Chrome Resonance, Vortex Math (28 tests) |
+| `test/kellyCalculator.test.js` | Kelly Criterion, odds conversion, bankroll (34 tests) |
+| `test/correlationDetector.test.js` | Pick correlation, diversification (16 tests) |
+| `test/clvTracker.test.js` | CLV tracking, closing lines, grading (20 tests) |
+| `test/pickExplainer.test.js` | Explanations, headlines, risk factors (10 tests) |
+| `test/signalEngine.test.js` | Gematria, JARVIS, daily readings (22 tests) |
 | `test/BetSlip.test.jsx` | Bet slip component tests |
-| `e2e/*.spec.js` | Playwright E2E tests |
+| `test/BetHistory.test.jsx` | Bet history component tests |
+| `test/ParlayBuilder.test.jsx` | Parlay builder tests |
+| `test/BoostBreakdownPanel.test.jsx` | Boost breakdown display (4 tests) |
+| `test/StatusBadgeRow.test.jsx` | Status badge rendering (4 tests) |
+| `test/GlitchSignalsPanel.test.jsx` | GLITCH protocol signals (4 tests) |
+| `test/EsotericContributionsPanel.test.jsx` | Esoteric contributions (4 tests) |
+| `e2e/*.spec.js` | Playwright E2E tests (8 files, 100% route coverage) |
 
 ---
 
@@ -2304,7 +2412,7 @@ npm run test:e2e
 - Use the `mockResponse()` helper for ALL new test mocks — never bare objects
 - Auth endpoint assertions MUST include `cache: 'no-store'`
 
-**Automated Gate:** `npm run test:run` — 91 tests must pass before commit.
+**Automated Gate:** `npm run test:run` — 210 tests must pass before commit.
 
 ### Lesson 10: API Methods Missing Network Error Handling (Feb 2026)
 **Problem:** API methods like `getTodayEnergy`, `getSportsbooks`, `getParlay` etc. had `|| default` fallbacks for non-ok responses, but didn't catch network errors (fetch rejections). Network failures crashed instead of returning defaults.
@@ -2436,14 +2544,14 @@ npm run build
 ### 3. Unit Test Suite
 ```bash
 npm run test:run
-# All 92 tests must pass
+# All 210 tests must pass
 ```
 
 ### 3b. E2E Test Suite
 ```bash
 # Requires dev server running on :5173
 npm run test:e2e
-# All 106 tests must pass
+# All ~150 tests must pass
 
 # Fixture integrity check
 grep -rn "from '@playwright/test'" e2e/*.spec.js
@@ -2543,6 +2651,9 @@ curl -s "https://web-production-7b2a.up.railway.app/live/best-bets/NBA" \
 22. **NEVER** add localStorage-gated UI (modals, wizards, banners) without adding the skip key to `e2e/fixtures.js`
 23. **NEVER** use `waitForLoadState('networkidle')` in E2E tests on pages with API polling (BetHistory, Dashboard, SmashSpots)
 24. **NEVER** use `getByText()` to verify a page rendered — raw Vite source code contains all string literals and will match
+25. **NEVER** hardcode enum validation arrays without checking the actual backend values — enums expand (e.g., UNFAVORABLE added to betting_outlook)
+26. **NEVER** ship a new core logic module (calculator, tracker, engine) without corresponding unit tests
+27. **NEVER** add a new route without adding at least a smoke E2E test to verify it loads
 
 ---
 

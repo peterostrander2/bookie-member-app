@@ -100,7 +100,7 @@ Fix:
 ```bash
 # Run tests to verify
 npm run test:run
-# All 91 tests must pass
+# All 210 tests must pass
 ```
 
 ## 10) Component crashes with TypeError on backend data
@@ -253,6 +253,39 @@ Fix:
 - Use semantic selectors: `getByRole('heading', { name: /Bet History/i })`
 - Use labeled inputs: `getByLabel(/Away Team/i)` instead of `locator('input')`
 - See Lesson 19 in `docs/LESSONS.md`
+
+---
+
+## 18) Backend enum value not recognized by frontend
+
+Symptoms:
+- `verify-backend.js` flags valid backend responses as invalid
+- Display code falls through to default styling
+- New backend enum values show up as "unknown" or generic
+
+Root Cause:
+- Backend expanded an enum (e.g., added `UNFAVORABLE` to `betting_outlook`) but frontend validation arrays and display switches weren't updated.
+
+Fix:
+1. Identify the enum field: `grep -rn "validOutlooks\|validTiers\|validStatuses" --include="*.js"`
+2. Add the new value to the validation array
+3. Update display/switch code to handle the new value with proper styling
+4. Group semantically similar values: `['BEARISH', 'UNFAVORABLE'].includes()`
+5. See Lesson 21 in `docs/LESSONS.md`
+
+---
+
+## 19) New module has no test coverage
+
+Symptoms:
+- `test/` directory has no test file for a core module
+- Bugs in the module can only be found manually
+
+Fix:
+1. Create `test/<module>.test.js` with tests for all exported functions
+2. Use existing test patterns (see `test/kellyCalculator.test.js` for a good example)
+3. Run `npm run test:run` to verify
+4. See Lesson 22 in `docs/LESSONS.md`
 
 ---
 
