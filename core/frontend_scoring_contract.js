@@ -29,7 +29,7 @@ export const BOOST_CAPS = {
 };
 
 export const MONITOR_THRESHOLD = 5.5;
-export const MIN_FINAL_SCORE = 6.5;      // Community threshold
+export const MIN_FINAL_SCORE = 7.0;      // Matches backend scoring_contract.py
 export const GOLD_STAR_THRESHOLD = 7.5;
 export const TITANIUM_THRESHOLD = 8.0;
 
