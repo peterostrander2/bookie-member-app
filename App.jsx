@@ -39,6 +39,7 @@ import { BetSlipProvider, FloatingBetSlip } from './BetSlip';
 import ErrorBoundary from './ErrorBoundary';
 import { OfflineProvider, OfflineBanner, UpdateBanner } from './OfflineIndicator';
 import { PushProvider, SmashAlertBell } from './PushNotifications';
+import { StreamingProvider, StreamingStatusBadge } from './components/StreamingUpdater';
 import { NotificationOnboardingModal, useNotificationOnboarding } from './NotificationOnboarding';
 import SearchBar from './SearchBar';
 import api from './api';
@@ -367,6 +368,7 @@ const Navbar = ({ onOpenNotificationModal }) => {
 
         {/* Right side actions */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <StreamingStatusBadge />
           <SmashAlertBell onOpenModal={onOpenNotificationModal} />
           <SignalBell />
           <button
@@ -682,13 +684,15 @@ const App = () => {
             <GamificationProvider>
               <ToastProvider>
                 <SignalNotificationProvider>
-                  <BetSlipProvider>
-                    <OfflineBanner />
-                    <UpdateBanner />
-                    <AuthInvalidBanner />
-                    <AppContent />
-                    <FloatingBetSlip />
-                  </BetSlipProvider>
+                  <StreamingProvider>
+                    <BetSlipProvider>
+                      <OfflineBanner />
+                      <UpdateBanner />
+                      <AuthInvalidBanner />
+                      <AppContent />
+                      <FloatingBetSlip />
+                    </BetSlipProvider>
+                  </StreamingProvider>
                 </SignalNotificationProvider>
               </ToastProvider>
             </GamificationProvider>

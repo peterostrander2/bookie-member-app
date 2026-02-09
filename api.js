@@ -282,6 +282,27 @@ export const api = {
       // v20.5: Pass through signal dicts
       glitch_signals: item.glitch_signals ?? {},
       esoteric_contributions: item.esoteric_contributions ?? {},
+
+      // v20.12: Pass through reason arrays
+      ai_reasons: item.ai_reasons ?? [],
+      esoteric_reasons: item.esoteric_reasons ?? [],
+      context_reasons: item.context_reasons ?? [],
+      reasons: item.reasons ?? [],
+
+      // v20.12: Stadium/altitude impact
+      stadium_data: item.stadium_data ?? null,
+      altitude_impact: item.altitude_impact ?? null,
+      scoring_impact: item.scoring_impact ?? 0,
+
+      // v20.12: Travel fatigue
+      travel_data: item.travel_data ?? null,
+      travel_fatigue: item.travel_fatigue ?? 0,
+      away_fatigue: item.away_fatigue ?? 0,
+      home_boost: item.home_boost ?? 0,
+
+      // v20.12: Officials fallback
+      officials_data: item.officials_data ?? null,
+      officials_fallback: item.officials_fallback ?? false,
     });
 
     // Helper to extract array from various response formats

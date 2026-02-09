@@ -28,6 +28,7 @@ import BoostBreakdownPanel from './components/BoostBreakdownPanel';
 import StatusBadgeRow from './components/StatusBadgeRow';
 import GlitchSignalsPanel from './components/GlitchSignalsPanel';
 import EsotericContributionsPanel from './components/EsotericContributionsPanel';
+import ReasonPanel from './components/ReasonPanel';
 
 // AI Models and Pillars for enhanced "Why?" breakdown
 const AI_MODELS = [
@@ -799,6 +800,9 @@ const PickCard = memo(({ pick, injuries = [] }) => {
       {/* v20.5: Esoteric Contributions by category */}
       <EsotericContributionsPanel pick={pick} />
 
+      {/* v20.12: Categorized reason arrays */}
+      <ReasonPanel pick={pick} />
+
       {/* TERTIARY: Key stats - smallest, de-emphasized */}
       <div style={KEY_STATS_ROW_STYLE}>
         <div style={STAT_BADGE_STYLE}>
@@ -1018,7 +1022,15 @@ const PickCard = memo(({ pick, injuries = [] }) => {
          p.jason_sim_boost === n.jason_sim_boost &&
          p.ensemble_adjustment === n.ensemble_adjustment &&
          p.glitch_signals === n.glitch_signals &&
-         p.esoteric_contributions === n.esoteric_contributions;
+         p.esoteric_contributions === n.esoteric_contributions &&
+         // v20.12: Reason arrays and new features
+         p.ai_reasons === n.ai_reasons &&
+         p.esoteric_reasons === n.esoteric_reasons &&
+         p.context_reasons === n.context_reasons &&
+         p.scoring_impact === n.scoring_impact &&
+         p.away_fatigue === n.away_fatigue &&
+         p.home_boost === n.home_boost &&
+         p.officials_fallback === n.officials_fallback;
 });
 PickCard.displayName = 'PickCard';
 
