@@ -1638,6 +1638,45 @@ async getParlay(userId) {
 
 ---
 
+### Session: February 2026 (v20.12 Frontend Integration)
+
+**Completed in this session:**
+1. Implemented v20.12 frontend support for backend Phase 9 features
+2. Created `ReasonPanel.jsx` - Expandable categorized reasons with v20.12 feature badges
+3. Created `StreamingUpdater.jsx` - SSE client with auto-reconnect and exponential backoff
+4. Updated `normalizePick()` with 15 new v20.12 field passthroughs
+5. Integrated ReasonPanel into both GameSmashList.jsx and PropsSmashList.jsx (INVARIANT 8)
+6. Integrated StreamingProvider into App.jsx provider hierarchy
+7. Added StreamingStatusBadge to navbar (Live/Connecting/Polling status)
+8. Updated memo comparison functions for v20.12 fields
+
+**New files created:**
+- `components/ReasonPanel.jsx` - Expandable "Why This Pick" panel with AI/Esoteric/Context categories
+- `components/StreamingUpdater.jsx` - SSE provider, hooks (useStreaming, useStreamingEvents, usePicksWithLiveUpdates)
+
+**Files modified:**
+- `api.js` - Added v20.12 fields to normalizePick (reason arrays, stadium, travel, officials)
+- `GameSmashList.jsx` - ReasonPanel integration + memo comparison updates
+- `PropsSmashList.jsx` - ReasonPanel integration + memo comparison updates (symmetric with GameSmashList)
+- `App.jsx` - StreamingProvider wrapper + StreamingStatusBadge in navbar
+
+**v20.12 Backend Features Supported:**
+| Feature | Backend Fields | Frontend Display |
+|---------|---------------|------------------|
+| Reason Arrays | ai_reasons, esoteric_reasons, context_reasons | ReasonPanel with category grouping |
+| Stadium Altitude | scoring_impact, altitude_impact, stadium_data | Altitude badge (Denver +0.3, Utah +0.2) |
+| Travel Fatigue | away_fatigue, home_boost, travel_data | Travel fatigue badges |
+| Officials Fallback | officials_fallback, officials_data | Officials badge when ESPN hasn't assigned refs |
+| SSE Streaming | /live/stream/status endpoint | StreamingStatusBadge, live pick updates |
+
+**Lesson learned:** Edit tool requires EXACT string matching (see Lesson 17). Always Read before Edit.
+
+**Commit:** `baa7ff6 feat: add v20.12 frontend support for reason arrays and SSE streaming`
+**Build:** Clean (341 KB main bundle)
+**Tests:** 210/210 passing
+
+---
+
 ## 🚨 MASTER INVARIANTS (NEVER VIOLATE) 🚨
 
 **READ THIS FIRST BEFORE TOUCHING SCORING OR DISPLAY CODE**
@@ -1880,20 +1919,44 @@ grep -n "import.*from.*components/" GameSmashList.jsx PropsSmashList.jsx
 
 **RULE:** When backend adds new fields, `normalizePick()` in `api.js` MUST be updated to pass them through. The normalizer is the single gateway for all pick data.
 
-**Current passthrough fields (v20.5):**
+**Current passthrough fields (v20.12):**
 ```javascript
-// Boost fields
+// Boost fields (v20.5)
 base_4_score, context_modifier, confluence_boost, msrf_boost,
 jason_sim_boost, serp_boost, ensemble_adjustment, live_adjustment
 
-// Status fields
+// Status fields (v20.5)
 msrf_status, serp_status, jason_status, msrf_metadata, serp_shadow_mode
 
-// Signal dicts
+// Signal dicts (v20.5)
 glitch_signals, esoteric_contributions
+
+// v20.12: Reason arrays
+ai_reasons, esoteric_reasons, context_reasons, reasons
+
+// v20.12: Stadium/altitude impact
+stadium_data, altitude_impact, scoring_impact
+
+// v20.12: Travel fatigue
+travel_data, travel_fatigue, away_fatigue, home_boost
+
+// v20.12: Officials fallback
+officials_data, officials_fallback
 ```
 
 **If a field shows as `undefined` in a component, check normalizePick() FIRST.**
+
+**v20.12 memo comparison fields (both SmashList files):**
+```javascript
+// Must be in arePropsEqual/arePicksEqual for re-render on update
+p.ai_reasons === n.ai_reasons &&
+p.esoteric_reasons === n.esoteric_reasons &&
+p.context_reasons === n.context_reasons &&
+p.scoring_impact === n.scoring_impact &&
+p.away_fatigue === n.away_fatigue &&
+p.home_boost === n.home_boost &&
+p.officials_fallback === n.officials_fallback
+```
 
 ---
 
@@ -2160,6 +2223,117 @@ const isNegative = ['BEARISH', 'UNFAVORABLE'].includes(outlook);
 
 ---
 
+### INVARIANT 20: v20.12 Reason Arrays and Feature Fields
+
+**RULE:** Backend v20.12 sends categorized reason arrays and feature fields. These MUST be passed through `normalizePick()` and displayed in both SmashList components.
+
+**v20.12 Reason Arrays:**
+```javascript
+// Categorized reasons from backend
+ai_reasons: [],        // AI model predictions and consensus signals
+esoteric_reasons: [],  // Numerology, gematria, cosmic alignment
+context_reasons: [],   // Stadium altitude, travel fatigue, officials
+reasons: [],           // Legacy flat array (fallback)
+```
+
+**v20.12 Feature Fields:**
+```javascript
+// Stadium/Altitude Impact
+stadium_data: null,    // Stadium details
+altitude_impact: null, // Raw altitude value
+scoring_impact: 0,     // Denver +0.3, Utah +0.2
+
+// Travel Fatigue
+travel_data: null,     // Distance, rest days
+travel_fatigue: 0,     // Overall fatigue modifier
+away_fatigue: 0,       // Away team penalty (negative)
+home_boost: 0,         // Home team advantage (positive)
+
+// Officials Fallback (Pillar 16)
+officials_data: null,  // Lead ref, tendencies
+officials_fallback: false, // true when ESPN hasn't assigned refs
+```
+
+**Display Components:**
+- `components/ReasonPanel.jsx` - Expandable categorized reasons panel
+- Uses `<details>` for expand/collapse
+- Categories: AI Analysis (🤖), Esoteric Signals (⚡), Context Factors (📊)
+- Shows v20.12 feature badges (Altitude, Travel Fatigue, Officials)
+
+**MUST appear in both:**
+- `GameSmashList.jsx`
+- `PropsSmashList.jsx`
+
+---
+
+### INVARIANT 21: SSE Streaming Connection
+
+**RULE:** Real-time updates use Server-Sent Events (SSE) via `StreamingProvider`. The streaming context provides live pick updates, line movements, and SMASH alerts.
+
+**SSE Endpoint:** `GET /live/stream/status`
+
+**Event Types:**
+```javascript
+const EVENT_TYPES = {
+  PICK_UPDATE: 'pick_update',      // Score/line changes
+  LINE_MOVEMENT: 'line_movement',  // Odds shifts
+  LIVE_SCORE: 'live_score',        // Game scores
+  SMASH_ALERT: 'smash_alert',      // New SMASH triggers
+  STATUS: 'status',                // Connection status
+  HEARTBEAT: 'heartbeat',          // Keep-alive
+};
+```
+
+**Provider Hierarchy (App.jsx):**
+```jsx
+<StreamingProvider enabled={true}>
+  <SmashAlertProvider>
+    <TimezoneProvider>
+      ...
+    </TimezoneProvider>
+  </SmashAlertProvider>
+</StreamingProvider>
+```
+
+**Hooks:**
+- `useStreaming()` - Connection status, events array
+- `useStreamingEvents(type, callback)` - Subscribe to specific event types
+- `usePicksWithLiveUpdates(picks)` - Auto-merge live updates into picks
+
+**Status Badge:** `StreamingStatusBadge` in navbar shows:
+- 🟢 Live (connected)
+- 🟡 Connecting... (reconnecting)
+- ⚪ Polling (SSE not supported)
+
+**Reconnection:** Exponential backoff (5s, 10s, 20s, 40s, 80s), max 5 attempts.
+
+**NEVER:** Block the UI waiting for SSE. Fallback to polling gracefully.
+
+---
+
+### INVARIANT 22: Edit Tool Exact String Matching
+
+**RULE:** When using the Edit tool, the `old_string` MUST match the file content EXACTLY, including comment syntax (`/` vs `//`), whitespace, and indentation.
+
+**Why this exists:** Session Feb 2026 — Edit failed because `old_string` used `/` for comments but the actual file had `//`. The Edit tool does exact string matching with no fuzzy logic.
+
+**Prevention:**
+1. ALWAYS read the exact lines before editing: `Read tool with offset/limit`
+2. Copy the EXACT text from the Read output, including all whitespace
+3. Pay attention to comment syntax: `//`, `/*`, `#`, `--`
+4. Verify indentation matches (tabs vs spaces)
+
+**DO:**
+```bash
+# Read the exact content first
+Read file_path with offset=275, limit=20
+# Then use the EXACT text from that output
+```
+
+**NEVER:** Assume comment syntax or whitespace. Always verify with Read first.
+
+---
+
 ## 📋 FRONTEND-BACKEND CONTRACT (v17.3)
 
 ### API Response Structure
@@ -2226,30 +2400,43 @@ const isNegative = ['BEARISH', 'UNFAVORABLE'].includes(outlook);
 
 ### Field Availability by Version
 
-| Field | v12.0 | v17.3 | v20.5 |
-|-------|-------|-------|-------|
-| ai_score | ✅ | ✅ | ✅ |
-| research_score | ✅ | ✅ | ✅ |
-| esoteric_score | ✅ | ✅ | ✅ |
-| jarvis_score | ✅ | ✅ | ✅ |
-| context_score | ❌ | ✅ | ✅ |
-| context_layer | ❌ | ✅ | ✅ |
-| harmonic_boost | ❌ | ✅ | ✅ |
-| msrf_boost | ❌ | ✅ | ✅ |
-| base_4_score | ❌ | ❌ | ✅ |
-| context_modifier | ❌ | ❌ | ✅ |
-| confluence_boost | ❌ | ❌ | ✅ |
-| jason_sim_boost | ❌ | ❌ | ✅ |
-| serp_boost | ❌ | ❌ | ✅ |
-| ensemble_adjustment | ❌ | ❌ | ✅ |
-| live_adjustment | ❌ | ❌ | ✅ |
-| msrf_status | ❌ | ❌ | ✅ |
-| serp_status | ❌ | ❌ | ✅ |
-| jason_status | ❌ | ❌ | ✅ |
-| msrf_metadata | ❌ | ❌ | ✅ |
-| serp_shadow_mode | ❌ | ❌ | ✅ |
-| glitch_signals | ❌ | ❌ | ✅ |
-| esoteric_contributions | ❌ | ❌ | ✅ |
+| Field | v12.0 | v17.3 | v20.5 | v20.12 |
+|-------|-------|-------|-------|--------|
+| ai_score | ✅ | ✅ | ✅ | ✅ |
+| research_score | ✅ | ✅ | ✅ | ✅ |
+| esoteric_score | ✅ | ✅ | ✅ | ✅ |
+| jarvis_score | ✅ | ✅ | ✅ | ✅ |
+| context_score | ❌ | ✅ | ✅ | ✅ |
+| context_layer | ❌ | ✅ | ✅ | ✅ |
+| harmonic_boost | ❌ | ✅ | ✅ | ✅ |
+| msrf_boost | ❌ | ✅ | ✅ | ✅ |
+| base_4_score | ❌ | ❌ | ✅ | ✅ |
+| context_modifier | ❌ | ❌ | ✅ | ✅ |
+| confluence_boost | ❌ | ❌ | ✅ | ✅ |
+| jason_sim_boost | ❌ | ❌ | ✅ | ✅ |
+| serp_boost | ❌ | ❌ | ✅ | ✅ |
+| ensemble_adjustment | ❌ | ❌ | ✅ | ✅ |
+| live_adjustment | ❌ | ❌ | ✅ | ✅ |
+| msrf_status | ❌ | ❌ | ✅ | ✅ |
+| serp_status | ❌ | ❌ | ✅ | ✅ |
+| jason_status | ❌ | ❌ | ✅ | ✅ |
+| msrf_metadata | ❌ | ❌ | ✅ | ✅ |
+| serp_shadow_mode | ❌ | ❌ | ✅ | ✅ |
+| glitch_signals | ❌ | ❌ | ✅ | ✅ |
+| esoteric_contributions | ❌ | ❌ | ✅ | ✅ |
+| **ai_reasons** | ❌ | ❌ | ❌ | ✅ |
+| **esoteric_reasons** | ❌ | ❌ | ❌ | ✅ |
+| **context_reasons** | ❌ | ❌ | ❌ | ✅ |
+| **reasons** | ❌ | ❌ | ❌ | ✅ |
+| **stadium_data** | ❌ | ❌ | ❌ | ✅ |
+| **altitude_impact** | ❌ | ❌ | ❌ | ✅ |
+| **scoring_impact** | ❌ | ❌ | ❌ | ✅ |
+| **travel_data** | ❌ | ❌ | ❌ | ✅ |
+| **travel_fatigue** | ❌ | ❌ | ❌ | ✅ |
+| **away_fatigue** | ❌ | ❌ | ❌ | ✅ |
+| **home_boost** | ❌ | ❌ | ❌ | ✅ |
+| **officials_data** | ❌ | ❌ | ❌ | ✅ |
+| **officials_fallback** | ❌ | ❌ | ❌ | ✅ |
 
 ---
 
@@ -2272,6 +2459,13 @@ const isNegative = ['BEARISH', 'UNFAVORABLE'].includes(outlook);
 | `components/StatusBadgeRow.jsx` | Status badges: MSRF active (+value), SERP active/shadow, Jason block/boost, ML adjust |
 | `components/GlitchSignalsPanel.jsx` | GLITCH protocol: void_moon (nested), kp_index (nested), noosphere (nested), benford (nested) |
 | `components/EsotericContributionsPanel.jsx` | Esoteric contributions by category: numerology, astronomical, mathematical, signals, situational (12 verified keys) |
+
+### v20.12 Components
+
+| File | Purpose |
+|------|---------|
+| `components/ReasonPanel.jsx` | Expandable "Why This Pick" panel with categorized reasons (AI, Esoteric, Context) and v20.12 feature badges (Altitude, Travel, Officials) |
+| `components/StreamingUpdater.jsx` | SSE client with StreamingProvider, StreamingStatusBadge, useStreaming hook, auto-reconnect with exponential backoff |
 
 ### API & Data
 
@@ -2568,6 +2762,59 @@ confidence: confidenceToPercent(item.confidence) || item.confidence_score || 70
 
 ---
 
+### Lesson 17: Edit Tool Exact String Matching Failures (Feb 2026)
+**Problem:** Edit tool failed with "String to replace not found in file" when trying to update `api.js`. The `old_string` used `/` for comments but the actual file had `//` (double slash).
+
+**Root Cause:** The Edit tool does EXACT string matching with no fuzzy logic. Even a single character difference (like `/` vs `//`) causes complete failure. The string was composed from memory/assumption rather than reading the exact file content first.
+
+**Impact:** Wasted round-trips and confusion. Had to re-read the file to get exact content.
+
+**Fix Applied:** Read the exact lines 275-294 from api.js, then used the precise text for the edit.
+
+**Prevention:**
+- ALWAYS read the exact lines before editing with `Read tool offset=X limit=Y`
+- Copy text EXACTLY from Read output, including comment syntax and whitespace
+- Pay attention to: `//` vs `/`, tabs vs spaces, trailing whitespace
+- Never compose edit strings from memory — always verify first
+
+**Automated Gate:** None (requires workflow discipline)
+
+---
+
+### Lesson 18: v20.12 Frontend Integration Pattern (Feb 2026)
+**Problem:** Backend v20.12 shipped with 4 new features (stadium altitude, travel fatigue, officials fallback, SSE streaming) but frontend displayed none of them.
+
+**Root Cause:** Frontend work wasn't done when backend shipped. The plan listed "22-29 hours of frontend work needed" but wasn't started.
+
+**Impact:** Users couldn't see the new backend data (reason arrays, streaming updates, feature badges).
+
+**Fix Applied:**
+1. Updated `normalizePick()` in api.js with 15 new v20.12 field passthroughs
+2. Created `ReasonPanel.jsx` - expandable categorized reasons component
+3. Created `StreamingUpdater.jsx` - SSE client with auto-reconnect
+4. Integrated ReasonPanel into BOTH GameSmashList.jsx AND PropsSmashList.jsx (INVARIANT 8)
+5. Integrated StreamingProvider into App.jsx provider hierarchy
+6. Added StreamingStatusBadge to navbar
+7. Updated memo comparison functions to include v20.12 fields
+
+**Files Changed:**
+- `api.js` - normalizePick v20.12 fields
+- `GameSmashList.jsx` - ReasonPanel + memo comparison
+- `PropsSmashList.jsx` - ReasonPanel + memo comparison (symmetric)
+- `App.jsx` - StreamingProvider wrapper + StreamingStatusBadge
+- `components/ReasonPanel.jsx` - NEW
+- `components/StreamingUpdater.jsx` - NEW
+
+**Prevention:**
+- When backend adds features, immediately update frontend (don't let it accumulate)
+- Follow the pattern: normalizePick → Component → Integration (both SmashLists) → App wrapper
+- Update memo comparison functions when adding fields that affect rendering
+- Always verify SSE endpoint works before integrating: `curl /live/stream/status`
+
+**Automated Gate:** Build + 210 tests must pass. No specific v20.12 validators yet.
+
+---
+
 ## ✅ VERIFICATION CHECKLIST (Before Deploy)
 
 ### 1. Contract Validators (MANDATORY - run first)
@@ -2603,7 +2850,7 @@ grep -rn "from '@playwright/test'" e2e/*.spec.js
 
 ### 4. API Field Verification
 ```bash
-# Verify backend returns all expected fields
+# Verify backend returns all expected fields (v20.5)
 curl -s "https://web-production-7b2a.up.railway.app/live/best-bets/NBA" \
   -H "X-API-Key: bookie-prod-2026-xK9mP2nQ7vR4" | \
   jq '.game_picks.picks[0] | {
@@ -2613,6 +2860,21 @@ curl -s "https://web-production-7b2a.up.railway.app/live/best-bets/NBA" \
     jason_sim_boost, serp_boost, ensemble_adjustment,
     msrf_status, serp_status, glitch_signals, esoteric_contributions
   }'
+
+# Verify v20.12 fields
+curl -s "https://web-production-7b2a.up.railway.app/live/best-bets/NBA" \
+  -H "X-API-Key: bookie-prod-2026-xK9mP2nQ7vR4" | \
+  jq '.game_picks.picks[0] | {
+    ai_reasons, esoteric_reasons, context_reasons, reasons,
+    scoring_impact, altitude_impact, stadium_data,
+    away_fatigue, home_boost, travel_data,
+    officials_fallback, officials_data
+  }'
+
+# Verify SSE endpoint
+curl -s "https://web-production-7b2a.up.railway.app/live/stream/status" \
+  -H "X-API-Key: bookie-prod-2026-xK9mP2nQ7vR4" | jq
+# Should return: { enabled: true, sse_available: true, ... }
 ```
 
 ### 5. Visual Verification (Local Dev)
@@ -2630,6 +2892,10 @@ Check:
 - [ ] GLITCH Protocol panel shows signals with progress bars
 - [ ] Esoteric Contributions panel shows grouped categories
 - [ ] JARVIS badge appears when `jarvis_active: true`
+- [ ] **v20.12:** ReasonPanel "Why This Pick" expands with categorized reasons
+- [ ] **v20.12:** Altitude badge appears for Denver/Utah home games
+- [ ] **v20.12:** Travel fatigue badges appear for B2B/road teams
+- [ ] **v20.12:** StreamingStatusBadge in navbar shows Live/Connecting/Polling
 - [ ] TITANIUM banner mentions "3/4 engines"
 - [ ] Tier legend shows correct thresholds (uses contract constants)
 - [ ] Negative jason_sim_boost shows in red
