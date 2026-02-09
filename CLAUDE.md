@@ -2765,6 +2765,63 @@ See `docs/SESSION_HYGIENE.md` for complete guide.
 
 ---
 
+## 🤖 Automation & Cron Jobs
+
+### Overview
+33 automated jobs run via cron across both repositories. No manual intervention needed as long as Mac is awake.
+
+### Cron Schedule (Frontend - bookie-member-app)
+
+| Schedule | Script | Purpose |
+|----------|--------|---------|
+| Every 30 min | `response_time_check.sh` | Monitor deployed app response times |
+| Every 4 hours | `memory_leak_check.sh` | Find React memory leak patterns |
+| Daily 6 AM | `console_log_scan.sh` | Find stray console.log/debugger |
+| Daily 9 AM | `daily_health_check.sh` | Full frontend health check |
+| Sunday 5 AM | `prune_build_artifacts.sh` | Clean Vite cache, old builds |
+| Sunday 7 AM | `dead_code_scan.sh` | Find unused components/exports |
+| Sunday 7:30 AM | `accessibility_check.sh` | Basic a11y audit |
+| Sunday 10:15 AM | `dependency_vuln_scan.sh` | npm audit with details |
+| Monday 6 AM | `broken_import_check.sh` | Validate all imports |
+| Monday 7 AM | `complexity_report.sh` | Flag complex components |
+| Monday 8 AM | `test_coverage_report.sh` | Vitest coverage report |
+| Monday 8:30 AM | `bundle_size_check.sh` | Track bundle bloat |
+| Monday 9:15 AM | `secret_exposure_check.sh` | Find exposed secrets |
+| Monday 9:30 AM | `feature_flag_audit.sh` | Audit feature flags |
+
+### Log Location
+```bash
+~/bookie-member-app/logs/cron.log  # All cron output
+```
+
+### Verify Cron is Running
+```bash
+crontab -l | grep bookie-member-app | wc -l  # Should show 15+ lines
+tail -20 ~/bookie-member-app/logs/cron.log   # Recent activity
+```
+
+### Manual Script Runs
+```bash
+# Morning check-in
+./scripts/session_start.sh
+
+# Before deploys
+./scripts/contract_sync_check.sh  # Run from backend repo
+
+# Quick health check
+./scripts/daily_health_check.sh
+```
+
+### CRITICAL: Path Validation (Lesson 66)
+Cron jobs silently fail if paths are wrong:
+```bash
+# Verify paths in crontab match reality
+crontab -l | grep "bookie-member-app"
+ls -d ~/bookie-member-app  # Must exist
+```
+
+---
+
 ## 🧠 DAILY LEARNING LOOP (Dashboard)
 
 **Invariant:** The dashboard must surface the backend's daily lesson after the 6:00 AM ET audit.

@@ -626,6 +626,34 @@ await expect(page.getByRole('heading', { name: /Bet History/i })).toBeVisible({ 
 
 ---
 
+## Lesson 23: Cron Path Validation (Feb 2026)
+
+**When:** February 2026 (Automation session)
+**Problem:** Crontab entries pointed to `~/Desktop/ai-betting-backend-main` and `~/Desktop/bookie-member-app` but the actual repos were at `~/ai-betting-backend` and `~/bookie-member-app`. All 33 cron jobs silently failed for months.
+
+**Root Cause:** Cron paths were set up on a different machine/setup and never validated when repos moved.
+
+**Impact:** Zero automated health checks running. Daily, weekly, and hourly monitoring scripts were never executing.
+
+**Fix Applied:**
+- Updated all crontab paths to correct locations (`~/ai-betting-backend`, `~/bookie-member-app`)
+- Changed log path from `~/Desktop/health_check.log` to `~/ai-betting-backend/logs/health_check.log`
+- Created `~/ai-betting-backend/logs/` and `~/bookie-member-app/logs/` directories
+- Verified with `crontab -l` and `ls -d` checks
+
+**Prevention:**
+- After setting up cron jobs, ALWAYS verify paths exist:
+  ```bash
+  crontab -l | grep "cd ~/"
+  ls -d ~/ai-betting-backend ~/bookie-member-app  # Both must exist
+  ```
+- Logs go to `~/repo/logs/`, never Desktop or /tmp
+- Test one cron job manually before assuming all work
+
+**Automated Gate:** None — cron failures are silent. Add path validation to session start checklist.
+
+---
+
 ## Pattern: How New Lessons Get Added
 
 When you encounter a new mistake:
@@ -660,3 +688,5 @@ The goal: every mistake should be catchable automatically. If it can't be automa
 | E2E: fixtures | `grep "from '@playwright/test'" e2e/*.spec.js` | Missing onboarding skip (should return EMPTY) |
 | E2E: selectors | Playwright strict mode | Ambiguous selectors matching multiple elements |
 | Test coverage | `ls test/*.test.* e2e/*.spec.js` | Every core module has tests, every route has E2E |
+| Cron paths | `crontab -l \| grep "cd ~/"; ls -d ~/ai-betting-backend ~/bookie-member-app` | Cron jobs pointing to wrong paths (Lesson 23) |
+| Cron activity | `tail -20 ~/ai-betting-backend/logs/cron.log` | Cron jobs not running (check recent output) |
