@@ -435,3 +435,45 @@ Fix:
    return [];
    ```
 3. See Lesson 29 in `docs/LESSONS.md`
+
+---
+
+## 26) formatTime defined in multiple files
+
+Symptoms:
+- Time formatting inconsistent across pages (some show "7:30 PM", others "7:30 pm")
+- `grep "const formatTime" *.jsx` returns multiple files
+
+Root Cause:
+- Each file defines its own local formatTime function
+
+Fix:
+1. Check for duplicates: `grep -rn "const formatTime" --include="*.jsx" | grep -v import`
+2. All files should import from `src/utils/pickNormalize.js`:
+   ```javascript
+   import { formatTime } from './src/utils/pickNormalize';
+   ```
+3. Remove local formatTime definitions
+4. See Lesson 30 in `docs/LESSONS.md`
+
+---
+
+## 27) FilterControls defined locally in SmashList files
+
+Symptoms:
+- Tier filter changes only take effect in one SmashList
+- `grep "const.*FilterControls.*memo" GameSmashList.jsx` returns a match
+
+Root Cause:
+- FilterControls component is defined locally instead of imported from shared component
+
+Fix:
+1. Check for local definitions: `grep -rn "const.*FilterControls.*memo" GameSmashList.jsx PropsSmashList.jsx`
+2. Both files should import from shared component:
+   ```javascript
+   import FilterControls from './components/FilterControls';
+   // Usage:
+   <FilterControls mode="game" filters={filters} setFilters={setFilters} sortBy={sortBy} setSortBy={setSortBy} />
+   ```
+3. Remove local FilterControls/GameFilterControls definitions
+4. See Lesson 31 in `docs/LESSONS.md`

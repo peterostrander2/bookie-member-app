@@ -1,4 +1,4 @@
-# LESSONS LEARNED — Frontend (29 Lessons)
+# LESSONS LEARNED — Frontend (31 Lessons)
 
 Every lesson here was learned the hard way. Each one has an automated prevention mechanism.
 
@@ -880,6 +880,107 @@ grep -rn "Math.random\|shuffle\|randomize" GameSmashList.jsx PropsSmashList.jsx
 
 ---
 
+## Lesson 30: formatTime Duplication Across 8 Files
+
+**When:** February 2026 (Refactoring session)
+**Problem:** `formatTime()` function was defined locally in 8 different files: SharpAlerts, Props, BestOdds, Dashboard, Splits, SmashSpots, SmashSpotsPage, PropsSmashList.
+**Root Cause:** Each developer wrote a local helper when needed, without checking for existing utilities.
+**Impact:** ~32 lines of duplicate code, inconsistent time formatting (some used hour12:true, some didn't), harder to maintain.
+
+**Broken pattern:**
+```javascript
+// Each file had its own version
+const formatTime = (date) => {
+  if (!date) return '';
+  return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+};
+```
+
+**Correct pattern:**
+```javascript
+// Single canonical version in src/utils/pickNormalize.js
+export function formatTime(dateInput) {
+  if (!dateInput) return '';
+  const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
+  if (isNaN(date.getTime())) return '';
+  return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+}
+```
+
+**Fix Applied:**
+- Added `formatTime()` and `formatTimeAgo()` to `src/utils/pickNormalize.js`
+- Updated all 8 files to import from pickNormalize
+- Removed local definitions
+- Handles both Date objects and ISO strings
+- Consistent `en-US` locale and `hour12: true`
+
+**Prevention:**
+- Before writing a time/date formatting function, check `src/utils/pickNormalize.js`
+- Common utilities: `formatOdds`, `formatTime`, `formatTimeAgo`, `formatLine`
+- Pattern: `grep -r "const formatTime" *.jsx` should return only import lines
+
+**Automated Gate:** None — requires periodic audits:
+```bash
+# Find duplicate time formatting functions
+grep -rn "const formatTime\|function formatTime" --include="*.jsx" --include="*.js" | grep -v "pickNormalize"
+# Should return EMPTY (all should import from pickNormalize)
+```
+
+---
+
+## Lesson 31: FilterControls Duplication in SmashList Files
+
+**When:** February 2026 (Refactoring session)
+**Problem:** `GameFilterControls` (~60 lines) in GameSmashList.jsx and `FilterControls` (~75 lines) in PropsSmashList.jsx were nearly identical, differing only in:
+1. Second filter type (market buttons vs propType dropdown)
+2. Sort options (Confidence/Edge vs Score/Edge/Odds)
+**Root Cause:** Copy-paste development when creating Props version from Game version.
+**Impact:** ~135 lines of duplicate code, tier filter changes had to be made in both files.
+
+**Broken pattern:**
+```javascript
+// GameSmashList.jsx
+const GameFilterControls = memo(({ filters, setFilters, sortBy, setSortBy }) => {
+  // 60 lines of filter UI
+});
+
+// PropsSmashList.jsx
+const FilterControls = memo(({ filters, setFilters, sortBy, setSortBy }) => {
+  // 75 lines of nearly identical filter UI
+});
+```
+
+**Correct pattern:**
+```javascript
+// components/FilterControls.jsx - single shared component
+import FilterControls from './components/FilterControls';
+
+// Usage with mode prop
+<FilterControls mode="game" filters={filters} setFilters={setFilters} sortBy={sortBy} setSortBy={setSortBy} />
+<FilterControls mode="props" filters={filters} setFilters={setFilters} sortBy={sortBy} setSortBy={setSortBy} />
+```
+
+**Fix Applied:**
+- Created `components/FilterControls.jsx` with `mode` prop ("game" | "props")
+- Shared tier filter logic (INVARIANT 8 compliance)
+- Mode-specific second filter and sort options
+- Removed ~120 lines total from SmashList files
+- Bundle: SmashSpotsPage reduced by 1.6 KB
+
+**Prevention:**
+- Before creating a filter component, check if `components/FilterControls.jsx` supports it
+- When adding new filter modes, extend the existing component rather than copying
+- INVARIANT 8: Tier filter logic must stay synchronized
+
+**Automated Gate:** None — requires code review vigilance:
+```bash
+# Find local filter control definitions (should return EMPTY)
+grep -rn "const.*FilterControls.*=.*memo" GameSmashList.jsx PropsSmashList.jsx
+# Should return EMPTY — both should import from components/FilterControls.jsx
+```
+
+---
+
 ## Summary: Prevention Stack
 
 | Layer | What | Catches |
@@ -908,3 +1009,5 @@ grep -rn "Math.random\|shuffle\|randomize" GameSmashList.jsx PropsSmashList.jsx
 | Manual: symmetric | `grep "import.*Badges" Game* Props*` | Shared component not imported in both files (Lesson 27) |
 | Manual: duplicates | `grep -r "const formatOdds" *.jsx \| wc -l` | Utility function duplication (Lesson 28) |
 | Code review | `grep "Math.random" Game* Props*` | Fake data simulation instead of real API data (Lesson 29) |
+| Manual: formatTime | `grep "const formatTime" *.jsx \| grep -v import` | formatTime duplication (Lesson 30) |
+| Manual: FilterControls | `grep "const.*FilterControls.*memo" Game* Props*` | FilterControls duplication (Lesson 31) |

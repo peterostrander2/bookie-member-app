@@ -197,8 +197,9 @@ catch { await expect(page.locator('body')).toBeVisible(); return; }
 
 ---
 
-## Shared UI Components (components/Badges.jsx)
+## Shared UI Components
 
+### components/Badges.jsx
 | Component | Purpose | Props |
 |-----------|---------|-------|
 | ScoreBadge | Score with color coding | `score`, `maxScore`, `label`, `tooltip` |
@@ -206,7 +207,16 @@ catch { await expect(page.locator('body')).toBeVisible(); return; }
 | BadgeDisplay | Row of status badges | `badges[]` |
 | TierLegend | Tier legend with thresholds | (none - uses contract constants) |
 
-**Pattern:** If a UI element appears in BOTH GameSmashList and PropsSmashList, extract to `components/Badges.jsx`.
+### components/FilterControls.jsx
+| Component | Purpose | Props |
+|-----------|---------|-------|
+| FilterControls | Tier/type/sort filters | `mode` ("game"\|"props"), `filters`, `setFilters`, `sortBy`, `setSortBy` |
+
+**Mode differences:**
+- `game`: Market buttons (SPREAD/TOTAL/ML), sort by Confidence/Edge
+- `props`: Prop type dropdown, sort by Score/Edge/Odds
+
+**Pattern:** If a UI element appears in BOTH GameSmashList and PropsSmashList, extract to `components/`.
 
 ---
 
@@ -214,7 +224,7 @@ catch { await expect(page.locator('body')).toBeVisible(); return; }
 
 | File | Exports | Used By |
 |------|---------|---------|
-| `pickNormalize.js` | `formatOdds`, `getBookInfo`, `getPickScore`, `isTitanium`, `filterCommunityPicks` | 10+ files |
+| `pickNormalize.js` | `formatOdds`, `formatTime`, `formatTimeAgo`, `formatLine`, `getBookInfo`, `getPickScore`, `isTitanium`, `filterCommunityPicks`, `communitySort` | 15+ files |
 | `tierConfig.js` | `TIER_CONFIGS`, `getTierConfigFromPick`, `getTierConfig` | SmashList files |
 | `constants.js` | `AI_MODELS`, `PILLARS`, `STAT_BADGE_STYLE` | SmashList files |
 
