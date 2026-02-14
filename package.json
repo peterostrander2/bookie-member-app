@@ -17,6 +17,12 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
     "verify:backend": "node scripts/verify-backend.js",
+    "validate:integrations": "node scripts/validate_integrations.mjs",
+    "validate:variance": "node scripts/validate_score_variance.mjs",
+    "validate:coverage": "node scripts/validate_market_coverage.mjs",
+    "validate:boundaries": "node scripts/validate_output_boundaries.mjs",
+    "validate:live": "node scripts/validate_live_fields.mjs",
+    "validate:all": "npm run validate:integrations && npm run validate:variance && npm run validate:coverage && npm run validate:boundaries && npm run validate:live",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },

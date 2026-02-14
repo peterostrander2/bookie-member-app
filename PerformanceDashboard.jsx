@@ -22,6 +22,7 @@ import { getBankrollStats } from './kellyCalculator';
 import { analyzeCorrelation } from './correlationDetector';
 import { ROIChart, WinRateChart, LineChart, Sparkline } from './Charts';
 import DBSyncIndicator, { DBSyncCard } from './DBSyncIndicator';
+import DailyReportCard from './src/components/DailyReportCard';
 import api from './api';
 
 const PerformanceDashboard = () => {
@@ -627,6 +628,9 @@ const PerformanceDashboard = () => {
               </div>
             ) : (
               <>
+                {/* Daily Grading Report (Proof 7) */}
+                <DailyReportCard />
+
                 {/* API Health Status */}
                 <div style={{
                   display: 'grid',

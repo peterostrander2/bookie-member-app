@@ -176,7 +176,8 @@ catch { await expect(page.locator('body')).toBeVisible(); return; }
 | Components | `App.jsx` | Routing, lazy loading |
 | Signals | `signalEngine.js` | Client calculations |
 | Storage | `storageUtils.js` | localStorage keys |
-| Lessons | `docs/LESSONS.md` | Historical mistakes and prevention (34 lessons) |
+| Lessons | `docs/LESSONS.md` | Historical mistakes and prevention (35 lessons) |
+| 7-Proofs | `docs/7-PROOFS.md` | System validation framework for community launch |
 | Test Mocks | `test/api.test.js` → `mockResponse()` | Canonical mock pattern for API tests |
 | Test Setup | `test/setup.js` | Global mocks, env stubs, rate limit bypass |
 | E2E Fixtures | `e2e/fixtures.js` | Shared page fixture (onboarding skip, localStorage) |
@@ -276,13 +277,19 @@ npm run build:analyze
 ## Validators — What to Run
 
 ```bash
-# ALL THREE must pass before committing (MANDATORY)
+# CONTRACT VALIDATORS — ALL THREE must pass before committing (MANDATORY)
 node scripts/validate_frontend_contracts.mjs    # Hardcoded literals, direct fetch, missing imports
 node scripts/validate_no_frontend_literals.mjs  # Scoring literals even in comments/strings
 node scripts/validate_no_eval.mjs               # eval/new Function prevention
 
-# Or run CI sanity check (includes all validators)
-./scripts/ci_sanity_check_frontend.sh
+# 7-PROOFS VALIDATORS — Run before deploy (requires API key)
+VITE_BOOKIE_API_KEY=xxx npm run validate:all    # All 5 validators at once
+# Or individually:
+npm run validate:integrations  # Proof 1: Critical integrations VALIDATED
+npm run validate:variance      # Proof 3: AI scores have variance (not constant)
+npm run validate:coverage      # Proof 4: Market types present
+npm run validate:boundaries    # Proof 5: All picks pass contracts
+npm run validate:live          # Proof 6: Live picks have context fields
 
 # Tests
 npm test
@@ -291,12 +298,23 @@ npm test
 npm run build
 ```
 
-**What validators catch:**
+**Contract Validators (prevent code drift):**
 | Validator | Catches |
 |-----------|---------|
 | `validate_frontend_contracts.mjs` | Hardcoded thresholds (6.5, 7.5, 8.0), direct fetch calls, missing contract imports |
 | `validate_no_frontend_literals.mjs` | Scoring literals in comments and template strings |
 | `validate_no_eval.mjs` | eval() and new Function() usage |
+
+**7-Proofs Validators (verify system health):**
+| Validator | Proof | Catches |
+|-----------|-------|---------|
+| `validate_integrations.mjs` | 1 | odds_api or playbook_api not VALIDATED |
+| `validate_score_variance.mjs` | 3 | AI scores constant (regression) |
+| `validate_market_coverage.mjs` | 4 | Missing market types when games exist |
+| `validate_output_boundaries.mjs` | 5 | Picks violating contracts (score < 6.5, invalid tier) |
+| `validate_live_fields.mjs` | 6 | Live picks missing game_status/data_age_ms |
+
+See `docs/7-PROOFS.md` for full framework documentation.
 
 ---
 
@@ -489,7 +507,11 @@ npm run test:e2e
 grep -rn "from '@playwright/test'" e2e/*.spec.js
 # ^ Should return EMPTY
 
-# 6. Commit and push
+# 6. 7-Proofs validation (before deploy, requires API key)
+VITE_BOOKIE_API_KEY=xxx npm run validate:all
+# All 5 validators must pass
+
+# 7. Commit and push
 git add -A && git commit -m "feat: ... + docs: ..."
 git push origin main
 ```

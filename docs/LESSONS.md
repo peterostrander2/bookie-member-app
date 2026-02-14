@@ -1181,3 +1181,68 @@ if grep -rn "Math\.random\|MOCK_[A-Z]" --include="*.jsx" | grep -v test | grep -
   exit 1
 fi
 ```
+
+---
+
+## Lesson 35: 7-Proofs Validation Framework
+
+**When:** February 2026 (Community Launch Prep)
+**Problem:** Before community launch, needed systematic validation that the AI betting system is fully operational — not just "the site loads" but that every data source is wired, every engine is producing varied scores, every output is within contract bounds, and grading is running.
+
+**Root Cause:** No automated validation existed to prove the system is working correctly. Manual spot-checks missed silent failures like constant AI scores, missing integrations, or broken live betting context fields.
+
+**Impact:** Could have launched to community with broken data pipelines, constant AI scores (regression), or missing market coverage — all invisible to manual testing.
+
+**Solution: 7-Proofs Validation Framework**
+
+| Proof | Script | What It Validates |
+|-------|--------|-------------------|
+| 1. Integration | `validate_integrations.mjs` | odds_api + playbook_api = VALIDATED |
+| 2. Engine Variance | `validate_score_variance.mjs` | unique(ai_score) >= 4, stddev >= 0.15 |
+| 3. Output Boundaries | `validate_output_boundaries.mjs` | final_score >= 6.5, valid tiers, engines in [0,10] |
+| 4. Market Coverage | `validate_market_coverage.mjs` | spread + total markets present when games exist |
+| 5. Live Fields | `validate_live_fields.mjs` | is_live picks have game_status + data_age_ms |
+| 6. Grader Report | `DailyReportCard.jsx` | Daily grading results display in dashboard |
+| 7. CI Gate | `npm run validate:all` | All validators pass before deploy |
+
+**Files Created:**
+- `scripts/validate_integrations.mjs` — Proof 1: Integration status check
+- `scripts/validate_score_variance.mjs` — Proof 3: AI constant detection
+- `scripts/validate_market_coverage.mjs` — Proof 4: Market type counts
+- `scripts/validate_output_boundaries.mjs` — Proof 5: Contract enforcement
+- `scripts/validate_live_fields.mjs` — Proof 6: Live betting fields
+- `src/components/DailyReportCard.jsx` — Proof 7: Grader report display
+
+**Files Modified:**
+- `package.json` — Added validate:* scripts
+- `scripts/run_final_audit.sh` — Added validate:all to pre-commit
+- `PerformanceDashboard.jsx` — Integrated DailyReportCard
+- `api.js` — Added getDailyGraderReport method
+
+**Prevention:**
+- Run full validation before every deploy: `VITE_BOOKIE_API_KEY=xxx npm run validate:all`
+- DailyReportCard shows grading status in Performance Dashboard system tab
+- Validators run as part of `npm run audit:final`
+
+**What "100% Working" Means (Community Statement):**
+After all 7 proofs pass, you can say:
+- "100% of critical integrations are validated and used when relevant"
+- "100% of picks pass contract gates"
+- "0 silent engine degradations"
+- "Live freshness + status correct"
+- "Auditable logs + grading are running"
+
+This is an **engineering correctness claim**, not a gambling outcome claim.
+
+**Automated Gate:**
+```bash
+# Run all validators (requires API key)
+VITE_BOOKIE_API_KEY=xxx npm run validate:all
+
+# Individual validators
+npm run validate:integrations  # Proof 1
+npm run validate:variance      # Proof 3
+npm run validate:coverage      # Proof 4
+npm run validate:boundaries    # Proof 5
+npm run validate:live          # Proof 6
+```

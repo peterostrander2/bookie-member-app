@@ -1746,6 +1746,55 @@ async getParlay(userId) {
 
 ---
 
+### Session: February 2026 (7-Proofs Validation Framework)
+
+**Completed in this session:**
+1. Implemented 5 validation scripts for the 7-Proofs framework
+2. Created DailyReportCard component for Proof 7 (grader display)
+3. Added npm scripts and CI integration for validators
+4. Documented framework across LESSONS.md, RECOVERY.md, 7-PROOFS.md, MASTER_INDEX.md
+
+**New files created:**
+- `scripts/validate_integrations.mjs` - Proof 1: Critical integration status check
+- `scripts/validate_score_variance.mjs` - Proof 3: AI constant detection (unique >= 4, stddev >= 0.15)
+- `scripts/validate_market_coverage.mjs` - Proof 4: Market type diversity
+- `scripts/validate_output_boundaries.mjs` - Proof 5: Contract enforcement (final_score >= 6.5, valid tiers)
+- `scripts/validate_live_fields.mjs` - Proof 6: Live betting context fields
+- `src/components/DailyReportCard.jsx` - Proof 7: Grader report display
+- `docs/7-PROOFS.md` - Comprehensive framework documentation
+
+**Files modified:**
+- `api.js` - Added `getDailyGraderReport()` method
+- `package.json` - Added 6 validate:* npm scripts
+- `scripts/run_final_audit.sh` - Added validate:all call when API key available
+- `PerformanceDashboard.jsx` - Integrated DailyReportCard in System tab
+- `docs/LESSONS.md` - Added Lesson 35 (7-Proofs framework)
+- `docs/RECOVERY.md` - Added recovery entries 31-35 for validation failures
+- `docs/MASTER_INDEX.md` - Updated validators table, Golden Command Sequence
+- `CLAUDE.md` - Added INVARIANT 26
+
+**Key validation thresholds:**
+- AI score variance: unique >= 4 AND stddev >= 0.15 (for >= 5 picks)
+- Final score boundary: >= 6.5 (community filter)
+- Engine score range: [0, 10]
+- Live data freshness: data_age_ms < 5 minutes
+- Critical integrations: odds_api, playbook_api = VALIDATED
+
+**Commands added:**
+```bash
+npm run validate:all              # Run all 5 validators
+npm run validate:integrations     # Proof 1
+npm run validate:variance         # Proof 3
+npm run validate:coverage         # Proof 4
+npm run validate:boundaries       # Proof 5
+npm run validate:live             # Proof 6
+```
+
+**Build:** Clean (1.23s)
+**Tests:** 210/210 passing
+
+---
+
 ## 🚨 MASTER INVARIANTS (NEVER VIOLATE) 🚨
 
 **READ THIS FIRST BEFORE TOUCHING SCORING OR DISPLAY CODE**
@@ -2475,6 +2524,34 @@ const explainPick = (analysis) => {
 ```
 
 **NEVER:** Call .filter(), .map(), .forEach() on a field without first checking it's an array.
+
+---
+
+### INVARIANT 26: 7-Proofs Validation Before Deploy
+
+**RULE:** Before any production deploy, run `npm run validate:all` with a valid API key. All 5 validators must pass.
+
+**Why this exists:** Session Feb 2026 — Community launch prep required systematic validation that the entire system is operational, not just "the site loads."
+
+**The 7 Proofs:**
+| Proof | Script | Pass Condition |
+|-------|--------|----------------|
+| 1. Integration | `validate_integrations.mjs` | odds_api=VALIDATED, playbook_api=VALIDATED |
+| 2. Engine | (in best-bets response) | All 5 engine scores present, no nulls |
+| 3. Non-degeneracy | `validate_score_variance.mjs` | unique(ai_score) >= 4, stddev >= 0.15 |
+| 4. Market | `validate_market_coverage.mjs` | spread + total markets present |
+| 5. Boundaries | `validate_output_boundaries.mjs` | All picks pass contracts |
+| 6. Live | `validate_live_fields.mjs` | is_live picks have context fields |
+| 7. Grader | `DailyReportCard.jsx` | Daily report displays in Performance Dashboard |
+
+**Run command:**
+```bash
+VITE_BOOKIE_API_KEY=xxx npm run validate:all
+```
+
+**Full documentation:** `docs/7-PROOFS.md`
+
+**NEVER:** Deploy to production without running the 7-proofs validators. Silent failures in integrations, constant AI scores, or boundary violations can go unnoticed until users report issues.
 
 ---
 

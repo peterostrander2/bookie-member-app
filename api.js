@@ -135,6 +135,22 @@ export const api = {
     }
   },
 
+  // Daily grader report (authenticated) - for 7-proofs dashboard
+  async getDailyGraderReport() {
+    try {
+      const url = `${API_BASE_URL}/live/grader/daily-report`;
+      const resp = await authFetch(url);
+      const data = await safeJson(resp);
+
+      if (!data) {
+        return { error: 'Report not available' };
+      }
+      return data;
+    } catch {
+      return { error: 'Network error' };
+    }
+  },
+
   // ============================================================================
   // CLICK-TO-BET / SPORTSBOOK INTEGRATION
   // ============================================================================

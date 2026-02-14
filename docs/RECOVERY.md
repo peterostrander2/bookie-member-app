@@ -568,3 +568,119 @@ Fix:
 3. Remove the mock generation function and constants
 4. Add empty state rendering: `{data.length === 0 && <div>No data available</div>}`
 5. See Lesson 34 in `docs/LESSONS.md`
+
+---
+
+## 31) 7-Proofs validation failure: Integration (Proof 1)
+
+Symptoms:
+- `npm run validate:integrations` fails
+- odds_api or playbook_api shows UNREACHABLE or NOT_CONFIGURED
+
+Root Cause:
+- Backend integration not properly configured
+- Third-party API down
+- Missing API credentials in Railway
+
+Fix:
+1. Check backend integrations endpoint:
+   ```bash
+   curl -s "https://web-production-7b2a.up.railway.app/live/debug/integrations" \
+     -H "X-API-Key: xxx" | jq
+   ```
+2. Verify API credentials in Railway environment
+3. Restart backend service
+4. See `docs/7-PROOFS.md` for full documentation
+
+---
+
+## 32) 7-Proofs validation failure: AI Variance (Proof 3)
+
+Symptoms:
+- `npm run validate:variance` fails
+- Message: "AI scores appear constant"
+
+Root Cause:
+- AI model regression
+- Model returning same score for all picks
+- Backend not calling AI correctly
+
+Fix:
+1. Check AI scores directly:
+   ```bash
+   curl -s "https://web-production-7b2a.up.railway.app/live/best-bets/NBA" \
+     -H "X-API-Key: xxx" | jq '[.game_picks.picks[].ai_score] | unique'
+   ```
+2. Should show 4+ unique values
+3. If all same: check backend AI model logs
+4. Restart backend AI service
+5. See Lesson 35 in `docs/LESSONS.md`
+
+---
+
+## 33) 7-Proofs validation failure: Boundaries (Proof 5)
+
+Symptoms:
+- `npm run validate:boundaries` fails
+- Picks with final_score < 6.5 or invalid tiers
+
+Root Cause:
+- Backend scoring bug
+- Community filter not applied
+- Tier assignment logic broken
+
+Fix:
+1. Find violating picks:
+   ```bash
+   curl -s "https://web-production-7b2a.up.railway.app/live/best-bets/NBA" \
+     -H "X-API-Key: xxx" | jq '.game_picks.picks[] | select(.final_score < 6.5)'
+   ```
+2. Check backend scoring_contract.py for threshold values
+3. Verify community filter is applied before response
+4. See `docs/7-PROOFS.md` for full documentation
+
+---
+
+## 34) 7-Proofs validation failure: Live Fields (Proof 6)
+
+Symptoms:
+- `npm run validate:live` fails
+- Live picks missing game_status or data_age_ms
+
+Root Cause:
+- Live data pipeline broken
+- Game status not being tracked
+- Data freshness issue
+
+Fix:
+1. Check live picks:
+   ```bash
+   curl -s "https://web-production-7b2a.up.railway.app/live/best-bets/NBA" \
+     -H "X-API-Key: xxx" | jq '.game_picks.picks[] | select(.is_live == true) | {game_status, data_age_ms}'
+   ```
+2. Both fields should exist for live games
+3. Check backend live data scraper
+4. Verify odds_api is returning live game data
+
+---
+
+## 35) DailyReportCard not loading (Proof 7)
+
+Symptoms:
+- Performance Dashboard > System tab shows "Report not available"
+- Error: "Network error" or "Report not available"
+
+Root Cause:
+- Backend `/live/grader/daily-report` endpoint not responding
+- Grader not running
+- Report generated before 6 AM ET
+
+Fix:
+1. Check if before 6 AM ET (report not generated yet)
+2. Verify grader endpoint:
+   ```bash
+   curl -s "https://web-production-7b2a.up.railway.app/live/grader/daily-report" \
+     -H "X-API-Key: xxx" | jq
+   ```
+3. Check backend grader service is running
+4. See `docs/7-PROOFS.md` for full documentation

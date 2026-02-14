@@ -25,3 +25,15 @@ if [ ! -x "$ROOT_DIR/scripts/final_audit.sh" ]; then
 fi
 
 "$ROOT_DIR/scripts/final_audit.sh" "$BACKEND_DIR" "$FRONTEND_DIR"
+
+# Run 7-Proofs validation if API key is available
+if [ -n "$VITE_BOOKIE_API_KEY" ]; then
+  echo ""
+  echo "============================================"
+  echo "Running 7-Proofs Validation..."
+  echo "============================================"
+  cd "$ROOT_DIR" && npm run validate:all
+else
+  echo ""
+  echo "Skipping 7-Proofs validation: VITE_BOOKIE_API_KEY not set"
+fi
