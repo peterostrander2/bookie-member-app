@@ -1,4 +1,4 @@
-# LESSONS LEARNED — Frontend (33 Lessons)
+# LESSONS LEARNED — Frontend (34 Lessons)
 
 Every lesson here was learned the hard way. Each one has an automated prevention mechanism.
 
@@ -1115,3 +1115,69 @@ grep -c "useMemo" SmashSpotsPage.jsx GameSmashList.jsx PropsSmashList.jsx
 | Manual: FilterControls | `grep "const.*FilterControls.*memo" Game* Props*` | FilterControls duplication (Lesson 31) |
 | Performance: styles | `grep -c "style={{" *.jsx` | High inline style count (Lesson 32) |
 | Performance: useMemo | `grep -c "useMemo" SmashSpotsPage.jsx` | Missing memoization in large components (Lesson 33) |
+| Manual: fake data | `grep -rn "Math\.random\|MOCK_\|generateMock" *.jsx` | Fake/mock data in production components (Lesson 34) |
+
+---
+
+## Lesson 34: Fake/Mock Data in Production Components
+
+**When:** February 2026 (Frontend Audit)
+**Problem:** 7 production components had fake/mock data fallbacks that displayed simulated data to users when API calls failed or returned empty. Users couldn't tell if they were seeing real data or fabricated content.
+
+**Files affected:**
+- `GameSmashList.jsx` - `generateGameStats()` with Math.random()
+- `SystemHealthPanel.jsx` - Random drift/bias values in fallbacks
+- `Leaderboard.jsx` - `mockLeaders` array with fake usernames
+- `BestOdds.jsx` - `MOCK_BOOKS`, `BASE_GAMES`, `generateMockGames()` (~70 lines)
+- `InjuryVacuum.jsx` - `generateMockInjuries()` (~95 lines)
+- `Splits.jsx` - `MOCK_SPLITS`, random percentage generation (~50 lines)
+- `SharpAlerts.jsx` - `generateMockAlerts()` (~75 lines)
+
+**Root Cause:** Components were written with mock fallbacks for development/demo purposes, but these fallbacks were never removed before production. The fallback logic was designed to make the app "look good" even without real data, hiding the fact that the backend connection was broken.
+
+**Impact:** Users saw fake usernames, fake statistics, fake alerts, and fake game data without any indication it was simulated. This could lead to bad betting decisions based on fabricated information.
+
+**Fix Applied:**
+- Removed all `generateMock*()` functions
+- Removed all `MOCK_*` constants
+- Replaced mock fallbacks with empty state: `setData([])` instead of `setData(generateMockData())`
+- Added null checks in rendering: `{data && (...)}`
+- Empty states now show "No data available" messages
+
+**Pattern - WRONG (fake fallback):**
+```javascript
+} catch (err) {
+  console.error(err);
+  setGames(generateMockGames(sport));  // ❌ Shows fake data
+}
+```
+
+**Pattern - CORRECT (empty state):**
+```javascript
+} catch (err) {
+  console.error(err);
+  setGames([]);  // ✅ Shows empty state
+}
+```
+
+**Prevention:**
+- Search for fake data patterns before every deploy:
+  ```bash
+  grep -rn "Math\.random\|MOCK_\|generateMock\|mockData\|fakeData" --include="*.jsx" | grep -v test | grep -v mocks | grep -v __tests__
+  # Should return EMPTY for production components
+  ```
+- **Legitimate uses of randomness (NOT violations):**
+  - `crypto.randomUUID()` for generating IDs
+  - Animation effects (e.g., shimmer/skeleton loading)
+  - Monte Carlo simulations in calculators
+  - Test files under `/test/` or `__tests__/`
+  - Mock handlers under `/mocks/`
+
+**Automated Gate:** Add to pre-commit checks:
+```bash
+# Check for fake data in production components
+if grep -rn "Math\.random\|MOCK_[A-Z]" --include="*.jsx" | grep -v test | grep -v mocks | grep -v "\.test\." | grep -v "__tests__"; then
+  echo "ERROR: Found fake/mock data in production components"
+  exit 1
+fi
+```

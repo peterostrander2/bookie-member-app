@@ -1710,6 +1710,42 @@ async getParlay(userId) {
 
 ---
 
+### Session: February 2026 (Frontend Audit - Fake Data Removal)
+
+**Completed in this session:**
+1. Full frontend audit of functionality wiring and data flow
+2. Identified and removed all fake/mock data from 7 production components
+3. Replaced mock fallbacks with proper empty state handling
+4. Added Lesson 34 documenting fake data patterns
+
+**Files modified:**
+- `GameSmashList.jsx` - Removed `generateGameStats()` with Math.random(), removed `keyStats` useMemo
+- `SystemHealthPanel.jsx` - Fixed random drift/bias fallbacks to use null checks
+- `Leaderboard.jsx` - Changed `mockLeaders` to `emptyLeaders` with empty arrays
+- `BestOdds.jsx` - Removed `MOCK_BOOKS`, `BASE_GAMES`, `generateMockGames()` (~70 lines)
+- `InjuryVacuum.jsx` - Removed `generateMockInjuries()` (~95 lines)
+- `Splits.jsx` - Removed `MOCK_SPLITS`, random percentage generation (~50 lines)
+- `SharpAlerts.jsx` - Removed `generateMockAlerts()` (~75 lines)
+
+**Documentation updated:**
+- `docs/LESSONS.md` - Added Lesson 34 (fake/mock data in production)
+- `docs/RECOVERY.md` - Added recovery entry 30 (fake data symptoms and fix)
+- `docs/MASTER_INDEX.md` - Updated lesson count (33→34), added new Hard Bans
+
+**Key pattern established:**
+- NEVER use mock fallbacks in production components
+- Show empty state on API failure: `setData([])` instead of `setData(generateMockData())`
+- Detection command: `grep -rn "Math\.random\|MOCK_\|generateMock" *.jsx | grep -v test | grep -v mocks`
+
+**Commits:**
+- `6b081d8 fix: remove fake random stats from GameSmashList`
+- `cf5f067 fix: remove all fake/mock data from production components`
+
+**Build:** Clean
+**Tests:** 210/210 unit, 36 E2E passing
+
+---
+
 ## 🚨 MASTER INVARIANTS (NEVER VIOLATE) 🚨
 
 **READ THIS FIRST BEFORE TOUCHING SCORING OR DISPLAY CODE**

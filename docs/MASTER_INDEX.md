@@ -176,7 +176,7 @@ catch { await expect(page.locator('body')).toBeVisible(); return; }
 | Components | `App.jsx` | Routing, lazy loading |
 | Signals | `signalEngine.js` | Client calculations |
 | Storage | `storageUtils.js` | localStorage keys |
-| Lessons | `docs/LESSONS.md` | Historical mistakes and prevention (29 lessons) |
+| Lessons | `docs/LESSONS.md` | Historical mistakes and prevention (34 lessons) |
 | Test Mocks | `test/api.test.js` → `mockResponse()` | Canonical mock pattern for API tests |
 | Test Setup | `test/setup.js` | Global mocks, env stubs, rate limit bypass |
 | E2E Fixtures | `e2e/fixtures.js` | Shared page fixture (onboarding skip, localStorage) |
@@ -435,6 +435,8 @@ diff <(grep "import.*from.*components" GameSmashList.jsx | sort) \
 - Copy-paste components between GameSmashList and PropsSmashList (extract to components/)
 - Duplicate utility functions (check src/utils/ first)
 - Simulate/fake backend data with Math.random() or shuffling (use real data or empty state)
+- Use MOCK_* constants or generateMock*() functions in production components (test/mocks only)
+- Show fake usernames, statistics, or alerts when API fails (show empty state instead)
 
 ---
 

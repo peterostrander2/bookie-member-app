@@ -533,3 +533,38 @@ Fix:
    const MyComponent = () => { ... };
    ```
 4. See Lesson 33 in `docs/LESSONS.md`
+
+---
+
+## 30) Fake/mock data showing to users
+
+Symptoms:
+- Data looks "too perfect" or doesn't match reality
+- Different data on refresh (random values)
+- Usernames or statistics that don't exist in backend
+- App "works" even when backend is down
+
+Root Cause:
+- Component has mock fallback that activates on API error or empty response
+- Mock data was added for development but never removed
+
+Fix:
+1. Find the mock fallback:
+   ```bash
+   grep -rn "Math\.random\|MOCK_\|generateMock" <component>.jsx
+   ```
+2. Replace mock fallback with empty state:
+   ```javascript
+   // WRONG
+   } catch (err) {
+     setData(generateMockData());  // Shows fake data
+   }
+
+   // CORRECT
+   } catch (err) {
+     setData([]);  // Shows empty state
+   }
+   ```
+3. Remove the mock generation function and constants
+4. Add empty state rendering: `{data.length === 0 && <div>No data available</div>}`
+5. See Lesson 34 in `docs/LESSONS.md`
