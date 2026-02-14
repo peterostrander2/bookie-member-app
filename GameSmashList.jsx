@@ -167,18 +167,24 @@ const generateGameStats = (pick) => {
   };
 };
 
-const getAgreeingModels = (aiScore) => {
-  if (!aiScore) return [];
-  const numAgreeing = Math.round(aiScore);
-  const shuffled = [...AI_MODELS].sort(() => 0.5 - Math.random());
-  return shuffled.slice(0, numAgreeing);
+// Get which AI models agree - uses REAL data from pick.agreeing_models
+const getAgreeingModels = (pick) => {
+  // Use real data if backend provides it
+  if (pick.agreeing_models && Array.isArray(pick.agreeing_models)) {
+    return pick.agreeing_models.map(id => AI_MODELS.find(m => m.id === id)).filter(Boolean);
+  }
+  // No real data available
+  return [];
 };
 
-const getAligningPillars = (pillarScore) => {
-  if (!pillarScore) return [];
-  const numAligning = Math.round(pillarScore);
-  const shuffled = [...PILLARS].sort(() => 0.5 - Math.random());
-  return shuffled.slice(0, numAligning);
+// Get which pillars align - uses REAL data from pick.aligning_pillars
+const getAligningPillars = (pick) => {
+  // Use real data if backend provides it
+  if (pick.aligning_pillars && Array.isArray(pick.aligning_pillars)) {
+    return pick.aligning_pillars.map(id => PILLARS.find(p => p.id === id)).filter(Boolean);
+  }
+  // No real data available
+  return [];
 };
 
 // Memoized pick card with enhanced display - v10.4 support
@@ -187,8 +193,8 @@ const PickCard = memo(({ pick, injuries = [] }) => {
   // v10.4: Use new tier config from pick object
   const tierConfig = getTierConfigFromPick(pick);
   const keyStats = useMemo(() => generateGameStats(pick), [pick.market, pick.point, pick.team]);
-  const agreeingModels = useMemo(() => getAgreeingModels(pick.ai_score), [pick.ai_score]);
-  const aligningPillars = useMemo(() => getAligningPillars(pick.pillar_score), [pick.pillar_score]);
+  const agreeingModels = useMemo(() => getAgreeingModels(pick), [pick.agreeing_models]);
+  const aligningPillars = useMemo(() => getAligningPillars(pick), [pick.aligning_pillars]);
   const { isMobile, isTouchDevice } = useMobileDetect();
 
   // v12.1: Use canonical score extraction
