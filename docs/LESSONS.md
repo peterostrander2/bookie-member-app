@@ -1,4 +1,4 @@
-# LESSONS LEARNED — Frontend (31 Lessons)
+# LESSONS LEARNED — Frontend (33 Lessons)
 
 Every lesson here was learned the hard way. Each one has an automated prevention mechanism.
 
@@ -981,6 +981,108 @@ grep -rn "const.*FilterControls.*=.*memo" GameSmashList.jsx PropsSmashList.jsx
 
 ---
 
+## Lesson 32: Inline Style Objects Cause Re-renders
+
+**When:** February 2026 (Performance session)
+**Problem:** GameSmashList and PropsSmashList had 97+ and 123+ inline style objects respectively. Each `style={{ color: '#6B7280' }}` creates a new object on every render, triggering unnecessary React diffing and garbage collection.
+**Root Cause:** Convenience of inline styles during rapid development without considering performance implications.
+**Impact:** Slower renders, increased memory churn, larger bundle size from repeated style strings.
+
+**Broken pattern:**
+```javascript
+// WRONG — creates new object every render
+<span style={{ color: '#6B7280' }}>Text</span>
+<span style={{ color: '#6B7280' }}>More text</span>  // Duplicate!
+```
+
+**Correct pattern:**
+```javascript
+// CORRECT — shared constant, same reference
+import { TEXT_MUTED } from './src/utils/constants';
+<span style={TEXT_MUTED}>Text</span>
+<span style={TEXT_MUTED}>More text</span>  // Same object!
+```
+
+**Fix Applied:**
+- Added 14 shared style constants to `src/utils/constants.js`
+- Replaced 49 inline style objects with constant references
+- Bundle reduced by ~1 KB
+- Runtime: fewer object allocations, stable references for React
+
+**Shared style constants added:**
+- `TEXT_MUTED`, `TEXT_SECONDARY`, `TEXT_SUCCESS` — color-only styles
+- `TEXT_MUTED_SM`, `TEXT_SECONDARY_SM`, `TEXT_SUCCESS_SM`, `TEXT_BODY` — with font sizes
+- `FLEX_WRAP_GAP_6`, `FLEX_WRAP_GAP_4`, `FLEX_COL_GAP_8`, `FLEX_START_GAP_8` — flex layouts
+- `MB_8`, `MB_16` — margin bottom
+
+**Prevention:**
+- Before writing `style={{ ... }}`, check if `src/utils/constants.js` has a matching constant
+- If a style appears 3+ times, extract it to constants
+- Pattern: `grep -c "style={{" *.jsx` to audit inline style count
+
+**Automated Gate:** None — requires periodic audits:
+```bash
+# Count inline styles per file (lower = better)
+grep -c "style={{" GameSmashList.jsx PropsSmashList.jsx SmashSpotsPage.jsx
+# Watch for high counts — consider extracting repeated patterns
+```
+
+---
+
+## Lesson 33: useMemo and Pure Functions for Runtime Performance
+
+**When:** February 2026 (Performance session)
+**Problem:** SmashSpotsPage had 0 useMemo hooks despite having computed values like `tierDisplayConfig` that recreated objects on every render. Also had `formatCountdown` function defined inside component, recreating on every render.
+**Root Cause:** Not applying memoization patterns during initial development.
+**Impact:** Unnecessary object recreation, function allocation on every render, potential downstream re-renders from unstable references.
+
+**Broken pattern:**
+```javascript
+// WRONG — object recreated every render
+const MyComponent = () => {
+  const config = condition ? { a: 1 } : { b: 2 };  // New object each time!
+
+  const formatValue = (x) => x.toFixed(2);  // New function each time!
+
+  return <Child config={config} format={formatValue} />;
+};
+```
+
+**Correct pattern:**
+```javascript
+// CORRECT — memoized object, pure function outside
+const formatValue = (x) => x.toFixed(2);  // Defined once, outside component
+
+const MyComponent = () => {
+  const config = useMemo(() =>
+    condition ? { a: 1 } : { b: 2 },
+    [condition]  // Only recreate when condition changes
+  );
+
+  return <Child config={config} format={formatValue} />;
+};
+```
+
+**Fix Applied:**
+- Added `useMemo` to `tierDisplayConfig` in SmashSpotsPage
+- Moved `formatCountdown` outside component (pure function)
+- Stable references prevent unnecessary child re-renders
+
+**Prevention:**
+- Computed objects that depend on state/props → wrap in `useMemo`
+- Pure functions (no state/props dependencies) → move outside component
+- Event handlers that don't change → wrap in `useCallback`
+- Pattern: Check files with 0 useMemo that have computed values
+
+**Automated Gate:** None — requires code review vigilance:
+```bash
+# Check useMemo usage in large components
+grep -c "useMemo" SmashSpotsPage.jsx GameSmashList.jsx PropsSmashList.jsx
+# Low count in large files = review opportunity
+```
+
+---
+
 ## Summary: Prevention Stack
 
 | Layer | What | Catches |
@@ -1011,3 +1113,5 @@ grep -rn "const.*FilterControls.*=.*memo" GameSmashList.jsx PropsSmashList.jsx
 | Code review | `grep "Math.random" Game* Props*` | Fake data simulation instead of real API data (Lesson 29) |
 | Manual: formatTime | `grep "const formatTime" *.jsx \| grep -v import` | formatTime duplication (Lesson 30) |
 | Manual: FilterControls | `grep "const.*FilterControls.*memo" Game* Props*` | FilterControls duplication (Lesson 31) |
+| Performance: styles | `grep -c "style={{" *.jsx` | High inline style count (Lesson 32) |
+| Performance: useMemo | `grep -c "useMemo" SmashSpotsPage.jsx` | Missing memoization in large components (Lesson 33) |

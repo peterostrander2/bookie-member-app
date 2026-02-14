@@ -477,3 +477,59 @@ Fix:
    ```
 3. Remove local FilterControls/GameFilterControls definitions
 4. See Lesson 31 in `docs/LESSONS.md`
+
+---
+
+## 28) Slow renders / high memory usage in SmashList
+
+Symptoms:
+- React DevTools shows frequent re-renders
+- Memory usage climbs over time
+- `grep -c "style={{" *.jsx` shows 50+ inline styles per file
+
+Root Cause:
+- Inline style objects `style={{ color: '#6B7280' }}` create new objects every render
+- React must diff these objects even though values are identical
+
+Fix:
+1. Check inline style count: `grep -c "style={{" GameSmashList.jsx PropsSmashList.jsx`
+2. Import shared style constants from `src/utils/constants.js`:
+   ```javascript
+   import { TEXT_MUTED, FLEX_WRAP_GAP_6 } from './src/utils/constants';
+   // Replace: style={{ color: '#6B7280' }}
+   // With:    style={TEXT_MUTED}
+   ```
+3. For repeated styles, add new constants to `src/utils/constants.js`
+4. See Lesson 32 in `docs/LESSONS.md`
+
+---
+
+## 29) Computed values recreated on every render
+
+Symptoms:
+- Child components re-render unnecessarily
+- `useMemo` count is 0 in large components
+- Config objects like `tierDisplayConfig` defined inline
+
+Root Cause:
+- Object literals in render create new references every time
+- Functions defined inside component are new every render
+
+Fix:
+1. Check useMemo usage: `grep -c "useMemo" SmashSpotsPage.jsx`
+2. Wrap computed objects in useMemo:
+   ```javascript
+   const config = useMemo(() => ({
+     color: tier === 'GOLD' ? '#FFD700' : '#10B981'
+   }), [tier]);
+   ```
+3. Move pure functions outside component:
+   ```javascript
+   // BEFORE (inside component)
+   const formatValue = (x) => x.toFixed(2);
+
+   // AFTER (outside component)
+   const formatValue = (x) => x.toFixed(2);
+   const MyComponent = () => { ... };
+   ```
+4. See Lesson 33 in `docs/LESSONS.md`

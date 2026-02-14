@@ -226,9 +226,50 @@ catch { await expect(page.locator('body')).toBeVisible(); return; }
 |------|---------|---------|
 | `pickNormalize.js` | `formatOdds`, `formatTime`, `formatTimeAgo`, `formatLine`, `getBookInfo`, `getPickScore`, `isTitanium`, `filterCommunityPicks`, `communitySort` | 15+ files |
 | `tierConfig.js` | `TIER_CONFIGS`, `getTierConfigFromPick`, `getTierConfig` | SmashList files |
-| `constants.js` | `AI_MODELS`, `PILLARS`, `STAT_BADGE_STYLE` | SmashList files |
+| `constants.js` | `AI_MODELS`, `PILLARS`, `STAT_BADGE_STYLE`, `getAgreeingModels`, `getAligningPillars`, + 14 style constants | SmashList files |
+
+**Style constants in constants.js (for performance):**
+- `TEXT_MUTED`, `TEXT_SECONDARY`, `TEXT_SUCCESS` — color-only styles
+- `TEXT_MUTED_SM`, `TEXT_SECONDARY_SM`, `TEXT_SUCCESS_SM`, `TEXT_BODY` — with font sizes
+- `FLEX_WRAP_GAP_6`, `FLEX_WRAP_GAP_4`, `FLEX_COL_GAP_8`, `FLEX_START_GAP_8` — flex layouts
+- `MB_8`, `MB_16` — margin bottom
 
 **Pattern:** Before writing a utility function, check if it exists in `src/utils/`. Use `grep -r "export.*function" src/utils/` to list available utilities.
+
+---
+
+## Performance Patterns
+
+### Bundle Tracking
+| Chunk | Target | Current |
+|-------|--------|---------|
+| SmashSpotsPage | < 100 KB | 98.28 KB ✅ |
+| Main index | < 350 KB | 344.25 KB ✅ |
+
+### Key Optimizations Applied
+1. **Shared style constants** — 49 inline styles → constants (Lesson 32)
+2. **useMemo for computed objects** — tierDisplayConfig, etc. (Lesson 33)
+3. **Pure functions outside components** — formatCountdown, formatTime
+4. **memo() on child components** — PropCard, GameCard, TierLegend
+5. **Code splitting** — 22 lazy-loaded routes
+
+### Performance Audit Commands
+```bash
+# Check inline style count (lower = better)
+grep -c "style={{" GameSmashList.jsx PropsSmashList.jsx SmashSpotsPage.jsx
+
+# Check memoization usage
+grep -c "useMemo\|useCallback\|memo(" SmashSpotsPage.jsx
+
+# Build with size analysis
+npm run build:analyze
+```
+
+### When to Memoize
+- **useMemo**: Computed objects that depend on state/props
+- **useCallback**: Event handlers passed to child components
+- **memo()**: Components that receive stable props but parent re-renders often
+- **Move outside**: Pure functions with no state/props dependencies
 
 ---
 
@@ -360,9 +401,11 @@ diff <(grep "import.*from.*components" GameSmashList.jsx | sort) \
 
 **Where shared code lives:**
 - UI Components: `components/Badges.jsx` (ScoreBadge, TierBadge, BadgeDisplay, TierLegend)
-- Formatting: `src/utils/pickNormalize.js` (formatOdds, getBookInfo)
+- UI Components: `components/FilterControls.jsx` (FilterControls with mode prop)
+- Formatting: `src/utils/pickNormalize.js` (formatOdds, formatTime, formatTimeAgo, getBookInfo)
 - Config: `src/utils/tierConfig.js` (TIER_CONFIGS, getTierConfigFromPick)
-- Constants: `src/utils/constants.js` (AI_MODELS, PILLARS)
+- Constants: `src/utils/constants.js` (AI_MODELS, PILLARS, getAgreeingModels, getAligningPillars)
+- Styles: `src/utils/constants.js` (TEXT_MUTED, FLEX_*, MB_* — 14 style constants for perf)
 
 ---
 
