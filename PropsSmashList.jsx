@@ -42,6 +42,7 @@ import GlitchSignalsPanel from './components/GlitchSignalsPanel';
 import EsotericContributionsPanel from './components/EsotericContributionsPanel';
 import ReasonPanel from './components/ReasonPanel';
 import { ScoreBadge, TierBadge, BadgeDisplay, TierLegend } from './components/Badges';
+import FilterControls from './components/FilterControls';
 
 // Container for expanded breakdown section
 const BREAKDOWN_CONTAINER_STYLE = {
@@ -213,85 +214,6 @@ const LineMovement = memo(({ pick }) => {
   );
 });
 LineMovement.displayName = 'LineMovement';
-
-// Filter/Sort controls component (v10.87 tier names)
-const FilterControls = memo(({ filters, setFilters, sortBy, setSortBy }) => {
-  const tierOptions = ['ALL', TIERS.TITANIUM_SMASH, TIERS.GOLD_STAR, TIERS.EDGE_LEAN, TIERS.MONITOR];
-  const tierLabels = { ALL: 'ALL', [TIERS.TITANIUM_SMASH]: 'TITANIUM', [TIERS.GOLD_STAR]: 'GOLD', [TIERS.EDGE_LEAN]: 'EDGE', [TIERS.MONITOR]: 'MONITOR' };
-  const propTypes = ['ALL', 'POINTS', 'REBOUNDS', 'ASSISTS', '3PT', 'OTHER'];
-  const sortOptions = [
-    { value: 'score', label: 'Score (High→Low)' },
-    { value: 'edge', label: 'Edge (High→Low)' },
-    { value: 'odds', label: 'Best Odds' }
-  ];
-
-  return (
-    <div style={{
-      backgroundColor: '#12121f', borderRadius: '10px', padding: '12px 16px',
-      marginBottom: '16px', border: '1px solid #2a2a4a'
-    }}>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'center' }}>
-        {/* Tier Filter */}
-        <div>
-          <span style={{ color: '#6B7280', fontSize: '11px', marginRight: '8px' }}>TIER:</span>
-          <div style={{ display: 'inline-flex', gap: '4px' }}>
-            {tierOptions.map(tier => (
-              <button
-                key={tier}
-                onClick={() => setFilters({ ...filters, tier })}
-                style={{
-                  padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold',
-                  cursor: 'pointer', border: 'none',
-                  backgroundColor: filters.tier === tier ? (tier === TIERS.TITANIUM_SMASH ? '#00FFFF' : '#8B5CF6') : '#1a1a2e',
-                  color: filters.tier === tier ? (tier === TIERS.TITANIUM_SMASH ? '#000' : '#fff') : '#9CA3AF'
-                }}
-              >{tierLabels[tier]}</button>
-            ))}
-          </div>
-        </div>
-
-        {/* Prop Type Filter */}
-        <div>
-          <span style={{ color: '#6B7280', fontSize: '11px', marginRight: '8px' }}>TYPE:</span>
-          <select
-            id="props-smash-type"
-            name="propsSmashType"
-            value={filters.propType}
-            onChange={(e) => setFilters({ ...filters, propType: e.target.value })}
-            style={{
-              backgroundColor: '#1a1a2e', color: '#fff', border: '1px solid #4B5563',
-              borderRadius: '6px', padding: '4px 8px', fontSize: '12px', cursor: 'pointer'
-            }}
-          >
-            {propTypes.map(type => (
-              <option key={type} value={type}>{type}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Sort By */}
-        <div style={{ marginLeft: 'auto' }}>
-          <span style={{ color: '#6B7280', fontSize: '11px', marginRight: '8px' }}>SORT:</span>
-          <select
-            id="props-smash-sort"
-            name="propsSmashSort"
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            style={{
-              backgroundColor: '#1a1a2e', color: '#fff', border: '1px solid #4B5563',
-              borderRadius: '6px', padding: '4px 8px', fontSize: '12px', cursor: 'pointer'
-            }}
-          >
-            {sortOptions.map(opt => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-    </div>
-  );
-});
-FilterControls.displayName = 'FilterControls';
 
 const getPropIcon = (market) => {
   if (market?.includes('points')) return '🏀';
@@ -1292,6 +1214,7 @@ const PropsSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortBy
 
       {/* Filter/Sort Controls */}
       <FilterControls
+        mode="props"
         filters={filters}
         setFilters={setFilters}
         sortBy={sortBy}

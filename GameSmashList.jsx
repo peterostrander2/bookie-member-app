@@ -41,6 +41,7 @@ import GlitchSignalsPanel from './components/GlitchSignalsPanel';
 import EsotericContributionsPanel from './components/EsotericContributionsPanel';
 import ReasonPanel from './components/ReasonPanel';
 import { ScoreBadge, TierBadge, BadgeDisplay, TierLegend } from './components/Badges';
+import FilterControls from './components/FilterControls';
 
 // Container for expanded breakdown section
 const BREAKDOWN_CONTAINER_STYLE = {
@@ -77,67 +78,6 @@ const MODEL_BADGE_INACTIVE = {
 };
 
 // ============================================================================
-
-// Filter controls for game picks (v10.87 - includes TITANIUM_SMASH)
-const GameFilterControls = memo(({ filters, setFilters, sortBy, setSortBy }) => {
-  const tierOptions = ['ALL', TIERS.TITANIUM_SMASH, TIERS.GOLD_STAR, TIERS.EDGE_LEAN, TIERS.MONITOR];
-  const tierLabels = { ALL: 'ALL', [TIERS.TITANIUM_SMASH]: 'TITANIUM', [TIERS.GOLD_STAR]: 'GOLD', [TIERS.EDGE_LEAN]: 'EDGE', [TIERS.MONITOR]: 'MONITOR' };
-  const marketOptions = ['ALL', 'SPREAD', 'TOTAL', 'ML'];
-
-  return (
-    <div style={{
-      backgroundColor: '#12121f', borderRadius: '10px', padding: '12px 16px',
-      marginBottom: '16px', border: '1px solid #2a2a4a'
-    }}>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'center' }}>
-        <div>
-          <span style={{ color: '#6B7280', fontSize: '11px', marginRight: '8px' }}>TIER:</span>
-          <div style={{ display: 'inline-flex', gap: '4px' }}>
-            {tierOptions.map(tier => (
-              <button key={tier} onClick={() => setFilters({ ...filters, tier })}
-                style={{
-                  padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold',
-                  cursor: 'pointer', border: 'none',
-                  backgroundColor: filters.tier === tier ? (tier === TIERS.TITANIUM_SMASH ? '#00FFFF' : '#00D4FF') : '#1a1a2e',
-                  color: filters.tier === tier ? '#0a0a0f' : '#9CA3AF'
-                }}>{tierLabels[tier]}</button>
-            ))}
-          </div>
-        </div>
-        <div>
-          <span style={{ color: '#6B7280', fontSize: '11px', marginRight: '8px' }}>TYPE:</span>
-          <div style={{ display: 'inline-flex', gap: '4px' }}>
-            {marketOptions.map(market => (
-              <button key={market} onClick={() => setFilters({ ...filters, market })}
-                style={{
-                  padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold',
-                  cursor: 'pointer', border: 'none',
-                  backgroundColor: filters.market === market ? '#00D4FF' : '#1a1a2e',
-                  color: filters.market === market ? '#0a0a0f' : '#9CA3AF'
-                }}>{market}</button>
-            ))}
-          </div>
-        </div>
-        <div style={{ marginLeft: 'auto' }}>
-          <span style={{ color: '#6B7280', fontSize: '11px', marginRight: '8px' }}>SORT:</span>
-          <select
-            id="game-smash-sort"
-            name="gameSmashSort"
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            style={{
-              backgroundColor: '#1a1a2e', color: '#fff', border: '1px solid #4B5563',
-              borderRadius: '6px', padding: '4px 8px', fontSize: '12px', cursor: 'pointer'
-            }}>
-            <option value="confidence">Confidence</option>
-            <option value="edge">Edge</option>
-          </select>
-        </div>
-      </div>
-    </div>
-  );
-});
-GameFilterControls.displayName = 'GameFilterControls';
 
 // Generate key stats for game picks
 const generateGameStats = (pick) => {
@@ -1115,7 +1055,8 @@ const GameSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortByC
       <TierLegend />
 
       {/* Filter Controls */}
-      <GameFilterControls
+      <FilterControls
+        mode="game"
         filters={filters}
         setFilters={setFilters}
         sortBy={sortBy}
