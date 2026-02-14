@@ -373,3 +373,65 @@ Fix:
 2. Use Array.isArray() before array methods: `const safe = Array.isArray(arr) ? arr : [];`
 3. Use default values in destructuring: `const { signals = [] } = analysis;`
 4. See Lesson 26 in `docs/LESSONS.md`
+
+---
+
+## 23) Duplicate code in GameSmashList and PropsSmashList
+
+Symptoms:
+- Same component/function exists in both files
+- Bundle size larger than necessary
+- Changes made to one file not reflected in the other
+
+Root Cause:
+- Copy-paste development pattern
+- No shared component extraction
+
+Fix:
+1. Identify duplicates: `diff <(grep "const.*=" GameSmashList.jsx) <(grep "const.*=" PropsSmashList.jsx)`
+2. Extract to `components/Badges.jsx` for UI components
+3. Extract to `src/utils/` for utility functions
+4. Update both files to import from shared location
+5. See Lesson 27 in `docs/LESSONS.md`
+
+---
+
+## 24) Utility function defined in multiple files
+
+Symptoms:
+- `formatOdds`, `formatTime`, or similar exists in 3+ files
+- Inconsistent behavior across files
+
+Fix:
+1. Find duplicates: `grep -r "const formatOdds\|const formatTime" --include="*.jsx"`
+2. Check if canonical version exists in `src/utils/pickNormalize.js`
+3. Update all files to import from canonical location
+4. Remove local definitions
+5. See Lesson 28 in `docs/LESSONS.md`
+
+---
+
+## 25) GameSmashList shows random/inconsistent model data
+
+Symptoms:
+- "Agreeing Models" or "Aligning Pillars" shows different values on each refresh
+- PropsSmashList shows consistent data, GameSmashList doesn't
+- Math.random() in code for model/pillar selection
+
+Root Cause:
+- Fake data simulation using random shuffling instead of real backend data
+
+Fix:
+1. Check for random patterns: `grep -n "Math.random\|shuffle" GameSmashList.jsx`
+2. Replace simulation with real data pattern:
+   ```javascript
+   // WRONG
+   const shuffled = [...AI_MODELS].sort(() => 0.5 - Math.random());
+
+   // CORRECT
+   if (pick.agreeing_models && Array.isArray(pick.agreeing_models)) {
+     return pick.agreeing_models.map(id => AI_MODELS.find(m => m.id === id));
+   }
+   return [];
+   ```
+3. See Lesson 29 in `docs/LESSONS.md`

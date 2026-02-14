@@ -1,4 +1,4 @@
-# LESSONS LEARNED — Frontend (26 Lessons)
+# LESSONS LEARNED — Frontend (29 Lessons)
 
 Every lesson here was learned the hard way. Each one has an automated prevention mechanism.
 
@@ -774,6 +774,112 @@ The goal: every mistake should be catchable automatically. If it can't be automa
 
 ---
 
+## Lesson 27: Code Duplication — TierLegend in Multiple Files
+
+**When:** February 2026 (Refactoring session)
+**Problem:** `TierLegend` component was copy-pasted identically in both `GameSmashList.jsx` (line 82) and `PropsSmashList.jsx` (line 310) — ~24 lines of identical code in each file.
+**Root Cause:** When components are needed in two places, developers often copy-paste instead of extracting to a shared location.
+**Impact:** Code drift risk (one file gets updated, other doesn't), larger bundle size, maintenance burden.
+
+**Fix Applied:**
+- Extracted `TierLegend` to `components/Badges.jsx`
+- Added `GOLD_STAR_THRESHOLD` and `MIN_FINAL_SCORE` imports from contract
+- Updated both SmashList files to import from shared component
+- Reduced SmashSpotsPage bundle by ~1.27 KB
+
+**Prevention:**
+- Before copy-pasting a component, check if it can be extracted to `components/`
+- Shared UI components between SmashList files MUST live in `components/` directory
+- Search for existing shared components: `ls components/*.jsx`
+- Pattern: If it appears in BOTH GameSmashList and PropsSmashList, extract it
+
+**Automated Gate:** Symmetric component check in pre-commit:
+```bash
+grep -n "import.*from.*components/" GameSmashList.jsx PropsSmashList.jsx
+# Both files should import the same scoring components
+```
+
+---
+
+## Lesson 28: Utility Function Duplication — formatOdds
+
+**When:** February 2026 (Refactoring session)
+**Problem:** `formatOdds()` function was defined 5 times across different files: GameSmashList.jsx, BestOdds.jsx, SmashSpots.jsx, BetSlip.jsx, BetslipModal.jsx — each with slight variations.
+**Root Cause:** No central utility for common formatting. Each developer wrote their own version.
+**Impact:** Inconsistent formatting (some handled null, some didn't), wasted bytes in bundle, maintenance burden.
+
+**Fix Applied:**
+- Identified canonical version in `src/utils/pickNormalize.js` (most robust, handles edge cases)
+- Updated 5 files to import `formatOdds` from pickNormalize
+- Removed ~26 lines of duplicate code
+- Reduced SmashSpotsPage bundle by ~2.06 KB
+
+**Prevention:**
+- Before writing a formatting function, check `src/utils/` for existing utilities
+- Common utilities live in:
+  - `src/utils/pickNormalize.js` — `formatOdds`, `getBookInfo`, scoring helpers
+  - `src/utils/tierConfig.js` — Tier styling helpers
+  - `src/utils/constants.js` — AI_MODELS, PILLARS, shared constants
+- Pattern: `grep -r "const formatOdds" *.jsx` to find duplicates
+
+**Automated Gate:** None — requires periodic audits:
+```bash
+# Find duplicate function definitions
+grep -r "const formatTime\|const formatOdds\|const formatDate" --include="*.jsx" | wc -l
+# High count = consolidation opportunity
+```
+
+---
+
+## Lesson 29: Fake Data Simulation vs Real Backend Data
+
+**When:** February 2026 (Refactoring session)
+**Problem:** `GameSmashList.jsx` functions `getAgreeingModels()` and `getAligningPillars()` used random shuffling to simulate which models agreed, based on score value. Meanwhile `PropsSmashList.jsx` used actual backend data from `pick.agreeing_models` and `pick.aligning_pillars`.
+**Root Cause:** GameSmashList was written before backend provided real model/pillar data. When backend added the fields, only PropsSmashList was updated.
+**Impact:** Users saw fake/random model agreement in GameSmashList, actual data in PropsSmashList — inconsistent experience.
+
+**Broken code pattern:**
+```javascript
+// WRONG — simulates fake data
+const getAgreeingModels = (aiScore) => {
+  const numAgreeing = Math.round(aiScore);
+  const shuffled = [...AI_MODELS].sort(() => 0.5 - Math.random());  // Random!
+  return shuffled.slice(0, numAgreeing);
+};
+```
+
+**Correct code pattern:**
+```javascript
+// CORRECT — uses real backend data
+const getAgreeingModels = (pick) => {
+  if (pick.agreeing_models && Array.isArray(pick.agreeing_models)) {
+    return pick.agreeing_models.map(id => AI_MODELS.find(m => m.id === id)).filter(Boolean);
+  }
+  return [];  // No data = empty (not fake)
+};
+```
+
+**Fix Applied:**
+- Rewrote GameSmashList `getAgreeingModels()` and `getAligningPillars()` to match PropsSmashList pattern
+- Updated useMemo dependencies from `pick.ai_score` to `pick.agreeing_models`
+- Now both files use real backend data, return empty array when not available
+
+**Prevention:**
+- NEVER simulate/fake backend data with random values
+- If backend doesn't provide data yet, show empty state or "Not available"
+- When backend adds new data fields, update ALL files that display that data
+- Pattern: Check if field comes from backend before using it
+- INVARIANT 8: Both SmashList files must be updated together
+
+**Automated Gate:** None — requires code review vigilance:
+```bash
+# Find suspicious random patterns that might be simulating data
+grep -rn "Math.random\|shuffle\|randomize" GameSmashList.jsx PropsSmashList.jsx
+# Should return EMPTY
+```
+
+---
+
 ## Summary: Prevention Stack
 
 | Layer | What | Catches |
@@ -799,3 +905,6 @@ The goal: every mistake should be catchable automatically. If it can't be automa
 | Code review | useEffect async patterns | Race conditions - missing cleanup/cancelled flags (Lesson 24) |
 | Code review | `grep "console.error" *.jsx` | Silent API errors without toast.error (Lesson 25) |
 | Unit tests | `test/pickExplainer.test.js` | Null guard failures in helper functions (Lesson 26) |
+| Manual: symmetric | `grep "import.*Badges" Game* Props*` | Shared component not imported in both files (Lesson 27) |
+| Manual: duplicates | `grep -r "const formatOdds" *.jsx \| wc -l` | Utility function duplication (Lesson 28) |
+| Code review | `grep "Math.random" Game* Props*` | Fake data simulation instead of real API data (Lesson 29) |

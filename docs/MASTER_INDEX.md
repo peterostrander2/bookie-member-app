@@ -176,7 +176,7 @@ catch { await expect(page.locator('body')).toBeVisible(); return; }
 | Components | `App.jsx` | Routing, lazy loading |
 | Signals | `signalEngine.js` | Client calculations |
 | Storage | `storageUtils.js` | localStorage keys |
-| Lessons | `docs/LESSONS.md` | Historical mistakes and prevention (22 lessons) |
+| Lessons | `docs/LESSONS.md` | Historical mistakes and prevention (29 lessons) |
 | Test Mocks | `test/api.test.js` → `mockResponse()` | Canonical mock pattern for API tests |
 | Test Setup | `test/setup.js` | Global mocks, env stubs, rate limit bypass |
 | E2E Fixtures | `e2e/fixtures.js` | Shared page fixture (onboarding skip, localStorage) |
@@ -194,6 +194,31 @@ catch { await expect(page.locator('body')).toBeVisible(); return; }
 | EsotericContributionsPanel | `components/EsotericContributionsPanel.jsx` | Esoteric contributions by category (12 verified backend keys) |
 
 **Integration:** All 4 components appear in BOTH `GameSmashList.jsx` and `PropsSmashList.jsx`.
+
+---
+
+## Shared UI Components (components/Badges.jsx)
+
+| Component | Purpose | Props |
+|-----------|---------|-------|
+| ScoreBadge | Score with color coding | `score`, `maxScore`, `label`, `tooltip` |
+| TierBadge | Tier label with win rate | `confidence`, `showWinRate` |
+| BadgeDisplay | Row of status badges | `badges[]` |
+| TierLegend | Tier legend with thresholds | (none - uses contract constants) |
+
+**Pattern:** If a UI element appears in BOTH GameSmashList and PropsSmashList, extract to `components/Badges.jsx`.
+
+---
+
+## Shared Utilities (src/utils/)
+
+| File | Exports | Used By |
+|------|---------|---------|
+| `pickNormalize.js` | `formatOdds`, `getBookInfo`, `getPickScore`, `isTitanium`, `filterCommunityPicks` | 10+ files |
+| `tierConfig.js` | `TIER_CONFIGS`, `getTierConfigFromPick`, `getTierConfig` | SmashList files |
+| `constants.js` | `AI_MODELS`, `PILLARS`, `STAT_BADGE_STYLE` | SmashList files |
+
+**Pattern:** Before writing a utility function, check if it exists in `src/utils/`. Use `grep -r "export.*function" src/utils/` to list available utilities.
 
 ---
 
@@ -305,6 +330,32 @@ const explainPick = (analysis) => {
 
 ---
 
+## Code Duplication Prevention
+
+**Check before writing new code:**
+```bash
+# Check for existing utilities
+grep -r "export.*function\|export const" src/utils/ | grep -v ".test"
+
+# Check for duplicate function definitions
+grep -r "const formatTime\|const formatOdds\|const formatDate" --include="*.jsx"
+
+# Check shared components exist
+ls components/*.jsx
+
+# Verify symmetric imports (both SmashList files should import same components)
+diff <(grep "import.*from.*components" GameSmashList.jsx | sort) \
+     <(grep "import.*from.*components" PropsSmashList.jsx | sort)
+```
+
+**Where shared code lives:**
+- UI Components: `components/Badges.jsx` (ScoreBadge, TierBadge, BadgeDisplay, TierLegend)
+- Formatting: `src/utils/pickNormalize.js` (formatOdds, getBookInfo)
+- Config: `src/utils/tierConfig.js` (TIER_CONFIGS, getTierConfigFromPick)
+- Constants: `src/utils/constants.js` (AI_MODELS, PILLARS)
+
+---
+
 ## Hard Bans
 
 - Hardcode tier thresholds (6.5, 7.5, 8.0) anywhere — even in comments
@@ -328,6 +379,9 @@ const explainPick = (analysis) => {
 - Async operations in useEffect without cleanup (cancelled flag or isMountedRef)
 - console.error in user-facing components without accompanying toast.error
 - Helper functions that process API data without null/undefined guards
+- Copy-paste components between GameSmashList and PropsSmashList (extract to components/)
+- Duplicate utility functions (check src/utils/ first)
+- Simulate/fake backend data with Math.random() or shuffling (use real data or empty state)
 
 ---
 
