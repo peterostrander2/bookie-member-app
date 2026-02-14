@@ -61,6 +61,48 @@ export const STAT_BADGE_STYLE_INACTIVE = {
   color: '#6B7280'
 };
 
+// ============================================================================
+// PERFORMANCE: Shared style constants (prevents inline object re-creation)
+// ============================================================================
+
+/** Muted text color */
+export const TEXT_MUTED = { color: '#6B7280' };
+
+/** Secondary text color */
+export const TEXT_SECONDARY = { color: '#9CA3AF' };
+
+/** Success/green text */
+export const TEXT_SUCCESS = { color: '#10B981' };
+
+/** Flex row with wrap */
+export const FLEX_WRAP_GAP_6 = { display: 'flex', flexWrap: 'wrap', gap: '6px' };
+
+/** Flex row with wrap, smaller gap */
+export const FLEX_WRAP_GAP_4 = { display: 'flex', flexWrap: 'wrap', gap: '4px' };
+
+/** Flex column with gap */
+export const FLEX_COL_GAP_8 = { display: 'flex', flexDirection: 'column', gap: '8px' };
+
+/** Flex row align start */
+export const FLEX_START_GAP_8 = { display: 'flex', alignItems: 'flex-start', gap: '8px' };
+
+/** Common margin bottom */
+export const MB_8 = { marginBottom: '8px' };
+export const MB_16 = { marginBottom: '16px' };
+
+/** Muted small text */
+export const TEXT_MUTED_SM = { color: '#6B7280', fontSize: '10px' };
+export const TEXT_MUTED_XS = { color: '#6B7280', fontSize: '11px' };
+
+/** Secondary small text */
+export const TEXT_SECONDARY_SM = { color: '#9CA3AF', fontSize: '11px' };
+
+/** Success small text */
+export const TEXT_SUCCESS_SM = { color: '#10B981', fontSize: '12px' };
+
+/** White body text */
+export const TEXT_BODY = { color: '#fff', fontSize: '13px', lineHeight: '1.4' };
+
 /**
  * Get agreeing models from pick data
  * Uses real backend data from pick.agreeing_models

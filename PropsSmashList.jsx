@@ -36,7 +36,18 @@ import {
   STAT_BADGE_STYLE,
   STAT_BADGE_STYLE_RIGHT,
   getAgreeingModels,
-  getAligningPillars
+  getAligningPillars,
+  TEXT_MUTED,
+  TEXT_SECONDARY,
+  TEXT_SUCCESS,
+  TEXT_SUCCESS_SM,
+  TEXT_BODY,
+  FLEX_WRAP_GAP_4,
+  FLEX_COL_GAP_8,
+  FLEX_START_GAP_8,
+  MB_8,
+  TEXT_MUTED_SM,
+  TEXT_SECONDARY_SM
 } from './src/utils/constants';
 import BoostBreakdownPanel from './components/BoostBreakdownPanel';
 import StatusBadgeRow from './components/StatusBadgeRow';
@@ -153,7 +164,7 @@ const LineMovement = memo(({ pick }) => {
             }}>STEAM 🔥</span>
           )}
         </div>
-        <span style={{ color: '#6B7280', fontSize: '10px' }}>
+        <span style={TEXT_MUTED_SM}>
           {lineMovement.timeAgo && `${lineMovement.timeAgo} • `}Odds {lineMovement.oddsChange}
         </span>
       </div>
@@ -537,7 +548,7 @@ const PropCard = memo(({ pick }) => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           {pick.edge && (
             <div style={{ display: 'flex', alignItems: 'center' }}>
-              <span style={{ color: '#6B7280', fontSize: '10px' }}>Edge</span>
+              <span style={TEXT_MUTED_SM}>Edge</span>
               <span style={{ color: pick.edge > 0 ? '#10B981' : '#EF4444', fontWeight: 'bold', fontSize: '13px', marginLeft: '4px' }}>
                 {pick.edge > 0 ? '+' : ''}{(pick.edge * 100).toFixed(1)}%
               </span>
@@ -585,7 +596,7 @@ const PropCard = memo(({ pick }) => {
 
       {/* v17.3: Context Layer Details (expandable) */}
       {pick.context_layer && (pick.context_layer.def_rank || pick.context_layer.pace || pick.context_layer.vacuum > 0) && (
-        <details style={{ marginBottom: '8px' }}>
+        <details style={MB_8}>
           <summary style={{
             color: '#A855F7',
             fontSize: '11px',
@@ -608,16 +619,16 @@ const PropCard = memo(({ pick }) => {
             <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
               {pick.context_layer.def_rank && (
                 <div>
-                  <span style={{ color: '#6B7280' }}>vs #</span>
+                  <span style={TEXT_MUTED}>vs #</span>
                   <span style={{ color: pick.context_layer.def_rank <= 10 ? '#10B981' : pick.context_layer.def_rank >= 20 ? '#EF4444' : '#F59E0B' }}>
                     {pick.context_layer.def_rank}
                   </span>
-                  <span style={{ color: '#6B7280' }}> Defense</span>
+                  <span style={TEXT_MUTED}> Defense</span>
                 </div>
               )}
               {pick.context_layer.pace && (
                 <div>
-                  <span style={{ color: '#6B7280' }}>Pace: </span>
+                  <span style={TEXT_MUTED}>Pace: </span>
                   <span style={{ color: pick.context_layer.pace >= 102 ? '#10B981' : pick.context_layer.pace <= 98 ? '#EF4444' : '#9CA3AF' }}>
                     {pick.context_layer.pace.toFixed(1)}
                   </span>
@@ -625,7 +636,7 @@ const PropCard = memo(({ pick }) => {
               )}
               {pick.context_layer.vacuum > 0 && (
                 <div>
-                  <span style={{ color: '#6B7280' }}>Vacuum: </span>
+                  <span style={TEXT_MUTED}>Vacuum: </span>
                   <span style={{ color: '#10B981' }}>
                     {(pick.context_layer.vacuum * 100).toFixed(0)}%
                   </span>
@@ -633,7 +644,7 @@ const PropCard = memo(({ pick }) => {
               )}
               {pick.context_layer.officials_adjustment !== 0 && (
                 <div>
-                  <span style={{ color: '#6B7280' }}>Refs: </span>
+                  <span style={TEXT_MUTED}>Refs: </span>
                   <span style={{ color: pick.context_layer.officials_adjustment > 0 ? '#10B981' : '#EF4444' }}>
                     {pick.context_layer.officials_adjustment > 0 ? '+' : ''}{pick.context_layer.officials_adjustment.toFixed(2)}
                   </span>
@@ -661,7 +672,7 @@ const PropCard = memo(({ pick }) => {
         <div style={KEY_STATS_ROW_STYLE}>
           {keyStats.avg && (
             <div style={STAT_BADGE_STYLE}>
-              <span style={{ color: '#9CA3AF' }}>{keyStats.avg}</span>
+              <span style={TEXT_SECONDARY}>{keyStats.avg}</span>
             </div>
           )}
           {keyStats.trend && (
@@ -684,7 +695,7 @@ const PropCard = memo(({ pick }) => {
 
       {/* Dev-only Debug section */}
       {process.env.NODE_ENV === 'development' && (
-        <details style={{ marginBottom: '8px' }}>
+        <details style={MB_8}>
           <summary style={{ color: '#6B7280', fontSize: '10px', cursor: 'pointer', padding: '4px 0' }}>
             Debug
           </summary>
@@ -730,7 +741,7 @@ const PropCard = memo(({ pick }) => {
               <div style={{ color: '#8B5CF6', fontSize: '12px', fontWeight: 'bold', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span>🎯</span> WHY THIS PICK
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={FLEX_COL_GAP_8}>
                 {pick.reasons.map((reason, idx) => {
                   // Parse reason category and content (format: "CATEGORY: Content +score")
                   const isResearch = reason.includes('RESEARCH:');
@@ -740,7 +751,7 @@ const PropCard = memo(({ pick }) => {
                   const icon = isEsoteric ? '⚡' : isConfluence ? '🎯' : '📊';
 
                   return (
-                    <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                    <div key={idx} style={FLEX_START_GAP_8}>
                       <span style={{ color, fontSize: '12px' }}>{icon}</span>
                       <span style={{ color: '#fff', fontSize: '12px', lineHeight: '1.4' }}>
                         {reason}
@@ -764,12 +775,12 @@ const PropCard = memo(({ pick }) => {
               <div style={{ color: '#10B981', fontSize: '12px', fontWeight: 'bold', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span>📊</span> KEY FACTORS
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={FLEX_COL_GAP_8}>
                 {/* Recent performance - only if avg provided */}
                 {keyStats.avg && (
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                    <span style={{ color: '#10B981', fontSize: '12px' }}>✓</span>
-                    <span style={{ color: '#fff', fontSize: '13px', lineHeight: '1.4' }}>
+                  <div style={FLEX_START_GAP_8}>
+                    <span style={TEXT_SUCCESS_SM}>✓</span>
+                    <span style={TEXT_BODY}>
                       <strong>{pick.player_name}</strong> is averaging <strong style={{ color: '#00D4FF' }}>{keyStats.avg.split(' ')[0]}</strong> in the last 10 games
                       {pick.side === 'Over' ? ' — trending above this line' : ' — defense limiting production'}
                     </span>
@@ -777,36 +788,36 @@ const PropCard = memo(({ pick }) => {
                 )}
                 {/* Hit rate - only if trend provided */}
                 {keyStats.trend && (
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                    <span style={{ color: '#10B981', fontSize: '12px' }}>✓</span>
-                    <span style={{ color: '#fff', fontSize: '13px', lineHeight: '1.4' }}>
+                  <div style={FLEX_START_GAP_8}>
+                    <span style={TEXT_SUCCESS_SM}>✓</span>
+                    <span style={TEXT_BODY}>
                       {keyStats.trend}
                     </span>
                   </div>
                 )}
                 {/* Matchup - only if matchup provided */}
                 {keyStats.matchup && (
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                    <span style={{ color: '#10B981', fontSize: '12px' }}>✓</span>
-                    <span style={{ color: '#fff', fontSize: '13px', lineHeight: '1.4' }}>
+                  <div style={FLEX_START_GAP_8}>
+                    <span style={TEXT_SUCCESS_SM}>✓</span>
+                    <span style={TEXT_BODY}>
                       {keyStats.matchup}
                     </span>
                   </div>
                 )}
                 {/* AI consensus - only if we have real model data */}
                 {agreeingModels.length > 0 && (
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                    <span style={{ color: '#10B981', fontSize: '12px' }}>✓</span>
-                    <span style={{ color: '#fff', fontSize: '13px', lineHeight: '1.4' }}>
+                  <div style={FLEX_START_GAP_8}>
+                    <span style={TEXT_SUCCESS_SM}>✓</span>
+                    <span style={TEXT_BODY}>
                       <strong style={{ color: '#8B5CF6' }}>{agreeingModels.length}/8 AI models</strong> agree on this pick (strong consensus)
                     </span>
                   </div>
                 )}
                 {/* Sharp action - only if we have real pillar data */}
                 {aligningPillars.length > 0 && aligningPillars.some(p => p.id === 'sharp_action') && (
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                    <span style={{ color: '#10B981', fontSize: '12px' }}>✓</span>
-                    <span style={{ color: '#fff', fontSize: '13px', lineHeight: '1.4' }}>
+                  <div style={FLEX_START_GAP_8}>
+                    <span style={TEXT_SUCCESS_SM}>✓</span>
+                    <span style={TEXT_BODY}>
                       <strong style={{ color: '#F59E0B' }}>Sharp money detected</strong> — professional bettors are on this side
                     </span>
                   </div>
@@ -830,7 +841,7 @@ const PropCard = memo(({ pick }) => {
               <div style={{ color: isSmashSpot ? '#FF6400' : tierConfig.tier === TIERS.TITANIUM_SMASH ? '#00FFFF' : '#00D4FF', fontSize: '11px', fontWeight: 'bold', marginBottom: '2px' }}>
                 RECOMMENDED STAKE
               </div>
-              <div style={{ color: '#9CA3AF', fontSize: '11px' }}>
+              <div style={TEXT_SECONDARY_SM}>
                 Based on {finalScore.toFixed(1)}/10 score {isSmashSpot && '(TRUE SMASH)'} {tierConfig.tier === TIERS.TITANIUM_SMASH && '(TITANIUM)'}
               </div>
             </div>
@@ -880,7 +891,7 @@ const PropCard = memo(({ pick }) => {
                     <div style={{ color: '#8B5CF6', fontSize: '11px', fontWeight: 'bold', marginBottom: '6px' }}>
                       AI MODELS ({agreeingModels.length}/8 Agree)
                     </div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                    <div style={FLEX_WRAP_GAP_4}>
                       {AI_MODELS.map(model => {
                         const agrees = agreeingModels.some(m => m.id === model.id);
                         return (
@@ -904,7 +915,7 @@ const PropCard = memo(({ pick }) => {
                     <div style={{ color: '#F59E0B', fontSize: '11px', fontWeight: 'bold', marginBottom: '6px' }}>
                       8 PILLARS ({aligningPillars.length}/8 Aligned)
                     </div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                    <div style={FLEX_WRAP_GAP_4}>
                       {PILLARS.map(pillar => {
                         const aligns = aligningPillars.some(p => p.id === pillar.id);
                         return (
@@ -935,7 +946,7 @@ const PropCard = memo(({ pick }) => {
               <div style={{ color: '#FFD700', fontSize: '12px', fontWeight: 'bold', marginBottom: '4px' }}>
                 JARVIS SIGNAL +{pick.jarvis_boost.toFixed(1)}
               </div>
-              <div style={{ color: '#9CA3AF', fontSize: '11px' }}>
+              <div style={TEXT_SECONDARY_SM}>
                 Esoteric edge detected: Numerological patterns align favorably
               </div>
             </div>
@@ -1146,7 +1157,7 @@ const PropsSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortBy
           borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px'
         }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        <div style={{ color: '#9CA3AF' }}>Loading player props...</div>
+        <div style={TEXT_SECONDARY}>Loading player props...</div>
       </div>
     );
   }
@@ -1208,7 +1219,7 @@ const PropsSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortBy
           textAlign: 'center', border: '1px solid #2a2a4a'
         }}>
           <div style={{ fontSize: '40px', marginBottom: '12px' }}>🔍</div>
-          <div style={{ color: '#9CA3AF' }}>
+          <div style={TEXT_SECONDARY}>
             {picks.length === 0
               ? `No player props available for ${sport}`
               : 'No picks match your filters'}

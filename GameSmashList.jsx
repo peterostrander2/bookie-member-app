@@ -35,7 +35,12 @@ import {
   STAT_BADGE_STYLE,
   STAT_BADGE_STYLE_RIGHT,
   getAgreeingModels,
-  getAligningPillars
+  getAligningPillars,
+  TEXT_MUTED,
+  TEXT_SECONDARY,
+  FLEX_WRAP_GAP_6,
+  MB_8,
+  TEXT_MUTED_SM
 } from './src/utils/constants';
 import BoostBreakdownPanel from './components/BoostBreakdownPanel';
 import StatusBadgeRow from './components/StatusBadgeRow';
@@ -395,7 +400,7 @@ const PickCard = memo(({ pick, injuries = [] }) => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           {pick.edge && (
             <div style={{ display: 'flex', alignItems: 'center' }}>
-              <span style={{ color: '#6B7280', fontSize: '10px' }}>Edge</span>
+              <span style={TEXT_MUTED_SM}>Edge</span>
               <span style={{ color: pick.edge > 0 ? '#10B981' : '#EF4444', fontWeight: 'bold', fontSize: '13px', marginLeft: '4px' }}>
                 {pick.edge > 0 ? '+' : ''}{(pick.edge * 100).toFixed(1)}%
               </span>
@@ -442,7 +447,7 @@ const PickCard = memo(({ pick, injuries = [] }) => {
 
       {/* v17.3: Context Layer Details (expandable) */}
       {pick.context_layer && (pick.context_layer.def_rank || pick.context_layer.pace || pick.context_layer.vacuum > 0) && (
-        <details style={{ marginBottom: '8px' }}>
+        <details style={MB_8}>
           <summary style={{
             color: '#A855F7',
             fontSize: '11px',
@@ -465,16 +470,16 @@ const PickCard = memo(({ pick, injuries = [] }) => {
             <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
               {pick.context_layer.def_rank && (
                 <div>
-                  <span style={{ color: '#6B7280' }}>vs #</span>
+                  <span style={TEXT_MUTED}>vs #</span>
                   <span style={{ color: pick.context_layer.def_rank <= 10 ? '#10B981' : pick.context_layer.def_rank >= 20 ? '#EF4444' : '#F59E0B' }}>
                     {pick.context_layer.def_rank}
                   </span>
-                  <span style={{ color: '#6B7280' }}> Defense</span>
+                  <span style={TEXT_MUTED}> Defense</span>
                 </div>
               )}
               {pick.context_layer.pace && (
                 <div>
-                  <span style={{ color: '#6B7280' }}>Pace: </span>
+                  <span style={TEXT_MUTED}>Pace: </span>
                   <span style={{ color: pick.context_layer.pace >= 102 ? '#10B981' : pick.context_layer.pace <= 98 ? '#EF4444' : '#9CA3AF' }}>
                     {pick.context_layer.pace.toFixed(1)}
                   </span>
@@ -482,7 +487,7 @@ const PickCard = memo(({ pick, injuries = [] }) => {
               )}
               {pick.context_layer.vacuum > 0 && (
                 <div>
-                  <span style={{ color: '#6B7280' }}>Vacuum: </span>
+                  <span style={TEXT_MUTED}>Vacuum: </span>
                   <span style={{ color: '#10B981' }}>
                     {(pick.context_layer.vacuum * 100).toFixed(0)}%
                   </span>
@@ -490,7 +495,7 @@ const PickCard = memo(({ pick, injuries = [] }) => {
               )}
               {pick.context_layer.officials_adjustment !== 0 && (
                 <div>
-                  <span style={{ color: '#6B7280' }}>Refs: </span>
+                  <span style={TEXT_MUTED}>Refs: </span>
                   <span style={{ color: pick.context_layer.officials_adjustment > 0 ? '#10B981' : '#EF4444' }}>
                     {pick.context_layer.officials_adjustment > 0 ? '+' : ''}{pick.context_layer.officials_adjustment.toFixed(2)}
                   </span>
@@ -516,7 +521,7 @@ const PickCard = memo(({ pick, injuries = [] }) => {
       {/* TERTIARY: Key stats - smallest, de-emphasized */}
       <div style={KEY_STATS_ROW_STYLE}>
         <div style={STAT_BADGE_STYLE}>
-          <span style={{ color: '#9CA3AF' }}>{keyStats.stat1}</span>
+          <span style={TEXT_SECONDARY}>{keyStats.stat1}</span>
         </div>
         <div style={STAT_BADGE_STYLE}>
           {keyStats.stat2}
@@ -533,7 +538,7 @@ const PickCard = memo(({ pick, injuries = [] }) => {
 
       {/* Dev-only Debug section */}
       {process.env.NODE_ENV === 'development' && (
-        <details style={{ marginBottom: '8px' }}>
+        <details style={MB_8}>
           <summary style={{ color: '#6B7280', fontSize: '10px', cursor: 'pointer', padding: '4px 0' }}>
             Debug
           </summary>
@@ -616,7 +621,7 @@ const PickCard = memo(({ pick, injuries = [] }) => {
               <div style={{ color: '#00D4FF', fontSize: '12px', fontWeight: 'bold', marginBottom: '8px' }}>
                 AI MODELS ({agreeingModels.length}/8 Agree)
               </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              <div style={FLEX_WRAP_GAP_6}>
                 {AI_MODELS.map(model => {
                   const agrees = agreeingModels.some(m => m.id === model.id);
                   return (
@@ -638,7 +643,7 @@ const PickCard = memo(({ pick, injuries = [] }) => {
               <div style={{ color: '#F59E0B', fontSize: '12px', fontWeight: 'bold', marginBottom: '8px' }}>
                 8 PILLARS ({aligningPillars.length}/8 Aligned)
               </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              <div style={FLEX_WRAP_GAP_6}>
                 {PILLARS.map(pillar => {
                   const aligns = aligningPillars.some(p => p.id === pillar.id);
                   return (
@@ -796,7 +801,7 @@ const InjuryIndicator = memo(({ homeTeam, awayTeam, injuries }) => {
           INJURY IMPACT {significantCount > 0 ? `(${significantCount} KEY)` : ''}
         </span>
       </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+      <div style={FLEX_WRAP_GAP_6}>
         {matchupInjuries.map((inj, idx) => (
           <div key={idx} style={{
             display: 'flex',
@@ -819,7 +824,7 @@ const InjuryIndicator = memo(({ homeTeam, awayTeam, injuries }) => {
             <span style={{ color: '#fff', fontSize: '11px', fontWeight: '500' }}>
               {inj.player_name || inj.player}
             </span>
-            <span style={{ color: '#6B7280', fontSize: '10px' }}>
+            <span style={TEXT_MUTED_SM}>
               {inj.team}
             </span>
           </div>
@@ -973,7 +978,7 @@ const GameSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortByC
           margin: '0 auto 16px'
         }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        <div style={{ color: '#9CA3AF' }}>Loading game picks...</div>
+        <div style={TEXT_SECONDARY}>Loading game picks...</div>
       </div>
     );
   }
@@ -1053,7 +1058,7 @@ const GameSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortByC
           <div style={{ fontSize: '40px', marginBottom: '12px' }}>
             {picks.length === 0 ? '🎯' : '🔍'}
           </div>
-          <div style={{ color: '#9CA3AF' }}>
+          <div style={TEXT_SECONDARY}>
             {picks.length === 0
               ? `No game picks available for ${sport}`
               : 'No picks match your filters'}
