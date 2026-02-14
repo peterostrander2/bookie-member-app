@@ -14,6 +14,7 @@ import {
   communitySort,
   getBookInfo,
   formatOdds,
+  formatTimeAgo,
   COMMUNITY_THRESHOLD
 } from './src/utils/pickNormalize';
 import {
@@ -41,20 +42,6 @@ import GlitchSignalsPanel from './components/GlitchSignalsPanel';
 import EsotericContributionsPanel from './components/EsotericContributionsPanel';
 import ReasonPanel from './components/ReasonPanel';
 import { ScoreBadge, TierBadge, BadgeDisplay, TierLegend } from './components/Badges';
-
-// Helper to format time ago from ISO timestamp
-const formatTimeAgo = (isoTimestamp) => {
-  if (!isoTimestamp) return null;
-  const now = new Date();
-  const then = new Date(isoTimestamp);
-  const diffMs = now - then;
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMins / 60);
-
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  return `${Math.floor(diffHours / 24)}d ago`;
-};
 
 // Container for expanded breakdown section
 const BREAKDOWN_CONTAINER_STYLE = {

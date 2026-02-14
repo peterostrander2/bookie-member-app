@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import api from './api';
+import { formatTime } from './src/utils/pickNormalize';
 import { getAllPicks, getStats } from './clvTracker';
 import { analyzeCorrelation } from './correlationDetector';
 import SharpMoneyWidget from './SharpMoneyWidget';
@@ -346,10 +347,6 @@ const Dashboard = () => {
     }
   };
 
-  const formatTime = (date) => {
-    if (!date) return '';
-    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-  };
 
   const getConfidenceColor = (confidence) => {
     if (confidence >= 85) return '#00FF88';

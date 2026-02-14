@@ -267,6 +267,35 @@ export function formatOdds(odds) {
 }
 
 /**
+ * Format time for display (e.g., "7:30 PM")
+ * Accepts Date object or ISO string
+ */
+export function formatTime(dateInput) {
+  if (!dateInput) return '';
+  const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
+  if (isNaN(date.getTime())) return '';
+  return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+}
+
+/**
+ * Format relative time ago (e.g., "5m ago", "2h ago")
+ * Accepts ISO timestamp string
+ */
+export function formatTimeAgo(isoTimestamp) {
+  if (!isoTimestamp) return null;
+  const now = new Date();
+  const then = new Date(isoTimestamp);
+  if (isNaN(then.getTime())) return null;
+  const diffMs = now - then;
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  return `${Math.floor(diffHours / 24)}d ago`;
+}
+
+/**
  * Format line for display
  */
 /**

@@ -8,7 +8,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import api from './api';
-import { formatOdds } from './src/utils/pickNormalize';
+import { formatOdds, formatTime } from './src/utils/pickNormalize';
 
 // Sports options (moved outside component to prevent recreation on every render)
 const SPORTS = ['NBA', 'NFL', 'MLB', 'NHL', 'NCAAB'];
@@ -138,10 +138,6 @@ const BestOdds = () => {
     fetchGames();
   }, [fetchGames]);
 
-  const formatTime = (date) => {
-    if (!date) return '';
-    return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-  };
 
   const getOddsColor = (odds, bestOdds) => {
     if (odds === bestOdds) return '#00FF88';

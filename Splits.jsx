@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import api from './api'
+import api from './api';
+import { formatTime } from './src/utils/pickNormalize';
 
 const Splits = () => {
   const [sport, setSport] = useState('NBA');
@@ -62,10 +63,6 @@ const Splits = () => {
     fetchSplits();
   };
 
-  const formatTime = (date) => {
-    if (!date) return '';
-    return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-  };
 
   const detectSharpMoney = (game) => {
     const ticketHome = game.home_ticket_pct || 50;

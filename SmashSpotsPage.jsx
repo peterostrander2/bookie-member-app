@@ -12,6 +12,7 @@ import {
   getTierForStyling,
   filterCommunityPicks,
   communitySort,
+  formatTime,
   COMMUNITY_THRESHOLD
 } from './src/utils/pickNormalize';
 import {
@@ -931,9 +932,6 @@ const SmashSpotsPage = () => {
     updatePreference('defaultTab', newTab);
   };
 
-  const formatTime = (date) => {
-    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-  };
 
   const formatCountdown = (ms) => {
     const minutes = Math.floor(ms / 60000);

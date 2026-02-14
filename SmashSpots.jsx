@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from './api';
-import { formatOdds } from './src/utils/pickNormalize';
+import { formatOdds, formatTime } from './src/utils/pickNormalize';
 import { calculateConfidence, fetchSignalContext, getTierInfo, getRecommendationDisplay } from './signalEngine';
 import { recordPick, getAllPicks } from './clvTracker';
 import { explainPick, quickExplain } from './pickExplainer';
@@ -286,10 +286,6 @@ const SmashSpots = () => {
     return '#FFD700';
   };
 
-  const formatTime = (dateStr) => {
-    const date = new Date(dateStr);
-    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-  };
 
   const BookBadge = ({ book }) => {
     const colors = {

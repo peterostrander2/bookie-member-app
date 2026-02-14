@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from './api';
 import { useToast } from './Toast';
+import { formatTime } from './src/utils/pickNormalize';
 import { AddToSlipButton } from './BetSlip';
 import { PropsSkeleton } from './Skeleton';
 import { PullToRefresh, RefreshButton } from './PullToRefresh';
@@ -44,10 +45,6 @@ const Props = () => {
     setLastUpdated(new Date());
   };
 
-  const formatTime = (date) => {
-    if (!date) return '';
-    return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-  };
 
   const getConfidenceColor = (conf) => {
     if (conf >= 75) return '#00FF88';

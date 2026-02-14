@@ -8,6 +8,7 @@
 
 import React, { useState, useEffect } from 'react';
 import api from './api';
+import { formatTime } from './src/utils/pickNormalize';
 
 const SharpAlerts = () => {
   const [sport, setSport] = useState('NBA');
@@ -87,10 +88,6 @@ const SharpAlerts = () => {
     fetchSharpData();
   };
 
-  const formatTime = (date) => {
-    if (!date) return '';
-    return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-  };
 
   const generateMockAlerts = (sport) => {
     const mockGames = {
