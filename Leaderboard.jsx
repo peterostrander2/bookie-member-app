@@ -2,39 +2,16 @@ import React, { useState, useEffect } from 'react';
 import api from './api';
 import { getStats } from './clvTracker';
 
-// Fallback mock data for leaderboard
-const mockLeaders = {
-  monthly: [
-    { rank: 1, username: 'SharpShooter99', roi: 34.5, winRate: 67, picks: 45, streak: 8 },
-    { rank: 2, username: 'EsotericEdge', roi: 28.2, winRate: 63, picks: 52, streak: 5 },
-    { rank: 3, username: 'ModelMaster', roi: 24.8, winRate: 61, picks: 38, streak: 3 },
-    { rank: 4, username: 'ValueHunter', roi: 21.3, winRate: 59, picks: 67, streak: 4 },
-    { rank: 5, username: 'CLVKing', roi: 19.7, winRate: 58, picks: 41, streak: 2 },
-    { rank: 6, username: 'SteamChaser', roi: 17.2, winRate: 56, picks: 55, streak: 0 },
-    { rank: 7, username: 'PickPro', roi: 15.8, winRate: 55, picks: 48, streak: 1 },
-    { rank: 8, username: 'EdgeSeeker', roi: 13.4, winRate: 54, picks: 62, streak: 0 },
-    { rank: 9, username: 'BeatTheBooks', roi: 11.9, winRate: 53, picks: 44, streak: 2 },
-    { rank: 10, username: 'SignalSage', roi: 10.2, winRate: 52, picks: 51, streak: 0 }
-  ],
-  weekly: [
-    { rank: 1, username: 'HotStreak', roi: 45.2, winRate: 78, picks: 9, streak: 7 },
-    { rank: 2, username: 'SharpShooter99', roi: 38.6, winRate: 71, picks: 14, streak: 4 },
-    { rank: 3, username: 'EsotericEdge', roi: 32.1, winRate: 67, picks: 12, streak: 3 },
-    { rank: 4, username: 'ModelMaster', roi: 28.5, winRate: 64, picks: 11, streak: 2 },
-    { rank: 5, username: 'ValueHunter', roi: 24.3, winRate: 62, picks: 16, streak: 1 }
-  ],
-  streaks: [
-    { rank: 1, username: 'HotStreak', streak: 12, lastWin: 'Lakers -4.5' },
-    { rank: 2, username: 'SharpShooter99', streak: 8, lastWin: 'Chiefs ML' },
-    { rank: 3, username: 'EsotericEdge', streak: 7, lastWin: 'Celtics -6' },
-    { rank: 4, username: 'ModelMaster', streak: 5, lastWin: 'Dodgers -1.5' },
-    { rank: 5, username: 'ValueHunter', streak: 4, lastWin: 'Bills -3' }
-  ]
+// Empty state for leaderboard (no mock data)
+const emptyLeaders = {
+  monthly: [],
+  weekly: [],
+  streaks: []
 };
 
 const Leaderboard = () => {
   const [activeTab, setActiveTab] = useState('monthly');
-  const [leaders, setLeaders] = useState(mockLeaders);
+  const [leaders, setLeaders] = useState(emptyLeaders);
   const [loading, setLoading] = useState(true);
   const [userStats, setUserStats] = useState(null);
   const [userRank, setUserRank] = useState(null);
@@ -55,7 +32,7 @@ const Leaderboard = () => {
               winRate: l.win_rate || 0,
               picks: l.total_picks || 0,
               streak: l.current_streak || 0
-            })) || mockLeaders.monthly,
+            })) || emptyLeaders.monthly,
             weekly: data.leaders.weekly?.map((l, i) => ({
               rank: i + 1,
               username: l.username || l.user_id,
@@ -63,13 +40,13 @@ const Leaderboard = () => {
               winRate: l.win_rate || 0,
               picks: l.total_picks || 0,
               streak: l.current_streak || 0
-            })) || mockLeaders.weekly,
+            })) || emptyLeaders.weekly,
             streaks: data.leaders.streaks?.map((l, i) => ({
               rank: i + 1,
               username: l.username || l.user_id,
               streak: l.streak || 0,
               lastWin: l.last_win || 'N/A'
-            })) || mockLeaders.streaks
+            })) || emptyLeaders.streaks
           };
           setLeaders(transformedLeaders);
 

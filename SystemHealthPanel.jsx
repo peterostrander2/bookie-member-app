@@ -55,16 +55,18 @@ const SystemHealthPanel = ({ compact = false }) => {
   };
 
   const getDriftStatus = () => {
-    // Calculate drift from weights history (mock for now)
-    const drift = weights?.drift || Math.random() * 0.15;
+    // Only show drift when we have real data from backend
+    if (weights?.drift == null) return null;
+    const drift = weights.drift;
     if (drift < 0.05) return { level: 'LOW', color: '#00FF88', value: (drift * 100).toFixed(1) };
     if (drift < 0.10) return { level: 'MODERATE', color: '#FFD700', value: (drift * 100).toFixed(1) };
     return { level: 'HIGH', color: '#FF4444', value: (drift * 100).toFixed(1) };
   };
 
   const getBiasStatus = () => {
-    // Calculate bias from grading results (mock for now)
-    const bias = weights?.bias || (Math.random() * 0.2 - 0.1);
+    // Only show bias when we have real data from backend
+    if (weights?.bias == null) return null;
+    const bias = weights.bias;
     const absBias = Math.abs(bias);
     if (absBias < 0.03) return { level: 'NEUTRAL', color: '#00FF88', value: bias > 0 ? 'OVER' : 'UNDER', pct: (absBias * 100).toFixed(1) };
     if (absBias < 0.08) return { level: 'SLIGHT', color: '#FFD700', value: bias > 0 ? 'OVER' : 'UNDER', pct: (absBias * 100).toFixed(1) };
@@ -100,14 +102,21 @@ const SystemHealthPanel = ({ compact = false }) => {
           }} />
         </div>
         <div style={{ display: 'flex', gap: '15px', fontSize: '12px' }}>
-          <div>
-            <span style={{ color: '#6b7280' }}>Drift: </span>
-            <span style={{ color: drift.color }}>{drift.value}%</span>
-          </div>
-          <div>
-            <span style={{ color: '#6b7280' }}>Bias: </span>
-            <span style={{ color: bias.color }}>{bias.pct}% {bias.value}</span>
-          </div>
+          {drift && (
+            <div>
+              <span style={{ color: '#6b7280' }}>Drift: </span>
+              <span style={{ color: drift.color }}>{drift.value}%</span>
+            </div>
+          )}
+          {bias && (
+            <div>
+              <span style={{ color: '#6b7280' }}>Bias: </span>
+              <span style={{ color: bias.color }}>{bias.pct}% {bias.value}</span>
+            </div>
+          )}
+          {!drift && !bias && (
+            <span style={{ color: '#6b7280' }}>No metrics data</span>
+          )}
         </div>
       </div>
     );
@@ -177,58 +186,72 @@ const SystemHealthPanel = ({ compact = false }) => {
       {/* Model Health Metrics */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '25px' }}>
         {/* Drift */}
-        <div style={{
-          backgroundColor: '#12121f',
-          borderRadius: '12px',
-          padding: '20px',
-          border: `1px solid ${drift.color}40`
-        }}>
-          <div style={{ color: '#6b7280', fontSize: '12px', marginBottom: '8px' }}>MODEL DRIFT</div>
-          <div style={{ fontSize: '32px', fontWeight: 'bold', color: drift.color, marginBottom: '5px' }}>
-            {drift.value}%
-          </div>
+        {drift ? (
           <div style={{
-            backgroundColor: drift.color + '20',
-            color: drift.color,
-            padding: '4px 10px',
-            borderRadius: '4px',
-            fontSize: '11px',
-            fontWeight: 'bold',
-            display: 'inline-block'
+            backgroundColor: '#12121f',
+            borderRadius: '12px',
+            padding: '20px',
+            border: `1px solid ${drift.color}40`
           }}>
-            {drift.level}
+            <div style={{ color: '#6b7280', fontSize: '12px', marginBottom: '8px' }}>MODEL DRIFT</div>
+            <div style={{ fontSize: '32px', fontWeight: 'bold', color: drift.color, marginBottom: '5px' }}>
+              {drift.value}%
+            </div>
+            <div style={{
+              backgroundColor: drift.color + '20',
+              color: drift.color,
+              padding: '4px 10px',
+              borderRadius: '4px',
+              fontSize: '11px',
+              fontWeight: 'bold',
+              display: 'inline-block'
+            }}>
+              {drift.level}
+            </div>
+            <div style={{ color: '#6b7280', fontSize: '11px', marginTop: '10px' }}>
+              {drift.level === 'LOW' ? 'Model is stable' : drift.level === 'MODERATE' ? 'Consider retraining soon' : 'Immediate attention needed'}
+            </div>
           </div>
-          <div style={{ color: '#6b7280', fontSize: '11px', marginTop: '10px' }}>
-            {drift.level === 'LOW' ? 'Model is stable' : drift.level === 'MODERATE' ? 'Consider retraining soon' : 'Immediate attention needed'}
+        ) : (
+          <div style={{ backgroundColor: '#12121f', borderRadius: '12px', padding: '20px', border: '1px solid #33333340' }}>
+            <div style={{ color: '#6b7280', fontSize: '12px', marginBottom: '8px' }}>MODEL DRIFT</div>
+            <div style={{ color: '#6b7280', fontSize: '14px' }}>No data available</div>
           </div>
-        </div>
+        )}
 
         {/* Bias */}
-        <div style={{
-          backgroundColor: '#12121f',
-          borderRadius: '12px',
-          padding: '20px',
-          border: `1px solid ${bias.color}40`
-        }}>
-          <div style={{ color: '#6b7280', fontSize: '12px', marginBottom: '8px' }}>PREDICTION BIAS</div>
-          <div style={{ fontSize: '32px', fontWeight: 'bold', color: bias.color, marginBottom: '5px' }}>
-            {bias.pct}%
-          </div>
+        {bias ? (
           <div style={{
-            backgroundColor: bias.color + '20',
-            color: bias.color,
-            padding: '4px 10px',
-            borderRadius: '4px',
-            fontSize: '11px',
-            fontWeight: 'bold',
-            display: 'inline-block'
+            backgroundColor: '#12121f',
+            borderRadius: '12px',
+            padding: '20px',
+            border: `1px solid ${bias.color}40`
           }}>
-            {bias.level} {bias.value}
+            <div style={{ color: '#6b7280', fontSize: '12px', marginBottom: '8px' }}>PREDICTION BIAS</div>
+            <div style={{ fontSize: '32px', fontWeight: 'bold', color: bias.color, marginBottom: '5px' }}>
+              {bias.pct}%
+            </div>
+            <div style={{
+              backgroundColor: bias.color + '20',
+              color: bias.color,
+              padding: '4px 10px',
+              borderRadius: '4px',
+              fontSize: '11px',
+              fontWeight: 'bold',
+              display: 'inline-block'
+            }}>
+              {bias.level} {bias.value}
+            </div>
+            <div style={{ color: '#6b7280', fontSize: '11px', marginTop: '10px' }}>
+              {bias.level === 'NEUTRAL' ? 'Balanced predictions' : `Leaning ${bias.value} by ${bias.pct}%`}
+            </div>
           </div>
-          <div style={{ color: '#6b7280', fontSize: '11px', marginTop: '10px' }}>
-            {bias.level === 'NEUTRAL' ? 'Balanced predictions' : `Leaning ${bias.value} by ${bias.pct}%`}
+        ) : (
+          <div style={{ backgroundColor: '#12121f', borderRadius: '12px', padding: '20px', border: '1px solid #33333340' }}>
+            <div style={{ color: '#6b7280', fontSize: '12px', marginBottom: '8px' }}>PREDICTION BIAS</div>
+            <div style={{ color: '#6b7280', fontSize: '14px' }}>No data available</div>
           </div>
-        </div>
+        )}
 
         {/* Auto-Grader */}
         <div style={{
@@ -259,7 +282,7 @@ const SystemHealthPanel = ({ compact = false }) => {
       </div>
 
       {/* Weight Tuning Alert */}
-      {(drift.level !== 'LOW' || bias.level !== 'NEUTRAL') && (
+      {((drift && drift.level !== 'LOW') || (bias && bias.level !== 'NEUTRAL')) && (
         <div style={{
           backgroundColor: '#FFD70015',
           border: '1px solid #FFD70040',
@@ -273,8 +296,8 @@ const SystemHealthPanel = ({ compact = false }) => {
           <div>
             <div style={{ color: '#FFD700', fontWeight: 'bold', marginBottom: '4px' }}>Weight Tuning Recommended</div>
             <div style={{ color: '#9ca3af', fontSize: '13px' }}>
-              {drift.level !== 'LOW' && `Drift detected at ${drift.value}%. `}
-              {bias.level !== 'NEUTRAL' && `${bias.level} ${bias.value} bias of ${bias.pct}%. `}
+              {drift && drift.level !== 'LOW' && `Drift detected at ${drift.value}%. `}
+              {bias && bias.level !== 'NEUTRAL' && `${bias.level} ${bias.value} bias of ${bias.pct}%. `}
               Consider running the auto-tuner.
             </div>
           </div>

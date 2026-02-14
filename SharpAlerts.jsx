@@ -66,17 +66,13 @@ const SharpAlerts = () => {
         }).filter(g => g.has_alert);
       }
 
-      // If no data, generate mock alerts for demonstration
-      if (sharpAlerts.length === 0) {
-        sharpAlerts = generateMockAlerts(sport);
-      }
-
+      // No fake data fallback - show empty state if no real data
       setAlerts(sharpAlerts);
       setSplits(splitsRes?.games || splitsRes || []);
       setLastUpdated(new Date());
     } catch (err) {
       console.error('Error fetching sharp data:', err);
-      setAlerts(generateMockAlerts(sport));
+      setAlerts([]);
       setLastUpdated(new Date());
     }
     setLoading(false);
@@ -86,81 +82,6 @@ const SharpAlerts = () => {
   const handleRefresh = () => {
     setRefreshing(true);
     fetchSharpData();
-  };
-
-
-  const generateMockAlerts = (sport) => {
-    const mockGames = {
-      NBA: [
-        {
-          home_team: 'Lakers', away_team: 'Celtics', ticket_pct: 72, money_pct: 45, spread: -3.5, time: '7:30 PM',
-          opening_spread: -4.5, line_movement: '+1', movement_direction: 'toward_sharp',
-          estimated_handle: '$2.4M', steam_move: true, alert_time: '2h ago',
-          historical_hit_rate: 68, total_bets: 12500, sharp_bets_count: 8
-        },
-        {
-          home_team: 'Warriors', away_team: 'Suns', ticket_pct: 65, money_pct: 38, spread: -5.5, time: '10:00 PM',
-          opening_spread: -6.5, line_movement: '+1', movement_direction: 'toward_sharp',
-          estimated_handle: '$1.8M', steam_move: false, alert_time: '45m ago',
-          historical_hit_rate: 62, total_bets: 8200, sharp_bets_count: 5
-        },
-        {
-          home_team: 'Bucks', away_team: 'Heat', ticket_pct: 58, money_pct: 78, spread: -7, time: '8:00 PM',
-          opening_spread: -5.5, line_movement: '-1.5', movement_direction: 'with_sharp',
-          estimated_handle: '$3.1M', steam_move: true, alert_time: '3h ago',
-          historical_hit_rate: 71, total_bets: 15800, sharp_bets_count: 12
-        }
-      ],
-      NFL: [
-        {
-          home_team: 'Chiefs', away_team: 'Bills', ticket_pct: 68, money_pct: 42, spread: -3, time: '1:00 PM',
-          opening_spread: -4, line_movement: '+1', movement_direction: 'toward_sharp',
-          estimated_handle: '$8.5M', steam_move: true, alert_time: '1h ago',
-          historical_hit_rate: 65, total_bets: 45000, sharp_bets_count: 22
-        },
-        {
-          home_team: 'Eagles', away_team: 'Cowboys', ticket_pct: 55, money_pct: 75, spread: -2.5, time: '4:25 PM',
-          opening_spread: -1.5, line_movement: '-1', movement_direction: 'with_sharp',
-          estimated_handle: '$6.2M', steam_move: false, alert_time: '4h ago',
-          historical_hit_rate: 59, total_bets: 38000, sharp_bets_count: 15
-        }
-      ],
-      MLB: [
-        {
-          home_team: 'Yankees', away_team: 'Red Sox', ticket_pct: 70, money_pct: 48, spread: -1.5, time: '7:05 PM',
-          opening_spread: -1.5, line_movement: '0', movement_direction: 'no_move',
-          estimated_handle: '$1.2M', steam_move: false, alert_time: '30m ago',
-          historical_hit_rate: 58, total_bets: 6500, sharp_bets_count: 4
-        }
-      ],
-      NHL: [
-        {
-          home_team: 'Bruins', away_team: 'Rangers', ticket_pct: 62, money_pct: 40, spread: -1.5, time: '7:00 PM',
-          opening_spread: -1.5, line_movement: '0', movement_direction: 'no_move',
-          estimated_handle: '$850K', steam_move: false, alert_time: '1h ago',
-          historical_hit_rate: 61, total_bets: 4200, sharp_bets_count: 3
-        }
-      ],
-      NCAAB: [
-        {
-          home_team: 'Duke', away_team: 'UNC', ticket_pct: 75, money_pct: 52, spread: -4.5, time: '9:00 PM',
-          opening_spread: -6, line_movement: '+1.5', movement_direction: 'toward_sharp',
-          estimated_handle: '$2.8M', steam_move: true, alert_time: '2h ago',
-          historical_hit_rate: 64, total_bets: 22000, sharp_bets_count: 18
-        }
-      ]
-    };
-
-    return (mockGames[sport] || mockGames.NBA).map(game => {
-      const divergence = Math.abs(game.money_pct - game.ticket_pct);
-      return {
-        ...game,
-        divergence,
-        sharp_side: game.money_pct < game.ticket_pct ? 'SHARP_ON_UNDERDOG' : 'SHARP_ON_FAVORITE',
-        strength: divergence >= 25 ? 'STRONG' : divergence >= 20 ? 'MODERATE' : 'MILD',
-        has_alert: true
-      };
-    });
   };
 
   const getStrengthColor = (strength) => {

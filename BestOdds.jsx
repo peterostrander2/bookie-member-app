@@ -29,75 +29,6 @@ const BOOK_COLORS = {
   betonline: '#2C2C2C'
 };
 
-// Mock books for generating demo data (moved outside component)
-const MOCK_BOOKS = ['fanduel', 'draftkings', 'betmgm', 'caesars', 'pinnacle', 'pointsbet', 'betrivers', 'bet365'];
-
-// Base game data for each sport (moved outside component)
-const BASE_GAMES = {
-  NBA: [
-    { home_team: 'Lakers', away_team: 'Celtics', spread: -3.5, total: 224.5, time: '7:30 PM' },
-    { home_team: 'Warriors', away_team: 'Suns', spread: -5.5, total: 231, time: '10:00 PM' },
-    { home_team: 'Bucks', away_team: 'Heat', spread: -7, total: 219.5, time: '8:00 PM' }
-  ],
-  NFL: [
-    { home_team: 'Chiefs', away_team: 'Bills', spread: -3, total: 51.5, time: '1:00 PM' },
-    { home_team: 'Eagles', away_team: 'Cowboys', spread: -2.5, total: 48, time: '4:25 PM' }
-  ],
-  MLB: [
-    { home_team: 'Yankees', away_team: 'Red Sox', spread: -1.5, total: 9.5, time: '7:05 PM' }
-  ],
-  NHL: [
-    { home_team: 'Bruins', away_team: 'Rangers', spread: -1.5, total: 6, time: '7:00 PM' }
-  ],
-  NCAAB: [
-    { home_team: 'Duke', away_team: 'UNC', spread: -4.5, total: 152.5, time: '9:00 PM' }
-  ]
-};
-
-// Generate mock games function (moved outside component)
-const generateMockGames = (sport) => {
-  return (BASE_GAMES[sport] || BASE_GAMES.NBA).map(game => {
-    const bookOdds = {};
-    MOCK_BOOKS.forEach(book => {
-      const spreadVariance = (Math.random() - 0.5) * 0.5;
-      const oddsVariance = Math.floor((Math.random() - 0.5) * 10);
-
-      bookOdds[book] = {
-        spread: Math.round((game.spread + spreadVariance) * 2) / 2,
-        spread_odds: -110 + oddsVariance,
-        total: game.total + (Math.random() > 0.7 ? 0.5 : 0),
-        over_odds: -110 + Math.floor((Math.random() - 0.5) * 8),
-        under_odds: -110 + Math.floor((Math.random() - 0.5) * 8),
-        home_ml: game.spread < 0 ? -150 + Math.floor((Math.random() - 0.5) * 30) : 130 + Math.floor((Math.random() - 0.5) * 30),
-        away_ml: game.spread < 0 ? 130 + Math.floor((Math.random() - 0.5) * 30) : -150 + Math.floor((Math.random() - 0.5) * 30)
-      };
-    });
-
-    // Find best odds
-    const bestSpreadOdds = Math.max(...Object.values(bookOdds).map(b => b.spread_odds));
-    const bestOverOdds = Math.max(...Object.values(bookOdds).map(b => b.over_odds));
-    const bestUnderOdds = Math.max(...Object.values(bookOdds).map(b => b.under_odds));
-    const bestHomeML = Math.max(...Object.values(bookOdds).map(b => b.home_ml));
-    const bestAwayML = Math.max(...Object.values(bookOdds).map(b => b.away_ml));
-
-    return {
-      ...game,
-      books: bookOdds,
-      best: {
-        spread_odds: bestSpreadOdds,
-        spread_book: Object.keys(bookOdds).find(b => bookOdds[b].spread_odds === bestSpreadOdds),
-        over_odds: bestOverOdds,
-        over_book: Object.keys(bookOdds).find(b => bookOdds[b].over_odds === bestOverOdds),
-        under_odds: bestUnderOdds,
-        under_book: Object.keys(bookOdds).find(b => bookOdds[b].under_odds === bestUnderOdds),
-        home_ml: bestHomeML,
-        home_ml_book: Object.keys(bookOdds).find(b => bookOdds[b].home_ml === bestHomeML),
-        away_ml: bestAwayML,
-        away_ml_book: Object.keys(bookOdds).find(b => bookOdds[b].away_ml === bestAwayML)
-      }
-    };
-  });
-};
 
 const BestOdds = () => {
   const [sport, setSport] = useState('NBA');
@@ -117,12 +48,12 @@ const BestOdds = () => {
         const gameData = data.games || data.odds || data;
         setGames(Array.isArray(gameData) ? gameData : []);
       } else {
-        // Generate mock data for demonstration
-        setGames(generateMockGames(sport));
+        // No odds data available
+        setGames([]);
       }
     } catch (err) {
       console.error('Error fetching odds:', err);
-      setGames(generateMockGames(sport));
+      setGames([]);
     }
     setLoading(false);
     setRefreshing(false);

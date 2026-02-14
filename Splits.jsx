@@ -28,30 +28,12 @@ const Splits = () => {
       let combined = [];
       if (splitsData?.games || splitsData?.splits) {
         combined = splitsData.games || splitsData.splits || [];
-      } else if (oddsData?.games) {
-        combined = oddsData.games.map(g => ({
-          ...g,
-          home_ticket_pct: Math.floor(Math.random() * 30) + 35,
-          away_ticket_pct: 0,
-          home_money_pct: 0,
-          away_money_pct: 0
-        }));
-        combined.forEach(g => {
-          g.away_ticket_pct = 100 - g.home_ticket_pct;
-          g.home_money_pct = g.home_ticket_pct + Math.floor(Math.random() * 30) - 15;
-          g.home_money_pct = Math.max(20, Math.min(80, g.home_money_pct));
-          g.away_money_pct = 100 - g.home_money_pct;
-        });
       }
-      
-      if (combined.length === 0) {
-        combined = MOCK_SPLITS;
-      }
-      
+      // No fake data fallback - show empty state if no real data
       setGames(combined);
     } catch (err) {
       console.error(err);
-      setGames(MOCK_SPLITS);
+      setGames([]);
     }
     setLoading(false);
     setRefreshing(false);
@@ -363,44 +345,5 @@ const Splits = () => {
     </div>
   );
 };
-
-const MOCK_SPLITS = [
-  {
-    home_team: 'Boston Celtics',
-    away_team: 'Los Angeles Lakers',
-    spread: -6.5,
-    opening_spread: -5.5,
-    total: 224.5,
-    home_ticket_pct: 22,
-    away_ticket_pct: 78,
-    home_money_pct: 69,
-    away_money_pct: 31,
-    game_time: '7:30 PM ET'
-  },
-  {
-    home_team: 'Golden State Warriors',
-    away_team: 'Phoenix Suns',
-    spread: -3.5,
-    opening_spread: -4,
-    total: 232,
-    home_ticket_pct: 45,
-    away_ticket_pct: 55,
-    home_money_pct: 52,
-    away_money_pct: 48,
-    game_time: '10:00 PM ET'
-  },
-  {
-    home_team: 'Miami Heat',
-    away_team: 'Milwaukee Bucks',
-    spread: 4.5,
-    opening_spread: 3.5,
-    total: 218.5,
-    home_ticket_pct: 35,
-    away_ticket_pct: 65,
-    home_money_pct: 58,
-    away_money_pct: 42,
-    game_time: '8:00 PM ET'
-  }
-];
 
 export default Splits;

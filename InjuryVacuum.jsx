@@ -40,107 +40,14 @@ const InjuryVacuum = () => {
         const enhanced = enhanceWithVacuumAnalysis(injuryData, sport);
         setInjuries(enhanced);
       } else {
-        setInjuries(generateMockInjuries(sport));
+        // No injury data available
+        setInjuries([]);
       }
     } catch (err) {
       console.error('Error fetching injuries:', err);
-      setInjuries(generateMockInjuries(sport));
+      setInjuries([]);
     }
     setLoading(false);
-  };
-
-  const generateMockInjuries = (sport) => {
-    const mockData = {
-      NBA: [
-        {
-          team: 'Lakers',
-          opponent: 'Celtics',
-          game_time: '7:30 PM',
-          injuries: [
-            { player: 'Anthony Davis', status: 'OUT', position: 'PF/C', impact: 'HIGH', usage: 28.5, points: 24.1, rebounds: 12.4 },
-            { player: 'Austin Reaves', status: 'QUESTIONABLE', position: 'SG', impact: 'MEDIUM', usage: 21.2, points: 15.8 }
-          ],
-          vacuum: {
-            total_usage_lost: 28.5,
-            beneficiaries: [
-              { player: 'Rui Hachimura', usage_boost: '+8%', projected_boost: '+6.5 pts' },
-              { player: 'Jaxson Hayes', usage_boost: '+5%', projected_boost: '+4.2 pts' }
-            ],
-            team_impact: 'SIGNIFICANT',
-            recommendation: 'FADE Lakers, consider UNDER'
-          }
-        },
-        {
-          team: 'Warriors',
-          opponent: 'Suns',
-          game_time: '10:00 PM',
-          injuries: [
-            { player: 'Stephen Curry', status: 'OUT', position: 'PG', impact: 'CRITICAL', usage: 31.2, points: 29.4, assists: 6.1 }
-          ],
-          vacuum: {
-            total_usage_lost: 31.2,
-            beneficiaries: [
-              { player: 'Klay Thompson', usage_boost: '+10%', projected_boost: '+8.2 pts' },
-              { player: 'Brandin Podziemski', usage_boost: '+7%', projected_boost: '+5.5 pts' }
-            ],
-            team_impact: 'CRITICAL',
-            recommendation: 'STRONG FADE Warriors, heavy UNDER'
-          }
-        }
-      ],
-      NFL: [
-        {
-          team: 'Chiefs',
-          opponent: 'Bills',
-          game_time: '1:00 PM',
-          injuries: [
-            { player: 'Travis Kelce', status: 'QUESTIONABLE', position: 'TE', impact: 'HIGH', targets: 9.2, yards: 85.4 }
-          ],
-          vacuum: {
-            total_usage_lost: 0,
-            beneficiaries: [
-              { player: 'Noah Gray', usage_boost: '+4 targets', projected_boost: '+35 yards' }
-            ],
-            team_impact: 'MODERATE',
-            recommendation: 'Monitor pregame, fade if OUT'
-          }
-        }
-      ],
-      MLB: [
-        {
-          team: 'Yankees',
-          opponent: 'Red Sox',
-          game_time: '7:05 PM',
-          injuries: [
-            { player: 'Aaron Judge', status: 'OUT', position: 'RF', impact: 'CRITICAL', avg: '.310', hr: 42, rbi: 98 }
-          ],
-          vacuum: {
-            total_usage_lost: 0,
-            beneficiaries: [],
-            team_impact: 'SIGNIFICANT',
-            recommendation: 'FADE Yankees run line, consider UNDER'
-          }
-        }
-      ],
-      NHL: [
-        {
-          team: 'Bruins',
-          opponent: 'Rangers',
-          game_time: '7:00 PM',
-          injuries: [
-            { player: 'David Pastrnak', status: 'OUT', position: 'RW', impact: 'HIGH', goals: 28, assists: 35 }
-          ],
-          vacuum: {
-            total_usage_lost: 0,
-            beneficiaries: [],
-            team_impact: 'SIGNIFICANT',
-            recommendation: 'FADE Bruins, consider UNDER'
-          }
-        }
-      ]
-    };
-
-    return mockData[sport] || mockData.NBA;
   };
 
   const enhanceWithVacuumAnalysis = (injuryData, sport) => {
