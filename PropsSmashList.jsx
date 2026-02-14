@@ -1479,6 +1479,7 @@ const PropsSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortBy
       setPicks(propPicks.length === 0 ? [] : propPicks);
     } catch (err) {
       console.error('Error fetching props picks:', err);
+      toast.error('Failed to load player props');
       setPicks([]);
     } finally {
       setLoading(false);

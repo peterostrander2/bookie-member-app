@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import api from './api';
 import {
   getDailyEsotericReading,
@@ -18,31 +18,42 @@ const Esoteric = () => {
   const [homeTeam, setHomeTeam] = useState('');
   const [gameDate, setGameDate] = useState(new Date().toISOString().split('T')[0]);
   const [spread, setSpread] = useState('');
+  const isMountedRef = useRef(true);
   const [total, setTotal] = useState('');
   const [analysis, setAnalysis] = useState(null);
   const [showCiphers, setShowCiphers] = useState(false);
 
   useEffect(() => {
+    isMountedRef.current = true;
+
     // Load daily reading on mount (frontend calculation as fallback)
     const reading = getDailyEsotericReading(new Date());
     setDailyReading(reading);
 
     // Also fetch from backend for historical accuracy data
-    fetchBackendEnergy();
-  }, []);
-
-  const fetchBackendEnergy = async () => {
-    setLoadingBackend(true);
-    try {
-      const data = await api.getTodayEnergy();
-      if (data) {
-        setBackendEnergy(data);
+    const fetchBackendEnergy = async () => {
+      setLoadingBackend(true);
+      try {
+        const data = await api.getTodayEnergy();
+        if (!isMountedRef.current) return;
+        if (data) {
+          setBackendEnergy(data);
+        }
+      } catch (err) {
+        if (!isMountedRef.current) return;
+        console.error('Error fetching backend energy:', err);
       }
-    } catch (err) {
-      console.error('Error fetching backend energy:', err);
-    }
-    setLoadingBackend(false);
-  };
+      if (isMountedRef.current) {
+        setLoadingBackend(false);
+      }
+    };
+
+    fetchBackendEnergy();
+
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   const analyzeMatchup = () => {
     if (!awayTeam || !homeTeam) return;

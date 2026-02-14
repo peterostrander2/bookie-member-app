@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import api from './api';
 import { getAllPicks, getStats } from './clvTracker';
@@ -7,6 +7,7 @@ import SharpMoneyWidget from './SharpMoneyWidget';
 import { Skeleton } from './Skeleton';
 import SearchBar from './SearchBar';
 import { useFavoriteSport } from './usePreferences';
+import { useToast } from './Toast';
 
 // Tier win rate stats (historical averages)
 const TIER_WIN_RATES = {
@@ -53,6 +54,8 @@ const Dashboard = () => {
   const [correlationStatus, setCorrelationStatus] = useState(null);
   const [alerts, setAlerts] = useState([]);
   const { favoriteSport: activeSport, setFavoriteSport: setActiveSport } = useFavoriteSport();
+  const toast = useToast();
+  const isMountedRef = useRef(true);
   const [topPick, setTopPick] = useState(null);
   const [topPickLoading, setTopPickLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(null);
@@ -69,10 +72,21 @@ const Dashboard = () => {
   const [showEsoteric, setShowEsoteric] = useState(true);
 
   useEffect(() => {
-    fetchData();
-    loadTrackedStats();
-    // Mark as visited after first load
-    markAsVisited();
+    let cancelled = false;
+
+    const init = async () => {
+      await fetchData(cancelled);
+      if (!cancelled) {
+        loadTrackedStats();
+        markAsVisited();
+      }
+    };
+
+    init();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Load yesterday's graded pick from tracked history
@@ -119,6 +133,8 @@ const Dashboard = () => {
   const fetchSharpAlert = useCallback(async () => {
     try {
       const data = await api.getSharpMoney(activeSport);
+      if (!isMountedRef.current) return;
+
       if (data && data.movements && data.movements.length > 0) {
         // Get the most significant sharp move
         const sorted = [...data.movements].sort((a, b) =>
@@ -133,11 +149,13 @@ const Dashboard = () => {
       }
     } catch (err) {
       console.error('Error fetching sharp alert:', err);
+      // Silent failure for secondary feature - no toast needed
     }
   }, [activeSport]);
 
   // Memoized fetch function to prevent recreation
   const fetchTopPick = useCallback(async () => {
+    if (!isMountedRef.current) return;
     setTopPickLoading(true);
     try {
       // Also load fallback data
@@ -146,6 +164,10 @@ const Dashboard = () => {
 
       // Fetch best bets from user's favorite sport
       const data = await api.getBestBets(activeSport);
+
+      // Check mount state after async call
+      if (!isMountedRef.current) return;
+
       let allPicks = [];
 
       // Collect picks from different response formats
@@ -186,12 +208,23 @@ const Dashboard = () => {
       }
     } catch (err) {
       console.error('Error fetching top pick:', err);
+      if (!isMountedRef.current) return;
       // Use demo pick on error
       const sportDemo = DEMO_PICKS.find(p => p.sport === activeSport) || DEMO_PICKS[0];
       setTopPick({ ...sportDemo, isDemo: true });
     }
-    setTopPickLoading(false);
+    if (isMountedRef.current) {
+      setTopPickLoading(false);
+    }
   }, [activeSport, loadYesterdayPick, fetchSharpAlert]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // Refetch top pick when favorite sport changes
   useEffect(() => {
@@ -260,7 +293,7 @@ const Dashboard = () => {
     });
   };
 
-  const fetchData = async () => {
+  const fetchData = async (cancelled = false) => {
     setDailyLessonLoading(true);
     setDailyLessonError(null);
     try {
@@ -270,6 +303,10 @@ const Dashboard = () => {
         api.getInjuries(activeSport).catch(() => null),
         api.getDailyLesson().catch(() => null)
       ]);
+
+      // Check if component unmounted before setting state
+      if (cancelled) return;
+
       setHealth(healthData);
       setTodayEnergy(energyData);
       setLastUpdated(new Date());
@@ -301,10 +338,12 @@ const Dashboard = () => {
         .slice(0, 5);
       setRecentWins(recentWinPicks);
     } catch (err) {
-      console.error(err);
+      console.error('Dashboard fetchData error:', err);
     }
-    setDailyLessonLoading(false);
-    setLoading(false);
+    if (!cancelled) {
+      setDailyLessonLoading(false);
+      setLoading(false);
+    }
   };
 
   const formatTime = (date) => {

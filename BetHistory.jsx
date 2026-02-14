@@ -5,7 +5,7 @@
  * and performance statistics.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import api from './api';
 import { useToast } from './Toast';
 
@@ -16,32 +16,48 @@ const BetHistory = () => {
   const [filter, setFilter] = useState('all'); // all, pending, won, lost, push
   const [sport, setSport] = useState('all');
   const toast = useToast();
+  const isMountedRef = useRef(true);
 
   const sports = ['all', 'NBA', 'NFL', 'MLB', 'NHL'];
 
-  useEffect(() => {
-    loadBetHistory();
-  }, []);
-
-  const loadBetHistory = async () => {
+  const loadBetHistory = useCallback(async () => {
     setLoading(true);
     try {
       const data = await api.getBetHistory();
+      if (!isMountedRef.current) return;
       setBets(data.bets || []);
       setStats(data.stats || {});
     } catch (err) {
+      if (!isMountedRef.current) return;
       toast.error('Failed to load bet history');
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    loadBetHistory();
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, [loadBetHistory]);
 
   const handleGrade = async (betId, outcome) => {
-    const result = await api.gradeBet(betId, outcome);
-    if (result) {
-      toast.success(`Bet marked as ${outcome}`);
-      loadBetHistory();
-    } else {
+    try {
+      const result = await api.gradeBet(betId, outcome);
+      if (!isMountedRef.current) return;
+      if (result) {
+        toast.success(`Bet marked as ${outcome}`);
+        loadBetHistory();
+      } else {
+        toast.error('Failed to grade bet');
+      }
+    } catch (err) {
+      if (!isMountedRef.current) return;
+      console.error('Grade bet error:', err);
       toast.error('Failed to grade bet');
     }
   };

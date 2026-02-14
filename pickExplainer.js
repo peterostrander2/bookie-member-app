@@ -18,20 +18,35 @@ import { getTierInfo } from './signalEngine';
  * @returns {Object} Full explanation with summary, bullets, and confidence breakdown
  */
 export const explainPick = (game, analysis, sport) => {
-  const { confidence, tier, signals, recommendation } = analysis;
+  // Guard against null/undefined analysis
+  if (!analysis) {
+    return {
+      headline: 'Analysis not available',
+      summary: 'No analysis data available for this pick.',
+      bullets: [],
+      confidenceBreakdown: [],
+      risks: [],
+      tierInfo: getTierInfo('UNKNOWN'),
+      confidence: 0,
+      recommendation: 'WAIT'
+    };
+  }
+
+  const { confidence = 0, tier, signals = [], recommendation = 'WAIT' } = analysis;
   const tierInfo = getTierInfo(tier);
 
   // Generate headline
   const headline = generateHeadline(recommendation, confidence, game);
 
-  // Generate bullet points from top signals
-  const bullets = signals
+  // Generate bullet points from top signals (guard against non-array signals)
+  const safeSignals = Array.isArray(signals) ? signals : [];
+  const bullets = safeSignals
     .filter(s => s.score >= 55)
     .slice(0, 5)
     .map(s => generateBullet(s, sport));
 
   // Generate confidence breakdown
-  const confidenceBreakdown = generateConfidenceBreakdown(signals);
+  const confidenceBreakdown = generateConfidenceBreakdown(safeSignals);
 
   // Generate risk factors
   const risks = generateRisks(analysis, game, sport);
@@ -181,7 +196,9 @@ const generateConfidenceBreakdown = (signals) => {
     esoteric: { signals: ['moon_phase', 'numerology', 'gematria', 'sacred_geometry', 'zodiac'], score: 0, count: 0 }
   };
 
-  signals.forEach(signal => {
+  // Guard against null/undefined signals
+  const safeSignals = Array.isArray(signals) ? signals : [];
+  safeSignals.forEach(signal => {
     Object.entries(categories).forEach(([cat, data]) => {
       if (data.signals.includes(signal.name)) {
         data.score += signal.score;
@@ -203,8 +220,11 @@ const generateConfidenceBreakdown = (signals) => {
 const generateRisks = (analysis, game, sport) => {
   const risks = [];
 
+  // Guard against null/undefined analysis or signals
+  const signals = Array.isArray(analysis?.signals) ? analysis.signals : [];
+
   // Check for weak signals
-  const weakSignals = analysis.signals.filter(s => s.score < 50);
+  const weakSignals = signals.filter(s => s.score < 50);
   if (weakSignals.length >= 3) {
     risks.push({
       level: 'medium',

@@ -1182,6 +1182,7 @@ const GameSmashList = ({ sport = 'NBA', minConfidence = 0, minScore = 0, sortByC
       setPicks(gamePicks.length === 0 ? [] : gamePicks);
     } catch (err) {
       console.error('Error fetching game picks:', err);
+      toast.error('Failed to load game picks');
       setPicks([]);
     } finally {
       setLoading(false);

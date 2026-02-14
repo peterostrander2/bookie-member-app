@@ -212,11 +212,17 @@ const TodaysBestBets = memo(({ sport, onPickClick, onError }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    let cancelled = false;
+
     const fetchBestBets = async () => {
       setLoading(true);
       setError(null);
       try {
         const data = await api.getBestBets(sport);
+
+        // Check if component unmounted during fetch
+        if (cancelled) return;
+
         if (data?.error) {
           onError?.(data.error);
           setBestPicks([]);
@@ -267,6 +273,7 @@ const TodaysBestBets = memo(({ sport, onPickClick, onError }) => {
           }
         }
       } catch (err) {
+        if (cancelled) return;
         const endpoint = `/live/best-bets/${sport}`;
         console.error(`[TodaysBestBets] Failed: ${endpoint}`, err?.status || err?.message || err);
         setError({ message: err?.message || 'Failed to load picks', endpoint, status: err?.status });
@@ -274,11 +281,17 @@ const TodaysBestBets = memo(({ sport, onPickClick, onError }) => {
         setBestPicks([]);
         setDisplayTier('NONE');
       }
-      setLoading(false);
+      if (!cancelled) {
+        setLoading(false);
+      }
     };
 
     fetchBestBets();
-  }, [sport]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [sport, onError]);
 
   // v10.4 tier-based styling
   const tierDisplayConfig = displayTier === TIERS.GOLD_STAR
