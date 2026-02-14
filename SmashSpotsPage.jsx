@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, memo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, memo, useRef, useMemo } from 'react';
 import PropsSmashList from './PropsSmashList';
 import GameSmashList from './GameSmashList';
 import { usePreferences } from './usePreferences';
@@ -294,12 +294,16 @@ const TodaysBestBets = memo(({ sport, onPickClick, onError }) => {
     };
   }, [sport, onError]);
 
-  // v10.4 tier-based styling
-  const tierDisplayConfig = displayTier === TIERS.GOLD_STAR
-    ? { color: '#FFD700', label: 'GOLD STAR', borderColor: '#FFD70040', bgGradient: 'linear-gradient(135deg, #2a2a0a 0%, #3a3a1a 100%)', emoji: '🌟' }
-    : displayTier === TIERS.EDGE_LEAN
-    ? { color: '#10B981', label: 'EDGE LEAN', borderColor: '#10B98140', bgGradient: 'linear-gradient(135deg, #0a2a1a 0%, #1a3a2a 100%)', emoji: '💚' }
-    : { color: '#F59E0B', label: 'MONITOR', borderColor: '#F59E0B40', bgGradient: 'linear-gradient(135deg, #2a1a0a 0%, #3a2a1a 100%)', emoji: '🟡' };
+  // v10.4 tier-based styling - memoized to prevent object recreation
+  const tierDisplayConfig = useMemo(() => {
+    if (displayTier === TIERS.GOLD_STAR) {
+      return { color: '#FFD700', label: 'GOLD STAR', borderColor: '#FFD70040', bgGradient: 'linear-gradient(135deg, #2a2a0a 0%, #3a3a1a 100%)', emoji: '🌟' };
+    }
+    if (displayTier === TIERS.EDGE_LEAN) {
+      return { color: '#10B981', label: 'EDGE LEAN', borderColor: '#10B98140', bgGradient: 'linear-gradient(135deg, #0a2a1a 0%, #1a3a2a 100%)', emoji: '💚' };
+    }
+    return { color: '#F59E0B', label: 'MONITOR', borderColor: '#F59E0B40', bgGradient: 'linear-gradient(135deg, #2a1a0a 0%, #3a2a1a 100%)', emoji: '🟡' };
+  }, [displayTier]);
 
   if (loading) {
     return (
@@ -765,6 +769,13 @@ const TodaysBestBets = memo(({ sport, onPickClick, onError }) => {
   );
 });
 
+// Pure function - moved outside component to prevent recreation
+const formatCountdown = (ms) => {
+  const minutes = Math.floor(ms / 60000);
+  const seconds = Math.floor((ms % 60000) / 1000);
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+};
+
 const SmashSpotsPage = () => {
   const { preferences, updatePreference } = usePreferences();
   const { showToast } = useToast();
@@ -930,13 +941,6 @@ const SmashSpotsPage = () => {
   const handleTabChange = (newTab) => {
     setActiveTab(newTab);
     updatePreference('defaultTab', newTab);
-  };
-
-
-  const formatCountdown = (ms) => {
-    const minutes = Math.floor(ms / 60000);
-    const seconds = Math.floor((ms % 60000) / 1000);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
 
