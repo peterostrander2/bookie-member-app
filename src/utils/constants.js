@@ -60,3 +60,27 @@ export const STAT_BADGE_STYLE_INACTIVE = {
   backgroundColor: '#1a1a2e',
   color: '#6B7280'
 };
+
+/**
+ * Get agreeing models from pick data
+ * Uses real backend data from pick.agreeing_models
+ * Returns empty array if not available (never fakes data)
+ */
+export const getAgreeingModels = (pick) => {
+  if (pick?.agreeing_models && Array.isArray(pick.agreeing_models)) {
+    return pick.agreeing_models.map(id => AI_MODELS.find(m => m.id === id)).filter(Boolean);
+  }
+  return [];
+};
+
+/**
+ * Get aligning pillars from pick data
+ * Uses real backend data from pick.aligning_pillars
+ * Returns empty array if not available (never fakes data)
+ */
+export const getAligningPillars = (pick) => {
+  if (pick?.aligning_pillars && Array.isArray(pick.aligning_pillars)) {
+    return pick.aligning_pillars.map(id => PILLARS.find(p => p.id === id)).filter(Boolean);
+  }
+  return [];
+};

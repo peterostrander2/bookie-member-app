@@ -34,7 +34,9 @@ import {
   AI_MODELS,
   PILLARS,
   STAT_BADGE_STYLE,
-  STAT_BADGE_STYLE_RIGHT
+  STAT_BADGE_STYLE_RIGHT,
+  getAgreeingModels,
+  getAligningPillars
 } from './src/utils/constants';
 import BoostBreakdownPanel from './components/BoostBreakdownPanel';
 import StatusBadgeRow from './components/StatusBadgeRow';
@@ -235,27 +237,6 @@ const getKeyStats = (pick) => {
     trend: pick.key_stats.hit_rate != null ? `Hit this line in ${pick.key_stats.hit_rate}% of recent games` : null,
     matchup: pick.key_stats.matchup_note || null
   };
-};
-
-// Get which models agree - uses REAL data from pick.agreeing_models
-// Falls back to deriving from ai_score if backend provides the score
-const getAgreeingModels = (pick) => {
-  // Use real data if backend provides it
-  if (pick.agreeing_models && Array.isArray(pick.agreeing_models)) {
-    return pick.agreeing_models.map(id => AI_MODELS.find(m => m.id === id)).filter(Boolean);
-  }
-  // No real data available
-  return [];
-};
-
-// Get which pillars align - uses REAL data from pick.aligning_pillars
-const getAligningPillars = (pick) => {
-  // Use real data if backend provides it
-  if (pick.aligning_pillars && Array.isArray(pick.aligning_pillars)) {
-    return pick.aligning_pillars.map(id => PILLARS.find(p => p.id === id)).filter(Boolean);
-  }
-  // No real data available
-  return [];
 };
 
 // Memoized prop card - only re-renders when pick data changes
