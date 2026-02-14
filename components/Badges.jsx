@@ -8,6 +8,7 @@
 import React, { memo } from 'react';
 import { HelpIcon } from '../Tooltip';
 import { getTierConfig } from '../src/utils/tierConfig';
+import { GOLD_STAR_THRESHOLD, MIN_FINAL_SCORE } from '../core/frontend_scoring_contract';
 
 /**
  * ScoreBadge - Displays a score with color coding based on percentage
@@ -111,3 +112,32 @@ export const BadgeDisplay = memo(({ badges }) => {
   );
 });
 BadgeDisplay.displayName = 'BadgeDisplay';
+
+/**
+ * TierLegend - Displays tier legend with threshold values
+ * Used by both GameSmashList and PropsSmashList
+ */
+export const TierLegend = memo(() => (
+  <div style={{
+    display: 'flex', gap: '12px', marginBottom: '12px', flexWrap: 'wrap',
+    padding: '8px 12px', backgroundColor: '#0f0f1a', borderRadius: '8px'
+  }}>
+    <span style={{ color: '#6B7280', fontSize: '11px', marginRight: '4px' }}>v12.0 TIERS:</span>
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: '4px',
+      padding: '2px 6px', backgroundColor: '#00FFFF10', borderRadius: '4px', border: '1px solid #00FFFF30'
+    }}>
+      <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#00FFFF', boxShadow: '0 0 6px #00FFFF' }} />
+      <span style={{ color: '#00FFFF', fontSize: '11px', fontWeight: 'bold' }}>TITANIUM (backend-verified)</span>
+    </div>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+      <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#FFD700' }} />
+      <span style={{ color: '#FFD700', fontSize: '11px', fontWeight: 'bold' }}>GOLD STAR ≥{GOLD_STAR_THRESHOLD}</span>
+    </div>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+      <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10B981' }} />
+      <span style={{ color: '#10B981', fontSize: '11px', fontWeight: 'bold' }}>EDGE LEAN ≥{MIN_FINAL_SCORE}</span>
+    </div>
+  </div>
+));
+TierLegend.displayName = 'TierLegend';
