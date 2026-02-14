@@ -32,8 +32,6 @@ import {
 import {
   AI_MODELS,
   PILLARS,
-  STAT_BADGE_STYLE,
-  STAT_BADGE_STYLE_RIGHT,
   getAgreeingModels,
   getAligningPillars,
   TEXT_MUTED,
@@ -59,13 +57,6 @@ const BREAKDOWN_CONTAINER_STYLE = {
   borderLeft: '3px solid #8B5CF6'
 };
 
-// Key stats row container
-const KEY_STATS_ROW_STYLE = {
-  display: 'flex',
-  gap: '6px',
-  marginBottom: '10px',
-  flexWrap: 'wrap'
-};
 
 // AI Model/Pillar badge base style (used in maps)
 const MODEL_BADGE_ACTIVE = {
@@ -86,40 +77,11 @@ const MODEL_BADGE_INACTIVE = {
 
 // ============================================================================
 
-// Generate key stats for game picks
-const generateGameStats = (pick) => {
-  const market = pick.market;
-  const spread = pick.point || 0;
-
-  if (market === 'spreads') {
-    const atsRecord = Math.floor(55 + Math.random() * 15);
-    return {
-      stat1: `${pick.team} ${atsRecord}% ATS last 20`,
-      stat2: spread > 0 ? 'Getting points at home' : 'Laying chalk',
-      stat3: `Line moved ${Math.random() > 0.5 ? 'toward' : 'away'} since open`
-    };
-  }
-  if (market === 'totals') {
-    const ouRecord = Math.floor(50 + Math.random() * 20);
-    return {
-      stat1: `${pick.side === 'Over' ? 'Over' : 'Under'} ${ouRecord}% H2H`,
-      stat2: `Combined avg: ${(pick.point + (Math.random() * 10 - 5)).toFixed(1)}`,
-      stat3: 'Pace factors align'
-    };
-  }
-  return {
-    stat1: `${pick.team} ${Math.floor(55 + Math.random() * 15)}% win rate`,
-    stat2: 'Value detected on moneyline',
-    stat3: 'Model consensus'
-  };
-};
-
 // Memoized pick card with enhanced display - v10.4 support
 const PickCard = memo(({ pick, injuries = [] }) => {
   const [expanded, setExpanded] = useState(false);
   // v10.4: Use new tier config from pick object
   const tierConfig = getTierConfigFromPick(pick);
-  const keyStats = useMemo(() => generateGameStats(pick), [pick.market, pick.point, pick.team]);
   const agreeingModels = useMemo(() => getAgreeingModels(pick), [pick.agreeing_models]);
   const aligningPillars = useMemo(() => getAligningPillars(pick), [pick.aligning_pillars]);
   const { isMobile, isTouchDevice } = useMobileDetect();
@@ -518,23 +480,12 @@ const PickCard = memo(({ pick, injuries = [] }) => {
       {/* v20.12: Categorized reason arrays */}
       <ReasonPanel pick={pick} />
 
-      {/* TERTIARY: Key stats - smallest, de-emphasized */}
-      <div style={KEY_STATS_ROW_STYLE}>
-        <div style={STAT_BADGE_STYLE}>
-          <span style={TEXT_SECONDARY}>{keyStats.stat1}</span>
+      {/* Bookmaker source */}
+      {pick.bookmaker && (
+        <div style={{ marginBottom: '10px' }}>
+          <span style={TEXT_SECONDARY}>via {pick.bookmaker}</span>
         </div>
-        <div style={STAT_BADGE_STYLE}>
-          {keyStats.stat2}
-        </div>
-        <div style={STAT_BADGE_STYLE}>
-          {keyStats.stat3}
-        </div>
-        {pick.bookmaker && (
-          <div style={STAT_BADGE_STYLE_RIGHT}>
-            via {pick.bookmaker}
-          </div>
-        )}
-      </div>
+      )}
 
       {/* Dev-only Debug section */}
       {process.env.NODE_ENV === 'development' && (
