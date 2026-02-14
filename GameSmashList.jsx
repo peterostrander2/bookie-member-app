@@ -40,7 +40,7 @@ import StatusBadgeRow from './components/StatusBadgeRow';
 import GlitchSignalsPanel from './components/GlitchSignalsPanel';
 import EsotericContributionsPanel from './components/EsotericContributionsPanel';
 import ReasonPanel from './components/ReasonPanel';
-import { ScoreBadge, TierBadge } from './components/Badges';
+import { ScoreBadge, TierBadge, BadgeDisplay } from './components/Badges';
 
 // Container for expanded breakdown section
 const BREAKDOWN_CONTAINER_STYLE = {
@@ -77,37 +77,6 @@ const MODEL_BADGE_INACTIVE = {
 };
 
 // ============================================================================
-
-// v10.4 Badge display component
-const BadgeDisplay = memo(({ badges }) => {
-  if (!badges || badges.length === 0) return null;
-
-  const BADGE_STYLES = {
-    SMASH_SPOT: { bg: 'rgba(255, 100, 0, 0.2)', color: '#FF6400', icon: '🔥', label: 'SMASH SPOT' },
-    SHARP_MONEY: { bg: 'rgba(16, 185, 129, 0.2)', color: '#10B981', icon: '💰', label: 'SHARP' },
-    JARVIS_TRIGGER: { bg: 'rgba(255, 215, 0, 0.2)', color: '#FFD700', icon: '⚡', label: 'JARVIS' },
-    REVERSE_LINE: { bg: 'rgba(139, 92, 246, 0.2)', color: '#8B5CF6', icon: '↩️', label: 'REVERSE' },
-    PRIME_TIME: { bg: 'rgba(236, 72, 153, 0.2)', color: '#EC4899', icon: '📺', label: 'PRIME' }
-  };
-
-  return (
-    <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-      {badges.map((badge, idx) => {
-        const style = BADGE_STYLES[badge] || { bg: 'rgba(107, 114, 128, 0.2)', color: '#6B7280', icon: '•', label: badge };
-        return (
-          <span key={idx} style={{
-            backgroundColor: style.bg, color: style.color,
-            padding: '2px 6px', borderRadius: '4px', fontSize: '9px', fontWeight: 'bold',
-            display: 'flex', alignItems: 'center', gap: '3px'
-          }}>
-            {style.icon} {style.label}
-          </span>
-        );
-      })}
-    </div>
-  );
-});
-BadgeDisplay.displayName = 'BadgeDisplay';
 
 // v20.5 Tier Legend (TITANIUM requires score>=TITANIUM_THRESHOLD + 3/5 engines, backend-verified)
 const TierLegend = memo(() => (
