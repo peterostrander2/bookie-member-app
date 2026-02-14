@@ -13,7 +13,7 @@ import {
   filterCommunityPicks,
   communitySort,
   getBookInfo,
-  formatOdds as normalizeFormatOdds,
+  formatOdds,
   COMMUNITY_THRESHOLD
 } from './src/utils/pickNormalize';
 import {
@@ -179,11 +179,6 @@ const getAligningPillars = (pillarScore) => {
   const numAligning = Math.round(pillarScore);
   const shuffled = [...PILLARS].sort(() => 0.5 - Math.random());
   return shuffled.slice(0, numAligning);
-};
-
-const formatOdds = (odds) => {
-  if (odds === undefined || odds === null) return '—';
-  return odds > 0 ? `+${odds}` : odds.toString();
 };
 
 // Memoized pick card with enhanced display - v10.4 support

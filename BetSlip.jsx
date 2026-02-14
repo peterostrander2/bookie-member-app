@@ -8,6 +8,7 @@
 import React, { useState, createContext, useContext, useEffect } from 'react';
 import { recordPick } from './clvTracker';
 import { useToast } from './Toast';
+import { formatOdds } from './src/utils/pickNormalize';
 
 // Dynamically import signalEngine only when needed for parlay esoteric analysis
 // This saves ~30KB from the initial bundle since BetSlipProvider loads on every page
@@ -155,11 +156,6 @@ export const PersistentBetSlipBar = () => {
 
   // Don't show if no selections
   if (selections.length === 0) return null;
-
-  const formatOdds = (odds) => {
-    if (!odds) return '';
-    return odds > 0 ? `+${odds}` : odds.toString();
-  };
 
   return (
     <div

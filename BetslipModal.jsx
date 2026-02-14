@@ -8,6 +8,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import api from './api';
 import { useToast } from './Toast';
+import { formatOdds } from './src/utils/pickNormalize';
 
 // Sportsbook logos/colors for branding
 const SPORTSBOOK_STYLES = {
@@ -131,11 +132,6 @@ export const BetslipModal = ({ isOpen, onClose, bet, sport }) => {
       toast.info(`Opening ${book.name} - manually add your bet`);
     }
     onClose();
-  };
-
-  const formatOdds = (odds) => {
-    if (!odds) return '-110';
-    return odds > 0 ? `+${odds}` : odds.toString();
   };
 
   const getBestOdds = () => {
