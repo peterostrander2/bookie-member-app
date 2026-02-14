@@ -306,3 +306,70 @@ Fix:
 - Per-pick data is displayed in GlitchSignalsPanel/EsotericContributionsPanel (on SmashList cards)
 - Don't re-add them to Esoteric.jsx
 - See Lesson 13 in `docs/LESSONS.md`
+
+---
+
+## 20) React "Can't perform state update on unmounted component" warnings
+
+Symptoms:
+- Console warnings about state updates on unmounted components
+- Happens after navigating away from a page during API fetch
+
+Root Cause:
+- Async operations in useEffect don't have cleanup
+- Component unmounts before fetch completes, but callback still runs setState
+
+Fix:
+1. Add `isMountedRef` pattern:
+   ```javascript
+   const isMountedRef = useRef(true);
+   useEffect(() => {
+     isMountedRef.current = true;
+     return () => { isMountedRef.current = false; };
+   }, []);
+   ```
+2. Check before every setState: `if (!isMountedRef.current) return;`
+3. See Lesson 24 in `docs/LESSONS.md`
+
+---
+
+## 21) Empty pick list with no error message
+
+Symptoms:
+- GameSmashList or PropsSmashList shows empty
+- No error message displayed to user
+- Console shows API error
+
+Root Cause:
+- API call fails but only logs to console
+- No toast notification for user
+
+Fix:
+1. Add `toast.error()` alongside `console.error()`
+2. Example:
+   ```javascript
+   } catch (err) {
+     console.error('Error:', err);
+     toast.error('Failed to load data');
+     setData([]);
+   }
+   ```
+3. See Lesson 25 in `docs/LESSONS.md`
+
+---
+
+## 22) Helper function crashes with "Cannot read property of undefined"
+
+Symptoms:
+- TypeError in pickExplainer.js, signalEngine.js, etc.
+- Crashes when API returns incomplete data
+
+Root Cause:
+- Helper function doesn't guard against null/undefined input
+- Tries to call methods on undefined values
+
+Fix:
+1. Add null guard at function start: `if (!analysis) return { bullets: [], risks: [] };`
+2. Use Array.isArray() before array methods: `const safe = Array.isArray(arr) ? arr : [];`
+3. Use default values in destructuring: `const { signals = [] } = analysis;`
+4. See Lesson 26 in `docs/LESSONS.md`

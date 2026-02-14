@@ -254,6 +254,55 @@ async getParlay(userId) {
 
 **Why:** `|| default` only works when `safeJson` returns null (non-ok response). Network errors throw before `safeJson` runs.
 
+### useEffect Async Cleanup Pattern
+**All async operations in useEffect MUST have cleanup:**
+```javascript
+// Pattern A: Single fetch with cancelled flag
+useEffect(() => {
+  let cancelled = false;
+  const fetchData = async () => {
+    const data = await api.getData();
+    if (cancelled) return;  // Check before EVERY setState
+    setData(data);
+  };
+  fetchData();
+  return () => { cancelled = true; };
+}, [dependency]);
+
+// Pattern B: Component-wide mount tracking
+const isMountedRef = useRef(true);
+useEffect(() => {
+  isMountedRef.current = true;
+  return () => { isMountedRef.current = false; };
+}, []);
+// Then in any async handler: if (!isMountedRef.current) return;
+```
+
+### Error Handling Pattern for User-Facing Components
+**User-facing components MUST show both console + toast errors:**
+```javascript
+} catch (err) {
+  console.error('Error fetching data:', err);
+  toast.error('Failed to load data');  // User sees this
+  setData([]);  // Graceful fallback
+}
+```
+
+### Null Guard Pattern for Helper Functions
+**Functions processing API data MUST guard against null/undefined:**
+```javascript
+const processSignals = (signals) => {
+  const safeSignals = Array.isArray(signals) ? signals : [];
+  return safeSignals.filter(s => s.score >= 50);
+};
+
+const explainPick = (analysis) => {
+  if (!analysis) return { bullets: [], risks: [] };
+  const { signals = [], confidence = 0 } = analysis;
+  // ...
+};
+```
+
 ---
 
 ## Hard Bans
@@ -276,6 +325,9 @@ async getParlay(userId) {
 - Hardcode enum validation arrays without checking actual backend values (enums expand)
 - Ship a new core logic module without corresponding unit tests
 - Add a new route without at least a smoke E2E test
+- Async operations in useEffect without cleanup (cancelled flag or isMountedRef)
+- console.error in user-facing components without accompanying toast.error
+- Helper functions that process API data without null/undefined guards
 
 ---
 

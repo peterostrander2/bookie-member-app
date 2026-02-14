@@ -1,4 +1,4 @@
-# LESSONS LEARNED — Frontend (22 Lessons)
+# LESSONS LEARNED — Frontend (26 Lessons)
 
 Every lesson here was learned the hard way. Each one has an automated prevention mechanism.
 
@@ -654,6 +654,112 @@ await expect(page.getByRole('heading', { name: /Bet History/i })).toBeVisible({ 
 
 ---
 
+## Lesson 24: Race Conditions in useEffect Async Operations
+
+**When:** February 2026 (Bug Fixes session)
+**Problem:** Components with async operations in useEffect would update state after unmounting, causing React warnings and potential memory leaks. Dashboard, BetHistory, Esoteric, and SmashSpotsPage all had this pattern.
+**Root Cause:** Async fetch operations have no awareness of component lifecycle. When a user navigates away before fetch completes, the callback still tries to `setState()`.
+**Impact:** Console warnings "Can't perform a React state update on an unmounted component", potential memory leaks, stale data in edge cases.
+
+**Fix Applied:**
+- Added `isMountedRef = useRef(true)` pattern to track mount state
+- Added `cancelled` flag pattern for useEffect with cleanup: `return () => { cancelled = true; }`
+- All setState calls wrapped with mount checks: `if (!isMountedRef.current) return;`
+
+**Prevention:**
+- Every async operation in useEffect MUST have cleanup
+- Pattern A (for single fetch):
+  ```javascript
+  useEffect(() => {
+    let cancelled = false;
+    const fetchData = async () => {
+      const data = await api.getData();
+      if (cancelled) return;  // Check before every setState
+      setData(data);
+    };
+    fetchData();
+    return () => { cancelled = true; };
+  }, []);
+  ```
+- Pattern B (for component-wide tracking):
+  ```javascript
+  const isMountedRef = useRef(true);
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => { isMountedRef.current = false; };
+  }, []);
+  ```
+
+**Automated Gate:** None — requires code review. Consider adding ESLint rule for async-in-useEffect patterns.
+
+---
+
+## Lesson 25: Silent API Errors Without User Feedback
+
+**When:** February 2026 (Bug Fixes session)
+**Problem:** GameSmashList and PropsSmashList had `console.error()` on fetch failures but no user-visible notification. Users saw empty states with no explanation of what went wrong.
+**Root Cause:** Error handling only logged to console, which users never see. No toast notification to inform the user.
+**Impact:** Poor UX — users think the app is broken when API fails, with no actionable feedback.
+
+**Fix Applied:**
+- Added `toast.error('Failed to load game picks')` to GameSmashList.jsx
+- Added `toast.error('Failed to load player props')` to PropsSmashList.jsx
+
+**Prevention:**
+- Every user-facing component that fetches data MUST show user-visible errors
+- Pattern: Always pair `console.error()` with `toast.error()` for user-facing components
+  ```javascript
+  } catch (err) {
+    console.error('Error fetching data:', err);
+    toast.error('Failed to load data');  // <-- User sees this
+    setData([]);  // Graceful fallback
+  }
+  ```
+- Exception: Background/polling operations can fail silently (e.g., SharpAlerts fallback to mock data)
+
+**Automated Gate:** None — requires code review. Grep check:
+```bash
+# Find console.error without nearby toast.error
+grep -n "console.error" *.jsx | grep -v "toast.error"
+```
+
+---
+
+## Lesson 26: Unsafe Property Access in Helper Functions
+
+**When:** February 2026 (Bug Fixes session)
+**Problem:** `pickExplainer.js` functions assumed `analysis` and `analysis.signals` were always defined. When called with null/undefined analysis, the code crashed with "Cannot read property 'filter' of undefined".
+**Root Cause:** Helper functions trusted their input without defensive guards. No null checks before destructuring or calling array methods.
+**Impact:** TypeError crashes when API returns incomplete data or component passes null.
+
+**Fix Applied:**
+- Added null guard at top of `explainPick()` with safe fallback return
+- Added `Array.isArray()` checks before `.forEach()` and `.filter()` calls
+- Pattern: `const safeSignals = Array.isArray(signals) ? signals : [];`
+
+**Prevention:**
+- Helper functions that process API data MUST guard against null/undefined input
+- Pattern for array operations:
+  ```javascript
+  const processSignals = (signals) => {
+    const safeSignals = Array.isArray(signals) ? signals : [];
+    return safeSignals.filter(s => s.score >= 50);
+  };
+  ```
+- Pattern for object destructuring:
+  ```javascript
+  const explainPick = (analysis) => {
+    if (!analysis) return { bullets: [], risks: [] };  // Safe fallback
+    const { signals = [], confidence = 0 } = analysis;  // Default values
+    // ...
+  };
+  ```
+- Test helper functions with null/undefined inputs
+
+**Automated Gate:** Unit tests in `test/pickExplainer.test.js` — verify functions handle null gracefully.
+
+---
+
 ## Pattern: How New Lessons Get Added
 
 When you encounter a new mistake:
@@ -690,3 +796,6 @@ The goal: every mistake should be catchable automatically. If it can't be automa
 | Test coverage | `ls test/*.test.* e2e/*.spec.js` | Every core module has tests, every route has E2E |
 | Cron paths | `crontab -l \| grep "cd ~/"; ls -d ~/ai-betting-backend ~/bookie-member-app` | Cron jobs pointing to wrong paths (Lesson 23) |
 | Cron activity | `tail -20 ~/ai-betting-backend/logs/cron.log` | Cron jobs not running (check recent output) |
+| Code review | useEffect async patterns | Race conditions - missing cleanup/cancelled flags (Lesson 24) |
+| Code review | `grep "console.error" *.jsx` | Silent API errors without toast.error (Lesson 25) |
+| Unit tests | `test/pickExplainer.test.js` | Null guard failures in helper functions (Lesson 26) |

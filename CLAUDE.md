@@ -1677,6 +1677,39 @@ async getParlay(userId) {
 
 ---
 
+### Session: February 2026 (Bug Fixes - Race Conditions, Error Handling, Null Guards)
+
+**Completed in this session:**
+1. Fixed race conditions in useEffect hooks across 4 components
+2. Added user-visible toast.error() notifications for API failures
+3. Added null/undefined guards to helper functions
+
+**Files modified:**
+- `Dashboard.jsx` - Added isMountedRef and cancelled flag patterns to fetchData, fetchSharpAlert, fetchTopPick
+- `BetHistory.jsx` - Added useCallback with mount checks to loadBetHistory, wrapped handleGrade in try-catch
+- `Esoteric.jsx` - Moved fetchBackendEnergy inside useEffect with proper cleanup
+- `SmashSpotsPage.jsx` - Added cancelled flag to TodaysBestBets fetch with cleanup
+- `GameSmashList.jsx` - Added toast.error() for failed game picks fetch
+- `PropsSmashList.jsx` - Added toast.error() for failed player props fetch
+- `pickExplainer.js` - Added null guards to explainPick(), generateConfidenceBreakdown(), generateRisks()
+
+**Documentation updated:**
+- `docs/LESSONS.md` - Added Lessons 24-26 (race conditions, error feedback, null guards)
+- `docs/RECOVERY.md` - Added entries 20-22 (recovery steps for these patterns)
+- `docs/MASTER_INDEX.md` - Added React patterns section and 3 new hard bans
+- `CLAUDE.md` - Added Invariants 23-25
+
+**Key patterns established:**
+- useEffect async cleanup with `cancelled` flag or `isMountedRef`
+- toast.error() alongside console.error() for user-facing components
+- Array.isArray() guards before .filter()/.map()/.forEach()
+
+**Commit:** `38f1fb6 fix: add defensive guards for race conditions, error handling, and null safety`
+**Build:** Clean (341 KB main bundle)
+**Tests:** 210/210 passing
+
+---
+
 ## 🚨 MASTER INVARIANTS (NEVER VIOLATE) 🚨
 
 **READ THIS FIRST BEFORE TOUCHING SCORING OR DISPLAY CODE**
@@ -2331,6 +2364,81 @@ Read file_path with offset=275, limit=20
 ```
 
 **NEVER:** Assume comment syntax or whitespace. Always verify with Read first.
+
+---
+
+### INVARIANT 23: useEffect Async Cleanup
+
+**RULE:** All async operations in useEffect MUST have cleanup to prevent state updates after unmount.
+
+**Why this exists:** Session Feb 2026 — Dashboard, BetHistory, Esoteric, SmashSpotsPage all had async fetches without cleanup, causing React warnings and potential memory leaks.
+
+**Pattern A (single fetch):**
+```javascript
+useEffect(() => {
+  let cancelled = false;
+  const fetchData = async () => {
+    const data = await api.getData();
+    if (cancelled) return;  // Check before EVERY setState
+    setData(data);
+  };
+  fetchData();
+  return () => { cancelled = true; };
+}, []);
+```
+
+**Pattern B (component-wide):**
+```javascript
+const isMountedRef = useRef(true);
+useEffect(() => {
+  isMountedRef.current = true;
+  return () => { isMountedRef.current = false; };
+}, []);
+// Then in handlers: if (!isMountedRef.current) return;
+```
+
+**NEVER:** Call setState in async callback without checking mount state first.
+
+---
+
+### INVARIANT 24: User-Visible Error Feedback
+
+**RULE:** User-facing components that fetch data MUST show toast.error() when fetch fails, not just console.error().
+
+**Why this exists:** Session Feb 2026 — GameSmashList and PropsSmashList only logged errors to console. Users saw empty states with no explanation.
+
+**Pattern:**
+```javascript
+} catch (err) {
+  console.error('Error fetching data:', err);
+  toast.error('Failed to load data');  // User sees this
+  setData([]);  // Graceful fallback
+}
+```
+
+**Exception:** Background/polling operations (e.g., SharpAlerts) can fail silently if they have mock data fallback.
+
+**NEVER:** Use only console.error() for user-facing fetch failures.
+
+---
+
+### INVARIANT 25: Null Guards in Helper Functions
+
+**RULE:** Helper functions that process API data MUST guard against null/undefined input before calling array methods or destructuring.
+
+**Why this exists:** Session Feb 2026 — pickExplainer.js crashed with "Cannot read property 'filter' of undefined" when analysis was null.
+
+**Pattern:**
+```javascript
+const explainPick = (analysis) => {
+  if (!analysis) return { bullets: [], risks: [] };  // Early return
+  const { signals = [], confidence = 0 } = analysis;  // Default values
+  const safeSignals = Array.isArray(signals) ? signals : [];  // Array guard
+  return safeSignals.filter(s => s.score >= 50);
+};
+```
+
+**NEVER:** Call .filter(), .map(), .forEach() on a field without first checking it's an array.
 
 ---
 
