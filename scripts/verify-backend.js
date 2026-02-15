@@ -116,7 +116,7 @@ async function testTodayEnergy() {
     recordTest('Today energy has required fields', valid, missing.length ? `Missing: ${missing.join(', ')}` : '');
 
     if (data.betting_outlook) {
-      const validOutlooks = ['BULLISH', 'NEUTRAL', 'BEARISH', 'UNFAVORABLE'];
+      const validOutlooks = ['BULLISH', 'NEUTRAL', 'BEARISH', 'UNFAVORABLE', 'FAVORABLE'];
       const isValidOutlook = validOutlooks.includes(data.betting_outlook);
       recordTest('betting_outlook is valid enum', isValidOutlook, `Got: ${data.betting_outlook}`);
     }

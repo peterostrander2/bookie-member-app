@@ -206,15 +206,15 @@ const Esoteric = () => {
               borderRadius: '20px',
               fontSize: '12px',
               fontWeight: 'bold',
-              backgroundColor: backendEnergy.betting_outlook === 'BULLISH' ? '#10B98120'
+              backgroundColor: ['BULLISH', 'FAVORABLE'].includes(backendEnergy.betting_outlook) ? '#10B98120'
                              : backendEnergy.betting_outlook === 'NEUTRAL' ? '#F59E0B20'
                              : ['BEARISH', 'UNFAVORABLE'].includes(backendEnergy.betting_outlook) ? '#EF444420'
                              : '#F59E0B20',
-              color: backendEnergy.betting_outlook === 'BULLISH' ? '#10B981'
+              color: ['BULLISH', 'FAVORABLE'].includes(backendEnergy.betting_outlook) ? '#10B981'
                    : backendEnergy.betting_outlook === 'NEUTRAL' ? '#F59E0B'
                    : ['BEARISH', 'UNFAVORABLE'].includes(backendEnergy.betting_outlook) ? '#EF4444'
                    : '#F59E0B',
-              border: `1px solid ${backendEnergy.betting_outlook === 'BULLISH' ? '#10B98150'
+              border: `1px solid ${['BULLISH', 'FAVORABLE'].includes(backendEnergy.betting_outlook) ? '#10B98150'
                                  : backendEnergy.betting_outlook === 'NEUTRAL' ? '#F59E0B50'
                                  : ['BEARISH', 'UNFAVORABLE'].includes(backendEnergy.betting_outlook) ? '#EF444450'
                                  : '#F59E0B50'}`
