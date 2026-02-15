@@ -503,7 +503,7 @@ npm run test:run
 # 3. Build
 npm run build
 
-# 4. E2E tests (~150 tests across 8 specs, requires dev server on :5173)
+# 4. E2E tests (194 tests across 8 specs, requires dev server on :5173)
 npm run test:e2e
 
 # 5. E2E fixture check
@@ -524,3 +524,72 @@ git push origin main
 2. Check that auth endpoint assertions include `cache: 'no-store'`
 3. Check that API methods with `|| default` have try-catch
 4. See Lessons 9 and 10 in `docs/LESSONS.md`
+
+---
+
+## Railway Deployment
+
+**Frontend URL:** https://bookie-frontend-ai-betting.up.railway.app
+**Backend URL:** https://web-production-7b2a.up.railway.app
+
+### Deploy Commands
+```bash
+# Link to project (one-time)
+railway link --project 4a05181a-0d84-4e5d-8c43-f2dcf747bfed
+
+# Deploy frontend
+railway up --detach --service bookie-frontend
+
+# Set environment variables
+railway variables --set "VITE_BOOKIE_API_KEY=xxx" --service bookie-frontend
+railway variables --set "VITE_API_BASE_URL=https://web-production-7b2a.up.railway.app" --service bookie-frontend
+
+# Check logs
+railway logs --service bookie-frontend
+
+# Redeploy
+railway redeploy --service bookie-frontend --yes
+```
+
+### Required Environment Variables (Frontend)
+| Variable | Purpose |
+|----------|---------|
+| `VITE_BOOKIE_API_KEY` | Backend API authentication |
+| `VITE_API_BASE_URL` | Backend base URL |
+
+### Health Check
+```bash
+curl -s -o /dev/null -w "%{http_code}" https://bookie-frontend-ai-betting.up.railway.app/
+# Should return 200
+```
+
+---
+
+## Hard Bans (NEVER DO)
+
+1. **NEVER** hardcode scoring thresholds (6.5, 7.5, 8.0, etc.) — even in comments
+2. **NEVER** call fetch/axios outside `lib/api/client.js`
+3. **NEVER** recompute tier/score on frontend — trust backend
+4. **NEVER** use `||` for field precedence — use `??` (nullish coalescing)
+5. **NEVER** import from `@playwright/test` in E2E specs — import from `./fixtures`
+6. **NEVER** say "3/5 engines" for TITANIUM — it's 3/4 (context excluded)
+7. **NEVER** use bare `{ json: () => ... }` in test mocks — use `mockResponse()`
+8. **NEVER** assume backend enum values — verify with curl, they expand (UNFAVORABLE, FAVORABLE)
+9. **NEVER** call numeric methods on nested objects — verify data shapes first
+10. **NEVER** use realistic mock data as fallbacks — show empty state or error
+
+---
+
+## Documentation Index
+
+| File | Purpose | Lessons |
+|------|---------|---------|
+| `CLAUDE.md` | Main context file (invariants, contracts, session history) | - |
+| `docs/MASTER_INDEX.md` | This file - decision tree and quick reference | - |
+| `docs/LESSONS.md` | 39 lessons learned with prevention | All |
+| `docs/RECOVERY.md` | 39 recovery procedures for common issues | All |
+| `docs/AUDIT_MAP.md` | Auto-generated endpoint/env var reference | - |
+| `docs/7-PROOFS.md` | Validation framework documentation | 35 |
+| `SESSION_START.md` | New session checklist | - |
+
+**Lesson counts:** 39 lessons, 39 recovery entries (as of Feb 2026)

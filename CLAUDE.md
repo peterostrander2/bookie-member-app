@@ -1832,6 +1832,37 @@ npm run validate:live             # Proof 6
 
 ---
 
+### Session: February 2026 (E2E Stabilization + Railway Deploy)
+
+**Completed in this session:**
+1. Fixed flaky E2E analytics tests — explicit button role selectors instead of broad text matches
+2. Added FAVORABLE to betting_outlook enum handling (validator + Esoteric.jsx styling)
+3. Deployed frontend to Railway as separate service (`bookie-frontend`)
+4. Added playwright-report/ and test-results/ to .gitignore
+5. Updated LESSONS.md with Lesson 39 (FAVORABLE enum)
+6. Updated RECOVERY.md with recovery entry 39
+7. Updated MASTER_INDEX.md with Railway deployment section and 194 E2E test count
+
+**Files modified:**
+- `e2e/analytics-profile-bankroll.spec.js` - Stabilized with getByRole('button')
+- `scripts/verify-backend.js` - Added FAVORABLE to validOutlooks
+- `Esoteric.jsx` - Group FAVORABLE with BULLISH for green styling
+- `.gitignore` - Added playwright artifacts
+- `docs/LESSONS.md` - Added Lesson 39
+- `docs/RECOVERY.md` - Added recovery entry 39
+- `docs/MASTER_INDEX.md` - Railway deploy commands, 194 E2E count
+
+**Railway Deployment:**
+- Frontend URL: https://bookie-frontend-ai-betting.up.railway.app
+- Service: `bookie-frontend` (new service created)
+- Project: `8 pillars` (4a05181a-0d84-4e5d-8c43-f2dcf747bfed)
+
+**Build:** Clean (344 KB)
+**Tests:** 210/210 unit, 194/194 E2E (100% pass rate)
+**Validators:** All 5 pass
+
+---
+
 ## 🚨 MASTER INVARIANTS (NEVER VIOLATE) 🚨
 
 **READ THIS FIRST BEFORE TOUCHING SCORING OR DISPLAY CODE**

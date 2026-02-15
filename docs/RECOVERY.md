@@ -776,3 +776,29 @@ Prevention:
 - Use `locator('h1').filter()` for headings with emojis/icons
 - Reserve `getByRole('heading')` for pure text headings
 - See Lesson 38
+
+---
+
+## 39) Backend enum expansion - FAVORABLE outlook not recognized
+
+Symptoms:
+- `verify-backend.js` reports: `✗ betting_outlook is valid enum - Got: FAVORABLE`
+- Esoteric page shows FAVORABLE with amber (neutral) styling instead of green (positive)
+- No crash, but incorrect visual feedback
+
+Root Cause:
+- Backend added `FAVORABLE` to `betting_outlook` enum
+- Frontend validator and styling only knew: BULLISH, NEUTRAL, BEARISH, UNFAVORABLE
+- Same pattern as UNFAVORABLE (Lesson 21) and Lesson 17
+
+Fix:
+1. Add `'FAVORABLE'` to `validOutlooks` array in `scripts/verify-backend.js`
+2. Update Esoteric.jsx to group `['BULLISH', 'FAVORABLE']` as positive (green)
+
+Prevention:
+- When backend adds enum values, grep for ALL places checking that enum:
+  ```bash
+  grep -rn "betting_outlook\|validOutlooks\|BULLISH" --include="*.js" --include="*.jsx"
+  ```
+- Add defensive default styling for unknown values (amber, not crash)
+- See Lesson 39
