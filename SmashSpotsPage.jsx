@@ -63,8 +63,9 @@ const TABS = [
 ];
 
 // v17.3 Tier display configuration (matches backend tiering.py)
-// TITANIUM requires: final_score >= TITANIUM_THRESHOLD AND 3/5 engines >= engineThreshold
-// 5 engines: AI (15%), Research (20%), Esoteric (15%), Jarvis (10%), Context (30%)
+// TITANIUM requires: final_score >= TITANIUM_THRESHOLD AND 3/4 weighted engines >= engineThreshold
+// 4 weighted engines: AI (25%), Research (35%), Esoteric (15%), Jarvis (25%)
+// Context is a bounded modifier (±0.35), not a weighted engine
 const TIER_CONFIG = {
   [TIERS.TITANIUM_SMASH]: {
     label: 'TITANIUM SMASH',
@@ -85,7 +86,7 @@ const TIER_CONFIG = {
 // v12.0 Tier display for legend (TITANIUM is visually dominant)
 // Only show tiers at community threshold
 const CONFIDENCE_TIERS = [
-  { label: 'TITANIUM', color: '#00FFFF', range: `≥${TITANIUM_THRESHOLD} + 3/5 engines ≥${TITANIUM_THRESHOLD}`, tier: TIERS.TITANIUM_SMASH, prominent: true },
+  { label: 'TITANIUM', color: '#00FFFF', range: `≥${TITANIUM_THRESHOLD} + ${TITANIUM_RULE.minEnginesGte}/${TITANIUM_RULE.engineCount} engines ≥${TITANIUM_RULE.engineThreshold}`, tier: TIERS.TITANIUM_SMASH, prominent: true },
   { label: 'GOLD STAR', color: '#FFD700', range: `≥${GOLD_STAR_THRESHOLD}`, tier: TIERS.GOLD_STAR },
   { label: 'EDGE LEAN', color: '#10B981', range: `≥${MIN_FINAL_SCORE}`, tier: TIERS.EDGE_LEAN }
 ];
@@ -481,7 +482,7 @@ const TodaysBestBets = memo(({ sport, onPickClick, onError }) => {
               {titaniumPicks.length} TITANIUM {titaniumPicks.length === 1 ? 'PICK' : 'PICKS'} DETECTED
             </div>
             <div style={{ color: '#7dd3fc', fontSize: '12px', marginTop: '2px' }}>
-              Ultra-rare: Score ≥{TITANIUM_THRESHOLD} + {TITANIUM_RULE.minEnginesGte}/5 engines at meaningful level (≥{TITANIUM_RULE.engineThreshold})
+              Ultra-rare: Score ≥{TITANIUM_THRESHOLD} + {TITANIUM_RULE.minEnginesGte}/{TITANIUM_RULE.engineCount} engines at meaningful level (≥{TITANIUM_RULE.engineThreshold})
             </div>
           </div>
           <div style={{

@@ -84,8 +84,8 @@ Backend `tiering.py` is the single source of truth. Frontend uses backend fields
 - Engine scores (Option A: 4 weighted engines + context modifier, all 0-10):
   - ai_score (25% weight) - 8 AI models
   - research_score (35% weight) - Sharp money, line variance, public fade
-  - esoteric_score (20% weight) - Numerology, astro, fibonacci
-  - jarvis_score (20% weight) - Gematria triggers
+  - esoteric_score (15% weight) - Numerology, astro, fibonacci
+  - jarvis_score (25% weight) - Gematria triggers
   - context_score (modifier ±0.35 cap) - Defense rank, pace, injury vacuum
 - Boost fields (added to final after BASE_4):
   - context_modifier (±0.35), confluence_boost (0-3.0), msrf_boost (0-1.0)
@@ -1407,7 +1407,7 @@ export const safeJson = async (response) => {
 **Engine Display (Option A):**
 ```jsx
 // 4 weighted engines + context modifier shown with tooltips
-AI (25%) | Research (35%) | Esoteric (20%) | Jarvis (20%) | Context (±0.35 modifier)
+AI (25%) | Research (35%) | Esoteric (15%) | Jarvis (25%) | Context (±0.35 modifier)
 ```
 
 **New Visual Elements:**
@@ -1452,7 +1452,7 @@ AI (25%) | Research (35%) | Esoteric (20%) | Jarvis (20%) | Context (±0.35 modi
 
 **Option A Formula (displayed in BoostBreakdownPanel):**
 ```
-BASE_4 = AI(0.25) + Research(0.35) + Esoteric(0.20) + Jarvis(0.20)
+BASE_4 = AI(0.25) + Research(0.35) + Esoteric(0.15) + Jarvis(0.25)
 FINAL = min(10, BASE_4 + context_modifier + confluence_boost + msrf_boost
              + jason_sim_boost + serp_boost + ensemble_adjustment)
 ```
@@ -1835,8 +1835,8 @@ const tier = score >= 7.5 ? 'GOLD_STAR' : 'EDGE_LEAN';
 |--------|--------|-------|---------|
 | AI | 25% | `ai_score` | 8 AI models |
 | Research | 35% | `research_score` | Sharp money, line variance, public fade |
-| Esoteric | 20% | `esoteric_score` | Numerology, astro, fibonacci |
-| Jarvis | 20% | `jarvis_score` | Gematria triggers |
+| Esoteric | 15% | `esoteric_score` | Numerology, astro, fibonacci |
+| Jarvis | 25% | `jarvis_score` | Gematria triggers |
 | **Context** | **±0.35 cap** | `context_score` | Defense rank, pace, injury vacuum (modifier, not weighted) |
 
 **Files that MUST show all engines:**
@@ -3193,8 +3193,8 @@ curl -s "https://web-production-7b2a.up.railway.app/live/best-bets/NBA" \
 ```
 AI:       25%      →  ai_score
 Research: 35%      →  research_score  ← LARGEST
-Esoteric: 20%      →  esoteric_score
-Jarvis:   20%      →  jarvis_score
+Esoteric: 15%      →  esoteric_score
+Jarvis:   25%      →  jarvis_score
 Context:  ±0.35    →  context_score   (modifier, not weighted)
 ```
 

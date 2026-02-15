@@ -207,7 +207,9 @@ export const StreamingProvider = ({ children, enabled = true }) => {
       eventSourceRef.current.onopen = () => {
         setIsConnected(true);
         setConnectionAttempts(0);
-        console.log('[SSE] Connected to streaming endpoint');
+        if (import.meta.env.DEV) {
+          console.log('[SSE] Connected to streaming endpoint');
+        }
       };
 
       eventSourceRef.current.onmessage = handleEvent;
@@ -224,14 +226,18 @@ export const StreamingProvider = ({ children, enabled = true }) => {
         // Attempt reconnection with backoff
         if (connectionAttempts < MAX_RECONNECT_ATTEMPTS) {
           const delay = RECONNECT_DELAY * Math.pow(2, connectionAttempts);
-          console.log(`[SSE] Reconnecting in ${delay}ms (attempt ${connectionAttempts + 1})`);
+          if (import.meta.env.DEV) {
+            console.log(`[SSE] Reconnecting in ${delay}ms (attempt ${connectionAttempts + 1})`);
+          }
 
           reconnectTimeoutRef.current = setTimeout(() => {
             setConnectionAttempts(prev => prev + 1);
             connect();
           }, delay);
         } else {
-          console.log('[SSE] Max reconnection attempts reached, falling back to polling');
+          if (import.meta.env.DEV) {
+            console.log('[SSE] Max reconnection attempts reached, falling back to polling');
+          }
         }
       };
     } catch (err) {

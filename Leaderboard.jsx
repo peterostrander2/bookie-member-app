@@ -56,8 +56,7 @@ const Leaderboard = () => {
           }
         }
       } catch (err) {
-        console.log('Using mock leaderboard data');
-        // Keep mock data on error
+        // Keep empty state on error - no mock data
       }
       setLoading(false);
     };

@@ -21,13 +21,8 @@ const Signals = () => {
       // Try to get live player props
       const propsData = await api.getLiveProps('NBA').catch(() => ({ props: [] }));
 
-      // Debug: log what backend returns
-      console.log('Props API response:', propsData);
-
       // Get all props
       const allProps = propsData.props || propsData || [];
-
-      console.log('All props count:', allProps.length, 'Sample:', allProps[0]);
 
       // Filter out mock/placeholder data - require real edge or varied confidence
       // Mock data typically has confidence exactly 60 and edges at 0

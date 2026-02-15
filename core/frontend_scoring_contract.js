@@ -8,8 +8,8 @@
 export const ENGINE_WEIGHTS = {
   ai: 0.25,        // 25%
   research: 0.35,  // 35% - LARGEST
-  esoteric: 0.20,  // 20%
-  jarvis: 0.20,    // 20%
+  esoteric: 0.15,  // 15%
+  jarvis: 0.25,    // 25%
 };
 
 // Context is NOT a weighted engine - it's a bounded modifier

@@ -10,12 +10,12 @@ import SearchBar from './SearchBar';
 import { useFavoriteSport } from './usePreferences';
 import { useToast } from './Toast';
 
-// Tier win rate stats (historical averages)
-const TIER_WIN_RATES = {
-  SMASH: { rate: 87, label: 'SMASH tier hits 87% historically', profitable: true },
-  STRONG: { rate: 72, label: 'STRONG tier hits 72% historically', profitable: true },
-  LEAN: { rate: 58, label: 'LEAN tier hits 58% historically', profitable: true },
-  WATCH: { rate: 48, label: 'WATCH tier hits 48% historically', profitable: false }
+// Tier labels for display (win rates should come from backend when available)
+const TIER_LABELS = {
+  SMASH: { label: 'SMASH tier', profitable: true },
+  STRONG: { label: 'STRONG tier', profitable: true },
+  LEAN: { label: 'LEAN tier', profitable: true },
+  WATCH: { label: 'WATCH tier', profitable: false }
 };
 
 // Minimum confidence required to be featured as "Top Pick"
@@ -25,14 +25,6 @@ const MIN_FEATURED_CONFIDENCE = 65;
 const hasVisitedBefore = () => localStorage.getItem('dashboard_visited') === 'true';
 const markAsVisited = () => localStorage.setItem('dashboard_visited', 'true');
 
-// Demo picks (moved outside component to prevent recreation on every render)
-const DEMO_PICKS = [
-  { player: 'LeBron James', side: 'Over', line: 25.5, stat_type: 'points', odds: -110, confidence: 87, sport: 'NBA' },
-  { player: 'Jayson Tatum', side: 'Over', line: 27.5, stat_type: 'points', odds: -115, confidence: 85, sport: 'NBA' },
-  { player: 'Luka Doncic', side: 'Over', line: 9.5, stat_type: 'assists', odds: -105, confidence: 82, sport: 'NBA' },
-  { team: 'Lakers', side: '-3.5', line: -3.5, bet_type: 'spread', odds: -110, confidence: 79, sport: 'NBA' },
-  { player: 'Nikola Jokic', side: 'Over', line: 11.5, stat_type: 'rebounds', odds: -120, confidence: 84, sport: 'NBA' }
-];
 
 // Quick links config (moved outside component to prevent recreation on every render)
 const QUICK_LINKS = [
@@ -203,16 +195,14 @@ const Dashboard = () => {
           });
         }
       } else {
-        // Use demo pick when no live data available
-        const sportDemo = DEMO_PICKS.find(p => p.sport === activeSport) || DEMO_PICKS[0];
-        setTopPick({ ...sportDemo, isDemo: true });
+        // No picks available - show empty state
+        setTopPick({ noPicks: true, sport: activeSport });
       }
     } catch (err) {
       console.error('Error fetching top pick:', err);
       if (!isMountedRef.current) return;
-      // Use demo pick on error
-      const sportDemo = DEMO_PICKS.find(p => p.sport === activeSport) || DEMO_PICKS[0];
-      setTopPick({ ...sportDemo, isDemo: true });
+      // Show empty state on error
+      setTopPick({ noPicks: true, sport: activeSport });
     }
     if (isMountedRef.current) {
       setTopPickLoading(false);
@@ -770,7 +760,7 @@ const Dashboard = () => {
                     borderRadius: '4px',
                     fontSize: '10px'
                   }}>
-                    {TIER_WIN_RATES[getConfidenceLabel(topPick.confidence || topPick.score || 75)]?.label || 'Track record pending'}
+                    {TIER_LABELS[getConfidenceLabel(topPick.confidence || topPick.score || 75)]?.label || 'Track record pending'}
                   </div>
                 </div>
                 <div style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold', marginBottom: '4px' }}>
