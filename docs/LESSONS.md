@@ -1,4 +1,4 @@
-# LESSONS LEARNED — Frontend (38 Lessons)
+# LESSONS LEARNED — Frontend (39 Lessons)
 
 Every lesson here was learned the hard way. Each one has an automated prevention mechanism.
 
@@ -1383,4 +1383,46 @@ page.getByRole('heading', { name: /text/i })
 ```bash
 # Run E2E tests to catch selector issues
 npm run test:e2e
+```
+
+---
+
+## Lesson 39: Backend Enum Expansion - FAVORABLE outlook (Feb 2026)
+
+**Date:** Feb 2026
+**Session:** Production readiness cleanup
+**Severity:** Low (validator warning only)
+**Impact:** Backend verification failed, enum not styled correctly
+
+**Problem:**
+Backend added `FAVORABLE` as a new `betting_outlook` enum value. The validator only knew about `BULLISH`, `NEUTRAL`, `BEARISH`, `UNFAVORABLE`. The Esoteric.jsx styling code only handled these four values.
+
+**Root Cause:**
+Same pattern as Lesson 17 (UNFAVORABLE) and Lesson 21 - backend enum values expand without frontend notification. The enum grew from 3 → 4 → 5 values over time.
+
+**Symptoms:**
+- `verify-backend.js` reports: `✗ betting_outlook is valid enum - Got: FAVORABLE`
+- FAVORABLE outlook displays with amber (neutral) styling instead of green (positive)
+
+**Fix Applied:**
+1. Added `'FAVORABLE'` to `validOutlooks` array in `scripts/verify-backend.js`
+2. Updated Esoteric.jsx to group `['BULLISH', 'FAVORABLE']` as positive outlooks (green)
+
+**Prevention:**
+- When backend adds new enum values, search for ALL places that check that enum
+- Pattern: `grep -rn "betting_outlook\|validOutlooks\|BULLISH\|BEARISH" --include="*.js" --include="*.jsx"`
+- Add defensive default styling (amber) for unknown values rather than crashing
+
+**Current Valid betting_outlook Values:**
+- `BULLISH` - Green (positive)
+- `FAVORABLE` - Green (positive)
+- `NEUTRAL` - Amber
+- `BEARISH` - Red (negative)
+- `UNFAVORABLE` - Red (negative)
+
+**Automated Gate:**
+```bash
+# Verify backend validator passes
+VITE_BOOKIE_API_KEY=xxx node scripts/verify-backend.js 2>&1 | grep "betting_outlook"
+# Should show: ✓ betting_outlook is valid enum
 ```
