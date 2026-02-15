@@ -8,7 +8,8 @@ import { test, expect } from './fixtures';
 test.describe('Historical Charts / Analytics Page', () => {
   test('should load /analytics with heading', async ({ page }) => {
     await page.goto('/analytics');
-    await expect(page.getByRole('heading', { name: /Analytics|Performance|Charts|History/i }).first()).toBeVisible({ timeout: 10000 });
+    // Heading contains emoji span, use locator instead of getByRole
+    await expect(page.locator('h1').filter({ hasText: /Analytics|Performance/i }).first()).toBeVisible({ timeout: 10000 });
   });
 
   test('should show time filter options', async ({ page }) => {
@@ -20,8 +21,8 @@ test.describe('Historical Charts / Analytics Page', () => {
 
   test('should show chart toggle options', async ({ page }) => {
     await page.goto('/analytics');
-    // Chart types: P/L, Win Rate, Volume
-    const chartToggle = page.getByText(/P.*L|Win.*Rate|Volume|Cumulative/i).first();
+    // Chart types: P/L, Win Rate, Volume - exclude nav elements
+    const chartToggle = page.locator('main, [role="main"], #root > div').getByText(/P.*L|Win.*Rate|Volume|Cumulative/i).first();
     await expect(chartToggle).toBeVisible({ timeout: 10000 });
   });
 
@@ -35,7 +36,8 @@ test.describe('Historical Charts / Analytics Page', () => {
 test.describe('Profile Page', () => {
   test('should load /profile with heading', async ({ page }) => {
     await page.goto('/profile');
-    await expect(page.getByRole('heading', { name: /Profile|Settings|Account/i }).first()).toBeVisible({ timeout: 10000 });
+    // Heading contains emoji span, use locator instead of getByRole
+    await expect(page.locator('h1').filter({ hasText: /Profile|Settings/i }).first()).toBeVisible({ timeout: 10000 });
   });
 
   test('should show user settings section', async ({ page }) => {
@@ -103,7 +105,8 @@ test.describe('Performance and Props Pages', () => {
 
   test('should load /props with heading', async ({ page }) => {
     await page.goto('/props');
-    await expect(page.getByRole('heading', { name: /Props|Player/i }).first()).toBeVisible({ timeout: 10000 });
+    // Heading contains emoji, use locator instead of getByRole
+    await expect(page.locator('h1').filter({ hasText: /Props|Player/i }).first()).toBeVisible({ timeout: 10000 });
   });
 
   test('should show sport selector on /props', async ({ page }) => {

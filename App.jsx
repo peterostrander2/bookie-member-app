@@ -34,7 +34,7 @@ import OnboardingWizard, { isOnboardingComplete } from './Onboarding';
 import { ThemeProvider, ThemeToggle, useTheme } from './ThemeContext';
 import { GamificationProvider, LevelBadge } from './GamificationContext';
 import { SignalNotificationProvider, SignalBell } from './SignalNotifications';
-import { trackPageView } from './analytics';
+import { trackPageView } from './lib/analytics';
 import { BetSlipProvider, FloatingBetSlip } from './BetSlip';
 import ErrorBoundary from './ErrorBoundary';
 import { OfflineProvider, OfflineBanner, UpdateBanner } from './OfflineIndicator';

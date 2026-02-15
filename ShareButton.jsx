@@ -6,7 +6,7 @@
  */
 
 import React, { useState } from 'react';
-import { FeatureEvents } from './analytics';
+import { FeatureEvents } from './lib/analytics';
 
 // Format a single pick for sharing
 export function formatPickForShare(pick) {

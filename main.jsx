@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
 import { initSentry } from './sentry';
-import { initAnalytics } from './analytics';
+import { initAnalytics } from './lib/analytics';
 import ErrorBoundary from './ErrorBoundary';
 
 // Initialize error monitoring (before app renders)
