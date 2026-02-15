@@ -455,6 +455,9 @@ diff <(grep "import.*from.*components" GameSmashList.jsx | sort) \
 - Simulate/fake backend data with Math.random() or shuffling (use real data or empty state)
 - Use MOCK_* constants or generateMock*() functions in production components (test/mocks only)
 - Show fake usernames, statistics, or alerts when API fails (show empty state instead)
+- Name root-level files same as SPA routes (e.g., `analytics.js` conflicts with `/analytics` route)
+- Write validators against assumed field names without verifying actual API response structure
+- Use `getByRole('heading')` for headings with emoji spans (use `locator('h1').filter()` instead)
 
 ---
 
@@ -467,7 +470,7 @@ diff <(grep "import.*from.*components" GameSmashList.jsx | sort) \
 **Frontend MUST match backend (v20.5):**
 1. **Tiers:** TITANIUM (>=8.0, 3/4 engines >=8.0, context excluded), GOLD_STAR (>=7.5, gates), EDGE_LEAN (>=6.5)
 2. **Never show picks:** with final_score < 6.5
-3. **Engine scores:** ai_score (25%), research_score (35%), esoteric_score (20%), jarvis_score (20%), context_score (+-0.35 modifier)
+3. **Engine scores:** ai_score (25%), research_score (35%), esoteric_score (15%), jarvis_score (25%), context_score (+-0.35 modifier)
 4. **Boost fields:** confluence_boost, msrf_boost, jason_sim_boost, serp_boost, ensemble_adjustment
 5. **Status fields:** msrf_status, serp_status, jason_status, msrf_metadata, serp_shadow_mode
 6. **Signal dicts:** glitch_signals, esoteric_contributions

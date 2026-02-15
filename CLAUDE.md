@@ -1795,6 +1795,43 @@ npm run validate:live             # Proof 6
 
 ---
 
+### Session: February 2026 (Production Readiness Audit + E2E Fixes)
+
+**Completed in this session:**
+1. Fixed engine weight references: Esoteric 15%, Jarvis 25% (was incorrectly 20%/20%)
+2. Fixed engine count references: 3/4 engines for TITANIUM (context excluded)
+3. Removed fake DEMO_PICKS and TIER_WIN_RATES from Dashboard.jsx
+4. Fixed integration validator to use `status_category` instead of `status`
+5. Fixed SPA routing conflicts (analytics.js → lib/analytics.js)
+6. Added Vite SPA fallback middleware for conflicting routes
+7. Fixed E2E test selectors for headings with emoji spans
+8. Updated LESSONS.md with lessons 36-38
+9. Updated RECOVERY.md with recovery entries 36-38
+10. Updated MASTER_INDEX.md with correct engine weights and new hard bans
+
+**Files modified:**
+- `scripts/validate_integrations.mjs` - Fixed field name mismatch
+- `vite.config.js` - Added SPA fallback middleware
+- `lib/analytics.js` - Moved from root to avoid route conflict
+- `App.jsx`, `main.jsx`, `ShareButton.jsx` - Updated analytics imports
+- `e2e/analytics-profile-bankroll.spec.js` - Fixed heading selectors
+- `SmashSpotsPage.jsx` - Fixed engine count comments and legend
+- `Dashboard.jsx` - Removed fake data
+- `docs/LESSONS.md` - Added lessons 36-38
+- `docs/RECOVERY.md` - Added recovery entries 36-38
+- `docs/MASTER_INDEX.md` - Fixed engine weights, added hard bans
+
+**New Lessons (36-38):**
+- Lesson 36: Validator field name mismatch with backend (`status` vs `status_category`)
+- Lesson 37: SPA route conflicts with source files (analytics.js → /analytics)
+- Lesson 38: E2E heading selectors with emoji spans
+
+**Build:** Clean (344 KB)
+**Tests:** 210/210 unit, 192/194 E2E (99% pass rate)
+**Validators:** All 5 pass
+
+---
+
 ## 🚨 MASTER INVARIANTS (NEVER VIOLATE) 🚨
 
 **READ THIS FIRST BEFORE TOUCHING SCORING OR DISPLAY CODE**

@@ -1,4 +1,4 @@
-# LESSONS LEARNED — Frontend (34 Lessons)
+# LESSONS LEARNED — Frontend (38 Lessons)
 
 Every lesson here was learned the hard way. Each one has an automated prevention mechanism.
 
@@ -1245,4 +1245,142 @@ npm run validate:variance      # Proof 3
 npm run validate:coverage      # Proof 4
 npm run validate:boundaries    # Proof 5
 npm run validate:live          # Proof 6
+```
+
+---
+
+## Lesson 36: Validator Field Name Mismatch with Backend
+
+**When:** February 2026 (Production Readiness Audit)
+**Problem:** Integration validator `validate_integrations.mjs` checked for `integration.status` but backend actually sends `status_category`.
+
+**Root Cause:** Validator was written from assumed/documented field names without verifying against actual API response structure. Backend uses `status_category` for the enum value (VALIDATED, CONFIGURED, UNREACHABLE, etc.).
+
+**Impact:** All critical integrations showed as "NOT_FOUND" even though they were properly validated. Validator gave false negatives, blocking deployments.
+
+**Fix Applied:**
+```javascript
+// WRONG: Field doesn't exist
+const status = integration?.status?.toUpperCase() || 'NOT_FOUND';
+
+// CORRECT: Use actual backend field name
+const status = (integration?.status_category || integration?.status || 'NOT_FOUND').toUpperCase();
+```
+
+Also fixed parsing to extract from nested `integrations` key:
+```javascript
+const integrationData = integrations.integrations || integrations;
+```
+
+**Prevention:**
+- Always verify field names against actual API response before writing validators
+- Use `curl ... | jq 'keys'` to see actual structure
+- Test validators against live backend, not mocked data
+
+**Automated Gate:**
+```bash
+# Verify validator works with live API
+VITE_BOOKIE_API_KEY=xxx npm run validate:integrations
+```
+
+---
+
+## Lesson 37: SPA Route Conflicts with Source Files
+
+**When:** February 2026 (E2E Test Failures)
+**Problem:** E2E tests navigating to `/analytics`, `/profile`, `/props` showed raw JavaScript source code instead of rendered React app. Vite was serving the raw `.js`/`.jsx` files directly.
+
+**Root Cause:** Files in root directory with names matching routes:
+- `analytics.js` → `/analytics` serves raw JS
+- `Profile.jsx` → `/profile` serves raw JSX
+- `Props.jsx` → `/props` serves raw JSX
+
+Vite dev server serves matching files before falling back to SPA routing.
+
+**Impact:** E2E tests completely broken for multiple pages. Screenshots showed raw source code with `import.meta.env` values (including API keys!) exposed.
+
+**Fix Applied:**
+1. Move conflicting files to subdirectories: `analytics.js` → `lib/analytics.js`
+2. Add Vite SPA fallback middleware in `vite.config.js`:
+```javascript
+{
+  name: 'spa-fallback',
+  configureServer(server) {
+    server.middlewares.use((req, res, next) => {
+      const spaRoutes = ['/profile', '/props', '/analytics', '/history'];
+      if (spaRoutes.some(route => req.url === route || req.url?.startsWith(route + '?'))) {
+        req.url = '/';
+      }
+      next();
+    });
+  },
+}
+```
+
+**Prevention:**
+- Never name root-level files the same as SPA routes
+- Keep source files in `src/`, `lib/`, or `components/` directories
+- Run E2E tests after any file reorganization
+
+**Conflicting Patterns to Avoid:**
+| Route | Don't Have File Named |
+|-------|----------------------|
+| `/profile` | `profile.js`, `Profile.jsx` in root |
+| `/analytics` | `analytics.js` in root |
+| `/props` | `props.js`, `Props.jsx` in root |
+| `/history` | `history.js` in root |
+
+**Automated Gate:**
+```bash
+# Check for potential route conflicts
+ls *.js *.jsx 2>/dev/null | grep -iE "^(profile|props|analytics|history|settings|admin)\." && echo "WARNING: Potential SPA route conflict!"
+```
+
+---
+
+## Lesson 38: E2E Heading Selectors with Emoji Spans
+
+**When:** February 2026 (E2E Test Failures)
+**Problem:** E2E tests using `getByRole('heading', { name: /Pattern/i })` failed to find headings that contained emoji spans.
+
+**Root Cause:** Headings structured like this don't match `getByRole`:
+```jsx
+<h1>
+  <span>📈</span> Performance Analytics
+</h1>
+```
+The emoji span breaks accessibility tree text computation, so "Performance Analytics" doesn't match as the heading's accessible name.
+
+**Impact:** Multiple E2E tests failed with "element(s) not found" even though headings were visible on page.
+
+**Fix Applied:**
+```javascript
+// WRONG: Doesn't find headings with emoji spans
+await page.getByRole('heading', { name: /Analytics|Performance/i }).first()
+
+// CORRECT: Use locator with filter
+await page.locator('h1').filter({ hasText: /Analytics|Performance/i }).first()
+```
+
+**Prevention:**
+- Use `page.locator('h1').filter({ hasText: /pattern/ })` for headings with emojis
+- Reserve `getByRole('heading')` for pure text headings
+- Consider removing emojis from h1 elements for better accessibility
+
+**Pattern Reference:**
+```javascript
+// For headings with emojis/icons
+page.locator('h1').filter({ hasText: /text/i }).first()
+
+// For content area (avoiding hidden nav)
+page.locator('main, [role="main"], #root > div').getByText(/text/i).first()
+
+// For pure text headings only
+page.getByRole('heading', { name: /text/i })
+```
+
+**Automated Gate:**
+```bash
+# Run E2E tests to catch selector issues
+npm run test:e2e
 ```

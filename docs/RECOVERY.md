@@ -684,3 +684,95 @@ Fix:
    ```
 3. Check backend grader service is running
 4. See `docs/7-PROOFS.md` for full documentation
+
+---
+
+## 36) Validator shows integrations as NOT_FOUND when they are VALIDATED
+
+Symptoms:
+- `npm run validate:integrations` fails with "NOT_FOUND"
+- Backend `/live/debug/integrations` shows VALIDATED status
+- Error: "odds_api: NOT_FOUND (expected VALIDATED)"
+
+Root Cause:
+- Validator checking wrong field name (`status` vs `status_category`)
+- Backend response structure changed
+
+Fix:
+1. Verify actual backend field name:
+   ```bash
+   curl -s "https://web-production-7b2a.up.railway.app/live/debug/integrations" \
+     -H "X-API-Key: xxx" | jq '.integrations.odds_api | keys'
+   ```
+2. Update validator to use correct field: `status_category`
+3. Also check for nested `integrations` key in response
+
+Prevention:
+- Always verify field names against actual API before writing validators
+- See Lesson 36
+
+---
+
+## 37) E2E tests show raw source code instead of rendered page
+
+Symptoms:
+- E2E test screenshots show JavaScript source code
+- Tests fail with "element(s) not found"
+- Raw `import.meta.env` values visible in screenshot (security risk!)
+- Affects specific routes like `/analytics`, `/profile`, `/props`
+
+Root Cause:
+- File in root directory has same name as SPA route
+- Example: `analytics.js` causes `/analytics` to serve raw JS instead of React app
+- Vite dev server serves matching files before SPA fallback
+
+Fix:
+1. Identify conflicting file:
+   ```bash
+   ls *.js *.jsx | grep -iE "^(profile|props|analytics|history)\."
+   ```
+2. Move file to subdirectory:
+   ```bash
+   mkdir -p lib
+   mv analytics.js lib/analytics.js
+   ```
+3. Update all imports:
+   ```bash
+   sed -i '' "s|from './analytics'|from './lib/analytics'|g" App.jsx main.jsx ShareButton.jsx
+   ```
+4. Or add SPA fallback middleware to `vite.config.js`
+
+Prevention:
+- Never name root-level files same as SPA routes
+- Keep utils in `lib/`, `src/utils/`, or `components/`
+- See Lesson 37
+
+---
+
+## 38) E2E tests fail to find headings with emoji spans
+
+Symptoms:
+- `getByRole('heading', { name: /Pattern/i })` fails
+- Test says "element(s) not found" but heading is visible
+- Only affects headings with emoji: `<h1><span>📈</span> Text</h1>`
+
+Root Cause:
+- Emoji span breaks accessibility tree text computation
+- `getByRole('heading')` doesn't match composite accessible names
+
+Fix:
+Replace:
+```javascript
+// WRONG
+await page.getByRole('heading', { name: /Analytics/i })
+```
+With:
+```javascript
+// CORRECT
+await page.locator('h1').filter({ hasText: /Analytics/i }).first()
+```
+
+Prevention:
+- Use `locator('h1').filter()` for headings with emojis/icons
+- Reserve `getByRole('heading')` for pure text headings
+- See Lesson 38
