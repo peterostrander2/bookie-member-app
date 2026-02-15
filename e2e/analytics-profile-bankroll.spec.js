@@ -8,21 +8,28 @@ import { test, expect } from './fixtures';
 test.describe('Historical Charts / Analytics Page', () => {
   test('should load /analytics with heading', async ({ page }) => {
     await page.goto('/analytics');
-    // Heading contains emoji span, use locator instead of getByRole
-    await expect(page.locator('h1').filter({ hasText: /Analytics|Performance/i }).first()).toBeVisible({ timeout: 10000 });
+    // Wait for page content to render (not just load)
+    await page.waitForSelector('h1', { timeout: 15000 });
+    // Heading contains emoji span: <h1><span>📈</span> Performance Analytics</h1>
+    const heading = page.locator('h1').first();
+    await expect(heading).toBeVisible({ timeout: 10000 });
+    // Verify it's the right heading (has Performance or Analytics text)
+    await expect(heading).toContainText(/Performance|Analytics/i);
   });
 
   test('should show time filter options', async ({ page }) => {
     await page.goto('/analytics');
-    // Time filters: 7D, 30D, 90D, All
-    const timeFilter = page.getByText(/7.*Day|30.*Day|90.*Day|All/i).first();
+    await page.waitForSelector('h1', { timeout: 15000 });
+    // Time filters are buttons: "7 Days", "30 Days", "90 Days", "All Time"
+    const timeFilter = page.getByRole('button', { name: /7 Days|30 Days|90 Days|All Time/i }).first();
     await expect(timeFilter).toBeVisible({ timeout: 10000 });
   });
 
   test('should show chart toggle options', async ({ page }) => {
     await page.goto('/analytics');
-    // Chart types: P/L, Win Rate, Volume - exclude nav elements
-    const chartToggle = page.locator('main, [role="main"], #root > div').getByText(/P.*L|Win.*Rate|Volume|Cumulative/i).first();
+    await page.waitForSelector('h1', { timeout: 15000 });
+    // Chart type buttons: "P/L", "Win Rate", "Volume" - use button role to avoid nav
+    const chartToggle = page.getByRole('button', { name: /^P\/L$|^Win Rate$|^Volume$/i }).first();
     await expect(chartToggle).toBeVisible({ timeout: 10000 });
   });
 
