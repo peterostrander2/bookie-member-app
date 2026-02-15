@@ -105,13 +105,18 @@ async function main() {
   const warnings = [];
 
   // Handle both array format and object format
+  // Backend returns: { integrations: { odds_api: {...}, ... }, ... }
   const integrationMap = new Map();
-  if (Array.isArray(integrations)) {
-    integrations.forEach(i => integrationMap.set(i.name || i.key, i));
-  } else if (typeof integrations === 'object') {
-    // Object format: { odds_api: { status: 'VALIDATED', ... }, ... }
-    Object.entries(integrations).forEach(([key, value]) => {
-      integrationMap.set(key, { name: key, ...value });
+  const integrationData = integrations.integrations || integrations;
+
+  if (Array.isArray(integrationData)) {
+    integrationData.forEach(i => integrationMap.set(i.name || i.key, i));
+  } else if (typeof integrationData === 'object') {
+    // Object format: { odds_api: { status_category: 'VALIDATED', ... }, ... }
+    Object.entries(integrationData).forEach(([key, value]) => {
+      if (typeof value === 'object' && value !== null) {
+        integrationMap.set(key, { name: key, ...value });
+      }
     });
   }
 
@@ -121,7 +126,8 @@ async function main() {
   console.log('CRITICAL (must be VALIDATED):');
   for (const name of CRITICAL_INTEGRATIONS) {
     const integration = integrationMap.get(name);
-    const status = integration?.status?.toUpperCase() || 'NOT_FOUND';
+    // Backend uses status_category, not status
+    const status = (integration?.status_category || integration?.status || 'NOT_FOUND').toUpperCase();
     const icon = getStatusIcon(status);
     const color = getStatusColor(status);
 
@@ -135,7 +141,8 @@ async function main() {
   console.log('\nOPTIONAL (warn if not validated):');
   for (const name of OPTIONAL_INTEGRATIONS) {
     const integration = integrationMap.get(name);
-    const status = integration?.status?.toUpperCase() || 'NOT_FOUND';
+    // Backend uses status_category, not status
+    const status = (integration?.status_category || integration?.status || 'NOT_FOUND').toUpperCase();
     const icon = getStatusIcon(status);
     const color = getStatusColor(status);
 
@@ -154,7 +161,8 @@ async function main() {
   if (otherIntegrations.length > 0) {
     console.log('\nOTHER:');
     for (const [name, integration] of otherIntegrations) {
-      const status = integration?.status?.toUpperCase() || 'UNKNOWN';
+      // Backend uses status_category, not status
+      const status = (integration?.status_category || integration?.status || 'UNKNOWN').toUpperCase();
       const icon = getStatusIcon(status);
       const color = getStatusColor(status);
       console.log(`  ${icon} ${color}${name}${RESET}: ${status}`);
